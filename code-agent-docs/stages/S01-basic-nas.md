@@ -5,7 +5,7 @@
 | Stage ID | S01 |
 | Status | Planned |
 | Blocked reason | |
-| Plan version this stage is based on | 0.3.1 |
+| Plan version this stage is based on | 0.4.0 |
 | Origin | User-defined |
 | Created | 2026-09-24 (session S002) |
 | Last updated | 2026-09-24 (session S004) |
@@ -381,6 +381,7 @@ go tool go-licenses check ./...         # allow-list from S01.1-T02
 | 2026-09-24 | S002 | Initial version (Planned) | P002 step 7 | Needed: user approval |
 | 2026-09-24 | S003 | Replaced every "to be confirmed after the S01.1 ADRs are accepted" placeholder with the concrete Go stack (packages, files, tools, commands). Rewrote the S01.1 tasks as Go setup tasks (11 tasks, previously 12; the old review gate is removed because the ADRs are Accepted). Added SQLite from S01 (S01.1-T10; `uploads` and `settings` tables). Added `os.Root` as the second traversal layer. Added x/sys for free space and volume ID. Concrete tusd hook design. Concrete endpoints, dependencies, and commands. Status stays **Planned** | P003 `stage_document_updates` | Needed: user approval (the stage was not approved before, so there is nothing to re-confirm) |
 | 2026-09-24 | S004 | Audit A001: added the ADR column to the dependency table; pinned `golang.org/x/text` v0.42.0 as a conditional dependency (F-025); listed the CI actions; added task S01.7-T07 (R12 documentation audit) and renumbered completion and sign-off to S01.7-T08 (F-026); based on plan 0.3.1. Status stays **Planned** | Audit A001 (P004); R12 | Needed: user approval (the document is not yet approved) |
+| 2026-09-24 | S004 | Re-based on plan 0.4.0 (video streaming change). **No S01 content affected** (the change lives in S04.8). Status stays Planned | Plan change 0.4.0 | None (no S01 change) |
 
 ## 13. Completion record
 

@@ -192,6 +192,19 @@ Planned deployment options:
 
 ---
 
+### R-10: Photo Management, video playback (added after A001, same session)
+
+**Current (lines 18–22):** no mention of video playback.
+
+**Proposed:** add a bullet to "🖼️ Photo Management":
+```
+- Video playback streamed to any device, with a live quality menu (Auto, Original, 1080p, 720p, …); lower qualities are prepared on demand
+```
+
+**Reason:** ADR-0020 (Accepted from the user's decisions in S004 E005/E008); plan 0.4.0 FR-144–FR-147.
+
+---
+
 ### Not proposed (and why)
 - **License (line 169):** still undecided (Q22). Unchanged.
 - **Sidecar schema example (lines 82–120):** the schema is decided in S05.1 (ADR pending). Unchanged.
