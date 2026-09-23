@@ -1,0 +1,851 @@
+{
+  "prompt_meta": {
+    "name": "local-ai-nas: Staged Development Roadmap (Plan Change Request #2)",
+    "prompt_version": "1.0",
+    "type": "Plan change request, to be handled under code-agent-docs/RULES.md R4 (plan change management)",
+    "how_to_read_this": "Read this entire prompt before acting. Every field is an instruction. Lists of substages and requirements are the minimum you must include; you may add detail, but you may not silently drop anything."
+  },
+
+  "before_you_start": [
+    "Run the full session start protocol from code-agent-docs/RULES.md (R1) before acting on anything in this prompt.",
+    "Save this entire prompt, unchanged, to code-agent-docs/prompts/P002-staged-development-roadmap.json. In the session log, record the USER entry as: 'Plan change request #2 (staged development roadmap), archived verbatim at code-agent-docs/prompts/P002-staged-development-roadmap.json'.",
+    "If the user has answered open questions, accepted ADRs, or changed the plan since v0.1.0, those decisions stand. Where this prompt conflicts with an Accepted ADR or a recorded user decision, do not overwrite it. Mark that spot in plan.md as 'CONFLICT: needs user decision' and list it in your report."
+  ],
+
+  "objective": "Replace the stage roadmap in code-agent-docs/plan.md with the user-defined staged roadmap below, add the planner-proposed stages, break every stage into detailed substages, update the related plan sections, apply the pre-approved RULES.md updates, and write the detailed stage document for Stage 1 only. Then report to the user and stop.",
+
+  "out_of_scope": [
+    "Writing any application source code",
+    "Scaffolding a project or installing dependencies",
+    "Starting Stage 1 implementation, even partially",
+    "Finalizing technology choices. Propose them as ADRs with status 'Proposed'; the user decides."
+  ],
+
+  "plan_structure": {
+    "hierarchy": "Stage -> Substage -> Task",
+    "id_scheme": {
+      "stage": "S01, S02, ... S12",
+      "substage": "S01.1, S01.2, ...",
+      "task": "S01.3-T02 (task 2 of substage S01.3)"
+    },
+    "what_goes_where": {
+      "plan.md": "Every stage and every substage, for the whole roadmap, written now.",
+      "stages/SNN-<slug>.md": "The task-level breakdown for one stage. Written just in time, before that stage starts (RULES.md R3). In this session, write it only for Stage 1."
+    },
+    "required_fields_for_each_substage_in_plan_md": [
+      "ID and name",
+      "Goal: one or two sentences",
+      "Scope: what is included",
+      "Key deliverables",
+      "Depends on: substage IDs, which may be in earlier stages",
+      "Linked requirement IDs (FR/NFR)",
+      "Acceptance criteria: 2 to 5 testable statements",
+      "Risks or notes",
+      "Status: 'Not started'"
+    ],
+    "required_fields_for_each_stage_in_plan_md": [
+      "ID, name, and origin ('User-defined' or 'Planner-proposed')",
+      "Goal",
+      "The user's requirements for that stage, quoted as given in this prompt",
+      "Substages, with the fields above",
+      "Design notes: including hooks for later stages",
+      "Exit criteria: what must be true for the stage to be Done",
+      "Status"
+    ],
+    "freedom_and_limits": [
+      "You may split a listed substage into several or add new substages when needed. Record why.",
+      "You may not remove, merge away, or reorder the listed substages without flagging it in your report for user approval.",
+      "Every new requirement introduced by this prompt gets an FR or NFR ID in plan.md section 3."
+    ]
+  },
+
+  "cross_cutting_principles": {
+    "note": "Add these to plan.md as a 'Cross-cutting principles' section. Every stage must follow them.",
+    "principles": [
+      "Every stage ends with a working, tested, demonstrable system. Nothing is left half-built between stages.",
+      "Forward compatibility: design each stage with the later stages in mind so they plug in without rewrites. Examples: the storage layout in S01 allows per-user namespaces for S07; the API has a central authorization hook from S03 that S07 extends; the sidecar schema in S05 reserves sections for ownership and access (S07) and AI results (S12); the search index in S06 reserves fields for owner, access list, AI tags, and face groups.",
+      "Secure-by-default baseline from S01, even though the dedicated security stage is S03: the server binds to localhost only by default, path traversal is impossible, and all input is validated. The NAS must not be exposed on the network without authentication.",
+      "Shared infrastructure is built once, in the first stage that needs it, and reused later. Examples: the background job system (S04) is reused by S05, S06, S08, S09, and S12; the authorization policy check (S03) is extended by S07.",
+      "S01 is API-only and S02 is the GUI stage. From S03 onward, any stage that adds user-facing features includes its own GUI substage.",
+      "The last substage of every stage covers integration testing, documentation updates, the completion record, and user sign-off."
+    ]
+  },
+
+  "project_invariants": {
+    "note": "These go into plan.md and into a new 'Project invariants' section of RULES.md (pre-approved below). They must never be violated by any code or plan change without explicit user approval.",
+    "invariants": [
+      "I1: The storage root contains exactly two user-data areas: files/ and photos/. They never intersect. An item moves between them only when the user explicitly copies or moves it.",
+      "I2: Internal application data (database, search index, caches, thumbnails, trash, configuration) lives outside files/ and photos/.",
+      "I3: Photo sidecar JSON files are the source of truth for photo metadata. The search index is a cache that can always be rebuilt from disk.",
+      "I4: Search reads only the index. It never scans files or runs AI at query time.",
+      "I5: A user cannot access another user's files or photos unless they have been explicitly shared. This is enforced server-side on every access path: API, downloads, previews, thumbnails, search, network shares, and background jobs.",
+      "I6: Everything runs locally. No telemetry. No network calls at runtime except for features the user has explicitly enabled.",
+      "I7: AI is optional and opt-in. The NAS must be fully functional with AI disabled.",
+      "I8: AI work is always the last stage of the roadmap. Any stage added in the future is inserted before it, and the AI stage is renumbered."
+    ]
+  },
+
+  "stages": [
+    {
+      "id": "S01",
+      "name": "Basic NAS implementation",
+      "origin": "User-defined",
+      "goal": "A reliable storage service that manages the files area through an API, with the two-area layout in place.",
+      "user_requirements": [
+        "Stage 1 is basic NAS implementation.",
+        "The NAS has two folders at the root: files and photos."
+      ],
+      "scope_note": "S01 creates both the files/ and photos/ roots, but only implements the files area. The photos area is managed from S04. There is no GUI and no authentication yet, so the server must bind to localhost only.",
+      "substages": [
+        {
+          "id": "S01.1",
+          "name": "Project foundation",
+          "must_cover": "Proposed ADRs for backend language and framework and for API style; repository structure; dependency management; linting and formatting; test framework; CI pipeline; development environment (e.g. dev container or Docker); configuration system (config file plus environment variables); structured logging; error-handling conventions. Coding starts only after the user accepts these ADRs."
+        },
+        {
+          "id": "S01.2",
+          "name": "Storage layout and configuration",
+          "must_cover": "Configurable storage root; creation and validation of files/ and photos/ on startup; location of internal app data outside both areas (invariant I2); a layout that allows per-user namespaces later without breaking changes (see S07.2); disk space checks; startup health checks."
+        },
+        {
+          "id": "S01.3",
+          "name": "Core file operations",
+          "must_cover": "Service layer for the files area: list directory with pagination and sorting; item details (size, modified time, type); create folder; upload; download with HTTP range support; rename; move; copy; delete. All confined to the files area."
+        },
+        {
+          "id": "S01.4",
+          "name": "Large file handling",
+          "must_cover": "Chunked and resumable uploads; streaming I/O that never loads whole files into memory; configurable size limits; writing to a temp file then atomically renaming, so partial files never appear; cleanup of abandoned uploads."
+        },
+        {
+          "id": "S01.5",
+          "name": "API layer",
+          "must_cover": "Resource design with separate route namespaces for files and (later) photos; API versioning (e.g. /api/v1); consistent error format; request validation; an OpenAPI specification; API documentation."
+        },
+        {
+          "id": "S01.6",
+          "name": "Safety baseline",
+          "must_cover": "Path normalization and path traversal prevention; filename sanitization including names reserved on Windows, macOS, and Linux; symlink policy; name-conflict handling (fail, auto-rename, or overwrite); safety of concurrent operations on the same item; localhost-only binding by default."
+        },
+        {
+          "id": "S01.7",
+          "name": "Integration, testing, and stage review",
+          "must_cover": "Integration tests against a real temporary filesystem; attack tests (traversal, malicious names); edge cases (unicode names, empty files, very large files, deep nesting); a basic performance check; documentation updates; completion record; user sign-off."
+        }
+      ],
+      "design_notes": [
+        "Put storage access behind a service interface so later features (trash, sharing checks, quotas, sidecar sync) can hook in without touching every endpoint.",
+        "Model every item with an owner from the start, even though there is only one user, so S07 does not require a data migration of the core model."
+      ],
+      "exit_criteria": "Using only the API (e.g. an HTTP client), files and folders in the files area can be managed reliably, including large resumable uploads. All tests pass in CI."
+    },
+
+    {
+      "id": "S02",
+      "name": "NAS GUI",
+      "origin": "User-defined",
+      "goal": "A graphical application that lets people use the NAS without touching the API.",
+      "user_requirements": [
+        "Stage 2 is the NAS software (GUI) that helps in interacting with the actual NAS."
+      ],
+      "substages": [
+        {
+          "id": "S02.1",
+          "name": "GUI technology and design foundation",
+          "must_cover": "Proposed ADR for the GUI approach (a web UI served by the NAS is the recommended default; a desktop app is an alternative; the user decides); frontend framework; design system (typography, color, spacing, components, icons); light and dark themes; API client layer."
+        },
+        {
+          "id": "S02.2",
+          "name": "App shell and navigation",
+          "must_cover": "Main layout; navigation with Files, Photos (placeholder until S04), and Settings (placeholder); routing; global loading and error states; notifications."
+        },
+        {
+          "id": "S02.3",
+          "name": "File browser",
+          "must_cover": "List and grid views; breadcrumbs; folder navigation; sorting; virtualized lists for very large folders; empty states."
+        },
+        {
+          "id": "S02.4",
+          "name": "Uploads and downloads",
+          "must_cover": "Button and drag-and-drop upload of files and folders; upload queue with progress, pause, resume, and cancel (using S01.4); single and multi-item download, e.g. as a streamed zip."
+        },
+        {
+          "id": "S02.5",
+          "name": "File operations UI",
+          "must_cover": "Create folder, rename, move, copy (with a folder picker), delete with confirmation; multi-select; context menus; keyboard shortcuts; name-conflict dialogs."
+        },
+        {
+          "id": "S02.6",
+          "name": "File previews",
+          "must_cover": "Previews for images, text and code, PDF, audio, and video (streamed via range requests); a clear fallback for unsupported types."
+        },
+        {
+          "id": "S02.7",
+          "name": "Responsiveness and accessibility",
+          "must_cover": "Phone and tablet layouts; full keyboard navigation; screen reader labels; sufficient color contrast."
+        },
+        {
+          "id": "S02.8",
+          "name": "Testing and stage review",
+          "must_cover": "Component tests; end-to-end tests of the main user flows; cross-browser check; documentation; completion record; user sign-off."
+        }
+      ],
+      "exit_criteria": "A non-technical user can do everything from S01 through the GUI."
+    },
+
+    {
+      "id": "S03",
+      "name": "Security",
+      "origin": "User-defined",
+      "goal": "Comprehensive security so the NAS can be safely reached from the local network. There is a single admin account at this stage; multiple users come in S07.",
+      "user_requirements": [
+        "Stage 3 is security implementation."
+      ],
+      "substages": [
+        {
+          "id": "S03.1",
+          "name": "Threat model",
+          "must_cover": "Assets, attackers (someone on the LAN, a malicious local user, a stolen session), and attack surfaces (API, GUI, uploads, previews, future network shares and AI worker). Documented in code-agent-docs/ and used to drive the rest of this stage."
+        },
+        {
+          "id": "S03.2",
+          "name": "First-run setup and authentication",
+          "must_cover": "First-run creation of the admin account (no default passwords ever); strong password hashing (e.g. Argon2id); login and logout; password change; login rate limiting and lockout."
+        },
+        {
+          "id": "S03.3",
+          "name": "Sessions and tokens",
+          "must_cover": "Secure session cookies (HttpOnly, Secure, SameSite) or tokens; expiry; revocation; 'log out everywhere'; optional API tokens for scripts."
+        },
+        {
+          "id": "S03.4",
+          "name": "Transport security",
+          "must_cover": "HTTPS; support for user-provided certificates and generated self-signed certificates; guidance for certificates on a LAN."
+        },
+        {
+          "id": "S03.5",
+          "name": "Application hardening",
+          "must_cover": "A central authorization check on every route with default deny (built so S07 can extend it); CSRF protection; CORS policy; security headers including a Content Security Policy; upload validation (size, content sniffing, nothing is ever executed); safe previews (no script execution through SVG or HTML files); general rate limiting; error messages that do not leak internals."
+        },
+        {
+          "id": "S03.6",
+          "name": "Security logging and audit trail",
+          "must_cover": "Logging of logins, failed attempts, and security-relevant changes; retention policy; an audit log structure that S07 extends with sharing events."
+        },
+        {
+          "id": "S03.7",
+          "name": "Two-factor authentication (optional)",
+          "must_cover": "TOTP-based 2FA. Priority 'Could', pending user decision."
+        },
+        {
+          "id": "S03.8",
+          "name": "Security GUI",
+          "must_cover": "Login page; first-run setup wizard; active sessions page; password change; 2FA setup if S03.7 is approved."
+        },
+        {
+          "id": "S03.9",
+          "name": "Security testing and stage review",
+          "must_cover": "Automated tests for auth bypass, CSRF, and traversal regressions; dependency vulnerability scanning in CI; static analysis; review of every threat model item (mitigated or documented as an accepted risk); completion record; user sign-off."
+        }
+      ],
+      "design_notes": [
+        "Network binding may change from localhost to LAN only after this stage is Done, and only when the user configures it."
+      ],
+      "exit_criteria": "No endpoint is reachable without authentication, and every threat model item is either mitigated or documented as an accepted risk."
+    },
+
+    {
+      "id": "S04",
+      "name": "Media management",
+      "origin": "User-defined",
+      "goal": "A separate photos area with Google Photos style management.",
+      "user_requirements": [
+        "Stage 4 is media management implementation.",
+        "Media storage is separate from file storage.",
+        "The NAS has two folders at the root, files and photos, and they never intersect.",
+        "Content moves between them only when the user selects a file to copy or move to files or photos."
+      ],
+      "substages": [
+        {
+          "id": "S04.1",
+          "name": "Photos area rules and domain model",
+          "must_cover": "Definition of a media item; supported formats (videos, HEIC, and RAW are open questions); how media is organized on disk inside photos/ (proposed ADR); the separation invariant I1 enforced in the service layer; a photos API namespace separate from the files API."
+        },
+        {
+          "id": "S04.2",
+          "name": "Media ingestion",
+          "must_cover": "Upload into the photos area; only media types accepted; duplicate detection by content hash; import batches; handling of corrupt or unreadable media."
+        },
+        {
+          "id": "S04.3",
+          "name": "Background job system",
+          "must_cover": "A persistent job queue with retries, progress reporting, concurrency limits, and survival across restarts. Built here and reused by S05, S06, S08, S09, and S12."
+        },
+        {
+          "id": "S04.4",
+          "name": "Thumbnails and previews",
+          "must_cover": "Several thumbnail sizes; video poster frames; generation as background jobs; storage in internal app data, never inside photos/ (invariant I2); regeneration on demand."
+        },
+        {
+          "id": "S04.5",
+          "name": "Library organization",
+          "must_cover": "Timeline (sorted by file timestamps until S05 provides date taken); albums as virtual collections that reference items and never duplicate files; favorites; hide or archive."
+        },
+        {
+          "id": "S04.6",
+          "name": "Cross-area transfer",
+          "must_cover": "Explicit copy and move between files and photos, in both directions; validation (only media may enter photos); behavior of metadata during transfer (coordinated with S05.6); conflict handling; audit logging."
+        },
+        {
+          "id": "S04.7",
+          "name": "Photos GUI",
+          "must_cover": "Timeline grid with date grouping and virtualized infinite scroll; lightbox viewer with zoom, swipe, and video playback; album UI; photo upload UI; 'Copy/Move to Photos' in the files GUI and 'Copy/Move to Files' in the photos GUI; multi-select."
+        },
+        {
+          "id": "S04.8",
+          "name": "Testing and stage review",
+          "must_cover": "Tests proving that no operation places an item in the other area implicitly; performance testing with a large library (e.g. 50,000 items); documentation; completion record; user sign-off."
+        }
+      ],
+      "design_notes": [
+        "Where an S04 feature depends on data that only arrives in S05 (such as date taken), use a simple fallback now and let S05 replace it."
+      ],
+      "exit_criteria": "Photos can be uploaded, browsed on a timeline, organized into albums, and transferred between areas only by explicit user action."
+    },
+
+    {
+      "id": "S05",
+      "name": "Media metadata",
+      "origin": "User-defined",
+      "goal": "Every photo has a sidecar JSON file that is the source of truth for its metadata.",
+      "user_requirements": [
+        "Stage 5 is media metadata work.",
+        "From the README: each photo's own metadata is stored in a JSON file alongside the photo."
+      ],
+      "substages": [
+        {
+          "id": "S05.1",
+          "name": "Sidecar schema v1",
+          "must_cover": "Proposed ADR for the JSON schema; naming convention (IMG_0001.jpg.json); schemaVersion; reserved sections for ownership and access (S07) and AI results (S12) so later stages need no breaking changes; a machine-readable JSON Schema file for validation."
+        },
+        {
+          "id": "S05.2",
+          "name": "Sidecar manager",
+          "must_cover": "Create, read, update, delete; atomic writes (temp file then rename); locking for concurrent writers; validation against the schema; recovery from corrupt sidecars."
+        },
+        {
+          "id": "S05.3",
+          "name": "Metadata extraction",
+          "must_cover": "EXIF, XMP, and IPTC for images: date taken with timezone handling, camera, lens, dimensions, orientation, GPS. Video metadata: duration, codec, creation date, GPS where present. HEIC and RAW if supported per S04.1."
+        },
+        {
+          "id": "S05.4",
+          "name": "Offline reverse geocoding",
+          "must_cover": "Converting GPS coordinates to place names (city, region, country) using a bundled offline dataset with no network calls. Proposed ADR for the dataset and its granularity."
+        },
+        {
+          "id": "S05.5",
+          "name": "User-editable metadata",
+          "must_cover": "Description, user tags, date and time correction, location correction, all written to the sidecar; an info panel and editing UI in the photos GUI."
+        },
+        {
+          "id": "S05.6",
+          "name": "Sidecar lifecycle",
+          "must_cover": "The sidecar follows its media on rename, move, copy, delete, and cross-area transfer (what happens when a photo moves to files is an open question); the timeline switches to date taken."
+        },
+        {
+          "id": "S05.7",
+          "name": "Reconciliation, integrity, and migrations",
+          "must_cover": "A scan that finds media without sidecars, orphaned sidecars, and stale metadata, with repair actions; a schema migration framework (vN to vN+1) with backups and dry-run mode."
+        },
+        {
+          "id": "S05.8",
+          "name": "Testing and stage review",
+          "must_cover": "A fixture set of photos and videos with varied EXIF, GPS, timezones, and corrupt metadata; round-trip tests; documentation; completion record; user sign-off."
+        }
+      ],
+      "exit_criteria": "Every photo has a valid sidecar with extracted and user-edited metadata, and sidecars stay correct through every file operation."
+    },
+
+    {
+      "id": "S06",
+      "name": "Search",
+      "origin": "User-defined",
+      "goal": "Fast, forgiving search across both files and photos.",
+      "user_requirements": [
+        "Stage 6 is searching, in both files and photos.",
+        "From the README: search covers file name, description, place (from GPS), date and time, and metadata.",
+        "Search is not exact-match. It works like a search engine, with near matches and different word forms, and synonyms work too (searching 'receipts' also returns items with 'receipt', 'invoice', or 'voucher' in their metadata).",
+        "Operator-style searches work, e.g. 'before:2026' returns all items dated before 2026."
+      ],
+      "substages": [
+        {
+          "id": "S06.1",
+          "name": "Search architecture and engine",
+          "must_cover": "Proposed ADR for the search engine (embedded options preferred, to keep deployment simple); the index as a rebuildable cache (invariant I3); one query path that covers both areas; index schema with reserved fields for owner and access list (S07) and AI tags and face groups (S12)."
+        },
+        {
+          "id": "S06.2",
+          "name": "Indexing pipeline",
+          "must_cover": "Initial full indexing; incremental updates on every create, update, move, and delete through the job system; a full rebuild command; index consistency checks."
+        },
+        {
+          "id": "S06.3",
+          "name": "Query language and parser",
+          "must_cover": "Free text plus operators. Baseline set: before:, after:, on:, place:, tag:, type:, in:files, in:photos, ext:, size:. Quoting and combinations. face: is reserved for S12. Clear errors for malformed queries. A documented formal grammar."
+        },
+        {
+          "id": "S06.4",
+          "name": "Fuzzy matching",
+          "must_cover": "Normalization of case, accents, and unicode; stemming and plurals; typo tolerance; prefix matching."
+        },
+        {
+          "id": "S06.5",
+          "name": "Synonyms and related terms",
+          "must_cover": "A local synonym dictionary (e.g. receipt, invoice, voucher, bill) that users can extend, applied at query time, with no network access."
+        },
+        {
+          "id": "S06.6",
+          "name": "Ranking",
+          "must_cover": "Relevance scoring with per-field weights (name, tags, description, place); recency boosting; stable tie-breaking."
+        },
+        {
+          "id": "S06.7",
+          "name": "Search API and GUI",
+          "must_cover": "Global search bar; results filterable by area; photo results as thumbnails and file results as a list; operator hints and autocomplete; filter chips; helpful no-result states."
+        },
+        {
+          "id": "S06.8",
+          "name": "Performance and stage review",
+          "must_cover": "Benchmarks at scale (e.g. 100,000 photos plus 100,000 files) against latency targets defined in plan.md; documentation; completion record; user sign-off."
+        }
+      ],
+      "design_notes": [
+        "Search reads only the index (invariant I4).",
+        "Full-text search inside document contents in the files area is an open question for the user."
+      ],
+      "exit_criteria": "Searching 'receipts' finds items tagged with 'invoice', typos still find results, operators work alone and combined, and queries meet the latency targets."
+    },
+
+    {
+      "id": "S07",
+      "name": "Multi-user and sharing",
+      "origin": "User-defined",
+      "goal": "Multiple users, each with private files and photos by default, and explicit sharing between them.",
+      "user_requirements": [
+        "Stage 7 is multi-user implementation.",
+        "Each user has separate files and photos access.",
+        "One user cannot access another user's files or photos unless they are shared with them.",
+        "Users can share files with each other.",
+        "A shared file then carries data about which user owns it and who has read access to it."
+      ],
+      "substages": [
+        {
+          "id": "S07.1",
+          "name": "User and role model",
+          "must_cover": "Users; roles (admin and standard user); the admin creates, disables, and deletes users; profiles; admin-initiated password reset. Whether the admin can see users' data is an open question."
+        },
+        {
+          "id": "S07.2",
+          "name": "Per-user data separation",
+          "must_cover": "Per-user namespaces inside both files/ and photos/ (proposed layout ADR); migration of existing single-user data to the first admin; per-user timelines, albums, and search scope."
+        },
+        {
+          "id": "S07.3",
+          "name": "Ownership and access data model",
+          "must_cover": "Owner and read-access list stored with each item's metadata, as the user specified. For photos, this lives in the sidecar's reserved section. For the files area, propose how (e.g. a sidecar per file, possibly hidden, or an alternative) as an ADR with trade-offs, defaulting to the user's stated approach. Mirror access data into the index for fast checks. Define folder-sharing inheritance and what happens to ownership on copy and move."
+        },
+        {
+          "id": "S07.4",
+          "name": "Authorization enforcement",
+          "must_cover": "Extend the S03 central policy check to every access path: API, downloads, previews, thumbnails, search results, and background jobs (invariant I5); default deny; no information leaks about items the user cannot access."
+        },
+        {
+          "id": "S07.5",
+          "name": "Sharing",
+          "must_cover": "Share files, folders, photos, and albums with specific users (read access per the user's requirement; write access is an open question); revoke; 'Shared with me' and 'Shared by me' views; copying a shared item into one's own space."
+        },
+        {
+          "id": "S07.6",
+          "name": "Multi-user GUI",
+          "must_cover": "Admin user-management page; share dialog; shared views; owner and access details on each item."
+        },
+        {
+          "id": "S07.7",
+          "name": "Access control testing and stage review",
+          "must_cover": "Cross-user tests for every endpoint (a non-owner without a share must always be refused); search leak tests; audit logging of share and revoke events; documentation; completion record; user sign-off."
+        }
+      ],
+      "exit_criteria": "No user can reach another user's data by any path unless it is shared, and sharing and revoking work in both the API and the GUI."
+    },
+
+    {
+      "id": "S08",
+      "name": "Data protection and recovery",
+      "origin": "Planner-proposed",
+      "reason_added": "A NAS often holds people's only copy of their files. Accidental deletion and corrupted metadata need recovery paths. It is placed after S07 so that trash and restore are per-user from the start.",
+      "substages": [
+        {
+          "id": "S08.1",
+          "name": "Trash",
+          "must_cover": "A per-user trash for both areas; retention period; restore to the original location with sidecar and metadata intact."
+        },
+        {
+          "id": "S08.2",
+          "name": "Integrity verification",
+          "must_cover": "Checksums; detection of corrupted files and sidecars; scheduled integrity scans."
+        },
+        {
+          "id": "S08.3",
+          "name": "Metadata and configuration backup",
+          "must_cover": "Backup and restore of the database, configuration, users, and sharing data."
+        },
+        {
+          "id": "S08.4",
+          "name": "Disaster recovery",
+          "must_cover": "A documented and tested procedure to rebuild the index and internal data from disk and sidecars."
+        },
+        {
+          "id": "S08.5",
+          "name": "File versioning (optional)",
+          "must_cover": "Keeping previous versions on overwrite. Priority 'Could', pending user decision."
+        },
+        {
+          "id": "S08.6",
+          "name": "External backup",
+          "must_cover": "A backup job to an external drive or another local location."
+        },
+        {
+          "id": "S08.7",
+          "name": "GUI, testing, and stage review",
+          "must_cover": "Trash and backup UI; recovery tests; documentation; completion record; user sign-off."
+        }
+      ]
+    },
+
+    {
+      "id": "S09",
+      "name": "Network file access and external change sync",
+      "origin": "Planner-proposed",
+      "reason_added": "Most people expect a NAS to show up as a network drive on their computers. This depends on S03 (security) and S07 (per-user permissions). Changes made through network shares bypass the app, so live sync of sidecars and the index is needed.",
+      "substages": [
+        {
+          "id": "S09.1",
+          "name": "Protocol selection",
+          "must_cover": "Proposed ADR: WebDAV built in, SMB via Samba, or both; platform constraints."
+        },
+        {
+          "id": "S09.2",
+          "name": "Network shares with permissions",
+          "must_cover": "Shares mapped to users and permissions: each user sees only their own items plus items shared with them."
+        },
+        {
+          "id": "S09.3",
+          "name": "Photos area exposure policy",
+          "must_cover": "Whether photos/ is exposed over network shares, and if so whether read-only (open question). Invariant I1 must hold."
+        },
+        {
+          "id": "S09.4",
+          "name": "Real-time watcher and reconciliation",
+          "must_cover": "Detect external creates, updates, renames, and deletes; update sidecars and the index; debouncing; rename detection."
+        },
+        {
+          "id": "S09.5",
+          "name": "Share settings GUI",
+          "must_cover": "Enabling and configuring shares, and connection instructions for Windows, macOS, and Linux."
+        },
+        {
+          "id": "S09.6",
+          "name": "Testing and stage review",
+          "must_cover": "Tests from Windows, macOS, and Linux clients; permission tests over the network; completion record; user sign-off."
+        }
+      ]
+    },
+
+    {
+      "id": "S10",
+      "name": "Administration, monitoring, and quotas",
+      "origin": "Planner-proposed",
+      "reason_added": "A multi-user system needs admin visibility and control over storage, health, and background work.",
+      "substages": [
+        {
+          "id": "S10.1",
+          "name": "Admin dashboard",
+          "must_cover": "Storage usage overall and per user; system status."
+        },
+        {
+          "id": "S10.2",
+          "name": "Storage quotas",
+          "must_cover": "Per-user quotas enforced on upload, copy, and copying shared items."
+        },
+        {
+          "id": "S10.3",
+          "name": "Disk health and alerts",
+          "must_cover": "Disk health (SMART where available); low-space and failure warnings."
+        },
+        {
+          "id": "S10.4",
+          "name": "Background jobs monitor",
+          "must_cover": "Queue view, progress, failures, and retries for the S04.3 job system."
+        },
+        {
+          "id": "S10.5",
+          "name": "Settings and log viewer",
+          "must_cover": "System settings; viewer for application logs and the audit log."
+        },
+        {
+          "id": "S10.6",
+          "name": "Testing and stage review",
+          "must_cover": "Quota enforcement tests; documentation; completion record; user sign-off."
+        }
+      ]
+    },
+
+    {
+      "id": "S11",
+      "name": "Packaging, deployment, and pre-AI release",
+      "origin": "Planner-proposed",
+      "reason_added": "The project's goal is that anyone can deploy it. Hardening and packaging here produce a stable release before AI is added, so the AI stage builds on a proven base.",
+      "substages": [
+        {
+          "id": "S11.1",
+          "name": "Container packaging",
+          "must_cover": "Docker image and Docker Compose setup."
+        },
+        {
+          "id": "S11.2",
+          "name": "Native installation",
+          "must_cover": "Native installs for the platforms the user chooses; running as a system service (e.g. systemd, Windows service)."
+        },
+        {
+          "id": "S11.3",
+          "name": "Updates and migrations",
+          "must_cover": "An update mechanism with automatic data and schema migrations and a backup before every update."
+        },
+        {
+          "id": "S11.4",
+          "name": "First-run polish and documentation",
+          "must_cover": "Polished first-run experience; install guide, admin guide, user guide, hardware requirements."
+        },
+        {
+          "id": "S11.5",
+          "name": "Full-system performance testing",
+          "must_cover": "Load and performance tests at target library sizes and user counts."
+        },
+        {
+          "id": "S11.6",
+          "name": "Final security review",
+          "must_cover": "Re-review of the threat model and a full dependency audit."
+        },
+        {
+          "id": "S11.7",
+          "name": "Release",
+          "must_cover": "Release process (versioning, changelog, tagged release) and the first stable release without AI. The version label is the user's decision."
+        }
+      ]
+    },
+
+    {
+      "id": "S12",
+      "name": "AI features",
+      "origin": "User-defined",
+      "position_rule": "Always the last stage (invariant I8).",
+      "goal": "Optional, fully local AI that classifies photos and groups faces, with results stored in sidecars and used by search.",
+      "user_requirements": [
+        "AI work is always the last stage.",
+        "From the README: the AI is opt-in and runs locally alongside the NAS software.",
+        "It identifies what kind of photo each one is and classifies it automatically, so searching 'receipts' shows receipt photos even though the user never labelled them.",
+        "It detects human faces and groups photos by similar faces. One photo can contain multiple faces.",
+        "Classifications are stored in the photo's JSON metadata file, so search reads metadata and never runs the AI model at query time.",
+        "It includes an auto photo classification system."
+      ],
+      "substages": [
+        {
+          "id": "S12.1",
+          "name": "AI architecture and opt-in",
+          "must_cover": "A separate, optional worker process or container, with the NAS fully functional when it is off (invariant I7); opt-in toggle (per install or per user is an open question); hardware detection (CPU, GPU); resource limits and scheduling (throttling, running when idle); proposed ADR for models, covering license, size, accuracy, and CPU performance; models obtained once with explicit user consent (bundled or downloaded) and run fully offline afterwards."
+        },
+        {
+          "id": "S12.2",
+          "name": "AI processing pipeline",
+          "must_cover": "Jobs on the S04.3 job system; processing new photos on ingest; backfilling the existing library with progress, pause, and resume; idempotent processing; model name and version recorded in the sidecar; reprocessing when the model changes."
+        },
+        {
+          "id": "S12.3",
+          "name": "Auto photo classification",
+          "must_cover": "A category taxonomy (e.g. documents, receipts, screenshots, food, pets, landscapes, people, vehicles) that users can extend; multiple labels per photo with confidence scores; confidence thresholds; mapping labels into the S06.5 synonym dictionary so 'receipts' also matches 'invoice' and 'voucher'."
+        },
+        {
+          "id": "S12.4",
+          "name": "Face detection",
+          "must_cover": "Detection of every face in a photo, with bounding boxes and quality scores; thresholds to ignore tiny or blurry faces."
+        },
+        {
+          "id": "S12.5",
+          "name": "Face recognition and grouping",
+          "must_cover": "Face embeddings; clustering of similar faces into groups; incremental assignment of new faces to existing groups; one photo belonging to several face groups. Where embeddings are stored is a proposed ADR (the sidecar holds group references and boxes, per the README)."
+        },
+        {
+          "id": "S12.6",
+          "name": "User corrections",
+          "must_cover": "Name a group; merge and split groups; remove a wrongly assigned face; 'not this person'; hide a group. Corrections persist and are never overwritten by reprocessing."
+        },
+        {
+          "id": "S12.7",
+          "name": "Sidecar writing and search integration",
+          "must_cover": "Writing tags and faces to the sidecar's ai section (schema from S05.1); updating the index; activating the face: operator and AI tags in tag: and free-text search."
+        },
+        {
+          "id": "S12.8",
+          "name": "AI GUI",
+          "must_cover": "An Explore view for browsing auto-classifications (People, Things, Places); face group management; an AI settings page with the opt-in toggle, status, progress, model information, and pause."
+        },
+        {
+          "id": "S12.9",
+          "name": "AI privacy and multi-user rules",
+          "must_cover": "Classifications and face groups are per user and follow S07 access rules; the handling of faces in shared photos is defined; opting out deletes all AI-derived data (sidecar ai sections and embeddings) on request."
+        },
+        {
+          "id": "S12.10",
+          "name": "Optional AI extensions",
+          "must_cover": "Priority 'Could', pending user decision: OCR so the text of receipts and documents is searchable; local semantic search using embeddings; duplicate and similar photo detection."
+        },
+        {
+          "id": "S12.11",
+          "name": "Evaluation, packaging, and stage review",
+          "must_cover": "A labelled evaluation set with accuracy targets; throughput benchmarks on CPU-only hardware; packaging the AI worker as an optional component (e.g. a Compose profile); documentation; completion record; user sign-off."
+        }
+      ],
+      "exit_criteria": "With AI enabled, unlabelled receipt photos are found by searching 'receipts', faces are grouped correctly per the evaluation targets, and disabling AI leaves the NAS fully functional."
+    }
+  ],
+
+  "not_scheduled_candidates": {
+    "note": "List these in plan.md under 'Not scheduled / future candidates' and ask the user about them. Do not add them as stages. If any is approved later, it is inserted before the AI stage (invariant I8).",
+    "items": [
+      "Mobile app with automatic photo backup from phones",
+      "Public share links for people without an account",
+      "Secure remote access from outside the local network"
+    ]
+  },
+
+  "pre_approved_documentation_changes": {
+    "note": "The user approves the following changes through this prompt. Apply them and record each one in the RULES.md changelog, citing code-agent-docs/prompts/P002-staged-development-roadmap.json as the approval.",
+    "changes": [
+      "Add the folder code-agent-docs/prompts/ for archived user prompts, and add it to the documentation map. The original bootstrap prompt stays where it is in code-agent-docs/bootstrap/.",
+      "Update R3 to the three-level hierarchy (stage, substage, task) with task IDs in the form S01.3-T02.",
+      "Update R4 versioning: while the plan is a pre-1.0 draft, restructurings bump the MINOR version. The plan becomes 1.0.0 when the user approves it as the baseline. After that, the original R4 rules apply.",
+      "Add a 'Project invariants' section to RULES.md containing invariants I1 to I8 from this prompt.",
+      "Update code-agent-docs/templates/stage-template.md to include a substages section, with a task table per substage."
+    ]
+  },
+
+  "execution_steps": [
+    {
+      "step": 1,
+      "action": "Run the R1 startup protocol, archive this prompt, and log it.",
+      "details": "See before_you_start."
+    },
+    {
+      "step": 2,
+      "action": "Write-ahead.",
+      "details": "In CURRENT_STATE.md under 'In progress', write: 'Applying plan change request #2 (staged roadmap)'."
+    },
+    {
+      "step": 3,
+      "action": "Impact analysis.",
+      "details": "Compare the current plan.md with this prompt. List in the session log: sections affected, requirements added, existing stages replaced, any conflicts with Accepted ADRs or recorded user decisions. The old Stage 0 (foundation) content moves into S01.1."
+    },
+    {
+      "step": 4,
+      "action": "Archive the current plan.",
+      "details": "Copy plan.md to code-agent-docs/archive/plan-history/plan_v<current-version>.md before editing anything."
+    },
+    {
+      "step": 5,
+      "action": "Apply the pre-approved RULES.md and template changes.",
+      "details": "See pre_approved_documentation_changes. Record each in the RULES.md changelog."
+    },
+    {
+      "step": 6,
+      "action": "Update plan.md.",
+      "details": "Apply every item in plan_md_updates. Bump the version per the updated R4 (e.g. 0.1.0 to 0.2.0). Keep the status as 'Draft, awaiting user review'."
+    },
+    {
+      "step": 7,
+      "action": "Write the Stage 1 document.",
+      "details": "Create code-agent-docs/stages/S01-basic-nas.md from the updated stage template, with status 'Planned'. Break each S01 substage into tasks (S01.1-T01, ...) with acceptance criteria, following R3. Tasks that depend on unapproved tech decisions must say so; their exact file lists are marked 'to be confirmed after the S01.1 ADRs are accepted'. Also create the S01.1 ADRs as 'Proposed' in code-agent-docs/decisions/."
+    },
+    {
+      "step": 8,
+      "action": "Update CURRENT_STATE.md.",
+      "details": "Phase: 'Planning: plan v0.2.0 and S01 stage document awaiting user review'. Next steps: user reviews plan and S01; user answers open questions; user accepts or changes the S01.1 ADRs; after approval, begin S01.1."
+    },
+    {
+      "step": 9,
+      "action": "Consistency check.",
+      "details": "Re-read every changed file. Check that stage and substage IDs, requirement IDs, dependencies, version numbers, and cross-references all match. Confirm that S12 is the last stage and that every stage ends with a testing and review substage."
+    },
+    {
+      "step": 10,
+      "action": "Git.",
+      "details": "Commit according to the preference recorded in RULES.md, e.g. 'docs(plan): staged roadmap v0.2.0 with S01 stage plan [P002]'. If no preference is recorded, ask."
+    },
+    {
+      "step": 11,
+      "action": "Report to the user and stop.",
+      "details": "Keep it concise: (a) what changed; (b) the roadmap at a glance, stage IDs and names only; (c) the four planner-proposed stages (S08 to S11), each with a one-line reason, stating that the user can remove or reorder them; (d) any substages you added, split, or flagged; (e) any conflicts found; (f) the numbered open questions, new ones first; (g) a request to review plan.md, the S01 stage document, and the S01.1 ADRs. Say clearly that approving the plan makes it the 1.0.0 baseline and that approving S01 allows implementation to begin. Log this and close the session log with a summary."
+    }
+  ],
+
+  "plan_md_updates": [
+    "Header: bump the version, update the date, keep the status as draft.",
+    "Section 1 (overview): describe the two-area design (files and photos) and the staged approach.",
+    "Section 2 (goals and non-goals): update to match this roadmap.",
+    "Section 3 (requirements): add FR/NFR entries for everything new in this prompt, including area separation, explicit cross-area transfer, per-user isolation, sharing with ownership and read access, trash and recovery, network shares, quotas and administration, packaging, and auto photo classification. Never renumber existing IDs; mark obsolete ones as 'Deprecated' instead of deleting them.",
+    "Section 5 (open questions): keep unanswered existing questions and add the new ones listed in new_open_questions.",
+    "Section 6 (architecture): update the diagram to show the two areas, internal app data, the job system, the auth and policy layer, the search index, network shares, and the optional AI worker.",
+    "Section 8 (key technical concerns): add forward compatibility, enforcement of area separation, storage of ownership and access data, permission filtering in search, and the live watcher for external changes.",
+    "Section 9 (methodology): describe the stage, substage, task hierarchy.",
+    "Section 10 (stage roadmap): replace entirely. Start with an overview table (ID, name, origin, goal, depends on, status), then the full breakdown of every stage and substage with the required fields.",
+    "Add a 'Cross-cutting principles' section and a 'Project invariants' section (the invariants also live in RULES.md).",
+    "Section 11 (MVP): propose which stages form the first usable release, with reasoning. The user decides.",
+    "Add a 'Not scheduled / future candidates' section.",
+    "Section 12 (testing strategy): align with the per-stage testing substages.",
+    "Section 13 (risks): update for the new scope (e.g. scope size, cross-user data leaks, sync conflicts from network shares, AI performance on weak hardware).",
+    "Section 14 (revision history): add an entry for this change referencing P002 and the session log."
+  ],
+
+  "new_open_questions": [
+    "GUI approach: a web UI served by the NAS (recommended), a desktop app, or both?",
+    "Photos area: does it include videos? Which image formats must be supported (e.g. HEIC, RAW)?",
+    "When a photo is moved from photos to files, what happens to its sidecar: delete it, keep it, or keep it hidden?",
+    "For the files area, how should ownership and access data be stored: a visible sidecar per file, a hidden sidecar, or a central store?",
+    "Can the admin see all users' files and photos, or only manage accounts?",
+    "Sharing: read-only as specified, or also write access? Should sharing with groups of users be possible?",
+    "Should full-text search inside document contents (PDF, Word, text) be included for the files area?",
+    "Network shares: WebDAV, SMB, or both? Should the photos area be exposed over network shares, and if so, read-only?",
+    "Is two-factor authentication wanted?",
+    "Is file versioning wanted?",
+    "AI opt-in: per installation or per user?",
+    "Which optional AI extensions are wanted: OCR for receipts and documents, semantic search, duplicate detection?",
+    "Should any of the not-scheduled candidates (mobile auto-backup, public share links, remote access) be added as stages?",
+    "Which stages should make up the first usable release?"
+  ],
+
+  "definition_of_done": [
+    "This prompt is archived at code-agent-docs/prompts/P002-staged-development-roadmap.json.",
+    "The previous plan version is archived in code-agent-docs/archive/plan-history/.",
+    "plan.md has a bumped version, and all 12 stages with every listed substage and every required field.",
+    "S12 (AI) is the last stage, and every stage ends with a testing and review substage.",
+    "RULES.md contains the pre-approved changes, the Project invariants section, and changelog entries.",
+    "The stage template includes substages.",
+    "code-agent-docs/stages/S01-basic-nas.md exists with status 'Planned' and a full task breakdown.",
+    "The S01.1 ADRs exist with status 'Proposed'.",
+    "CURRENT_STATE.md and the session log are current, and the session log has a closing summary.",
+    "No application code was written and no dependencies were installed.",
+    "The user has received the report described in step 11."
+  ],
+
+  "final_instruction": "Begin with the R1 startup protocol. Work through the execution steps in order, recording as you go. When everything in definition_of_done is complete, report to the user and stop."
+}
