@@ -10,6 +10,8 @@
 | Superseded by | none |
 
 > **History:** first drafted in S002 as *Proposed*, recommending Python/FastAPI. Updated in S003 to the user's decision (P003). The earlier recommendation is kept under "Options considered". Because the ADR was never Accepted before, updating it in place is allowed (R5).
+>
+> **File name note (audit A001, F-019):** the file keeps its original name `ADR-0001-backend-language-framework.md` although the title is now "Core server language: Go". Session logs, which are append-only (R2), link to this path, so renaming it would break those links. This is a documented exception to "file names match titles".
 
 ## Context
 

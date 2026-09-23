@@ -5,10 +5,10 @@
 | Stage ID | S01 |
 | Status | Planned |
 | Blocked reason | |
-| Plan version this stage is based on | 0.3.0 |
+| Plan version this stage is based on | 0.3.1 |
 | Origin | User-defined |
 | Created | 2026-09-24 (session S002) |
-| Last updated | 2026-09-24 (session S003) |
+| Last updated | 2026-09-24 (session S004) |
 | Depends on stages | none (requires plan baseline approval) |
 | Related ADRs | ADR-0001 Go (Accepted) · ADR-0002 REST/OpenAPI (Accepted) · **ADR-0003 storage layout (Proposed, gates S01.2)** · ADR-0004 repository layout (Accepted) · ADR-0005 testing/CI (Accepted) · ADR-0006 dev environment (Accepted) · ADR-0007 SQLite (Accepted) · ADR-0008 tus (Accepted) |
 
@@ -258,7 +258,8 @@ flowchart LR
 | S01.7-T04 | Basic performance check (`go test -bench` + a scripted run): listing latency (10k entries), upload and download throughput vs. raw disk (`dd`-style baseline), heap during a 10 GB transfer. Results recorded against NFR-003. | Not started | A report committed in `docs/perf/S01-baseline.md`. Targets met, or deviations recorded for user review (reference hardware pending Q1). |
 | S01.7-T05 | Documentation: README development and API usage (curl examples for Linux/macOS and PowerShell), `docs/api/*`, plan status, CURRENT_STATE. | Not started | A reader can run the demo from the docs alone. |
 | S01.7-T06 | Demo scripts `scripts/demo.sh` and `scripts/demo.ps1` (curl) covering create folder, simple upload, tus upload with a forced interruption and resume, list, ranged download, rename, move, copy, delete. | Not started | Both scripts run green against a fresh instance (Linux in CI; Windows manually, recorded). |
-| S01.7-T07 | Completion record and user sign-off. | Not started | Section 13 is filled in. The user's sign-off is quoted in the session log. |
+| S01.7-T07 | **Documentation audit (R12)** using `templates/audit-checklist.md`, reported as the next audit number in `audits/`. | Not started | Audit report complete; no Critical finding open (each fixed or escalated to the user) |
+| S01.7-T08 | Completion record and user sign-off. | Not started | Section 13 is filled in. The user's sign-off is quoted in the session log. |
 
 ## 6. Files and modules expected to be created or changed
 
@@ -290,25 +291,26 @@ flowchart LR
 
 ## 7. Dependencies to add
 
-All are recorded in `code-agent-docs/dependencies.md` in the same commit that adds them (R6). Licenses were verified on 2026-09-24 (S003 log E005/E007/E011).
+All are recorded in `code-agent-docs/dependencies.md` in the same commit that adds them (R6). Licenses were verified on 2026-09-24 (S003 log E005/E007/E011; audit A001).
 
-| Dependency | Version | Justification | License | License compatible? |
-|---|---|---|---|---|
-| Go toolchain | go1.27.1 | Core language (ADR-0001); `os.Root` for traversal-resistant I/O | BSD-3-Clause | Yes |
-| github.com/pelletier/go-toml/v2 | v2.4.3 | TOML config with strict decoding (S01.1-T07) | MIT | Yes |
-| modernc.org/sqlite | v1.59.0 | Pure-Go SQLite driver (ADR-0007) | BSD-3-Clause | Yes |
-| github.com/pressly/goose/v3 | v3.28.0 | Embedded SQL migrations (ADR-0007) | MIT | Yes |
-| github.com/tus/tusd/v2 | v2.10.1 | Resumable uploads (ADR-0008) | MIT | Yes |
-| github.com/oapi-codegen/runtime | v1.7.0 | Runtime for generated API code (ADR-0002) | Apache-2.0 | Yes (confirm against Q22; Apache-2.0 is incompatible only with GPL-2.0-only projects) |
-| golang.org/x/sys | v0.48.0 | Free space and volume ID on Windows (S01.2-T04/T05) | BSD-3-Clause | Yes |
-| golang.org/x/text (only if needed for NFC) | latest at the time of S01.6-T01 | Unicode normalization of names | BSD-3-Clause | Yes; decided in S01.6-T01 |
-| Redoc (vendored JS asset) | 2.5.4 | Offline API docs (ADR-0002) | MIT | Yes |
-| **Dev only:** oapi-codegen | v2.8.0 | Code generation (tool directive) | Apache-2.0 | Yes (not distributed) |
-| **Dev only:** github.com/google/go-cmp | v0.7.0 | Test diffs | BSD-3-Clause | Yes |
-| **Dev only:** golangci-lint (binary) | v2.13.2 | Lint and format | GPL-3.0 | Yes: a development tool, not linked or distributed |
-| **Dev only:** govulncheck | v1.8.0 | Vulnerability scan (tool directive) | BSD-3-Clause | Yes |
-| **Dev only:** go-licenses | v2.0.1 | License check (tool directive) | Apache-2.0 | Yes |
-| **CI only:** Trivy | v0.74.0 | Dev image vulnerability scan | Apache-2.0 | Yes |
+| Dependency | Version | Justification | License | License compatible? | ADR |
+|---|---|---|---|---|---|
+| Go toolchain | go1.27.1 | Core language; `os.Root` for traversal-resistant I/O | BSD-3-Clause | Yes | ADR-0001 |
+| github.com/pelletier/go-toml/v2 | v2.4.3 | TOML config with strict decoding (S01.1-T07) | MIT | Yes | ADR-0001 |
+| modernc.org/sqlite | v1.59.0 | Pure-Go SQLite driver | BSD-3-Clause | Yes | ADR-0007 |
+| github.com/pressly/goose/v3 | v3.28.0 | Embedded SQL migrations | MIT | Yes | ADR-0007 |
+| github.com/tus/tusd/v2 | v2.10.1 | Resumable uploads | MIT | Yes | ADR-0008 |
+| github.com/oapi-codegen/runtime | v1.7.0 | Runtime for generated API code | Apache-2.0 | Yes (confirm against Q22; Apache-2.0 is incompatible only with GPL-2.0-only projects) | ADR-0002 |
+| golang.org/x/sys | v0.48.0 | Free space and volume ID on Windows (S01.2-T04/T05) | BSD-3-Clause | Yes | ADR-0001 |
+| golang.org/x/text (unicode/norm), **only if** S01.6-T01 chooses to normalize | v0.42.0 | Unicode NFC normalization of names | BSD-3-Clause | Yes | ADR-0001 (stage-level candidate; register row) |
+| Redoc (vendored JS asset) | 2.5.4 | Offline API docs | MIT | Yes | ADR-0002 |
+| **Dev only:** oapi-codegen | v2.8.0 | Code generation (tool directive) | Apache-2.0 | Yes (not distributed) | ADR-0002 |
+| **Dev only:** github.com/google/go-cmp | v0.7.0 | Test diffs | BSD-3-Clause | Yes | ADR-0005 |
+| **Dev only:** golangci-lint (binary) | v2.13.2 | Lint and format | GPL-3.0 | Yes: a development tool, not linked or distributed | ADR-0005 |
+| **Dev only:** govulncheck | v1.8.0 | Vulnerability scan (tool directive) | BSD-3-Clause | Yes | ADR-0005 |
+| **Dev only:** go-licenses | v2.0.1 | License check (tool directive) | Apache-2.0 | Yes | ADR-0005 |
+| **CI only:** Trivy (+ aquasecurity/trivy-action v0.36.0) | v0.74.0 | Dev image vulnerability scan | Apache-2.0 | Yes | ADR-0005 |
+| **CI only:** actions/checkout v7.0.1, actions/setup-go v7.0.0, golangci/golangci-lint-action v9.3.0, docker/setup-buildx-action v4.4.1 | as listed | CI workflow steps | See register (licenses not fetched) | To be confirmed when added (R6) | ADR-0005, ADR-0006 |
 
 ## 8. Test plan
 
@@ -352,6 +354,7 @@ go tool go-licenses check ./...         # allow-list from S01.1-T02
 - [ ] `photos/` exists and is untouched. `/api/v1/photos` is reserved.
 - [ ] All commands in section 8 pass in CI on Linux and Windows. Cross-builds for linux/amd64 and linux/arm64 succeed. The dev image passes the Trivy scan (no unresolved high findings).
 - [ ] Documentation and `dependencies.md` are updated (README, API docs, plan and CURRENT_STATE status).
+- [ ] Documentation audit (R12, S01.7-T07) done; no Critical finding open.
 
 ## 10. Risks and rollback approach
 
@@ -377,6 +380,7 @@ go tool go-licenses check ./...         # allow-list from S01.1-T02
 |---|---|---|---|---|
 | 2026-09-24 | S002 | Initial version (Planned) | P002 step 7 | Needed: user approval |
 | 2026-09-24 | S003 | Replaced every "to be confirmed after the S01.1 ADRs are accepted" placeholder with the concrete Go stack (packages, files, tools, commands). Rewrote the S01.1 tasks as Go setup tasks (11 tasks, previously 12; the old review gate is removed because the ADRs are Accepted). Added SQLite from S01 (S01.1-T10; `uploads` and `settings` tables). Added `os.Root` as the second traversal layer. Added x/sys for free space and volume ID. Concrete tusd hook design. Concrete endpoints, dependencies, and commands. Status stays **Planned** | P003 `stage_document_updates` | Needed: user approval (the stage was not approved before, so there is nothing to re-confirm) |
+| 2026-09-24 | S004 | Audit A001: added the ADR column to the dependency table; pinned `golang.org/x/text` v0.42.0 as a conditional dependency (F-025); listed the CI actions; added task S01.7-T07 (R12 documentation audit) and renumbered completion and sign-off to S01.7-T08 (F-026); based on plan 0.3.1. Status stays **Planned** | Audit A001 (P004); R12 | Needed: user approval (the document is not yet approved) |
 
 ## 13. Completion record
 

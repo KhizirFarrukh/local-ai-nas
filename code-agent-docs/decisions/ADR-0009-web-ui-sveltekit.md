@@ -41,6 +41,8 @@ S02 builds the GUI (FR-078) that lets people use the NAS without touching the AP
 | Virtualized lists and timeline grid | **`@tanstack/svelte-virtual` 3.13.39** (MIT, maintained, verified) as the virtualization engine, with a **custom date-grouped / justified row layout** on top for the photo timeline | A maintained engine for variable-height rows, and custom layout where photo timelines need it. **S02.3 includes a prototype task** to confirm Svelte 5 compatibility; if it fails, fall back to a custom windowing component (recorded in the stage document) |
 | Package manager | pnpm (as P003 suggests) | Strict, fast, with lockfile support; Dependabot supports it |
 | TypeScript version | Pin the version that svelte-check supports; S02.1 confirms TypeScript 7 compatibility | TypeScript 7 is a major compiler change, and tool support needs confirming (unverified today) |
+
+> **Verification note (audit A001, 2026-09-24, F-021):** svelte-check 4.7.6 declares the peer range `typescript: ^5.0.0 || ^6.0.0`, so TypeScript 7 is **not** supported yet. Following the decision above ("pin the version that svelte-check supports"), the register pins **TypeScript 6.0.3**. S02.1 re-checks this and can move to 7.x once svelte-check supports it. The decision is unchanged.
 | Fonts and icons | Bundled locally (no Google Fonts or CDN) | I6 |
 
 ## Consequences
