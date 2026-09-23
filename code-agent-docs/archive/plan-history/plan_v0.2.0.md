@@ -2,15 +2,15 @@
 
 | Field | Value |
 |---|---|
-| **Version** | 0.3.0 |
+| **Version** | 0.2.0 |
 | **Status** | Draft, awaiting user review |
-| **Last updated** | 2026-09-24 (session S003) |
-| **Source of vision** | `README.md` (repository root), the user's staged roadmap (`code-agent-docs/prompts/P002-staged-development-roadmap.json`), and the user's technology stack (`code-agent-docs/prompts/P003-technology-stack.json`) |
-| **Previous version** | 0.2.0, archived at `code-agent-docs/archive/plan-history/plan_v0.2.0.md` (0.1.0 also archived there) |
+| **Last updated** | 2026-09-24 (session S002) |
+| **Source of vision** | `README.md` (repository root), plus the user's staged roadmap (`code-agent-docs/prompts/P002-staged-development-roadmap.json`) |
+| **Previous version** | 0.1.0, archived at `code-agent-docs/archive/plan-history/plan_v0.1.0.md` |
 
 > **This is a living document.** It changes as the user gives feedback. Every change follows `code-agent-docs/RULES.md` **R4**: the old version is archived, the version is bumped, and a revision entry is added. While the plan is a pre-1.0 draft, restructurings bump the MINOR version. **When the user approves this plan as the baseline, it becomes version 1.0.0.**
 >
-> **Technology decisions** are recorded as ADRs in `code-agent-docs/decisions/` (R5). Since 0.3.0, the user-chosen stack (P003) is **Accepted** (section 7). Items marked *Proposed* or *deferred* in section 7 still need a decision. Every dependency is listed in `code-agent-docs/dependencies.md`.
+> Every technology, data format, or architecture named here is a **proposal** until the user approves it. Each approval becomes an ADR in `code-agent-docs/decisions/` (R5).
 
 ---
 
@@ -24,7 +24,7 @@
 4. Assumptions
 5. Open questions for the user
 6. Proposed high-level architecture
-7. Chosen technology stack
+7. Technology stack options
 8. Key technical concerns
 9. Development methodology
 10. Stage roadmap
@@ -110,7 +110,6 @@ These invariants also live in `RULES.md` ("Project invariants"). **No code or pl
 - **I6:** Everything runs locally. No telemetry. No network calls at runtime except for features the user has explicitly enabled.
 - **I7:** AI is optional and opt-in. The NAS must be fully functional with AI disabled.
 - **I8:** AI work is always the last stage of the roadmap. Any stage added in the future is inserted before it, and the AI stage is renumbered.
-- **I9:** Only the core server writes sidecar files and the search index. Other processes, including the AI worker, submit results to the core server, which validates and writes them. _(Added in 0.3.0, P003.)_
 
 ---
 
@@ -357,8 +356,6 @@ Priorities: **Must** (required for its stage to be Done), **Should** (important;
 | NFR-026 | **Area separation (I1)** is enforced in the service layer and verified by automated tests. | Must | New. |
 | NFR-027 | **Cross-browser support**: current Chrome, Edge, Firefox, and Safari (desktop and mobile). | Should | New. |
 | NFR-028 | **AI quality and throughput**: a labelled evaluation set with accuracy targets, and CPU-only throughput benchmarks. | Must | New. |
-| NFR-029 | **License policy**: every dependency, external tool, dataset, and AI model has a license that allows **anyone to deploy and use** the project. Nothing is restricted to non-commercial or research-only use. Each is recorded in `dependencies.md` with its license. | Must | New in 0.3.0 (P003). |
-| NFR-030 | **Multi-architecture**: the core and its images build and run on **linux/amd64 and linux/arm64** (e.g. Raspberry Pi), via pure-Go builds and multi-arch container images. | Must | New in 0.3.0 (P003). |
 
 ---
 
@@ -367,7 +364,7 @@ Priorities: **Must** (required for its stage to be Done), **Should** (important;
 Assumptions are numbered permanently. Ones overturned by the 0.2.0 design are marked superseded.
 
 - **A1:** One household on a trusted LAN. S01–S06 have a single owner (the admin from S03). Multiple users arrive in S07.
-- **A2:** The GUI is a browser-based web UI served by the NAS: SvelteKit, embedded in the Go binary (Q25 answered by P003; ADR-0009). No native mobile apps (NG2).
+- **A2:** The GUI is a browser-based web UI served by the NAS (pending Q25). No native mobile apps (NG2).
 - **A3:** _Superseded in 0.2.0._ Was: the app works in place on existing folders. Now: one storage root with `files/` and `photos/` (FR-069). Existing collections are brought in by upload, transfer, or server-side import (Q39).
 - **A4:** The app never modifies original media except through explicit user operations. Metadata edits go to sidecars (Q19).
 - **A5:** The app has write access to the whole storage root (sidecars, uploads, trash).
@@ -376,7 +373,7 @@ Assumptions are numbered permanently. Ones overturned by the 0.2.0 design are ma
 - **A8:** Photo sidecars exist only for media in `photos/`. Items in `files/` have no photo sidecars. How owner and access data is stored for files is decided in S07.3 (Q28).
 - **A9:** Capture times are stored in ISO 8601 with the original UTC offset when known. Otherwise a configured default timezone applies and the sidecar marks it as assumed.
 - **A10:** English for the UI, the taxonomy, and the synonym dictionary in the first releases (Q15).
-- **A11:** AI model weights are either bundled in the optional AI image or downloaded once at opt-in with explicit consent, and are checksum-verified (FR-032, ADR-0017). They are never fetched at runtime otherwise.
+- **A11:** AI model weights are not bundled by default. They are obtained with explicit consent (FR-032).
 - **A12:** Performance planning targets 100,000 photos + 100,000 files per installation (Q18).
 - **A13:** The primary deployment target is containers on Linux (x86-64, ARM64). Native installs come in S11.2 (Q5).
 - **A14:** The README sidecar draft is a starting point. The schema is finalized by ADR in S05.1.
@@ -393,29 +390,16 @@ Assumptions are numbered permanently. Ones overturned by the 0.2.0 design are ma
 
 Questions keep their numbers permanently. **★ = needed before S01 implementation can start.** Answered or superseded questions stay listed for traceability.
 
-**Answered by P003 (0.3.0):**
-- Q25 (GUI): web UI (SvelteKit).
-- Q32, first half (WebDAV first; SMB later, Linux-only).
-- Q5, partly (Docker Compose primary; native Linux secondary; native Windows/macOS undecided).
-- Q7, and Q6 partly (CPU by default, optional GPU).
-
-**Answered by implication of P003:**
-- Q4 (languages: Go, SvelteKit/TypeScript, Python for AI).
-- Q24 (CI: GitHub Actions; the repository is on GitHub).
-- Q16 (face models must be permissively licensed; InsightFace excluded; NFR-029).
-
-**Remaining ★ before S01:** Q1, Q18, Q22. Also the approval of ADR-0003 (Proposed) before S01.2.
-
 ### New in 0.2.0
 
-25. _Answered (P003, ADR-0009):_ a web UI served by the NAS, built with SvelteKit (static SPA) and embedded in the Go binary. No desktop app.
+25. **GUI approach.** A web UI served by the NAS (**recommended**), a desktop app, or both? _Needed by: S02.1._
 26. **Photos area content.** Does it include videos? Which image formats must be supported (HEIC, RAW)? _Needed by: S04.1._ _Recommendation: JPEG/PNG/WebP/GIF + HEIC + browser-playable video; RAW later._
 27. **Photo moved from `photos/` to `files/`.** What happens to its sidecar: delete it, keep it, or keep it hidden? _Needed by: S04.6, S05.6._ _Recommendation: move the sidecar into internal app data, keyed by content hash, so moving the photo back restores its metadata, and `files/` stays clean._
 28. **Ownership and access data for the files area.** A visible sidecar per file, a hidden sidecar, or a central store? _Needed by: S07.3._ _Recommendation (per your stated approach): a hidden sidecar only for items that are actually shared, with the owner implied by the user's namespace for everything else. Full trade-offs in section 8.8._
 29. **Admin visibility.** Can the admin see all users' files and photos, or only manage accounts? _Needed by: S07.1._ _Recommendation: only manage accounts (privacy by default)._
 30. **Sharing scope.** Read-only as specified, or also write access? Should sharing with groups of users be possible? _Needed by: S07.5._
 31. **Document content search.** Include full-text search inside PDF, Word, and text files in the files area? _Needed by: S06.2 (design), later stage for implementation._
-32. **Network shares.** _Partly answered (P003, ADR-0015):_ **WebDAV first**. SMB via Samba later, Linux-only, optional (ADR-0019, Proposed). **Still open:** should the photos area be exposed over network shares, and if so, read-only? _Needed by: S09.3._ _Recommendation: photos read-only over shares._
+32. **Network shares.** WebDAV, SMB, or both? Should the photos area be exposed over network shares, and if so, read-only? _Needed by: S09.1, S09.3._ _Recommendation: WebDAV built in (all changes go through the app); photos read-only over shares._
 33. **Two-factor authentication.** Wanted? _Needed by: S03.7._
 34. **File versioning.** Wanted? _Needed by: S08.5._
 35. **AI opt-in scope.** Per installation or per user? _Needed by: S12.1._
@@ -430,10 +414,10 @@ Questions keep their numbers permanently. **★ = needed before S01 implementati
 1. ★ **Target host and hardware**: which machine, CPU architecture, RAM, disks? _Needed by: S01.7 (performance baseline), S11._
 2. _Resolved by P002:_ single admin account from S03; multi-user in S07.
 3. _Superseded by Q37_ (remote access is a not-scheduled candidate).
-4. _Answered by P003:_ Go for the core (ADR-0001), REST + OpenAPI (ADR-0002), SvelteKit + TypeScript for the UI (ADR-0009), Python for the AI worker only (ADR-0017).
-5. **Deployment method.** _Partly answered (P003, ADR-0006):_ Docker Compose primary (linux/amd64 + arm64); native Linux secondary (binary + systemd). **Still open:** native **Windows and macOS** installs, yes or no? _Needed by: S11.2._
-6. **AI hardware and speed expectations.** _Partly answered (P003):_ CPU by default, optional GPU. **Still open:** what minimum machine and processing speed are acceptable (e.g. "backfill 50,000 photos overnight")? _Needed by: S12.1._
-7. _Answered (P003, ADR-0017):_ CPU by default. Optional GPU acceleration through ONNX Runtime execution providers (e.g. CUDA, OpenVINO); which ones are supported is evaluated in S12.1.
+4. ★ **Preferred languages and frameworks.** Answer by accepting or changing **ADR-0001** (backend) and **ADR-0002** (API style). _Needed by: S01.1._
+5. **Deployment method**: which native platforms (Linux, Windows, macOS) should S11.2 support besides containers? _Needed by: S11 (dev environment in S01.1 is unaffected)._
+6. **AI hardware and speed expectations.** _Needed by: S12.1._
+7. **GPU support** for AI (none, NVIDIA, Intel, AMD, Apple)? _Needed by: S12.1._
 8. _Superseded by Q26._
 9. _Superseded by Q39_ (the "in place" library model was replaced by the two-area layout).
 10. **External changes**: policy for files changed outside the app (re-associate by hash; orphaned sidecars quarantined, never deleted silently)? _Needed by: S05.7, S09.4._
@@ -442,25 +426,21 @@ Questions keep their numbers permanently. **★ = needed before S01 implementati
 13. **Albums and face-group storage.** Under I2 they cannot live inside `photos/`. Options: (a) the internal database, backed up by S08.3; (b) JSON documents in internal app data, easy to back up and export (**recommended**). Also: keep `groupName` in each sidecar (README draft) or only a `groupId`? _Needed by: S04.5, S12.5._
 14. **Date operator semantics.** Does `after:2025` mean "from 2026" (**recommended**) or include 2025? Compare on the photo's local capture time (**recommended**)? _Needed by: S06.3._
 15. **Languages** for search, synonyms, and taxonomy: English only, or Urdu too? _Needed by: S06.5, S12.3._
-16. _Answered by implication of P003 (NFR-029, ADR-0018):_ only models whose licenses let anyone deploy and use the project. **InsightFace pretrained weights are excluded.** YuNet (MIT) + SFace (Apache-2.0) are chosen.
+16. **Face model licensing.** The most accurate common models (InsightFace) are for non-commercial use only. Will the project be distributed or used commercially? _Needed by: S12.1._
 17. _Superseded by Q38._
 18. ★ **Library size**: current and expected number of photos, files, and GB? _Needed by: S01.7 baseline, S04.8, S06.8 targets._
 19. **Writing into originals / XMP export**: never write originals (**recommended**); XMP export later? _Needed by: S05._
 20. _Superseded by Q32._
 21. _Superseded by Q37._
-22. ★ **Project license** (MIT, Apache-2.0, GPL-3.0, AGPL-3.0)? It constrains which dependencies can be used. _Needed by: S01.1-T02._
-    - Relevant facts from the dependency register:
-      - Every linked Go library is MIT, BSD, or Apache-2.0.
-      - External tools run as separate programs: ExifTool (Artistic/GPL), libvips (LGPL-2.1), libheif (LGPL), FFmpeg (LGPL, or GPL depending on the build).
-      - golangci-lint (GPL-3.0) is a development tool only.
+22. ★ **Project license** (MIT, Apache-2.0, GPL-3.0, AGPL-3.0)? It constrains which dependencies can be used. _Needed by: S01.1._
 23. _Answered in S001:_ commit after each task; feature branch per stage/task off `develop`, pushed, PR into `develop` (RULES.md User Preferences).
-24. _Answered by implication of P003 (ADR-0005):_ GitHub Actions. The repository is hosted on GitHub.
+24. ★ **CI**: is GitHub Actions acceptable? _Needed by: S01.1._
 
 ---
 
 ## 6. Proposed high-level architecture
 
-> Component boundaries are stable. Since 0.3.0 the concrete technologies are decided (section 7, ADRs 0001–0018). The storage layout (6.3) is still **ADR-0003, Proposed**. The "Stage" column shows where each component is built.
+> **Proposal, not decided.** Component boundaries are meant to hold regardless of the stack chosen by ADR. The "Stage" column shows where each component is built.
 
 ### 6.1 Components
 
@@ -486,84 +466,80 @@ Questions keep their numbers permanently. **★ = needed before S01 implementati
 | **Admin and monitoring** | S10 | Dashboard, quotas, disk health, job monitor, settings, log viewer. |
 | **AI worker (optional)** | S12 | A separate process/container. Pulls AI jobs, reads media read-only, returns results. The core writes the results to sidecars and the index. |
 
-### 6.2 Diagram (concrete components, 0.3.0)
+### 6.2 Diagram
 
 ```mermaid
 flowchart TB
     subgraph Clients
-        BROWSER["Browser: SvelteKit SPA + Uppy (S02+)"]
-        DAVC["WebDAV clients: Windows / macOS / Linux (S09)"]
+        GUI["Web GUI (S02+)"]
+        NETC["Network drive clients: WebDAV / SMB (S09)"]
         SCRIPT["Scripts: API tokens (S03)"]
     end
 
-    subgraph Core["Go core server: one static binary (ADR-0001)"]
-        UI["Embedded web UI (go:embed, ADR-0009)"]
-        API["REST /api/v1: net/http + oapi-codegen from api/openapi.yaml (ADR-0002)"]
-        TUS["tusd embedded: resumable uploads (ADR-0008)"]
-        AUTH["Auth: Argon2id, SQLite sessions, CSRF, TLS (ADR-0010)"]
-        POLICY["Policy: authorize() on every path (S03.5, S07.4)"]
+    subgraph Core["NAS core server"]
+        API["HTTP API /api/v1 (S01.5)"]
+        AUTH["Auth + sessions (S03)"]
+        POLICY["Policy layer: authorize() on every path (S03.5, S07.4)"]
         FILESSVC["Files service (S01)"]
         PHOTOSSVC["Photos service (S04)"]
         XFER["Transfer service: only cross-area path (S04.6)"]
-        SIDE["Sidecar manager: single writer, I9 (S05)"]
-        JOBS["Job queue on SQLite (ADR-0011)"]
-        MEDIA["Media runner: ExifTool stay_open, vips, ffmpeg (ADR-0012)"]
-        GEO["GeoNames k-d tree (ADR-0013)"]
-        BLEVE["Bleve index + query parser (ADR-0014)"]
-        DAV["WebDAV: x/net/webdav custom FileSystem (ADR-0015)"]
-        WATCH["fsnotify watcher + reconciler (ADR-0016)"]
-        INTAPI["Internal AI job API: local-only, token (ADR-0017)"]
+        UPLOAD["Upload manager (S01.4)"]
+        SIDE["Sidecar manager (S05)"]
+        META["Metadata extractor + offline geocoder (S05)"]
+        JOBS["Job system (S04.3)"]
+        THUMB["Thumbnail service (S04.4)"]
+        SEARCH["Search indexer + query engine (S06)"]
+        AUDIT["Audit log (S03.6)"]
+        WATCH["Reconciler (S05.7) + watcher (S09.4)"]
+        PROTECT["Trash / integrity / backup (S08)"]
+        SHARES["Share gateway (S09)"]
+        ADMIN["Admin, quotas, monitoring (S10)"]
     end
 
-    DB[("SQLite WAL: users, sessions, settings, jobs, audit, share mirror (ADR-0007)")]
-    TOOLS["External tools as subprocesses: ExifTool (Perl), libvips + libheif, FFmpeg / ffprobe"]
-
-    subgraph Root["Storage root (single filesystem, A18)"]
-        FILES["files/&lt;ns&gt;/ user files"]
-        PHOTOS["photos/&lt;ns&gt;/ media + sidecar JSON"]
-        INTERNAL[".local-ai-nas/: db/, index/, thumbnails/, tmp/uploads/, trash/, metadata/, ai/, logs/ (I2)"]
+    subgraph Root["Storage root (single filesystem)"]
+        FILES["files/&lt;user&gt;/ (user data)"]
+        PHOTOS["photos/&lt;user&gt;/ media + sidecar JSON"]
+        INTERNAL[".local-ai-nas/ internal data: db, index, thumbnails, trash, tmp, logs (I2)"]
     end
 
-    subgraph AIC["Optional AI container, compose profile 'ai' (ADR-0017/0018)"]
-        AIW["Python + ONNX Runtime: SigLIP, YuNet, SFace, HDBSCAN"]
+    subgraph AI["AI worker, optional, opt-in (S12)"]
+        AIW["Classifier + face detection/grouping"]
     end
 
-    BROWSER --> UI
-    BROWSER --> API
-    BROWSER --> TUS
+    GUI --> API
     SCRIPT --> API
-    DAVC --> DAV
+    NETC --> SHARES
     API --> AUTH
-    TUS --> AUTH
-    DAV --> AUTH
-    AUTH --> POLICY
+    API --> POLICY
+    SHARES --> POLICY
     POLICY --> FILESSVC
     POLICY --> PHOTOSSVC
     POLICY --> XFER
-    POLICY --> BLEVE
-    TUS -->|"finalize: atomic rename"| FILESSVC
-    TUS --> PHOTOSSVC
-    XFER --> FILESSVC
-    XFER --> PHOTOSSVC
+    POLICY --> SEARCH
+    POLICY --> ADMIN
     FILESSVC --> FILES
     PHOTOSSVC --> PHOTOS
+    XFER --> FILESSVC
+    XFER --> PHOTOSSVC
+    UPLOAD --> INTERNAL
+    UPLOAD --> FILESSVC
+    UPLOAD --> PHOTOSSVC
     PHOTOSSVC --> SIDE
     SIDE --> PHOTOS
-    JOBS --> MEDIA
-    MEDIA --> TOOLS
-    JOBS --> GEO
-    JOBS --> BLEVE
-    MEDIA --> SIDE
+    JOBS --> META
+    JOBS --> THUMB
+    JOBS --> SEARCH
+    JOBS --> PROTECT
+    META --> SIDE
+    THUMB --> INTERNAL
+    SEARCH --> INTERNAL
+    PROTECT --> INTERNAL
     WATCH --> JOBS
-    AUTH --> DB
-    JOBS --> DB
-    BLEVE --> INTERNAL
-    TUS --> INTERNAL
-    DB --- INTERNAL
-    AIW -->|"pull jobs, return JSON results"| INTAPI
-    INTAPI --> JOBS
-    INTAPI -->|"validated results; core writes (I9)"| SIDE
-    AIW -.->|"read-only mount"| PHOTOS
+    XFER --> AUDIT
+    AUTH --> AUDIT
+    AUDIT --> INTERNAL
+    AIW -->|"pull jobs / push results (internal API)"| JOBS
+    AIW -.->|read-only| PHOTOS
 ```
 
 ### 6.3 Storage layout (proposal, ADR-0003)
@@ -577,8 +553,8 @@ flowchart TB
 └── .local-ai-nas/                    internal app data (I2), default location (A19)
     ├── tmp/uploads/                  resumable upload sessions (S01.4), same filesystem for atomic rename
     ├── trash/<user-namespace>/       per-user trash (S08.1)
-    ├── db/nas.db                     SQLite (WAL) internal database, from S01 (ADR-0007)
-    ├── index/                        Bleve search index (S06, ADR-0014)
+    ├── db/                           internal database (from S03.2)
+    ├── index/                        search index (S06)
     ├── thumbnails/                   renditions keyed by content hash (S04.4)
     ├── metadata/                     albums, face-group registry, transferred-out sidecars (Q13, Q27)
     ├── ai/                           models, embeddings (S12)
@@ -608,45 +584,97 @@ Configuration file: outside the storage root (CLI flag / env var / OS default pa
 
 ---
 
-## 7. Chosen technology stack
+## 7. Technology stack options
 
-> **Replaced in 0.3.0.** The v0.2.0 options and recommendations are archived in `archive/plan-history/plan_v0.2.0.md`. Each choice below is the user's decision from P003, recorded as an ADR, verified (version, license, maintenance) on 2026-09-24 (session S003, log E005/E007), and listed in `dependencies.md`. Alternatives and reasoning are in each ADR's "Options considered".
+> **Nothing here is decided.** Each decision becomes an ADR in the substage shown and is Accepted only with user approval (R5). All licenses must be verified in the adopting ADR (R6).
 
-| Layer | Choice (verified version) | ADR | Status |
-|---|---|---|---|
-| Core server language | Go (go1.27.1, pinned in `go.mod`); pure-Go builds (`CGO_ENABLED=0`) | [ADR-0001](decisions/ADR-0001-backend-language-framework.md) | Accepted |
-| API | REST under `/api/v1`; OpenAPI 3 contract at `api/openapi.yaml` (spec-first, oapi-codegen v2.8.0); stdlib `net/http` router; RFC 9457 errors; Redoc 2.5.4 offline docs | [ADR-0002](decisions/ADR-0002-api-style.md) | Accepted |
-| Storage layout | Per-user namespaces `files/<ns>/`, `photos/<ns>/` from S01; internal data at `<root>/.local-ai-nas/` | [ADR-0003](decisions/ADR-0003-storage-layout.md) | **Proposed** (gates S01.2) |
-| Repository layout | Single repository; Go module at root; `cmd/`, `internal/`, `api/`, `web/`, `ai-worker/`, `deploy/`, `testdata/`, `docs/`, `scripts/` | [ADR-0004](decisions/ADR-0004-repository-layout.md) | Accepted |
-| Testing, linting, CI | Go `testing` + go-cmp; golangci-lint v2.13.2; govulncheck v1.8.0; go-licenses v2.0.1; Vitest 5.0.1, Playwright 1.63.0, svelte-check, ESLint, Prettier; pytest, Ruff; Trivy v0.74.0; Dependabot; GitHub Actions (Linux + Windows) | [ADR-0005](decisions/ADR-0005-testing-linting-ci.md) | Accepted |
-| Dev environment and packaging | Docker Compose primary; linux/amd64 + linux/arm64 images on `debian:trixie-slim`; AI via `--profile ai`; native Linux (binary + systemd) secondary | [ADR-0006](decisions/ADR-0006-dev-environment-and-packaging.md) | Accepted (native Windows/macOS deferred) |
-| Database | SQLite WAL via `modernc.org/sqlite` v1.59.0 (pure Go); goose v3.28.0 SQL migrations; **from S01** | [ADR-0007](decisions/ADR-0007-database-sqlite.md) | Accepted |
-| Resumable uploads | tus: tusd v2.10.1 embedded (hooks for auth); Uppy 6 + @uppy/tus in the browser; temp in internal data, atomic rename on finalize | [ADR-0008](decisions/ADR-0008-resumable-uploads-tus.md) | Accepted |
-| Web UI | SvelteKit 2 (Svelte 5) static SPA via adapter-static, TypeScript, Tailwind CSS 4; embedded with `go:embed`; pnpm; @tanstack/svelte-virtual | [ADR-0009](decisions/ADR-0009-web-ui-sveltekit.md) | Accepted |
-| Security | Argon2id (x/crypto, t=3, m=64 MiB, p=4); server-side sessions in SQLite; opaque HttpOnly/Secure/SameSite cookie; CSRF tokens; TOTP via pquerna/otp if S03.7 approved; `crypto/tls` | [ADR-0010](decisions/ADR-0010-security-building-blocks.md) | Accepted |
-| Background jobs | Custom persistent queue on SQLite inside the core (leases, retries with backoff, priorities, per-type limits, progress) | [ADR-0011](decisions/ADR-0011-job-queue-sqlite.md) | Accepted |
-| Media toolchain | ExifTool (stay_open, custom Go wrapper), libvips + libheif (WebP thumbnails), FFmpeg/ffprobe, all as subprocesses | [ADR-0012](decisions/ADR-0012-media-toolchain.md) | Accepted (RAW conversion, transcoding deferred) |
-| Reverse geocoding | GeoNames `cities500` + admin1/country tables, custom in-memory k-d tree, bundled at build time; CC BY 4.0 attribution | [ADR-0013](decisions/ADR-0013-reverse-geocoding-geonames.md) | Accepted |
-| Search | Bleve v2.6.1 embedded; English analyzers + fuzzy/prefix; own operator parser → range/term queries; owner/ACL keyword filters; query-time synonyms from own dictionary | [ADR-0014](decisions/ADR-0014-search-engine-bleve.md) | Accepted (fallback: new ADR if S06.8 misses targets) |
-| Network shares | WebDAV via `golang.org/x/net/webdav` with a custom FileSystem through policy, areas, and sidecars | [ADR-0015](decisions/ADR-0015-network-shares-webdav.md) | Accepted |
-| SMB | Samba, Linux-only, optional | [ADR-0019](decisions/ADR-0019-smb-via-samba.md) | **Proposed** (deferred to S09.1) |
-| File watching | fsnotify v1.10.1 + periodic reconciliation; inotify watch-limit guidance | [ADR-0016](decisions/ADR-0016-file-watching.md) | Accepted |
-| AI worker | Python 3.14 + ONNX Runtime 1.30.0 in a separate optional container; uv, Ruff, pytest; pulls jobs from a local-only internal API (token); media read-only; core validates and writes results (I9); no internet at runtime | [ADR-0017](decisions/ADR-0017-ai-worker-architecture.md) | Accepted |
-| AI models | CLIP-family zero-shot (e.g. SigLIP, Apache-2.0); YuNet (MIT); SFace (Apache-2.0); HDBSCAN (scikit-learn); RapidOCR if S12.10 is approved; InsightFace excluded | [ADR-0018](decisions/ADR-0018-ai-models.md) | Accepted direction (variants deferred to S12) |
+### 7.1 Backend: **ADR-0001 (Proposed), S01.1**
 
-### 7.1 Deferred items
-- **Native Windows and macOS installs** (ADR-0006). Pending user decision (Q5).
-- **SMB via Samba** (ADR-0019, Proposed). Design in S09.1.
-- **Full RAW conversion** (e.g. LibRaw) and **video transcoding** (ADR-0012).
-- **Exact AI model variants**, **GPU execution providers**, and **embedding storage** (ADR-0017/0018). Chosen in S12 by benchmark.
-- **Semantic search** needs a text model at query time. That is an **exception to I4** and needs explicit user approval before it is built (ADR-0018, FR-054).
-- **Storage layout** (ADR-0003). Still Proposed; user approval needed before S01.2.
-- Implementation-time confirmations recorded as tasks:
-  - Node.js LTS and TypeScript 7 / svelte-check compatibility (S02.1).
-  - @tanstack/svelte-virtual on Svelte 5 (S02.3 prototype).
-  - Debian FFmpeg build flags (S11.1).
-  - ONNX Runtime on Python 3.14 (S12.1).
-  - The synonym dictionary source and license (S06.5).
+| Option | Pros | Cons |
+|---|---|---|
+| **A. Python 3.12+ / FastAPI** | One language for the core and the S12 AI worker (shared models and job contract). Best imaging and AI ecosystem. Fast development. OpenAPI generated from typed models. | Slower CPU-bound code (mitigated by native libraries and process pools). Harder native single-binary packaging. |
+| **B. Go** | Single static binary, excellent concurrency and file serving, low RAM. | Two languages once AI arrives. Weaker imaging/metadata libraries. |
+| **C. TypeScript / Node.js** | Same language as the GUI. `sharp` for images. | Two languages with AI. CPU-bound work needs worker threads. |
+| **D. Rust** | Best performance and safety. | Slowest development velocity. |
+
+**Recommendation: A.** Full reasoning in `decisions/ADR-0001-backend-language-framework.md`.
+
+### 7.2 API style: **ADR-0002 (Proposed), S01.1**
+
+**Recommendation:** REST + JSON with OpenAPI 3.1, `/api/v1` versioning, RFC 9457 problem-details errors, cursor pagination, item addressing by normalized path parameter, and resumable uploads via the **tus 1.0** open protocol. Alternatives considered: GraphQL, gRPC, WebDAV as the primary API, and a custom chunked-upload API. See `decisions/ADR-0002-api-style.md`.
+
+### 7.3 Storage layout and internal data: **ADR-0003 (Proposed), S01.2**
+
+**Recommendation:** per-user namespace directories in both areas from S01, with internal data in `<root>/.local-ai-nas/` by default (section 6.3). See `decisions/ADR-0003-storage-layout.md`.
+
+### 7.4 GUI: **ADR in S02.1**
+
+| Option | Pros | Cons |
+|---|---|---|
+| **Web UI served by the NAS: React + TypeScript + Vite** | Works on every device with a browser, including phones. No install. Largest ecosystem (virtualized grids, lightboxes). | Larger bundles than Svelte. |
+| Web UI: SvelteKit (static) | Small, fast bundles. | Smaller ecosystem. |
+| Desktop app (Tauri/Electron) | Native feel, OS integration. | Per-OS builds. Phones not covered. Duplicates what a browser already does. |
+
+**Recommendation:** web UI with React + TypeScript + Vite (Q25).
+
+### 7.5 Internal database: **ADR in S03.2**; job queue: **ADR in S04.3**
+
+**Recommendation:** SQLite (WAL) with a migration tool for users, sessions, tokens, audit, shares, and settings, and a SQLite-backed job queue. The alternative is PostgreSQL, which is heavier and needs an extra service.
+
+### 7.6 Search engine: **ADR in S06.1**
+
+| Option | Pros | Cons |
+|---|---|---|
+| **SQLite FTS5 + in-app query layer** | Embedded, zero-ops, one file, rebuildable. Structured filters and text in one engine. | Typo tolerance, synonyms, and ranking are built in-app. |
+| Tantivy (embedded) | Fuzzy queries, BM25, fast. | A second store. Python bindings are less mature. |
+| Meilisearch (service) | Typo tolerance and synonyms out of the box. | An extra service, more RAM, harder native installs. |
+
+**Recommendation:** SQLite FTS5 behind a `SearchEngine` interface. Meilisearch is the fallback.
+
+### 7.7 Media processing: **ADRs in S04.1 / S05.3**
+
+ExifTool (broadest coverage: HEIC, RAW, video, XMP, IPTC), libvips (thumbnails; LGPL), ffmpeg/ffprobe as external binaries (video), and libheif (HEIC, license review needed).
+
+### 7.8 Geocoding dataset: **ADR in S05.4**
+
+GeoNames `cities1000`/`cities500` (CC BY 4.0, attribution required) with a k-d tree. Optionally Natural Earth boundaries (public domain) for accurate country and region.
+
+### 7.9 Network shares: **ADR in S09.1**
+
+| Option | Pros | Cons |
+|---|---|---|
+| **WebDAV served by the app** | Every change goes through the service layer (policy, sidecars, index, audit), so no watcher is needed for it. Cross-platform. | Client quirks (e.g. Windows WebDAV redirector file-size limits, HTTPS requirement). Slower than SMB. |
+| SMB via Samba | The native network-drive experience, fast. | Bypasses the app (needs the watcher, S09.4). Permission mapping to NAS users is complex. Not available on Windows hosts. |
+| Both | Best client coverage. | Most work. |
+
+**Recommendation:** WebDAV first. SMB optional where the host supports Samba (Q32).
+
+### 7.10 AI runtime and models: **ADR in S12.1**
+
+ONNX Runtime (CPU first, GPU execution providers later). CLIP-family zero-shot classification (OpenCLIP/SigLIP), with an open vocabulary that fits the extendable taxonomy (FR-034). Faces: YuNet + SFace (permissive) by default, with InsightFace as an optional pack because of its non-commercial license (Q16). Clustering with HDBSCAN/DBSCAN plus incremental assignment.
+
+### 7.11 Packaging: **S01.1 (dev) and S11**
+
+A development Docker setup in S01.1. Production Docker Compose in S11.1 (core plus an optional `ai` profile in S12.11). Native service installs in S11.2 (Q5).
+
+### 7.12 At a glance
+
+| Layer | Recommendation | Decided in |
+|---|---|---|
+| Backend | Python 3.12+ / FastAPI; uv, ruff, mypy, pytest | ADR-0001 (S01.1) |
+| API style | REST/JSON, OpenAPI 3.1, problem+json, tus uploads | ADR-0002 (S01.1) |
+| Storage layout | Per-user namespaces from S01; `.local-ai-nas/` internal | ADR-0003 (S01.2) |
+| GUI | Web UI, React + TypeScript + Vite | S02.1 |
+| Internal DB | SQLite (WAL) + migrations | S03.2 |
+| Job queue | SQLite-backed | S04.3 |
+| Photos layout | per Q40 | S04.1 |
+| Sidecar schema | v1 with reserved sections | S05.1 |
+| Metadata / thumbnails | ExifTool / libvips / ffmpeg | S04–S05 |
+| Geocoding | GeoNames + k-d tree | S05.4 |
+| Search | SQLite FTS5 + in-app layer | S06.1 |
+| Files-area access data | Hidden sidecar for shared items | S07.3 |
+| Network shares | WebDAV (+ optional Samba) | S09.1 |
+| AI | ONNX Runtime; CLIP-family; YuNet+SFace | S12.1 |
 
 ---
 
@@ -681,7 +709,7 @@ Each stage leaves defined hook points so later stages extend rather than rewrite
 
 ### 8.4 Atomic writes and concurrent access
 - **Uploads (S01.4):** stream into `.local-ai-nas/tmp/uploads/`, fsync, then rename atomically into the area. This works because everything is on one filesystem (A18, verified at startup).
-- **Sidecars (S05.2):** write to a temp file in the same directory, fsync, then Go's `os.Rename` (replace semantics), with retry and backoff on Windows (file locking). The watcher ignores the app's own temp files and writes.
+- **Sidecars (S05.2):** write to a temp file in the same directory, fsync, then `os.replace`, with retry and backoff on Windows (file locking). The watcher ignores the app's own temp files and writes.
 - **Concurrency:** per-path locks for mutating operations; optimistic checks (mtime/hash, or `If-Match` ETags in the API) to avoid lost updates; section ownership inside sidecars (extractor, user, geocoder, and AI each own their sections).
 
 ### 8.5 External changes: reconciliation and live watcher (updated in 0.2.0)
@@ -738,14 +766,15 @@ Sidecars are hidden in the photos GUI.
 ### 8.10 AI runs once at ingest; reprocessing on model change
 AI jobs run after ingest, and backfills at the lowest priority. Every result records model@version. A model change marks items stale for reprocessing. User corrections (rejected tags, naming, merges, "not this person") are never overwritten (FR-038, FR-044). Search reads persisted results only (I4).
 
-### 8.11 Synonym and fuzzy matching (Bleve, ADR-0014)
+### 8.11 Synonym and fuzzy matching
 Pipeline:
-1. A custom Bleve analyzer: unicode tokenizer → lowercase → ASCII folding (accents) → English possessive and stop filters → Porter stemming. An unstemmed sub-field supports exact-match boosts.
-2. Query-time synonym expansion from the project's curated, user-extendable dictionary (a boosted disjunction, lower weight).
-3. Typo tolerance via Bleve **fuzzy (edit-distance) queries**, with the distance set by term length.
-4. **Prefix queries.**
-5. Ranking: exact > stem > synonym > typo, with field weights and recency.
-6. Autocomplete and "did you mean" suggestions use **permission-scoped** terms only (8.9).
+1. NFKC normalization, casefolding, diacritic stripping.
+2. Tokenize.
+3. Snowball stemming.
+4. Synonym expansion from a curated, user-extendable dictionary (lower weight).
+5. Typo candidates via SymSpell over the **permission-scoped** vocabulary (edit distance by term length).
+6. Prefix matching.
+7. Ranking: exact > stem > synonym > typo, with field weights and recency.
 
 AI labels feed the dictionary in S12.3 (FR-138).
 
@@ -755,8 +784,7 @@ A hand-written tokenizer and recursive-descent parser with a formal EBNF grammar
 - Partial dates define periods (Q14). Comparison uses local capture time.
 - `in:` and `type:` filter area and media type. `size:` accepts comparisons (`size:>10MB`). `ext:` matches extensions.
 - `face:` is parsed from S06 but returns a hint until S12.
-- Go native fuzzing (`go test -fuzz`) and table-driven tests guarantee no crash on arbitrary input.
-- The parser output compiles to Bleve `BooleanQuery` / `DateRangeQuery` / `NumericRangeQuery` / `TermQuery` (ADR-0014).
+- Property-based tests guarantee no crash on arbitrary input.
 
 ### 8.13 Offline reverse geocoding
 Bundled GeoNames data (CC BY 4.0), nearest-place lookup with a k-d tree, structured fields plus the dataset version in the sidecar, alternate names for matching. No network calls (I6). Known limitation: nearest-place is not boundary-accurate. Natural Earth polygons are optional.
@@ -775,31 +803,6 @@ A separate opt-in. Embeddings are stored only in internal app data, never in sid
 - **Security:** a single path resolver per area; strict name validation for Windows, macOS, and Linux; symlinks never followed out of an area; localhost binding until S03 (NFR-020); no default credentials; CSP; safe previews (NFR-022).
 - **Time zones:** use `OffsetTimeOriginal` when present, then GPS time, then the configured default, and record the source.
 - **Cross-platform:** one filesystem abstraction, and CI on Linux and Windows from S01.
-
-### 8.17 Single-writer rule (I9) (new in 0.3.0)
-- **Only the core server writes sidecar files and the search index.**
-- The AI worker (ADR-0017), and any future helper process, submits **JSON results** through the local-only internal API. The core **validates** them (schema, value ranges, model@version, ownership), then writes through the sidecar manager (S05.2) and the indexer (S06.2).
-- The AI container mounts media **read-only**, so it physically cannot write.
-- WebDAV writes (ADR-0015) go through the same services, so they also respect I9.
-- Samba (ADR-0019, if ever adopted) cannot write sidecars itself either. Its media changes reach sidecars only through the watcher and reconciler, which run inside the core.
-
-### 8.18 Same-filesystem requirement for atomic upload moves (new in 0.3.0)
-- tusd stores incomplete uploads in `<internal>/tmp/uploads/` (ADR-0008), and finalize **renames** the file into `files/` or `photos/`. A rename is atomic only **within one filesystem**.
-- The S01.2 health check compares the device IDs of `tmp/uploads/` and each area (`os.Stat` → `syscall.Stat_t.Dev` on Unix; the volume serial on Windows). A mismatch produces a startup warning and switches to the **fallback**: copy to a temp name inside the target directory, fsync, then rename. This keeps partial files invisible at the cost of a second write. The fallback and its cause are documented and shown in health.
-- Trash (S08.1) has the same requirement, and the same check covers it.
-
-### 8.19 inotify watch limits (new in 0.3.0)
-- On Linux, fsnotify uses inotify, which is **not recursive**. One watch is needed per directory, capped by `fs.inotify.max_user_watches` (often 8,192–65,536 by default, depending on the distribution).
-- Large libraries need a higher limit. The install guide (S11.4) shows how to check and raise it (sysctl), and the Docker docs cover the host setting.
-- When a watch cannot be added, the watcher **degrades gracefully** to reconciliation-only for that subtree and reports it (health and admin UI). The periodic reconciliation scan (S05.7) remains the correctness backstop.
-
-### 8.20 External-tool dependency for native installs (new in 0.3.0)
-- The Docker image bundles ExifTool (with Perl), libvips with libheif, and FFmpeg (ADR-0006/0012). **Native installs do not.**
-- The S11.2 native Linux install and the install guide (S11.4) must list the distribution packages and the minimum versions.
-- The core **detects the tools at startup** (path and version) and reports missing or too-old tools in health.
-- Features that need a missing tool are **disabled with a clear message** rather than failing silently. For example, without FFmpeg, video poster frames and metadata are unavailable.
-- S01–S03 need **no** external tools. They are first used in S04.4 and S05.3.
-- The tools' licenses and bundling are recorded in `dependencies.md` for the user's attention with Q22.
 
 ---
 
@@ -871,26 +874,26 @@ flowchart LR
 #### S01.1: Project foundation
 - **Goal:** Establish the approved stack, repository, tooling, and conventions, so every later change is built, checked, and tested the same way.
 - **Scope:**
-  - Set up the Accepted stack (P003, 0.3.0): Go (ADR-0001), REST + OpenAPI spec-first (ADR-0002), repository layout (ADR-0004), testing, linting, and CI (ADR-0005), dev environment (ADR-0006), SQLite + goose migrations (ADR-0007).
+  - Proposed ADRs for backend language/framework/toolchain (ADR-0001) and API style (ADR-0002).
   - Repository structure; dependency management; linting, formatting, type checking.
   - Test framework; CI pipeline (Linux + Windows); development environment (local + Docker dev setup).
   - Configuration system (config file + environment variables); structured logging; error-handling conventions.
   - LICENSE and dependency-license policy (Q22); `.gitattributes` line-ending policy (S001 finding); `.editorconfig`.
   - Carries over the old v0.1.0 "Stage 0" content.
 - **Deliverables:**
-  - Go module with pinned toolchain and tool directives; repository skeleton per ADR-0004.
-  - SQLite database with migrations wired at startup (ADR-0007).
+  - Accepted ADR-0001 and ADR-0002.
+  - Repository skeleton with an app factory.
   - CI workflow; config, logging, and error modules.
   - Developer setup documentation.
-- **Depends on:** plan baseline approval (1.0.0); S01 stage document approved; Q22 (project license, for LICENSE and the license allow-list). The S01.1 ADRs were Accepted via P003.
-- **Requirements:** NFR-008, NFR-009, NFR-013, NFR-014, NFR-016, NFR-025, NFR-029, NFR-030.
+- **Depends on:** plan baseline approval (1.0.0); ADR-0001/0002 accepted; Q4, Q22, Q24.
+- **Requirements:** NFR-008, NFR-009, NFR-013, NFR-014, NFR-016, NFR-025.
 - **Acceptance criteria:**
   1. CI runs lint, format check, type check, tests, and a dependency-license check on every PR, on Linux and Windows, and a deliberately failing test turns it red.
   2. A fresh clone can be set up and the server started with the documented commands on Windows and Linux.
   3. Invalid configuration stops startup with a clear message, and environment variables override file values.
   4. Logs are structured, carry a request ID, and never contain secrets (tested).
   5. All errors use one documented format. Unexpected exceptions return a generic body with a correlation ID.
-- **Risks/notes:** The stack ADRs were accepted in 0.3.0 (P003). The remaining gates are S01 approval and Q22. ADR-0003 gates S01.2.
+- **Risks/notes:** Coding starts only after the S01.1 ADRs are accepted. The tooling choices follow ADR-0001.
 - **Status:** Not started
 
 #### S01.2: Storage layout and configuration
@@ -930,7 +933,7 @@ flowchart LR
 #### S01.4: Large file handling
 - **Goal:** Upload and download files of any size reliably, with bounded memory, and never expose partial files.
 - **Scope:**
-  - Chunked, resumable uploads (tus via embedded tusd, ADR-0008); streaming I/O everywhere.
+  - Chunked, resumable uploads (tus, per ADR-0002); streaming I/O everywhere.
   - Configurable size limits; temp file then atomic rename.
   - Cleanup of abandoned uploads; optional checksum verification.
 - **Deliverables:** resumable upload endpoints; upload session store in `.local-ai-nas/tmp/uploads/`; cleanup task behind a scheduler interface; limit configuration.
@@ -951,7 +954,7 @@ flowchart LR
   - Resource design with separate route namespaces for files and (reserved) photos; `/api/v1` versioning.
   - Consistent error format (RFC 9457); request validation.
   - OpenAPI specification; API documentation served locally.
-- **Deliverables:** route conventions document; error schema and codes; `api/openapi.yaml` (spec-first) with oapi-codegen-generated server interfaces committed; offline API docs page (vendored Redoc); CI spec-drift check (ADR-0002).
+- **Deliverables:** route conventions document; error schema and codes; generated `openapi.json` committed; offline API docs page; CI spec-drift check.
 - **Depends on:** S01.1 (ADR-0002).
 - **Requirements:** FR-075, NFR-001.
 - **Acceptance criteria:**
@@ -960,7 +963,7 @@ flowchart LR
   3. Invalid input is rejected with 4xx before reaching the service layer (tested per endpoint).
   4. CI fails if the committed OpenAPI spec differs from the generated one.
   5. The API docs page works with the network disconnected.
-- **Risks/notes:** The docs renderer is vendored and served by the core, with no CDN (I6, ADR-0002).
+- **Risks/notes:** Framework-default docs pages often load assets from a CDN. They must be self-hosted (I6).
 - **Status:** Not started
 
 #### S01.6: Safety baseline
@@ -1004,7 +1007,7 @@ flowchart LR
 **Design notes (S01):**
 - Storage access sits behind a service interface with hook points (trash, sharing checks, quotas, sidecar sync, indexing), so later features never touch every endpoint.
 - Every item is modelled with an owner from the start, derived from its namespace, so S07 needs no core-model migration.
-- SQLite (WAL) exists from S01 (ADR-0007): migrations, settings, and the upload-session index. Users and sessions tables are added by migrations in S03.2. tusd keeps its own upload data files in `<internal>/tmp/uploads/`.
+- No database in S01. Upload sessions are files in internal data. The database arrives in S03.2 (users and sessions).
 - The cleanup scheduler sits behind an interface that the S04.3 job system implements later.
 - `photos/` exists and is validated but has no API until S04.
 
@@ -1023,10 +1026,11 @@ flowchart LR
 #### S02.1: GUI technology and design foundation
 - **Goal:** Choose the GUI approach and build the design system and API client that every screen uses.
 - **Scope:**
-  - GUI approach and framework decided (0.3.0): SvelteKit static SPA + TypeScript + Tailwind CSS, embedded in the Go binary (ADR-0009; Q25 answered). S02.1 confirms toolchain versions (Node.js LTS; TypeScript/svelte-check compatibility) and records them in `dependencies.md`.
+  - ADR for the GUI approach (web UI served by the NAS recommended; desktop app is the alternative; Q25).
+  - Frontend framework.
   - Design system: typography, color, spacing, components, icons.
   - Light and dark themes; API client layer generated from OpenAPI.
-- **Deliverables:** toolchain confirmation recorded; web app skeleton served by the NAS (go:embed); component library; theme tokens; generated API client; frontend lint, type-check, and tests in CI.
+- **Deliverables:** accepted GUI ADR(s); web app skeleton served by the NAS; component library; theme tokens; generated API client; frontend lint, type-check, and tests in CI.
 - **Depends on:** S01 (Done), S01.5.
 - **Requirements:** FR-078, FR-083, NFR-001, NFR-014.
 - **Acceptance criteria:**
@@ -1034,7 +1038,7 @@ flowchart LR
   2. Light and dark themes switch at runtime and follow the OS setting by default.
   3. The API client is generated from the committed OpenAPI spec, and CI fails on drift.
   4. Frontend lint, type checks, and unit tests run in CI.
-- **Risks/notes:** TypeScript 7 compatibility with svelte-check was not verified in S003. Pin a compatible TypeScript version if needed.
+- **Risks/notes:** Q25 decides desktop vs. web. The plan assumes web (A2).
 - **Status:** Not started
 
 #### S02.2: App shell and navigation
@@ -1061,7 +1065,7 @@ flowchart LR
   2. Sorting by name, size, date, and type matches the API order.
   3. The URL reflects the current folder, and reloading restores it.
   4. Empty and error states show a clear next action.
-- **Risks/notes:** Includes a **prototype task** confirming that @tanstack/svelte-virtual works with Svelte 5 (ADR-0009), with a custom windowing fallback. Performance on low-end phones is tested in S02.7.
+- **Risks/notes:** None beyond performance on low-end phones (tested in S02.7).
 - **Status:** Not started
 
 #### S02.4: Uploads and downloads
@@ -1173,8 +1177,8 @@ flowchart LR
 - **Scope:**
   - First-run creation of the admin account (never default passwords); Argon2id password hashing.
   - Login and logout; password change; login rate limiting and lockout.
-  - _Added scope:_ users and sessions tables via goose migrations on the S01 SQLite database (ADR-0007); an Argon2id parameter benchmark on reference hardware (ADR-0010); a CLI admin password reset.
-- **Deliverables:** user and session migrations; user store; auth endpoints; first-run flow; CLI password reset.
+  - _Added scope:_ an ADR for the internal database (SQLite recommended) and its migration tooling, because users and sessions need persistent storage; a CLI admin password reset.
+- **Deliverables:** internal database ADR; user store; auth endpoints; first-run flow; CLI password reset.
 - **Depends on:** S03.1.
 - **Requirements:** FR-064, FR-085, FR-068, NFR-010.
 - **Acceptance criteria:**
@@ -1319,7 +1323,7 @@ flowchart LR
   2. Media type is determined from content, and unsupported types are rejected.
   3. The photos API is separate from the files API and follows S01.5 conventions.
   4. The supported-format list matches the answer to Q26.
-- **Risks/notes:** HEIC/RAW decoders have licensing implications (ADR-0012, `dependencies.md`).
+- **Risks/notes:** HEIC/RAW decoders have licensing implications (7.7).
 - **Status:** Not started
 
 #### S04.2: Media ingestion
@@ -1345,7 +1349,7 @@ flowchart LR
   - A persistent job queue with retries, progress reporting, concurrency limits, and survival across restarts.
   - Built here and reused by S05, S06, S08, S09, and S12.
   - It also replaces the S01.4 and S03.6 simple schedulers.
-- **Deliverables:** custom SQLite-backed queue per ADR-0011 (leases, backoff, priorities); worker pool; priorities; per-user job context; internal progress API.
+- **Deliverables:** job queue ADR (SQLite-backed recommended); worker pool; priorities; per-user job context; internal progress API.
 - **Depends on:** S03.2 (internal DB).
 - **Requirements:** FR-095, NFR-012.
 - **Acceptance criteria:**
@@ -1488,7 +1492,7 @@ flowchart LR
   - EXIF, XMP, and IPTC for images: date taken with timezone handling, camera, lens, dimensions, orientation, GPS.
   - Video metadata: duration, codec, creation date, GPS where present.
   - HEIC and RAW if supported per S04.1; date fallback with its source recorded.
-- **Deliverables:** extraction job; ExifTool in `-stay_open` mode via a custom Go wrapper, and ffprobe for video (ADR-0012); fixture expectations.
+- **Deliverables:** extraction job; tool integration per ADR (ExifTool recommended); fixture expectations.
 - **Depends on:** S05.2, S04.3.
 - **Requirements:** FR-010, FR-011, FR-018, FR-019, FR-020, FR-098.
 - **Acceptance criteria:**
@@ -1496,13 +1500,13 @@ flowchart LR
   2. Fixture expectations are met (dates with and without offsets, GPS, orientation).
   3. Items without a capture date get a fallback date with its source recorded.
   4. Unreadable metadata is recorded as such without failing the item.
-- **Risks/notes:** External tool licenses and availability on native installs (ADR-0012, plan 8.20).
+- **Risks/notes:** External tool licenses (7.7).
 - **Status:** Not started
 
 #### S05.4: Offline reverse geocoding
 - **Goal:** Place names from GPS, fully offline.
-- **Scope:** converting GPS coordinates to place names (city, region, country) using a bundled offline dataset with no network calls. Dataset and granularity decided in 0.3.0: GeoNames `cities500` + admin1/country tables, custom k-d tree (ADR-0013).
-- **Deliverables:** bundled `cities500` dataset with attribution (docs + About page); geocoding job; dataset version stored in sidecars.
+- **Scope:** converting GPS coordinates to place names (city, region, country) using a bundled offline dataset with no network calls. Proposed ADR for the dataset and its granularity.
+- **Deliverables:** dataset ADR; bundled dataset with attribution; geocoding job; dataset version stored in sidecars.
 - **Depends on:** S05.3.
 - **Requirements:** FR-062, NFR-001.
 - **Acceptance criteria:**
@@ -1592,12 +1596,12 @@ flowchart LR
 
 #### S06.1: Search architecture and engine
 - **Goal:** One embedded, rebuildable search index for both areas, ready for access control and AI fields.
-- **Scope:** engine decided in 0.3.0: **Bleve** embedded (ADR-0014). S06.1 designs the index mapping; the index is a rebuildable cache (I3); one query path covering both areas; an index schema with reserved fields for owner and access list (S07) and AI tags and face groups (S12).
-- **Deliverables:** Bleve index mapping (analyzers, keyword, date, and numeric fields); `SearchEngine` interface; query API skeleton.
+- **Scope:** proposed ADR for the search engine (embedded options preferred, to keep deployment simple); the index as a rebuildable cache (I3); one query path covering both areas; an index schema with reserved fields for owner and access list (S07) and AI tags and face groups (S12).
+- **Deliverables:** search engine ADR; index schema; `SearchEngine` interface; query API skeleton.
 - **Depends on:** S05 (Done).
 - **Requirements:** FR-025, FR-047, FR-052, FR-104, FR-109.
 - **Acceptance criteria:**
-  1. Bleve runs embedded in the core with no extra service (ADR-0014), and the mapping matches the documented index schema.
+  1. The ADR is accepted, and the engine runs embedded (no extra service) unless the ADR says otherwise.
   2. The index can be deleted and fully rebuilt from disk and sidecars.
   3. One query API searches files, photos, or both.
   4. The reserved fields exist: `owner` populated now, `acl` and AI fields later.
@@ -1952,12 +1956,12 @@ flowchart LR
 
 #### S09.1: Protocol selection
 - **Goal:** Choose the network-share protocol(s).
-- **Scope:** WebDAV decided in 0.3.0 (ADR-0015). S09.1 designs its authentication, locks, and mounts, and the SMB-via-Samba design for ADR-0019 (Proposed), for the user to adopt or keep deferred; platform constraints (Q32).
-- **Deliverables:** ADR-0015 details confirmed; ADR-0019 decision or deferral; a prototype connection from each client OS.
+- **Scope:** a proposed ADR for WebDAV built in, SMB via Samba, or both; platform constraints (7.9, Q32).
+- **Deliverables:** protocol ADR; a prototype connection from each client OS.
 - **Depends on:** S07 (Done).
 - **Requirements:** FR-009.
 - **Acceptance criteria:**
-  1. The WebDAV design (ADR-0015 details) and the ADR-0019 SMB decision cover Windows, macOS, and Linux clients, host constraints, authentication integration, and how changes reach the index.
+  1. The ADR is accepted and covers Windows, macOS, and Linux clients, host constraints, authentication integration, and how changes reach the index.
   2. A prototype connection works from each target client OS.
 - **Risks/notes:** Samba is not available on Windows hosts (RK-22).
 - **Status:** Not started
@@ -2133,7 +2137,7 @@ flowchart LR
 - **Scope:** Docker image and Docker Compose setup.
 - **Deliverables:** multi-arch images (amd64, arm64); Compose file; volume layout documentation.
 - **Depends on:** S08, S09, S10 (Done).
-- **Requirements:** FR-131, NFR-008, NFR-009, NFR-030.
+- **Requirements:** FR-131, NFR-008, NFR-009.
 - **Acceptance criteria:**
   1. `docker compose up` starts a working NAS from the published images on amd64 and arm64.
   2. All data lives in mounted volumes, and recreating the containers loses nothing.
@@ -2194,7 +2198,7 @@ flowchart LR
 - **Scope:** re-review of the threat model and a full dependency audit.
 - **Deliverables:** updated threat model; audit report (vulnerabilities and licenses).
 - **Depends on:** S11.1–S11.5.
-- **Requirements:** FR-084, NFR-013, NFR-023, NFR-029.
+- **Requirements:** FR-084, NFR-013, NFR-023.
 - **Acceptance criteria:**
   1. The threat model is re-reviewed, including the S07–S10 additions.
   2. The dependency audit has no unresolved high-severity vulnerability or license finding.
@@ -2243,18 +2247,18 @@ flowchart LR
   - A separate, optional worker process or container, with the NAS fully functional when it is off (I7).
   - Opt-in toggle (per install or per user: Q35).
   - Hardware detection (CPU, GPU); resource limits and scheduling (throttling, running when idle).
-  - Model direction decided in 0.3.0 (ADR-0018). S12.1 selects exact variants by benchmark (license, size, accuracy, CPU performance), GPU execution providers, and embedding storage.
+  - Proposed ADR for models, covering license, size, accuracy, and CPU performance.
   - Models obtained once with explicit user consent (bundled or downloaded), then run fully offline.
-- **Deliverables:** ADR-0018 updated with the chosen variants; AI worker skeleton (ADR-0017); internal job API; model manager with checksums and license display; opt-in settings.
+- **Deliverables:** model ADR; AI worker skeleton; internal job API; model manager with checksums and license display; opt-in settings.
 - **Depends on:** S11 (Done).
 - **Requirements:** FR-031, FR-032, FR-136, NFR-002, NFR-004, NFR-005.
 - **Acceptance criteria:**
   1. With the worker stopped or not installed, every non-AI test passes.
   2. AI is off by default and enabled only by explicit opt-in.
   3. Models download only with consent, are checksum-verified, and then work with the network disabled.
-  4. The exact model variants are recorded in ADR-0018 with license, size, accuracy, and CPU performance, and all satisfy NFR-029.
+  4. The model ADR is accepted, covering license, size, accuracy, and CPU performance.
   5. Resource limits and idle scheduling are configurable and respected.
-- **Risks/notes:** Training-data note on permissive face models (ADR-0018); ONNX Runtime wheels for Python 3.14 unverified (ADR-0017); CPU performance (RK-06).
+- **Risks/notes:** Face model licensing (Q16); CPU performance (RK-06).
 - **Status:** Not started
 
 #### S12.2: AI processing pipeline
@@ -2302,8 +2306,8 @@ flowchart LR
 
 #### S12.5: Face recognition and grouping
 - **Goal:** Photos of the same person are grouped.
-- **Scope:** face embeddings; clustering of similar faces into groups; incremental assignment of new faces to existing groups; one photo belonging to several face groups. Where embeddings are stored is decided by the agent at S12 per ADR-0018 (likely SQLite blobs with brute-force cosine); the sidecar holds group references and boxes, per the README.
-- **Deliverables:** embedding storage decision recorded in ADR-0018 (internal data, 8.14); clustering; incremental assignment; face-group registry (Q13).
+- **Scope:** face embeddings; clustering of similar faces into groups; incremental assignment of new faces to existing groups; one photo belonging to several face groups. Where embeddings are stored is a proposed ADR (the sidecar holds group references and boxes, per the README).
+- **Deliverables:** embedding storage ADR (internal data recommended, 8.14); clustering; incremental assignment; face-group registry (Q13).
 - **Depends on:** S12.4.
 - **Requirements:** FR-040.
 - **Acceptance criteria:**
@@ -2407,7 +2411,7 @@ No listed substage was removed, merged away, or renumbered. The planner made the
 
 1. **Execution order in S01:** S01.6 (path resolver, name validation) and S01.5 (API conventions) are built **before** S01.3 in the task order, because S01.3 uses them. The substage numbering is unchanged. The order is recorded in `stages/S01-basic-nas.md`.
 2. **Execution order in S04:** S04.3 (job system) is built before S04.4 and in parallel with S04.2. The numbering is unchanged.
-3. **S03.2 added scope:** a CLI admin password reset. (0.3.0: the internal-database ADR originally added here was superseded, because SQLite exists from S01 per ADR-0007. S03.2 now adds user and session tables via migrations and benchmarks the Argon2id parameters.)
+3. **S03.2 added scope:** an ADR for the internal database and its migration tooling (first needed for users and sessions), plus a CLI admin password reset.
 4. **S04.2 added scope (pending Q39):** server-side import from a host folder.
 5. **S11.7 added scope:** the stage review (final integration tests, documentation, completion record, sign-off), because P002 requires every stage to end with a testing and review substage and the listed S11.7 covered only the release.
 6. **S12.6 added scope:** rejecting AI tags (existing FR-038), alongside the face corrections.
@@ -2499,11 +2503,11 @@ CI runs on Linux and Windows from S01.1.
 | RK-01 | The scope is very large (12 stages, 92 substages), so the project never reaches a usable state. | Scope | Stage gating; milestones (section 11); Could items pending user decisions; planner-proposed stages removable. |
 | RK-02 | Sidecar corruption or metadata loss. | Data | Atomic writes, single writer, locks, crash-injection tests, quarantine and recovery (S05.2). |
 | RK-03 | Foreign `<name>.json` files are overwritten. | Data | Media-only photos area; identifying marker; foreign-file detection (FR-030). |
-| RK-04 | The watcher misses external changes. | Technical | Periodic reconciliation is the correctness mechanism (S05.7); WebDAV is in-app (ADR-0015). |
-| RK-05 | ~~Python performance is insufficient at 100k+100k items.~~ | Performance | **Retired in 0.3.0:** the core is Go (ADR-0001). General performance is covered by the benchmarks in S01.7, S04.8, S06.8, and S11.5, and by RK-25. |
-| RK-06 | **AI speed on CPU-only hardware** is too slow for backfilling large libraries. | Performance | _Updated in 0.3.0 (P003):_ AI runs as an **idle-time, low-priority background job** (ADR-0011/0017) with pause and resume. Small ONNX models (ADR-0018), batching, and optional GPU execution providers (S12.1). Throughput is measured on CPU-only reference hardware (S12.11). |
+| RK-04 | The watcher misses external changes. | Technical | Periodic reconciliation is the correctness mechanism (S05.7); prefer in-app WebDAV (7.9). |
+| RK-05 | Python performance is insufficient at 100k+100k items. | Performance | Native libraries, keyset pagination, early benchmarks (S01.7, S04.8, S06.8); Go remains an alternative in ADR-0001. |
+| RK-06 | CPU-only AI is too slow on weak hardware. | Performance | Small models, batching, idle scheduling and throttling, pause and resume, optional GPU (S12.1). |
 | RK-07 | Classification quality is poor. | Technical | Evaluation set, thresholds, user corrections, reprocessing on model change. |
-| RK-08 | Incompatible dependency or model licenses. | Legal | Project license decided in S01.1 (Q22). License policy NFR-029. `dependencies.md` register. go-licenses and `pnpm licenses` checks in CI (ADR-0005). Audit in S11.6. GPL/LGPL external tools (FFmpeg build flags, ExifTool, libvips, libheif) run as separate programs and are recorded for the user's attention. The GPL-3.0 go-exiftool wrapper was rejected. |
+| RK-08 | Incompatible dependency or model licenses. | Legal | Project license decided in S01.1 (Q22); license checks in CI; audit in S11.6; permissive model defaults. |
 | RK-09 | Face data privacy (biometrics). | Privacy | Separate opt-in, embeddings only in internal data, per-user, full deletion (S12.9). |
 | RK-10 | Synonym over-expansion adds noise. | UX | Lower weights, curated and editable dictionary, golden query set. |
 | RK-11 | Cross-platform filesystem differences. | Technical | One resolver per area, Windows CI from S01, name validation for all OSes. |
@@ -2520,10 +2524,6 @@ CI runs on Linux and Windows from S01.1.
 | RK-22 | SMB via Samba is unavailable on Windows hosts, and Samba permission mapping is complex. | Platform | WebDAV first; SMB optional per host (S09.1). |
 | RK-23 | WebDAV client quirks (e.g. Windows WebDAV redirector file-size limits and HTTPS/auth requirements). | Platform | Documented client settings (S09.5); client test matrix (S09.6). |
 | RK-24 | Disk health (SMART) inaccessible in containers or without privileges. | Platform | Degrade gracefully to "not available"; document the privileges needed (S10.3). |
-| RK-25 | **Bleve performance at scale** (100k photos + 100k files, fuzzy and synonym queries) misses the NFR-003 latency targets. | Performance | Benchmarks in S06.8 on reference hardware; tuning fuzziness, prefix, and synonym expansion; per-field analyzers. **Fallback:** revisit the engine via a new ADR (ADR-0014). The `SearchEngine` interface keeps the swap contained. |
-| RK-26 | **External tool availability on native installs** (ExifTool + Perl, libvips + libheif, FFmpeg missing or too old). | Platform | Bundled in the Docker image (ADR-0006). Startup tool detection with versions in health. Affected features are disabled with a clear message. The install guide lists the packages (S11.2, S11.4, plan 8.20). |
-| RK-27 | **Model license changes**: an upstream model (SigLIP, YuNet, SFace, OCR models) is relicensed or withdrawn. | Legal | Pin exact model files by checksum. Record the license at the time of adoption in `dependencies.md` and ADR-0018. Re-verify licenses when upgrading models. Keep the model choice swappable through the ONNX contract (ADR-0017). |
-| RK-28 | Distribution package versions lag upstream (e.g. Debian trixie ExifTool 13.25 vs 13.59, FFmpeg 7.1.5 vs 9.0.2), missing format support. | Platform | Fixture tests catch gaps. Upgrade the base image or build specific tools from source via a new ADR if a needed feature is missing (ADR-0006, ADR-0012). |
 
 ---
 
@@ -2533,4 +2533,3 @@ CI runs on Linux and Windows from S01.1.
 |---|---|---|---|---|
 | 0.1.0 | 2026-09-23 | Initial draft generated from README.md: FR-001–FR-068, NFR-001–NFR-018, 24 open questions, architecture, stack options, roadmap S00–S15, MVP, testing, risks. | Bootstrap (initial prompt) | `logs/sessions/2026-09-23_S001.md` |
 | 0.2.0 | 2026-09-24 | **Staged roadmap replaces S00–S15** with S01–S12: 7 user-defined stages, 4 planner-proposed stages (S08–S11), and the AI stage always last. All 92 substages are defined with the required fields. Added sections 2a (Project invariants I1–I8), 2b (Cross-cutting principles), and 11a (Not scheduled). Two-area storage design (`files/`, `photos/`) and internal data outside both. Requirements: FR-001 deprecated; FR-069–FR-143 and NFR-019–NFR-028 added; priorities and wording updated where P002 requires. Questions Q25–Q40 added; Q2 and Q12 resolved; Q3, Q8, Q9, Q17, Q20, Q21 superseded. Architecture, concerns (forward compatibility, area separation, access data storage, search permission filtering, live watcher), MVP milestones, testing, and risks (RK-17–RK-24) updated. ADR-0001–0003 proposed for S01. | Plan change request #2 (`code-agent-docs/prompts/P002-staged-development-roadmap.json`) | `logs/sessions/2026-09-23_S002.md` |
-| 0.3.0 | 2026-09-24 | **Technology stack recorded.** Section 7 replaced by the chosen-stack table: Go core; REST/OpenAPI; SQLite WAL (from S01); tus; SvelteKit; Argon2id and sessions; SQLite job queue; ExifTool, libvips, FFmpeg; GeoNames; Bleve; WebDAV; fsnotify; Python/ONNX AI worker; model direction. ADR-0001/0002 updated and Accepted; ADR-0004–0018 Accepted; ADR-0019 (SMB) Proposed; ADR-0003 still Proposed. Invariant I9 added (2a). NFR-029 (license policy) and NFR-030 (multi-arch) added. Q25, Q7, Q4, Q24, Q16 answered; Q5, Q6, Q32 partly answered. Architecture diagram made concrete. Concerns 8.17–8.20 added (single writer, same-filesystem uploads, inotify limits, external tools on native installs), and 8.4/8.11/8.12 aligned to Go and Bleve. Stage texts updated where decisions were pending (S01.1, S01.4, S01.5, S01 design notes, S02.1, S02.3, S03.2, S04.3, S05.3, S05.4, S06.1, S09.1, S11.1, S11.6, S12.1, S12.5, 10.14). Risks RK-25–RK-28 added; RK-05 retired; RK-06 and RK-08 updated. Dependency register `dependencies.md` created. | Plan change request #3 (`code-agent-docs/prompts/P003-technology-stack.json`) | `logs/sessions/2026-09-24_S003.md` |

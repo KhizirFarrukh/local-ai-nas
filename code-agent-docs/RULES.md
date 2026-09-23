@@ -1,6 +1,6 @@
 # RULES: Permanent Operating Rules for AI Agents on local-ai-nas
 
-**RULES.md version:** 1.1.0
+**RULES.md version:** 1.2.0
 **Created:** 2026-09-23 (session S001)
 **Source:** `operating_rules` in `code-agent-docs/bootstrap/initial-prompt.json`, transcribed in full with the original rule IDs.
 
@@ -41,6 +41,7 @@ No code, plan change, stage document, or ADR may violate these invariants withou
 - **I6:** Everything runs locally. No telemetry. No network calls at runtime except for features the user has explicitly enabled.
 - **I7:** AI is optional and opt-in. The NAS must be fully functional with AI disabled.
 - **I8:** AI work is always the last stage of the roadmap. Any stage added in the future is inserted before it, and the AI stage is renumbered.
+- **I9:** Only the core server writes sidecar files and the search index. Other processes, including the AI worker, submit results to the core server, which validates and writes them.
 
 ---
 
@@ -155,6 +156,7 @@ ADR files are named `ADR-<NNNN>-<short-kebab-title>.md` (e.g. `ADR-0001-backend-
 - Write tests alongside or before the code (test-first where practical). No task is complete without its tests.
 - Run the linter, formatter, and test suite before marking a task complete. Record results in the session log.
 - No new dependency without a recorded justification and a compatible license.
+- Every new dependency must be added to the dependency register (`code-agent-docs/dependencies.md`) in the same commit that introduces it.
 - Every change to the sidecar JSON schema bumps `schemaVersion` and includes a migration plan for existing sidecar files.
 - Privacy is non-negotiable: no telemetry, no cloud services, no outbound network calls at runtime unless the user explicitly enables a feature that requires one.
 - Never write secrets into code, logs, or documentation.
@@ -236,6 +238,7 @@ All agent documentation lives in `code-agent-docs/`:
 | `code-agent-docs/RULES.md` | Permanent operating rules for the agent (this file). Read at the start of every session. |
 | `code-agent-docs/CURRENT_STATE.md` | Short, always-current snapshot: where the project stands and what to do next. The first thing a resuming agent relies on. Keep under ~150 lines. |
 | `code-agent-docs/plan.md` | The master development plan. Living document, versioned (R4). |
+| `code-agent-docs/dependencies.md` | The dependency register: every dependency, external tool, dataset, and AI model, with name, version, license, purpose, stage, ADR link, and verification status. Updated in the same commit that introduces a dependency (R6). |
 | `code-agent-docs/stages/` | One detailed plan document per development stage, e.g. `S00-foundation.md`. Created only when a stage is about to be planned in detail. |
 | `code-agent-docs/decisions/` | Architecture Decision Records, e.g. `ADR-0001-backend-language.md`. |
 | `code-agent-docs/logs/sessions/` | One log per working session: `<YYYY-MM-DD>_S<NNN>.md` with a sequential session number (S001, S002, ...). |
@@ -282,3 +285,6 @@ Filled in as the user states lasting preferences (R10). Commit behavior is recor
 | 1.1.0 | 2026-09-23 | (c) R4 versioning: while the plan is a pre-1.0 draft, restructurings bump MINOR. The plan becomes 1.0.0 when the user approves it as the baseline, and the original R4 rules apply after that. | Pre-approved in `code-agent-docs/prompts/P002-staged-development-roadmap.json`; session S002 |
 | 1.1.0 | 2026-09-23 | (d) Added the "Project invariants" section (I1-I8). | Pre-approved in `code-agent-docs/prompts/P002-staged-development-roadmap.json`; session S002 |
 | 1.1.0 | 2026-09-23 | (e) `templates/stage-template.md` updated with a substages section and a task table per substage. | Pre-approved in `code-agent-docs/prompts/P002-staged-development-roadmap.json`; session S002 |
+| 1.2.0 | 2026-09-24 | (a) Added invariant **I9** (only the core server writes sidecars and the search index) to "Project invariants". | Pre-approved in `code-agent-docs/prompts/P003-technology-stack.json` (`pre_approved_documentation_changes`); session S003 |
+| 1.2.0 | 2026-09-24 | (b) Created `code-agent-docs/dependencies.md` (the dependency register) and added it to the documentation map. | Pre-approved in `code-agent-docs/prompts/P003-technology-stack.json`; session S003 |
+| 1.2.0 | 2026-09-24 | (c) R6: every new dependency must be added to the dependency register in the same commit that introduces it. | Pre-approved in `code-agent-docs/prompts/P003-technology-stack.json`; session S003 |

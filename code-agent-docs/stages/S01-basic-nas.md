@@ -5,16 +5,16 @@
 | Stage ID | S01 |
 | Status | Planned |
 | Blocked reason | |
-| Plan version this stage is based on | 0.2.0 |
+| Plan version this stage is based on | 0.3.0 |
 | Origin | User-defined |
 | Created | 2026-09-24 (session S002) |
-| Last updated | 2026-09-24 (session S002) |
+| Last updated | 2026-09-24 (session S003) |
 | Depends on stages | none (requires plan baseline approval) |
-| Related ADRs | ADR-0001 (backend, Proposed), ADR-0002 (API style + tus, Proposed), ADR-0003 (storage layout, Proposed) |
+| Related ADRs | ADR-0001 Go (Accepted) · ADR-0002 REST/OpenAPI (Accepted) · **ADR-0003 storage layout (Proposed, gates S01.2)** · ADR-0004 repository layout (Accepted) · ADR-0005 testing/CI (Accepted) · ADR-0006 dev environment (Accepted) · ADR-0007 SQLite (Accepted) · ADR-0008 tus (Accepted) |
 
 ## 1. Goal
 
-A reliable storage service that manages the **files area through an API**, with the two-area layout (`files/`, `photos/`) in place. There is no GUI and no authentication, so the server binds to **localhost only**.
+A reliable storage service, written in **Go**, that manages the **files area through a REST API**, with the two-area layout (`files/`, `photos/`) in place. There is no GUI and no authentication, so the server binds to **localhost only**.
 
 **Exit criteria (from plan):** "Using only the API (e.g. an HTTP client), files and folders in the files area can be managed reliably, including large resumable uploads. All tests pass in CI."
 
@@ -49,73 +49,81 @@ A reliable storage service that manages the **files area through an API**, with 
 | NFR-021 | Streaming I/O | Fully | S01.4 |
 | NFR-025 | Forward compatibility | Ongoing | all |
 | NFR-026 | Area separation enforced | Partially (photos in S04) | S01.2 |
+| NFR-029 | License policy (anyone may deploy and use) | Ongoing (CI license check) | S01.1 |
+| NFR-030 | Multi-architecture (amd64 + arm64) | Partially (pure-Go cross-builds in CI; images in S11) | S01.1 |
 
 ## 3. Scope
 
 ### In scope
-- Project foundation: stack per the S01.1 ADRs, repository, tooling, CI, dev environment, config, logging, errors.
-- Storage root with `files/`, `photos/`, and internal data; namespace layout (ADR-0003); health checks.
-- Files-area API: list, details, create folder, upload (simple and resumable), download (range), rename, move, copy, delete.
-- API conventions: `/api/v1`, problem-details errors, validation, OpenAPI, local docs.
-- Safety baseline: path traversal prevention, name validation, symlink policy, conflict policy, concurrency, localhost binding.
-- Tests: unit, integration, attack, edge cases, performance baseline.
+- Project foundation on the Accepted stack: Go module, repository layout, lint, tests, CI, Docker dev environment, configuration, logging, error conventions, and **SQLite with migrations** (ADR-0007).
+- Storage root with `files/`, `photos/`, and internal data; namespace layout (ADR-0003, once Accepted); health checks.
+- Files-area API: list, details, create folder, upload (simple and resumable via tus), download (range), rename, move, copy, delete.
+- API conventions: `/api/v1`, `api/openapi.yaml` (spec-first), RFC 9457 errors, validation, offline docs.
+- Safety baseline: path traversal prevention (resolver + `os.Root`), name validation, symlink policy, conflict policy, concurrency, localhost binding.
+- Tests: unit, integration, fuzz, attack, edge cases, performance baseline.
 
 ### Out of scope
-- Any GUI (S02).
-- Authentication and authorization (S03). The server is localhost-only instead.
-- Any photos-area functionality. `photos/` is created and validated only; `/api/v1/photos` returns "not available yet".
-- Database, job system, search, trash (S03.2, S04.3, S06, S08).
-- Streamed multi-file ZIP download (added with the GUI in S02.4).
+- Any GUI (S02), and the streamed multi-file ZIP download (S02.4).
+- Authentication and authorization (S03); user and session tables (S03.2). The server is localhost-only instead.
+- Any photos-area functionality. `photos/` is created and validated only; `/api/v1/photos` returns `not_available`.
+- Job system (S04.3), search (S06), trash (S08). S01 deletes are permanent.
+- External media tools (ExifTool, libvips, FFmpeg). None is needed in S01.
 - Production packaging (S11).
 
 ## 4. Design approach
 
-> Technology-specific names below (modules, libraries, commands) are **to be confirmed after the S01.1 ADRs are accepted**. The structure itself is technology-neutral.
-
-### 4.1 Components
+### 4.1 Components and packages (ADR-0004)
 
 ```mermaid
 flowchart LR
-    CLIENT["HTTP client (curl, httpie, scripts)"] -->|"127.0.0.1 only"| API["API layer /api/v1 (S01.5)"]
-    API --> VALID["Request validation + error mapping"]
-    VALID --> SVC["FilesService interface (S01.3) with before/after hooks"]
-    SVC --> RES["Namespace + path resolver (S01.6)"]
-    SVC --> LOCK["Per-path locks (S01.6)"]
-    SVC --> FS["Local filesystem backend"]
-    API --> TUS["Resumable uploads: tus (S01.4)"]
-    TUS --> TMP[".local-ai-nas/tmp/uploads/"]
-    TUS -->|"atomic rename on finalize"| SVC
-    FS --> FILES["<root>/files/u0001/…"]
-    INIT["Startup: layout + health checks (S01.2)"] --> FILES
-    INIT --> PHOTOS["<root>/photos/u0001/ (created, unused)"]
-    INIT --> TMP
+    CLIENT["HTTP client: curl, scripts, tests"] -->|"127.0.0.1 only"| MUX["net/http ServeMux + middleware: request ID, slog access log, recover, problem+json (internal/api)"]
+    MUX --> GEN["oapi-codegen strict server (internal/api/gen) from api/openapi.yaml"]
+    GEN --> H["Handlers (internal/api)"]
+    MUX --> TUS["tusd handler (internal/uploads) at /api/v1/files/uploads/"]
+    H --> SVC["FilesService + hooks (internal/files)"]
+    TUS -->|"PreFinishResponseCallback: finalize"| SVC
+    SVC --> RES["Namespace resolver + name rules + locks (internal/storage)"]
+    RES --> ROOT["os.Root per namespace: traversal-resistant I/O"]
+    ROOT --> FILES["<root>/files/u0001/…"]
+    TUS --> TMP["<root>/.local-ai-nas/tmp/uploads/ (tusd filestore)"]
+    H --> HEALTH["internal/health"]
+    SVC --> DB[("SQLite WAL: <root>/.local-ai-nas/db/nas.db (internal/db, goose migrations)")]
+    TUS --> DB
+    CFG["internal/config: TOML + env + flags"] --> MUX
 ```
 
 ### 4.2 Key design points
-- **Namespace resolver (ADR-0003):** every request maps to `(area=files, namespace=u0001, relative path)`. The resolver normalizes the path and rejects anything that escapes the namespace, before any filesystem call.
-- **FilesService interface:** the only way endpoints touch storage. Operations emit before and after hooks (a no-op in S01). These are the attachment points for S03 policy checks, S04.6 transfer, S06 indexing, S08 trash, and S10 quotas.
-- **Owner model:** every `Item` carries `owner_id` (= namespace), `area`, `rel_path`, `kind`, `size`, `mtime`, `mime`.
-- **Uploads:** tus sessions are stored in `.local-ai-nas/tmp/uploads/<id>/` (data + info). On completion, fsync, then atomic rename into `files/…`, applying the conflict policy. A cleanup task (behind a scheduler interface) removes expired sessions.
+- **Go module** `github.com/KhizirFarrukh/local-ai-nas`, with `go 1.27` / `toolchain go1.27.1`. Release builds use `CGO_ENABLED=0` (ADR-0001).
+- **Namespace resolver (ADR-0003, pending acceptance):** every request maps to `(area=files, namespace=u0001, relPath)`. The resolver normalizes the path and rejects anything invalid **before** any filesystem call. The actual I/O then goes through an **`os.Root`** opened on the namespace directory (Go 1.24+). Its methods (OpenFile, Mkdir/MkdirAll, Rename, Remove/RemoveAll, Stat/Lstat) refuse to escape the root through `..` or symlinks. This is defense in depth.
+- **FilesService interface** (`internal/files`): the only way handlers touch storage. Operations emit before and after hooks (no-ops in S01). These are the attachment points for S03 policy checks, S04.6 transfer, S06 indexing, S08 trash, and S10 quotas.
+- **Owner model:** every `Item` carries `OwnerID` (= namespace), `Area`, `RelPath`, `Kind`, `Size`, `ModTime`, `MIME`, and `ETag`.
+- **SQLite (ADR-0007):** `modernc.org/sqlite` with pragmas `journal_mode=WAL`, `foreign_keys=ON`, `busy_timeout=5000`, and `synchronous=NORMAL`. There is one writer connection and a read pool. goose applies embedded migrations at startup. The S01 tables are `settings` and `uploads` (the upload-session index: id, target path, conflict policy, declared size, optional SHA-256, created and expiry times).
+- **Uploads (ADR-0008):** tusd v2 `handler` with `filestore` rooted at `<internal>/tmp/uploads/` and tusd's file locker.
+  - `PreUploadCreateCallback` validates metadata (`target_path`, `on_conflict`, optional `sha256`), the size limit, and free space, and records the session in SQLite.
+  - `PreFinishResponseCallback` finalizes: verify the optional SHA-256, fsync, then an atomic rename into `files/` through the FilesService, applying the conflict policy. It uses the fallback copy + fsync + rename if the same-filesystem check failed (plan 8.18).
+- **Downloads:** served with `http.ServeContent`, which handles Range, `If-None-Match`, `If-Modified-Since`, 206, and 416, wrapped in the generated response type. `Content-Disposition` uses RFC 6266/5987 filename encoding.
 - **Conflict policy:** `on_conflict = fail | rename | overwrite`, default `fail`. `rename` produces `name (1).ext`.
-- **Concurrency:** in-process per-path locks for all mutating operations. Overwrites go through temp file + atomic replace.
+- **Concurrency:** in-process, per-path, reference-counted locks for all mutating operations. Overwrites go through temp file + atomic rename.
 - **Binding guard:** config validation refuses any non-loopback bind address in S01 (NFR-020).
-- **No database in S01.** Upload sessions are plain files, so there is nothing to migrate.
+- **Logging:** `log/slog` JSON to stderr, with one access-log line per request carrying the request ID. Rotation is handled by Docker, journald, or the service manager (NFR-016). There is no file-logging dependency.
+- **Configuration:** TOML via `pelletier/go-toml/v2` in strict mode. Precedence: defaults < file < `LOCALAINAS_*` environment variables < flags. The file is located via `--config`, then `LOCALAINAS_CONFIG`, then the OS default: `/etc/local-ai-nas/config.toml` on Linux, `%ProgramData%\local-ai-nas\config.toml` on Windows.
 
-### 4.3 Planned endpoint set (ADR-0002, Proposed)
+### 4.3 Endpoint set (defined in `api/openapi.yaml`, ADR-0002)
 
 | Method + path | Purpose | Substage |
 |---|---|---|
-| `GET /api/v1/system/health` | Startup/health checks | S01.2 |
+| `GET /api/v1/system/health` | Startup and health checks | S01.2 |
 | `GET /api/v1/files/items?path=&cursor=&limit=&sort=&order=` | List a folder, or get item details for a file | S01.3 |
 | `POST /api/v1/files/folders` | Create a folder (`path`, `parents`) | S01.3 |
-| `PUT /api/v1/files/content?path=&on_conflict=` | Simple (single-request, streamed) upload | S01.3 |
+| `PUT /api/v1/files/content?path=&on_conflict=` | Simple streamed upload (`application/octet-stream`) | S01.3 |
 | `GET /api/v1/files/content?path=` | Download with Range / ETag | S01.3 |
 | `POST /api/v1/files/operations/rename` | Rename | S01.3 |
 | `POST /api/v1/files/operations/move` | Move | S01.3 |
 | `POST /api/v1/files/operations/copy` | Copy (file or folder) | S01.3 |
 | `DELETE /api/v1/files/items?path=&recursive=` | Delete | S01.3 |
-| `POST/HEAD/PATCH/DELETE /api/v1/files/uploads/…` | tus resumable upload | S01.4 |
-| `* /api/v1/photos/…` | Reserved: returns a problem `not_available` | S01.5 |
+| `POST/HEAD/PATCH/DELETE /api/v1/files/uploads/…` | tus 1.0 resumable upload (tusd). Documented in the spec as an external protocol | S01.4 |
+| `* /api/v1/photos/…` | Reserved: returns problem `not_available` | S01.5 |
+| `GET /api/docs/` | Offline API documentation (vendored Redoc) | S01.5 |
 
 ## 5. Substages and tasks
 
@@ -123,11 +131,11 @@ flowchart LR
 
 | Substage | Name | Status | Depends on | Requirements |
 |---|---|---|---|---|
-| S01.1 | Project foundation | Not started | plan 1.0.0; ADR-0001/0002 Accepted; Q4, Q22, Q24 | NFR-008, NFR-009, NFR-013, NFR-014, NFR-016, NFR-025 |
-| S01.2 | Storage layout and configuration | Not started | S01.1; ADR-0003 Accepted | FR-069–FR-072, NFR-026 |
+| S01.1 | Project foundation | Not started | plan 1.0.0; S01 approved; Q22 (for S01.1-T02) | NFR-008, NFR-009, NFR-013, NFR-014, NFR-016, NFR-025, NFR-029, NFR-030 |
+| S01.2 | Storage layout and configuration | Not started | S01.1; **ADR-0003 Accepted** | FR-069–FR-072, NFR-026 |
 | S01.3 | Core file operations | Not started | S01.2, S01.5 (conventions), S01.6 (resolver) | FR-003, FR-005, FR-007, FR-073 |
 | S01.4 | Large file handling | Not started | S01.2, S01.3, S01.5 | FR-004, FR-074, NFR-006, NFR-021 |
-| S01.5 | API layer | Not started | S01.1 (ADR-0002) | FR-075, NFR-001 |
+| S01.5 | API layer | Not started | S01.1 | FR-075, NFR-001 |
 | S01.6 | Safety baseline | Not started | S01.2 | FR-076, FR-077, NFR-010, NFR-019, NFR-020 |
 | S01.7 | Integration, testing, and stage review | Not started | S01.1–S01.6 | NFR-003, NFR-014 |
 
@@ -135,49 +143,48 @@ flowchart LR
 
 1. S01.1 (all tasks)
 2. S01.2 (all tasks)
-3. S01.6-T01, S01.6-T02 (resolver, name validation)
+3. S01.6-T01, S01.6-T02 (resolver + `os.Root`, name validation)
 4. S01.5-T01 to S01.5-T04 (conventions, versioning, errors, validation)
 5. S01.3 (all tasks)
 6. S01.6-T03 to S01.6-T06
 7. S01.4 (all tasks)
-8. S01.5-T05, S01.5-T06 (OpenAPI, docs, which need the full endpoint set)
+8. S01.5-T05, S01.5-T06 (full spec + drift check, docs)
 9. S01.7
 
 ### S01.1: Project foundation
 
-- **Goal:** Establish the approved stack, repository, tooling, and conventions.
+- **Goal:** Set up the Accepted Go stack (ADR-0001, 0002, 0004–0007) so every later change is built, checked, and tested the same way.
 - **Substage acceptance criteria:** as in plan.md S01.1 (CI on Linux + Windows; fresh-clone setup; config validation; structured logs without secrets; one error format).
-- **Gate:** no code until ADR-0001 and ADR-0002 are **Accepted**, and Q4, Q22, Q24 are answered.
+- **Gate:** plan approved as baseline 1.0.0 and this document approved. S01.1-T02 needs Q22 (license). S01.2 needs ADR-0003 Accepted.
 
 | Task ID | Description | Status | Acceptance criteria |
 |---|---|---|---|
-| S01.1-T01 | Review gate: user accepts, changes, or rejects ADR-0001, ADR-0002, ADR-0003. Record approvals. Update this document with the concrete stack. | Not started | ADRs have status Accepted (or superseded) with approval quoted. Every "to be confirmed" marker in this document is resolved. |
-| S01.1-T02 | Project license and dependency-license policy (Q22): add `LICENSE`; document allowed and denied dependency licenses. | Not started | `LICENSE` present. Policy documented. The license check (T07) enforces it. |
-| S01.1-T03 | Repository structure and housekeeping: source layout per ADR-0001 (to be confirmed after the S01.1 ADRs are accepted), `.gitignore`, `.gitattributes` (line endings, S001 finding), `.editorconfig`, README "Development" section. | Not started | Layout matches the ADR. `git add --renormalize .` shows no line-ending churn on Windows or Linux. |
-| S01.1-T04 | Dependency management with a lockfile (tool per ADR-0001, to be confirmed). Pin the language version. | Not started | A fresh clone installs exactly the locked versions on Windows and Linux with one documented command. |
-| S01.1-T05 | Lint, format, and type checking configured, with pre-commit hooks (tools per ADR-0001, to be confirmed). | Not started | Checks pass on the skeleton. A deliberate violation fails the pre-commit hook and CI. |
-| S01.1-T06 | Test framework: layout (`unit/`, `integration/`), coverage reporting and threshold, property-based testing, a temporary storage-root fixture. | Not started | A sample unit test and an integration test that uses the temp root both pass. Coverage report produced. |
-| S01.1-T07 | CI pipeline (GitHub Actions, Q24): lint, format check, type check, tests, license check, on Linux and Windows, for PRs into `develop`. | Not started | CI is green on the PR. A deliberately failing test turns it red (verified once, then reverted). |
-| S01.1-T08 | Development environment: documented local run on Windows and Linux, plus a Docker dev setup (Dockerfile or dev container; to be confirmed after the S01.1 ADRs are accepted). | Not started | A new developer starts the server locally and in Docker with the documented commands. |
-| S01.1-T09 | Configuration system: config file + environment variable overrides + defaults + validation. The config location comes from the CLI flag, then the env var, then the OS default (ADR-0003). Secrets are never logged. | Not started | Invalid config fails startup with a clear message. Env overrides file. The precedence is tested and documented. |
-| S01.1-T10 | Structured logging: JSON or key-value lines with request ID, method, route, status, duration; log levels; rotation settings; a redaction policy. | Not started | Every request is logged once with a request ID. A test asserts that no secret-like fields appear. |
-| S01.1-T11 | Error-handling conventions: domain error types, mapping to RFC 9457 problem responses with stable codes, and a generic 500 body with a correlation ID. | Not started | Unit tests cover every domain error mapping. An unexpected exception returns a generic body, with details only in the logs. |
-| S01.1-T12 | App skeleton and entry point: app factory, graceful shutdown, loopback bind default, a smoke test that starts the server in CI. | Not started | The server starts on 127.0.0.1 with a configurable port. The CI smoke test gets a valid response. |
+| S01.1-T01 | **Go module and repository skeleton** (ADR-0001, ADR-0004): `go mod init github.com/KhizirFarrukh/local-ai-nas`; `go 1.27` + `toolchain go1.27.1`; `tool` directives for oapi-codegen v2.8.0, govulncheck v1.8.0, go-licenses v2.0.1; folders `cmd/local-ai-nas/`, `internal/{config,logging,apperr,db,health,api}`, `api/`, `deploy/`, `testdata/SOURCES.md`, `docs/`, `scripts/`. `.gitattributes` (`* text=auto eol=lf`, binary patterns), `.editorconfig`, `.gitignore`. Record every added module in `dependencies.md` in the same commit (R6). | Not started | `go build ./...` and `go vet ./...` pass on Windows and Linux. `git add --renormalize .` produces no changes. `dependencies.md` matches `go.mod`. |
+| S01.1-T02 | **License and license policy** (Q22, NFR-029): add `LICENSE`; document the allowed licenses for linked dependencies (e.g. MIT, BSD-2/3-Clause, Apache-2.0, ISC, MPL-2.0 per the chosen project license) in `docs/licensing.md`; configure the `go-licenses check` allow-list. | Not started | `go tool go-licenses check ./...` passes. A deliberately disallowed test dependency fails it (verified once, then reverted). |
+| S01.1-T03 | **Lint and format** (ADR-0005): `.golangci.yml` (v2 format) enabling govet, staticcheck, errcheck, gosec, ineffassign, unused, and **depguard** rules (prepared: `internal/files` and `internal/photos` may not import each other; only `internal/transfer` may import both), plus the gofmt/goimports formatters. golangci-lint **v2.13.2 pinned as a binary**: a documented local install (upstream install script) and the official GitHub Action in CI. | Not started | `golangci-lint run` and `golangci-lint fmt --diff` are clean on the skeleton. A deliberate violation fails locally and in CI. |
+| S01.1-T04 | **Test setup**: standard `testing` + `github.com/google/go-cmp` v0.7.0; `internal/testutil` with a temp storage-root helper (`t.TempDir()`) and a server-on-`127.0.0.1:0` helper; a fuzz-test scaffold (`go test -fuzz`); a coverage profile with a threshold (80% on `internal/...`, enforced in CI). | Not started | A sample unit test, an integration test using the temp root, and a fuzz seed corpus run green. CI publishes the coverage figure and fails below the threshold. |
+| S01.1-T05 | **CI pipeline** (`.github/workflows/ci.yml`, GitHub Actions), on PRs into `develop`: jobs for lint (ubuntu); tests on `ubuntu-latest` (with `-race`) and `windows-latest`; `govulncheck ./...`; `go-licenses check`; spec drift (`go generate ./... && git diff --exit-code`); cross-builds with `CGO_ENABLED=0` for linux/amd64, linux/arm64, and windows/amd64; the dev image build + **Trivy v0.74.0** scan. Plus `.github/dependabot.yml` (gomod, github-actions, docker). | Not started | CI is green on the PR. A deliberately failing test turns it red (verified once). The arm64 build artifact is produced. |
+| S01.1-T06 | **Development environment** (ADR-0006): native run on Windows and Linux (`go run ./cmd/local-ai-nas serve --config dev/config.toml`), plus `deploy/Dockerfile.dev` (golang build stage, then `debian:trixie-slim` runtime) and `deploy/compose.dev.yaml` (source bind mount, named volume for the storage root, port published as `127.0.0.1:8080:8080`). An example config at `deploy/config.example.toml`. The README "Development" section. | Not started | A new developer starts the server natively and via `docker compose -f deploy/compose.dev.yaml up --build`, using only the README. |
+| S01.1-T07 | **Configuration** (`internal/config`): TOML via `github.com/pelletier/go-toml/v2` v2.4.3 (strict; unknown keys rejected); `LOCALAINAS_*` environment variable overrides; flags; the precedence defaults < file < env < flags; config path resolution (flag, then env, then OS default); validation (absolute storage root, size limits, bind address delegated to S01.6-T06). Secrets are never logged. | Not started | Table-driven tests cover precedence and every validation rule. An invalid config exits non-zero with a clear message naming the key. |
+| S01.1-T08 | **Logging** (`internal/logging`): `log/slog` JSON handler to stderr; levels from config; request-ID middleware (accepts a valid incoming `X-Request-ID`, otherwise generates 128-bit random hex); one access line per request (method, route pattern, status, bytes, duration, request ID); redaction of `Authorization`/`Cookie` headers and sensitive query values. | Not started | A test captures logs and asserts the fields. A redaction test asserts that no header secrets appear. |
+| S01.1-T09 | **Error conventions** (`internal/apperr`): typed domain errors (`NotFound`, `Conflict`, `InvalidName`, `OutsideRoot`, `TooLarge`, `InsufficientStorage`, `NotAvailable`, …) mapped to RFC 9457 `application/problem+json` with stable `code` values and `correlation_id` (= request ID). Panic-recovery middleware returns a generic 500. | Not started | Unit tests cover every mapping. A handler panic yields a generic body, and the details appear only in the logs. |
+| S01.1-T10 | **SQLite database** (`internal/db`, ADR-0007): open `modernc.org/sqlite` v1.59.0 at `<internal>/db/nas.db` with the pragmas; writer and reader pools; goose v3.28.0 with embedded SQL migrations (`internal/db/migrations/00001_init.sql`: `settings`, `uploads`); a `migrate status|up` CLI subcommand. | Not started | A driver test on Linux and Windows asserts `PRAGMA journal_mode` = `wal`, that a read succeeds during an open write transaction, and that migrations are idempotent (running twice is a no-op). |
+| S01.1-T11 | **App skeleton** (`cmd/local-ai-nas`): subcommands `serve`, `migrate`, `version`; `http.Server` with `ReadHeaderTimeout`, `IdleTimeout`, and body limits; graceful shutdown on SIGINT/SIGTERM (and Ctrl+C on Windows); default bind `127.0.0.1:8080`; a CI smoke test that starts the binary and calls `/api/v1/system/health`. | Not started | The smoke test passes in CI on Linux and Windows. Shutdown completes in-flight requests within the timeout. |
 
 ### S01.2: Storage layout and configuration
 
 - **Goal:** Create and validate the two-area layout and internal data, namespace-ready.
 - **Substage acceptance criteria:** as in plan.md S01.2.
-- **Gate:** ADR-0003 **Accepted**.
+- **Gate:** **ADR-0003 Accepted** (the namespace names `u0001` and the `.local-ai-nas/` location below follow its recommendation. If the user changes it, these tasks change accordingly before coding).
 
 | Task ID | Description | Status | Acceptance criteria |
 |---|---|---|---|
-| S01.2-T01 | Storage root config and layout initializer: create `files/`, `photos/`, and the default namespace (`u0001` per ADR-0003) if missing. Validate that they are directories and writable. Report unknown root entries without touching them. | Not started | Empty root → full layout created. The second start is a no-op. A read-only root → startup fails with a clear error. |
-| S01.2-T02 | Internal data location (I2): default `<root>/.local-ai-nas/` with subfolders; optional relocation of database, index, and logs; reject any overlap with the areas. | Not started | Configs placing internal data inside `files/` or `photos/`, or the reverse, are rejected (tests for each case). |
-| S01.2-T03 | Namespace resolver and owner model: `Item(owner_id, area, rel_path, kind, size, mtime, mime)`. The API root `/` maps to the caller's namespace (a fixed default owner in S01). | Not started | Every service call resolves through the resolver (architecture test). Items carry the owner. |
-| S01.2-T04 | Free-space guard: query free space, apply a configurable reserve, and refuse writes with a declared size that would breach it (problem `insufficient_storage`, HTTP 507). | Not started | A simulated low-space condition refuses the write before any data is stored. |
-| S01.2-T05 | Startup health checks: root writable; `tmp/` and areas on the same filesystem (atomic rename possible); free space; config valid. Results exposed at `GET /api/v1/system/health`. | Not started | Each failing condition is reported by name. The same-filesystem check fails when `tmp/` is on another volume (test with a mock or a second temp dir where possible). |
-| S01.2-T06 | Photos area placeholder: `photos/` validated but not exposed. The files service cannot resolve into `photos/`. | Not started | Attempts to reach `photos/` through the files API are impossible (resolver tests). `/api/v1/photos/*` returns `not_available`. |
+| S01.2-T01 | Layout initializer (`internal/storage/layout.go`): create `files/u0001/`, `photos/u0001/`, and `.local-ai-nas/{tmp/uploads,db,logs}` if missing. Validate that they are directories and writable. Report unknown root entries without touching them. | Not started | Empty root → full layout created. The second start is a no-op. A read-only root → startup fails with a clear error (tests on Linux; Windows uses an ACL-denied directory). |
+| S01.2-T02 | Internal data location (I2): default `<root>/.local-ai-nas/`; optional relocation of `db/` and `logs/` by config; `tmp/uploads/` always under the root. Reject any overlap between internal data and the areas. | Not started | Every overlap case (internal data inside `files/` or `photos/`, an area inside internal data, the same path) is rejected, with one test per case. |
+| S01.2-T03 | Namespace resolver and owner model (`internal/storage/resolver.go`, `internal/files/item.go`): `Resolve(area, ns, userPath) → (relPath, error)`. The API root `/` maps to the namespace. `Item` carries the owner. | Not started | An architecture test asserts that `internal/files` performs I/O only through the resolver and `os.Root`. Items carry `OwnerID="u0001"`. |
+| S01.2-T04 | Free-space guard (`internal/storage/space.go`): `unix.Statfs` on Linux and macOS, `windows.GetDiskFreeSpaceEx` on Windows (**golang.org/x/sys v0.48.0**, BSD-3, added to `dependencies.md`); a configurable reserve (default 1 GiB); refuses declared-size writes that would breach it with problem `insufficient_storage` (HTTP 507). | Not started | An injected low-space provider triggers 507 before any byte is stored (unit + integration). |
+| S01.2-T05 | Startup health checks (`internal/health`): root writable; **same filesystem** for `tmp/uploads/` and `files/` (Unix `Stat_t.Dev`; Windows volume serial via `x/sys/windows`); free space; database open and migrated; config valid. Exposed at `GET /api/v1/system/health` (loopback only in S01). | Not started | Each failing condition is reported by name. The same-filesystem mismatch is simulated through an injectable device-ID function, and a warning plus `upload_finalize_mode=copy` is reported. |
+| S01.2-T06 | Photos area placeholder: `photos/` is validated but has no API. The files resolver cannot reach `photos/`. | Not started | Resolver tests prove `photos/` is unreachable through the files API. `/api/v1/photos/*` returns `not_available` (S01.5). |
 
 ### S01.3: Core file operations
 
@@ -186,15 +193,15 @@ flowchart LR
 
 | Task ID | Description | Status | Acceptance criteria |
 |---|---|---|---|
-| S01.3-T01 | `FilesService` interface and local-filesystem backend with before/after operation hooks (no-op subscribers in S01). | Not started | Endpoints call only the service (architecture test). Hooks fire in the order documented in unit tests. |
-| S01.3-T02 | List directory: cursor pagination; sort by name, size, mtime, type (asc/desc); stable tie-break by name. | Not started | A 10,000-entry folder paginates without duplicates or gaps in every sort order. |
-| S01.3-T03 | Item details: size, mtime, kind, MIME type (by extension, with a content sniff for common types), ETag. | Not started | Details match the filesystem for fixture files. The ETag changes when content changes. |
-| S01.3-T04 | Create folder (with an optional `parents`). | Not started | Created, and an existing path follows the conflict policy. Invalid names are rejected (S01.6). |
-| S01.3-T05 | Simple streamed upload (single request) with temp file + atomic finalize and `on_conflict`. | Not started | The uploaded file is byte-identical. No partial file is visible during the upload. The conflict policy is honored. |
-| S01.3-T06 | Download with Range (single range), `ETag`, `Last-Modified`, `If-None-Match`, and a safe `Content-Disposition`. | Not started | 200/206/304/416 behave correctly. The filename header is safe for Unicode and quotes. |
-| S01.3-T07 | Rename and move within the files area (atomic rename on the same filesystem). | Not started | Works for files and folders. Moving a folder into itself is refused. Conflicts are handled. |
-| S01.3-T08 | Copy files and folders (streamed, per-file atomic finalize, configurable limits for synchronous copy). | Not started | Copied trees are byte-identical. A copy over the limit is refused with a clear error (the job-based copy arrives in S04.3). |
-| S01.3-T09 | Delete files and folders (folders need `recursive=true`). Permanent in S01 (trash is S08). | Not started | The file or folder is removed. A non-empty folder without `recursive` is refused. Deleting the namespace root is refused. |
+| S01.3-T01 | `FilesService` interface and local implementation on `os.Root` (`internal/files`), with before/after hooks (no-op subscribers). | Not started | Handlers use only the interface (golangci-lint depguard rule + an architecture test). Hook order is covered by unit tests. |
+| S01.3-T02 | List directory: cursor pagination (an opaque base64 cursor of the sort key + name); sort by name, size, mtime, type (asc/desc); stable tie-break by name. | Not started | A 10,000-entry folder paginates without duplicates or gaps in every sort order (integration test). |
+| S01.3-T03 | Item details: size, mtime, kind, MIME type (`mime.TypeByExtension`, with a `http.DetectContentType` sniff of the first 512 bytes), ETag (size + mtime + inode/file-ID hash). | Not started | Details match the filesystem for fixtures. The ETag changes when content changes. |
+| S01.3-T04 | Create folder (`parents` option) via `os.Root.Mkdir`/`MkdirAll`. | Not started | Created. An existing path follows the conflict policy. Invalid names are rejected (S01.6). |
+| S01.3-T05 | Simple streamed upload `PUT /content`: `io.Copy` with a 1 MiB buffer into a temp file in the target directory, then fsync, then atomic rename, with `on_conflict`. The declared `Content-Length` is checked against limits and free space. | Not started | The file is byte-identical (SHA-256). No partial file is visible during the upload. The conflict policy is honored. |
+| S01.3-T06 | Download: `http.ServeContent` inside the generated response visitor (Range, conditional requests, 206/304/416); safe `Content-Disposition` (RFC 6266 + RFC 5987 `filename*`). | Not started | Correct status and bytes for single-range, open-ended, suffix, and unsatisfiable ranges. Unicode and quote filenames are encoded safely. |
+| S01.3-T07 | Rename and move within the files area (`os.Root.Rename`). | Not started | Works for files and folders. Moving a folder into itself is refused. Conflicts are handled. |
+| S01.3-T08 | Copy files and folders: streamed, per-file temp + fsync + rename; a configurable limit for synchronous copy (items and bytes). | Not started | Copied trees are byte-identical. A copy over the limit returns problem `too_large_for_sync` (the job-based copy comes in S04.3). |
+| S01.3-T09 | Delete files and folders (`os.Root.Remove`/`RemoveAll`; folders need `recursive=true`). Permanent in S01. | Not started | The file or folder is removed. A non-empty folder without `recursive` is refused. Deleting the namespace root is refused. |
 
 ### S01.4: Large file handling
 
@@ -203,12 +210,12 @@ flowchart LR
 
 | Task ID | Description | Status | Acceptance criteria |
 |---|---|---|---|
-| S01.4-T01 | tus 1.0 server (core + creation + termination; library or in-house per ADR-0001/0002, to be confirmed after the S01.1 ADRs are accepted). Sessions in `.local-ai-nas/tmp/uploads/`. | Not started | The official tus client resumes an interrupted upload from the last offset. The final file hash equals the source hash. |
-| S01.4-T02 | Atomic finalize: on completion fsync, then rename into the target path with `on_conflict`. The target is chosen at creation (metadata) and re-validated at finalize. | Not started | A crash before finalize leaves nothing in `files/`. A crash after finalize leaves a complete file (fault-injection test). |
-| S01.4-T03 | Streaming everywhere with a bounded buffer. A memory regression test for a 10 GB transfer (sparse file). | Not started | Memory increase stays under the bound (proposed 256 MB) during upload and download. |
-| S01.4-T04 | Size limits: maximum file size and maximum chunk size (config). Declared-length check before accepting data. | Not started | Over-limit uploads are refused with 413 and no data stored. |
-| S01.4-T05 | Abandoned-upload cleanup: expiry config; periodic cleanup behind a scheduler interface (replaced by S04.3). | Not started | Expired sessions are removed. Active sessions are untouched. |
-| S01.4-T06 | Optional checksum extension (e.g. SHA-256): the server verifies it when the client provides one. | Not started | A mismatched checksum rejects the chunk. A matching one is accepted. |
+| S01.4-T01 | Embed **tusd v2.10.1** (`github.com/tus/tusd/v2/pkg/handler`, `pkg/filestore`, file locker) at `/api/v1/files/uploads/` (`internal/uploads`). Enable the tus core, creation, creation-with-upload, and termination extensions. The session index goes in the SQLite `uploads` table. | Not started | An in-test tus client (plain `net/http`, no dependency) resumes an interrupted upload from the server-reported offset. The final file SHA-256 equals the source. |
+| S01.4-T02 | Metadata validation in `PreUploadCreateCallback`: `target_path` (resolver + name rules), `on_conflict`, optional `sha256`, `Upload-Length` against the max size and free space. Invalid requests are rejected before any data is stored. | Not started | Each invalid-metadata case is rejected with a tus-compatible 4xx and a problem body. No `.bin`/`.info` files remain. |
+| S01.4-T03 | Finalize in `PreFinishResponseCallback`: verify the optional SHA-256, fsync, then an atomic rename via the FilesService with the conflict policy. Use the fallback copy + fsync + rename when the health check reported a filesystem mismatch. | Not started | Fault-injection tests: a crash before finalize leaves nothing in `files/`; a crash after the rename leaves a complete file; a SHA-256 mismatch rejects the upload and removes the data. |
+| S01.4-T04 | Streaming and memory bound: no whole-file buffering anywhere (uploads, downloads, copy). A memory test during a 10 GB sparse-file transfer (Linux CI; 1 GB on Windows because sparse files differ there). | Not started | Heap growth stays under 256 MB (`runtime/metrics` sampling) during upload and download. |
+| S01.4-T05 | Size limits: `max_file_size` and `max_chunk_size` in config; tusd `MaxSize` set; simple uploads also enforce them. | Not started | Over-limit uploads get 413 with no data stored (tus and simple upload). |
+| S01.4-T06 | Abandoned-upload cleanup: an expiry setting (default 24 h); a periodic cleanup behind a `Scheduler` interface (a simple ticker in S01; replaced by the S04.3 job system) removes expired tusd files and index rows. | Not started | Expired sessions are removed. Active sessions are untouched (tests with an injected clock). |
 
 ### S01.5: API layer
 
@@ -217,12 +224,12 @@ flowchart LR
 
 | Task ID | Description | Status | Acceptance criteria |
 |---|---|---|---|
-| S01.5-T01 | Route conventions document: namespaces, naming, path addressing, pagination, sorting, conflict parameter, reserved `/api/v1/photos`. | Not started | Document committed. Every endpoint follows it (review checklist). |
-| S01.5-T02 | Versioning policy: `/api/v1`; what counts as a breaking change; deprecation process. | Not started | Policy documented. A test asserts that every route is under `/api/v1`. |
-| S01.5-T03 | Error catalogue and RFC 9457 responses: stable `code` values and correlation IDs. | Not started | Every error response validates against the schema (contract test across all endpoints). |
-| S01.5-T04 | Request validation for all parameters and bodies, mapped to 4xx problems. | Not started | Property-based tests with random inputs never produce a 5xx or reach the service with invalid data. |
-| S01.5-T05 | OpenAPI spec generated or authored (per ADR-0002, to be confirmed after the S01.1 ADRs are accepted), committed, with a CI drift check. | Not started | CI fails when the spec and the implementation differ (verified once). |
-| S01.5-T06 | Locally served API documentation, with every asset bundled and no CDN (I6). | Not started | The docs page renders with the network disabled (test with blocked outbound traffic or asset checks). |
+| S01.5-T01 | Route conventions document (`docs/api/conventions.md`): namespaces, naming, path addressing, cursor pagination, sorting, `on_conflict`, reserved `/api/v1/photos`, and tus as an external protocol. | Not started | Committed. A review checklist is applied to every endpoint. |
+| S01.5-T02 | Versioning policy (`docs/api/versioning.md`): `/api/v1`; what counts as a breaking change; deprecation process. | Not started | Committed. A test asserts that every registered route is under `/api/v1` or `/api/docs`. |
+| S01.5-T03 | Error catalogue (`docs/api/errors.md`) and the problem schema in `api/openapi.yaml`. | Not started | A contract test validates every error response against the schema across all endpoints. |
+| S01.5-T04 | Request validation: generated parameter binding plus explicit validators, mapped to 4xx problems. | Not started | Fuzz tests (`go test -fuzz`) over query and body inputs never produce a 5xx or reach the service with invalid data. |
+| S01.5-T05 | `api/openapi.yaml` (OpenAPI 3.0.x, the version oapi-codegen supports) complete for S01; **oapi-codegen v2.8.0** (`std-http` strict server) generates `internal/api/gen/` via `//go:generate go tool oapi-codegen -config internal/api/oapi-codegen.yaml api/openapi.yaml`; runtime `github.com/oapi-codegen/runtime` v1.7.0; CI drift check. | Not started | CI fails when the spec and the generated code differ (verified once). Handlers fail to compile if an operation is missing. |
+| S01.5-T06 | Offline API docs: vendored **Redoc 2.5.4** standalone bundle (`internal/api/docs/redoc.standalone.js`, checksum recorded in `dependencies.md`), embedded with `go:embed` and served at `/api/docs/` together with the spec. | Not started | The docs render with the network disabled. An automated check asserts that the page references no external URLs. |
 
 ### S01.6: Safety baseline
 
@@ -231,12 +238,12 @@ flowchart LR
 
 | Task ID | Description | Status | Acceptance criteria |
 |---|---|---|---|
-| S01.6-T01 | Path normalization and traversal prevention in the resolver: reject `..`, absolute paths, drive letters, UNC paths, NUL bytes, and encoded separators; normalize Unicode to NFC; verify that the final real path stays inside the namespace. | Not started | The attack corpus (≥ 50 cases) is rejected on Linux and Windows CI. |
-| S01.6-T02 | Filename validation: Windows reserved names (`CON`, `PRN`, `AUX`, `NUL`, `COM1-9`, `LPT1-9`, with or without extensions); forbidden characters `<>:"/\|?*` and control characters; trailing dot or space; `.` and `..`; ≤ 255 bytes per component; overall path-length policy. The API **rejects** invalid names with the reason (no silent rewriting). | Not started | Table-driven tests cover each rule with a clear error code per rule. |
-| S01.6-T03 | Symlink policy: symlinks inside the area are not followed for reads or writes, are listed as `kind=symlink` without a target, and are never created by the API. | Not started | A symlink pointing outside the root cannot be read, written, or traversed (tests on Linux; Windows where the test runner has symlink privilege). |
-| S01.6-T04 | Name-conflict handling: `on_conflict=fail\|rename\|overwrite` (default `fail`) for upload, create, copy, move, rename; a `name (n).ext` rename pattern. | Not started | Each policy is tested for each operation. |
-| S01.6-T05 | Concurrency safety: per-path locks on mutating operations; overwrite via temp + atomic replace; a stress test with parallel writers. | Not started | 50 concurrent writers to one name give one consistent final file and no partial files. |
-| S01.6-T06 | Bind-address guard: loopback only in S01. Configuring any other address fails validation with a message that points to S03. | Not started | `0.0.0.0`, a LAN IP, and `::` are refused. `127.0.0.1` and `::1` are accepted. |
+| S01.6-T01 | Path normalization and traversal prevention in the resolver. (1) Reject `..`, absolute paths, drive letters, UNC paths, NUL bytes, backslash separators, and encoded separators. (2) NFC-normalize names (`golang.org/x/text/unicode/norm` **if** needed, otherwise reject non-NFC; decided in the task and recorded in `dependencies.md`). (3) `filepath.IsLocal` check. (4) All I/O via `os.Root` as the second layer. | Not started | The attack corpus (≥ 50 cases, also a fuzz seed corpus) is rejected on Linux and Windows CI. `os.Root` blocks escapes even when the resolver is bypassed in tests. |
+| S01.6-T02 | Filename validation: Windows reserved names (`CON`, `PRN`, `AUX`, `NUL`, `COM1-9`, `LPT1-9`, with or without extensions, any case); forbidden characters `<>:"/\|?*` and control characters; trailing dot or space; `.` and `..`; ≤ 255 bytes per component; overall path-length policy. The API **rejects** invalid names with a per-rule code (no silent rewriting). | Not started | Table-driven tests cover each rule with its error code. |
+| S01.6-T03 | Symlink policy: symlinks inside the area are never followed for reads or writes (`os.Root` + `Lstat`), are listed as `kind=symlink` without a target, and are never created by the API. | Not started | A symlink pointing outside the root cannot be read, written, or traversed (Linux; Windows where the CI runner has symlink privilege, otherwise skipped with a reason). |
+| S01.6-T04 | Name-conflict handling: `on_conflict=fail\|rename\|overwrite` (default `fail`) for simple upload, tus finalize, create folder, copy, move, rename; the `name (n).ext` pattern with a race-safe loop. | Not started | Each policy is tested for each operation, including concurrent `rename` collisions. |
+| S01.6-T05 | Concurrency safety: per-path lock manager (`internal/storage/locks.go`); overwrite via temp + atomic rename; a stress test with parallel writers (`-race`). | Not started | 50 concurrent writers to one name give one consistent final file, no partial files, and no race-detector reports. |
+| S01.6-T06 | Bind-address guard: loopback only in S01. Configuring any other address fails validation with a message that points to S03. | Not started | `0.0.0.0`, a LAN IP, `::`, and hostnames resolving to non-loopback addresses are refused. `127.0.0.1`, `::1`, and `localhost` are accepted. |
 
 ### S01.7: Integration, testing, and stage review
 
@@ -245,105 +252,131 @@ flowchart LR
 
 | Task ID | Description | Status | Acceptance criteria |
 |---|---|---|---|
-| S01.7-T01 | Integration suite: every endpoint over real HTTP against a real temporary storage root. | Not started | Every endpoint and status code path is covered and passes in CI (Linux + Windows). |
-| S01.7-T02 | Attack suite: traversal, malicious names, symlink escapes, header injection in filenames, oversized inputs. | Not started | The suite passes. Every case in the S01.6 corpus is also exercised end to end. |
-| S01.7-T03 | Edge-case suite: Unicode (NFC/NFD, emoji, right-to-left), empty files, sparse multi-GB files, deep nesting, folders with 10,000 entries. | Not started | The suite passes. Platform-specific skips are documented with reasons. |
-| S01.7-T04 | Basic performance check: listing latency (10k entries), upload and download throughput vs. raw disk, memory during a 10 GB transfer. Results recorded against NFR-003. | Not started | Report committed. Targets met, or deviations recorded for user review. |
-| S01.7-T05 | Documentation: README developer setup and API usage with HTTP-client examples, route conventions, error catalogue, updated plan status and CURRENT_STATE. | Not started | A reader can run the demo from the docs alone. |
-| S01.7-T06 | Demo script (HTTP client) covering create folder, upload (simple and resumable, with a forced interruption), list, download with range, rename, move, copy, delete. | Not started | The script runs green against a fresh instance. |
-| S01.7-T07 | Completion record and user sign-off. | Not started | Completion record filled in (section 13). The user's sign-off is quoted in the log. |
+| S01.7-T01 | Integration suite: every endpoint over real HTTP (the server on `127.0.0.1:0`) against a real temporary storage root. | Not started | Every endpoint and status code path is covered and passes in CI (Linux + Windows). |
+| S01.7-T02 | Attack suite: traversal, malicious names, symlink escapes, header injection in filenames, oversized inputs, tus metadata abuse. | Not started | The suite passes. The S01.6 corpus is exercised end to end. |
+| S01.7-T03 | Edge-case suite: Unicode (NFC/NFD, emoji, right-to-left), empty files, sparse multi-GB files (Linux), deep nesting, folders with 10,000 entries. | Not started | The suite passes. Platform-specific skips are documented with reasons. |
+| S01.7-T04 | Basic performance check (`go test -bench` + a scripted run): listing latency (10k entries), upload and download throughput vs. raw disk (`dd`-style baseline), heap during a 10 GB transfer. Results recorded against NFR-003. | Not started | A report committed in `docs/perf/S01-baseline.md`. Targets met, or deviations recorded for user review (reference hardware pending Q1). |
+| S01.7-T05 | Documentation: README development and API usage (curl examples for Linux/macOS and PowerShell), `docs/api/*`, plan status, CURRENT_STATE. | Not started | A reader can run the demo from the docs alone. |
+| S01.7-T06 | Demo scripts `scripts/demo.sh` and `scripts/demo.ps1` (curl) covering create folder, simple upload, tus upload with a forced interruption and resume, list, ranged download, rename, move, copy, delete. | Not started | Both scripts run green against a fresh instance (Linux in CI; Windows manually, recorded). |
+| S01.7-T07 | Completion record and user sign-off. | Not started | Section 13 is filled in. The user's sign-off is quoted in the session log. |
 
 ## 6. Files and modules expected to be created or changed
 
-> **To be confirmed after the S01.1 ADRs are accepted.** The exact paths depend on the language and repository layout chosen in ADR-0001. Technology-neutral list:
-
 | Path | Create / Change | Purpose | Task ID(s) |
 |---|---|---|---|
-| `LICENSE` | Create | Project license (Q22) | S01.1-T02 |
-| `.gitignore`, `.gitattributes`, `.editorconfig` | Create | Repository hygiene, line endings | S01.1-T03 |
-| Dependency manifest + lockfile | Create | Pinned dependencies | S01.1-T04 |
-| Lint/format/type-check configuration, pre-commit config | Create | Code quality | S01.1-T05 |
-| `.github/workflows/ci.yml` | Create | CI on Linux + Windows | S01.1-T07 |
-| Dev container / Dockerfile + compose (dev) | Create | Development environment | S01.1-T08 |
-| Server source: config, logging, errors, app entry | Create | Foundation | S01.1-T09–T12 |
-| Server source: storage layout, resolver, owner model, health | Create | S01.2 | S01.2-T01–T06 |
-| Server source: files service, local backend, endpoints | Create | S01.3 | S01.3-T01–T09 |
-| Server source: tus uploads, cleanup | Create | S01.4 | S01.4-T01–T06 |
-| API spec (OpenAPI), conventions and error docs | Create | S01.5 | S01.5-T01–T06 |
-| Server source: name validation, locks, bind guard | Create | S01.6 | S01.6-T01–T06 |
-| Test suites (unit, integration, attack, edge, perf) | Create | Verification | all, S01.7 |
-| `README.md` | Change | Developer and API usage sections | S01.1-T03, S01.7-T05 |
-| `code-agent-docs/*` | Change | Status, logs, completion record | all |
+| `go.mod`, `go.sum` | Create | Module, toolchain pin, tool directives | S01.1-T01 |
+| `.gitattributes`, `.editorconfig`, `.gitignore` | Create | Repository hygiene, LF line endings | S01.1-T01 |
+| `LICENSE`, `docs/licensing.md` | Create | Project license (Q22) and dependency license policy | S01.1-T02 |
+| `.golangci.yml` | Create | Lint, format, depguard rules | S01.1-T03 |
+| `internal/testutil/` | Create | Temp root and test-server helpers | S01.1-T04 |
+| `.github/workflows/ci.yml`, `.github/dependabot.yml` | Create | CI and dependency updates | S01.1-T05 |
+| `deploy/Dockerfile.dev`, `deploy/compose.dev.yaml`, `deploy/config.example.toml` | Create | Development environment | S01.1-T06 |
+| `internal/config/` | Create | TOML + env + flags configuration | S01.1-T07 |
+| `internal/logging/` | Create | slog setup, request ID, access log | S01.1-T08 |
+| `internal/apperr/` | Create | Domain errors → RFC 9457 | S01.1-T09 |
+| `internal/db/`, `internal/db/migrations/00001_init.sql` | Create | SQLite open, pragmas, goose migrations | S01.1-T10 |
+| `cmd/local-ai-nas/main.go` | Create | Entry point, subcommands, server lifecycle | S01.1-T11 |
+| `internal/storage/{layout,resolver,space,locks,names}.go` | Create | Layout, resolver, free space, locks, name rules | S01.2, S01.6 |
+| `internal/health/` | Create | Startup and health checks | S01.2-T05 |
+| `internal/files/` | Create | FilesService, Item model, os.Root backend, hooks | S01.3 |
+| `internal/uploads/` | Create | tusd integration, validation, finalize, cleanup | S01.4 |
+| `api/openapi.yaml`, `internal/api/oapi-codegen.yaml`, `internal/api/gen/`, `internal/api/*.go` | Create | Contract, generated code, handlers, middleware | S01.5, S01.3 |
+| `internal/api/docs/` | Create | Vendored Redoc + docs handler | S01.5-T06 |
+| `docs/api/{conventions,versioning,errors}.md`, `docs/perf/S01-baseline.md` | Create | API and performance documentation | S01.5, S01.7 |
+| `scripts/demo.sh`, `scripts/demo.ps1` | Create | Demo | S01.7-T06 |
+| `testdata/`, `testdata/SOURCES.md` | Create | Fixtures (generated where possible) and their sources and licenses | S01.1-T01, S01.7 |
+| `README.md` | Change | Development and API usage sections | S01.1-T06, S01.7-T05 |
+| `code-agent-docs/*` (incl. `dependencies.md`) | Change | Status, logs, register, completion record | all |
 
 ## 7. Dependencies to add
 
-> **To be confirmed after the S01.1 ADRs are accepted.** Candidates under the *Proposed* ADR-0001 (Python/FastAPI) are listed for review only. Nothing is installed until the ADRs are accepted, and every entry needs a verified license (R6).
+All are recorded in `code-agent-docs/dependencies.md` in the same commit that adds them (R6). Licenses were verified on 2026-09-24 (S003 log E005/E007/E011).
 
 | Dependency | Version | Justification | License | License compatible? |
 |---|---|---|---|---|
-| Language runtime + web framework (per ADR-0001) | TBC | HTTP server, routing, validation | TBC | TBC (Q22) |
-| tus server implementation (library or in-house, per ADR-0002) | TBC | Resumable uploads (FR-004) | TBC | TBC |
-| Config/settings library | TBC | Config file + env (S01.1-T09) | TBC | TBC |
-| Structured logging library | TBC | NFR-016 | TBC | TBC |
-| Test framework, property-based testing, HTTP test client | TBC (dev) | NFR-014 | TBC | TBC |
-| Linter/formatter/type checker, pre-commit | TBC (dev) | NFR-014 | TBC | TBC |
-| License checker | TBC (dev) | NFR-013 | TBC | TBC |
+| Go toolchain | go1.27.1 | Core language (ADR-0001); `os.Root` for traversal-resistant I/O | BSD-3-Clause | Yes |
+| github.com/pelletier/go-toml/v2 | v2.4.3 | TOML config with strict decoding (S01.1-T07) | MIT | Yes |
+| modernc.org/sqlite | v1.59.0 | Pure-Go SQLite driver (ADR-0007) | BSD-3-Clause | Yes |
+| github.com/pressly/goose/v3 | v3.28.0 | Embedded SQL migrations (ADR-0007) | MIT | Yes |
+| github.com/tus/tusd/v2 | v2.10.1 | Resumable uploads (ADR-0008) | MIT | Yes |
+| github.com/oapi-codegen/runtime | v1.7.0 | Runtime for generated API code (ADR-0002) | Apache-2.0 | Yes (confirm against Q22; Apache-2.0 is incompatible only with GPL-2.0-only projects) |
+| golang.org/x/sys | v0.48.0 | Free space and volume ID on Windows (S01.2-T04/T05) | BSD-3-Clause | Yes |
+| golang.org/x/text (only if needed for NFC) | latest at the time of S01.6-T01 | Unicode normalization of names | BSD-3-Clause | Yes; decided in S01.6-T01 |
+| Redoc (vendored JS asset) | 2.5.4 | Offline API docs (ADR-0002) | MIT | Yes |
+| **Dev only:** oapi-codegen | v2.8.0 | Code generation (tool directive) | Apache-2.0 | Yes (not distributed) |
+| **Dev only:** github.com/google/go-cmp | v0.7.0 | Test diffs | BSD-3-Clause | Yes |
+| **Dev only:** golangci-lint (binary) | v2.13.2 | Lint and format | GPL-3.0 | Yes: a development tool, not linked or distributed |
+| **Dev only:** govulncheck | v1.8.0 | Vulnerability scan (tool directive) | BSD-3-Clause | Yes |
+| **Dev only:** go-licenses | v2.0.1 | License check (tool directive) | Apache-2.0 | Yes |
+| **CI only:** Trivy | v0.74.0 | Dev image vulnerability scan | Apache-2.0 | Yes |
 
 ## 8. Test plan
 
 | What is tested | Test type (unit / integration / e2e / perf) | How | Task ID |
 |---|---|---|---|
-| Config precedence and validation | unit | Table-driven | S01.1-T09 |
-| Error mapping and redaction | unit | Per domain error; log capture | S01.1-T10, T11 |
-| Layout init, overlap rejection, health | integration | Temp roots, including read-only and overlapping configs | S01.2-T01–T05 |
-| Resolver and traversal corpus | unit + integration | ≥ 50 attack cases on Linux and Windows | S01.6-T01, S01.7-T02 |
-| Filename rules | unit | Table-driven per OS rule | S01.6-T02 |
+| Config precedence and validation | unit | Table-driven | S01.1-T07 |
+| Logging fields and redaction | unit | slog handler capture | S01.1-T08 |
+| Error mapping and panic recovery | unit | Per domain error; `httptest` | S01.1-T09 |
+| SQLite WAL, concurrent read during a write, idempotent migrations | integration | Real database file on Linux and Windows | S01.1-T10 |
+| Layout init, overlap rejection, health, same-filesystem check | integration | Temp roots; injected device-ID and free-space providers | S01.2-T01–T05 |
+| Resolver and traversal corpus | unit + fuzz + integration | ≥ 50 cases as a fuzz seed corpus; Linux and Windows | S01.6-T01, S01.7-T02 |
+| Filename rules | unit | Table-driven per rule | S01.6-T02 |
 | Symlink policy | integration | Links inside and outside the root | S01.6-T03 |
 | Each file operation and conflict policy | integration | Real HTTP against a temp root | S01.3-T02–T09, S01.6-T04 |
 | Range and conditional downloads | integration | 200/206/304/416 | S01.3-T06 |
-| Resumable upload and crash safety | integration | tus client, interruption, fault injection | S01.4-T01, T02 |
-| Memory bound on 10 GB transfer | perf | Sparse file, RSS sampling | S01.4-T03, S01.7-T04 |
-| Concurrency stress | integration | 50 parallel writers | S01.6-T05 |
-| API contract and OpenAPI drift | integration + CI | Schema validation; spec diff | S01.5-T03, T05 |
-| Offline docs | integration | Asset check / blocked network | S01.5-T06 |
+| tus resume, metadata validation, finalize crash safety | integration | In-test tus client; fault injection | S01.4-T01–T03 |
+| Memory bound on a 10 GB transfer | perf | Sparse file; `runtime/metrics` sampling | S01.4-T04, S01.7-T04 |
+| Concurrency stress | integration | 50 parallel writers with `-race` | S01.6-T05 |
+| API contract and spec drift | integration + CI | Schema validation of responses; `go generate` diff | S01.5-T03, T05 |
+| Offline docs | integration | No external URLs in the served page | S01.5-T06 |
 | Edge cases | integration | Unicode, empty, sparse, deep, 10k entries | S01.7-T03 |
 
-Commands (lint, format, test) that must pass before a task is marked Done:
+Commands that must pass before a task is marked Done (the same commands run in CI):
 ```
-To be confirmed after the S01.1 ADRs are accepted (defined in S01.1-T05 to T07 and recorded here).
+go build ./...
+go vet ./...
+golangci-lint run ./...                 # binary v2.13.2
+golangci-lint fmt --diff                # formatting check
+go test ./...                           # Windows and Linux
+go test -race ./...                     # Linux (CI)
+go generate ./... && git diff --exit-code   # OpenAPI/spec drift
+go tool govulncheck ./...
+go tool go-licenses check ./...         # allow-list from S01.1-T02
 ```
 
 ## 9. Stage acceptance criteria
 
 - [ ] Every S01 substage acceptance criterion in plan.md (S01.1 to S01.7) is met.
-- [ ] Using only an HTTP client, files and folders in the files area can be managed reliably, including large resumable uploads (demo script, S01.7-T06).
+- [ ] Using only an HTTP client, files and folders in the files area can be managed reliably, including large resumable uploads (demo scripts, S01.7-T06).
 - [ ] The server listens only on loopback, and path traversal, invalid names, and symlink escapes are impossible (attack suite).
 - [ ] `photos/` exists and is untouched. `/api/v1/photos` is reserved.
-- [ ] All tests pass in CI on Linux and Windows. Linter, formatter, type checks, and license check are clean.
-- [ ] Documentation updated (README, API docs, conventions, plan and CURRENT_STATE status).
+- [ ] All commands in section 8 pass in CI on Linux and Windows. Cross-builds for linux/amd64 and linux/arm64 succeed. The dev image passes the Trivy scan (no unresolved high findings).
+- [ ] Documentation and `dependencies.md` are updated (README, API docs, plan and CURRENT_STATE status).
 
 ## 10. Risks and rollback approach
 
 | Risk | Likelihood | Impact | Mitigation | Rollback |
 |---|---|---|---|---|
-| Stack ADRs change after tasks are planned | Medium | Medium | Tech-specific details are marked "to be confirmed". Revisit this document at S01.1-T01. | Update the stage document before any code (R3). |
-| Windows-specific filesystem behavior (locks, reserved names, symlink privilege) breaks tests | Medium | Medium | Windows CI from the first commit; a documented skip policy | Fix, or mark platform-specific with a reason. |
-| The tus library does not fit the atomic finalize or storage needs | Low | Medium | ADR-0002 allows an in-house core-protocol implementation | Swap the implementation behind the upload interface. |
-| Memory bound not met in streaming paths | Low | High | Early memory test (S01.4-T03) | Fix the offending path before continuing. |
-| Same-filesystem requirement fails on some setups (e.g. separate volumes) | Low | Medium | Health check blocks startup with guidance | Document the fallback (copy + fsync + rename) as a future ADR if needed. |
-| Scope creep (GUI or auth pulled into S01) | Medium | Medium | Out-of-scope list | Defer to S02/S03. |
+| ADR-0003 (layout) is changed by the user | Medium | Medium | S01.2 is gated on it. The resolver isolates the layout details | Update S01.2 tasks before coding (R3) |
+| Windows filesystem behavior (locks, reserved names, symlink privilege, sparse files) breaks tests | Medium | Medium | Windows CI from the first commit; a documented skip policy | Fix, or mark platform-specific with a reason |
+| tusd hooks don't fit the atomic finalize (e.g. timing of `PreFinishResponseCallback` vs. file closing) | Low | Medium | Fault-injection tests in S01.4-T03 | Finalize from the `NotifyCompleteUploads` channel with client polling; recorded as a deviation |
+| oapi-codegen limits (OpenAPI 3.0.x only; binary bodies; ServeContent integration) | Low | Low | Custom response visitors; tus documented outside generated routes | Hand-written handlers for specific routes, still spec-checked by contract tests |
+| Memory bound not met in streaming paths | Low | High | Early memory test (S01.4-T04) | Fix the offending path before continuing |
+| Same-filesystem requirement fails on some setups | Low | Medium | Health check + fallback finalize (plan 8.18) | The fallback is the documented behavior |
+| Scope creep (GUI or auth pulled into S01) | Medium | Medium | Out-of-scope list | Defer to S02/S03 |
 
-**Rollback for the stage:** each task is a separate commit on its feature branch with a PR into `develop` (RULES.md User Preferences). A faulty task is reverted by reverting its PR. No data migrations exist in S01, so rolling back code never strands data.
+**Rollback for the stage:** each task is a separate commit on its feature branch with a PR into `develop` (RULES.md User Preferences). A faulty task is reverted by reverting its PR. S01 database migrations are additive, and the database file lives in internal data, so it can be deleted and recreated without losing user files.
 
 ## 11. Approval record
 
-> _Not yet approved. The user must approve this stage document (and accept ADR-0001, ADR-0002, ADR-0003) before any S01 code is written._
+> _Not yet approved. The user must approve this stage document before any S01 code is written. ADR-0003 must also be accepted before S01.2, and Q22 answered before S01.1-T02. ADRs 0001, 0002, and 0004–0008 were Accepted through P003._
 
 ## 12. Change log for this stage document
 
 | Date | Session | Change | Reason | Approval needed / given |
 |---|---|---|---|---|
 | 2026-09-24 | S002 | Initial version (Planned) | P002 step 7 | Needed: user approval |
+| 2026-09-24 | S003 | Replaced every "to be confirmed after the S01.1 ADRs are accepted" placeholder with the concrete Go stack (packages, files, tools, commands). Rewrote the S01.1 tasks as Go setup tasks (11 tasks, previously 12; the old review gate is removed because the ADRs are Accepted). Added SQLite from S01 (S01.1-T10; `uploads` and `settings` tables). Added `os.Root` as the second traversal layer. Added x/sys for free space and volume ID. Concrete tusd hook design. Concrete endpoints, dependencies, and commands. Status stays **Planned** | P003 `stage_document_updates` | Needed: user approval (the stage was not approved before, so there is nothing to re-confirm) |
 
 ## 13. Completion record
 

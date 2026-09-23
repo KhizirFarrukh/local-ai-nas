@@ -61,6 +61,6 @@
 ## Links
 
 - **Related requirements:** FR-069, FR-070, FR-071, FR-072, FR-074, FR-008, NFR-025, NFR-026
-- **Related ADRs:** ADR-0001, ADR-0002
+- **Related ADRs:** ADR-0001 (Go), ADR-0002 (API), ADR-0004 (repository layout), ADR-0007 (SQLite database at `<internal>/db/`), ADR-0008 (tus temp uploads at `<internal>/tmp/uploads/`), ADR-0014 (index at `<internal>/index/`)
 - **Related stages:** S01.2, S03.2, S07.2, S08.1
-- **Plan version:** 0.2.0
+- **Plan version:** 0.3.0. _S003 note: P003 did not cover this decision, so it **remains Proposed** and gates S01.2. Only the links were updated in S003._
