@@ -1,0 +1,366 @@
+{
+  "prompt_meta": {
+    "name": "local-ai-nas: Technology Stack (Plan Change Request #3)",
+    "prompt_version": "1.0",
+    "type": "Plan change request, handled under code-agent-docs/RULES.md R4 (plan changes) and R5 (decision records)",
+    "how_to_read_this": "Read this entire prompt before acting. Every field is an instruction. The technology choices here are the user's decisions. Your job is to verify them, record them as ADRs, and fold them into the plan, not to re-debate them. If verification finds a real problem, report it instead of silently switching to something else."
+  },
+
+  "before_you_start": [
+    "Run the full session start protocol from code-agent-docs/RULES.md (R1) before acting on anything in this prompt.",
+    "Save this entire prompt, unchanged, to code-agent-docs/prompts/P003-technology-stack.json. In the session log, record the USER entry as: 'Plan change request #3 (technology stack), archived verbatim at code-agent-docs/prompts/P003-technology-stack.json'.",
+    "If an Accepted ADR or a recorded user decision conflicts with this prompt, do not overwrite it. Mark it as 'CONFLICT: needs user decision' and list it in your report.",
+    "If implementation of any stage has already started, do not change any code in this session. List the impact on existing code in your report instead."
+  ],
+
+  "objective": "Record the user's chosen technology stack as Architecture Decision Records, verify each choice (maintenance status, current stable version, license), create a dependency register, update plan.md and the Stage 1 document with the concrete stack, apply the pre-approved RULES.md changes, then report to the user and stop.",
+
+  "out_of_scope": [
+    "Writing application source code, including prototypes and spikes. If a choice needs a prototype to confirm it, plan the prototype as a task in the relevant stage instead.",
+    "Installing dependencies or scaffolding the project",
+    "Starting Stage 1 implementation",
+    "Replacing a user-chosen technology with a different one. You may only recommend an alternative in your report."
+  ],
+
+  "decision_status_rules": {
+    "user_chosen_items": "Create each ADR with status 'Accepted'. The approval record cites this prompt (P003). The exception is when verification finds a blocking problem, such as an abandoned project, a license that restricts use, or a missing required capability. In that case, set the status to 'Proposed', describe the problem, suggest an alternative, and flag it in your report.",
+    "deferred_items": "Items marked 'deferred' below are recorded as the intended direction but stay 'Proposed' until their stage begins. The stage's first substage confirms or revises them.",
+    "agent_selected_details": "Some small implementation details are left to you (marked 'agent decides'). Pick one, justify it in the relevant ADR under 'Implementation details chosen by agent', and list these choices in your report so the user can object.",
+    "existing_proposed_adrs": "If a Proposed ADR from P002 already covers the same decision, update it to match the user's choice instead of creating a duplicate. Move its previous recommendation into 'Options considered'."
+  },
+
+  "guiding_principles": [
+    "Few moving parts: one core server binary, one database file, and an embedded search index. The only second service is the optional AI worker.",
+    "Everything works offline after installation. The only allowed download is obtaining AI models at opt-in, with explicit user consent.",
+    "Prefer the Go standard library, then small, well-maintained dependencies.",
+    "Call external media tools (ExifTool, libvips, FFmpeg) as subprocesses rather than through cgo bindings. This keeps the Go build pure and easy to cross-compile. Any exception needs its own ADR.",
+    "Pin every version. Use lockfiles for Go (go.sum), the web UI, and Python.",
+    "Every dependency and every AI model must have a license that allows anyone to deploy and use this project. Nothing restricted to non-commercial or research-only use."
+  ],
+
+  "technology_stack": {
+    "core_server": {
+      "choice": "Go (latest stable release at setup time, pinned in go.mod)",
+      "applies_to_stages": ["S01 onward"],
+      "rationale": "A NAS mostly does disk and network I/O, where Go's streaming and concurrency are strong. It produces a single static binary with low memory use and easy cross-compilation for amd64 and arm64 (e.g. Raspberry Pi).",
+      "alternatives_considered": [
+        "Rust: faster, and has the excellent Tantivy search library, but development is much slower and CPU speed is not the bottleneck here.",
+        "Node.js/TypeScript: one language across the whole stack, but a heavier runtime that is weaker for streaming large files and harder to package.",
+        "Python: best AI ecosystem but a weaker fit for a long-running file server. It is used only for the AI worker."
+      ]
+    },
+
+    "api": {
+      "choice": "REST over HTTP, versioned under /api/v1, with an OpenAPI 3 specification at api/openapi.yaml as the contract",
+      "applies_to_stages": ["S01.5 onward"],
+      "details": [
+        "Router: the Go standard library net/http router, or chi if routing needs outgrow it (agent decides).",
+        "Whether the spec is written first or generated from code: agent decides. Either way, CI must fail if the spec and the code disagree.",
+        "The web UI's TypeScript API client is generated from the spec (agent decides the generator)."
+      ]
+    },
+
+    "resumable_uploads": {
+      "choice": "The tus protocol: the tusd Go library on the server, Uppy with its tus plugin in the browser",
+      "applies_to_stages": ["S01.4", "S02.4", "S04.2"],
+      "details": [
+        "tusd must be embedded in the core server, with its hooks running authentication and authorization checks (from S03 onward).",
+        "Incomplete uploads are stored in a temp folder inside internal app data (invariant I2). That folder must be on the same filesystem as the storage root so the final move is an atomic rename. If it cannot be, fall back to copy, fsync, then rename, and document why."
+      ]
+    },
+
+    "database": {
+      "choice": "SQLite in WAL mode",
+      "applies_to_stages": ["S01 onward"],
+      "stores": "Users, sessions, settings, the job queue, the audit log, and the database-side mirror of sharing and access data.",
+      "details": [
+        "Driver: prefer a pure-Go driver (modernc.org/sqlite) to avoid cgo. Switch to mattn/go-sqlite3 only if benchmarks show a real problem, and record that in an ADR.",
+        "Schema migrations: versioned SQL migration files run by a Go migration tool (agent decides, e.g. goose)."
+      ],
+      "alternatives_considered": [
+        "PostgreSQL: more powerful, but another service to install, run, and back up. That is overkill at household scale and conflicts with the goal that anyone can deploy this."
+      ]
+    },
+
+    "job_queue": {
+      "choice": "A persistent job queue stored in SQLite and run inside the core server",
+      "applies_to_stages": ["S04.3 onward"],
+      "details": [
+        "Required: survives restarts, retries with backoff, priorities, per-job-type concurrency limits, progress reporting.",
+        "Implementation: a small custom queue or a maintained SQLite-backed queue library (agent evaluates and decides)."
+      ]
+    },
+
+    "search": {
+      "choice": "Bleve, a Go-native embedded full-text search library",
+      "applies_to_stages": ["S06 onward"],
+      "details": [
+        "The index is stored in internal app data and can always be rebuilt from disk and sidecars (invariant I3).",
+        "Fuzzy matching uses Bleve's edit-distance queries; stemming and plurals use language analyzers.",
+        "Operators (before:, after:, place:, type:, in:, and so on) are parsed by the project's own Go parser into Bleve date-range, numeric-range, and term queries.",
+        "Owner and access-list fields are keyword fields used as filters on every query (from S07 onward).",
+        "Synonyms are expanded at query time from the project's own local synonym dictionary, which users can extend (S06.5)."
+      ],
+      "alternatives_considered": [
+        "SQLite FTS5: already available through the database, but it has no built-in edit-distance fuzzy matching.",
+        "Meilisearch: excellent built-in typo tolerance and synonyms, but it is a separate service that uses more memory.",
+        "Tantivy: excellent, but written in Rust, so it would need cross-language bindings."
+      ],
+      "fallback": "If the S06.8 benchmarks miss their targets, revisit this through a new ADR."
+    },
+
+    "metadata_extraction": {
+      "choice": "ExifTool, kept running as a persistent process in -stay_open mode",
+      "applies_to_stages": ["S05.3 onward"],
+      "details": [
+        "Covers EXIF, XMP, IPTC, maker notes, HEIC, RAW, and video metadata.",
+        "Also used to extract the embedded JPEG preview from RAW files for thumbnails.",
+        "Wrapper: a maintained Go wrapper library or a small custom wrapper (agent decides).",
+        "Needs a Perl runtime, which the Docker image bundles."
+      ]
+    },
+
+    "image_processing": {
+      "choice": "libvips (vipsthumbnail and the vips command-line tool) with libheif for HEIC",
+      "applies_to_stages": ["S04.4 onward"],
+      "details": [
+        "Thumbnail format: WebP or JPEG (agent decides, with browser support noted).",
+        "RAW files: use the embedded preview extracted by ExifTool. Full RAW conversion (e.g. via LibRaw) is deferred."
+      ]
+    },
+
+    "video_processing": {
+      "choice": "FFmpeg and ffprobe",
+      "applies_to_stages": ["S04.4", "S05.3"],
+      "details": [
+        "Used for poster frames and for duration and codec metadata.",
+        "Transcoding browser-incompatible video is deferred and not part of the S04 baseline."
+      ]
+    },
+
+    "reverse_geocoding": {
+      "choice": "The GeoNames cities dataset with an in-memory nearest-city lookup (e.g. a k-d tree)",
+      "applies_to_stages": ["S05.4"],
+      "details": [
+        "Granularity (e.g. cities with population above 500 or 1000) and region and country name tables: agent decides and records the size trade-off.",
+        "The license (CC BY 4.0) requires attribution. Add it to the documentation and to an About page in the web UI."
+      ]
+    },
+
+    "web_ui": {
+      "choice": "A web UI served by the NAS: SvelteKit in static single-page mode (adapter-static), TypeScript, Tailwind CSS",
+      "applies_to_stages": ["S02 onward"],
+      "details": [
+        "The built UI is embedded into the Go binary with go:embed and served by the core server.",
+        "During development, the Vite dev server proxies API requests to the core server.",
+        "Uppy for uploads; a virtualized grid for the photo timeline (agent decides on a library or custom code).",
+        "Package manager: pnpm (agent decides otherwise only with a reason). Checks: svelte-check, ESLint, Prettier."
+      ],
+      "alternatives_considered": [
+        "React with Vite: the largest ecosystem, but heavier and more boilerplate.",
+        "A desktop app (Electron or Tauri): not needed, since a web UI works from any device on the network."
+      ]
+    },
+
+    "security": {
+      "choice": "Argon2id password hashing, server-side sessions in SQLite, TOTP for optional 2FA, Go's crypto/tls for HTTPS",
+      "applies_to_stages": ["S03 onward"],
+      "details": [
+        "Argon2id via golang.org/x/crypto/argon2. Record the chosen parameters in the ADR.",
+        "The session cookie holds only a random opaque ID and is HttpOnly, Secure, and SameSite. Session data stays in SQLite.",
+        "CSRF tokens for all state-changing requests.",
+        "TOTP through a maintained Go library (e.g. pquerna/otp), only if S03.7 is approved.",
+        "HTTPS with user-provided certificates or generated self-signed certificates."
+      ]
+    },
+
+    "network_shares": {
+      "choice": "WebDAV via golang.org/x/net/webdav",
+      "applies_to_stages": ["S09"],
+      "details": [
+        "Implement webdav.FileSystem so that every WebDAV operation goes through the core's authorization, area separation, and sidecar logic. Network access then follows exactly the same rules as the web UI (invariants I1 and I5)."
+      ],
+      "deferred": "SMB via Samba: Linux-only, later, and still 'Proposed'. Mapping the app's per-user permissions onto Samba needs its own design in S09.1."
+    },
+
+    "file_watching": {
+      "choice": "fsnotify for real-time events, plus a periodic reconciliation scan as a safety net",
+      "applies_to_stages": ["S05.7", "S09.4"],
+      "details": [
+        "On Linux, inotify is not recursive and has a limit on how many folders can be watched. Large libraries need a higher fs.inotify.max_user_watches; document this in the install guide. The reconciliation scan catches anything the watcher misses."
+      ]
+    },
+
+    "ai_worker": {
+      "choice": "Python (current stable release) with ONNX Runtime, running as a separate optional container",
+      "applies_to_stages": ["S12"],
+      "details": [
+        "CPU by default. Optional GPU acceleration through ONNX Runtime execution providers (e.g. CUDA, OpenVINO); agent evaluates which to support in S12.1.",
+        "Dependencies managed with uv and a lockfile. Checks: Ruff and pytest.",
+        "The worker pulls jobs from a local-only internal API on the core server, authenticated with a token generated at setup.",
+        "Media is mounted read-only into the AI container. The worker cannot write to storage.",
+        "The worker returns results as JSON. The core server validates them and is the only writer of sidecars and the index (new invariant I9).",
+        "No internet access at runtime. Models are either bundled in the AI image or downloaded once at opt-in with user consent, and are checksum-verified."
+      ]
+    },
+
+    "ai_models": {
+      "status": "The direction is Accepted now. Exact model variants are 'deferred' until S12, where they are chosen by benchmarking on the S12.11 evaluation set on CPU-only hardware.",
+      "photo_classification": "A CLIP-family zero-shot model such as SigLIP, exported to ONNX. Categories are text prompts (e.g. 'a photo of a receipt'), so adding a category means adding a line of text, with no retraining. Image embeddings are kept in internal app data so semantic search (S12.10) is possible later.",
+      "face_detection": "YuNet (from the OpenCV model zoo)",
+      "face_recognition": "SFace embeddings (from the OpenCV model zoo)",
+      "face_grouping": "HDBSCAN (scikit-learn) for the initial clustering. New faces are assigned to the nearest existing group within a similarity threshold. Periodic re-clustering must preserve user corrections (S12.6).",
+      "ocr_if_approved": "RapidOCR (an ONNX version of PaddleOCR), only if S12.10 is approved.",
+      "embedding_storage": "Agent decides at S12 (e.g. SQLite blobs with brute-force cosine similarity, which is fast enough at household scale; sqlite-vec only if needed).",
+      "excluded": "InsightFace pretrained models, whose weights are licensed for non-commercial research only, and any other weights with similar restrictions.",
+      "invariant_note": "Semantic search needs a small text model to run at query time. That would be an exception to invariant I4, so it requires explicit user approval before it is built."
+    },
+
+    "packaging": {
+      "choice": "Docker Compose as the primary deployment method",
+      "applies_to_stages": ["S01.1 (development environment)", "S11"],
+      "details": [
+        "Multi-architecture images for linux/amd64 and linux/arm64.",
+        "The core image bundles ExifTool, libvips with libheif, and FFmpeg.",
+        "The AI worker is a separate image enabled through a Compose profile (e.g. docker compose --profile ai up).",
+        "Secondary: native Linux install (binary plus a systemd unit). This requires installing the external tools separately, which the install guide must cover."
+      ],
+      "deferred": "Native Windows and macOS installs, pending user decision."
+    },
+
+    "testing_and_quality": {
+      "go": "Standard testing package (testify optional, agent decides), golangci-lint, gofmt, govulncheck",
+      "web_ui": "Vitest for unit and component tests, Playwright for end-to-end tests, pnpm audit",
+      "python": "pytest, Ruff",
+      "containers": "Image vulnerability scanning (e.g. Trivy)",
+      "dependency_updates": "Automated update pull requests (Dependabot or Renovate, agent decides)",
+      "ci": "GitHub Actions. If the repository is not hosted on GitHub, ask the user.",
+      "test_fixtures": "Sample photos and videos in testdata/ with varied metadata. Every fixture must have a license that allows it in the repository; record the sources."
+    }
+  },
+
+  "proposed_repository_layout": {
+    "note": "Starting point for the S01.1 repository-structure ADR. Refine it and record the reasoning. Create folders only when their stage begins.",
+    "layout": {
+      "cmd/local-ai-nas/": "Entry point of the core server",
+      "internal/": "Go packages, e.g. config, storage, files, photos, sidecar, media, geocode, jobs, search, auth, policy, users, sharing, webdav, api",
+      "api/openapi.yaml": "The API contract",
+      "web/": "SvelteKit web UI (created in S02)",
+      "ai-worker/": "Python AI worker (created in S12)",
+      "deploy/": "Dockerfiles, compose.yaml, systemd unit",
+      "testdata/": "Test fixtures",
+      "docs/": "User, admin, and install documentation",
+      "scripts/": "Development helper scripts",
+      "code-agent-docs/": "Agent planning and memory (already exists)"
+    }
+  },
+
+  "licensing_policy": {
+    "rules": [
+      "Record every dependency, external tool, dataset, and model in the dependency register with its license.",
+      "The project's own license is still an open question. Flag any dependency whose license could limit the choices (e.g. GPL-licensed components).",
+      "External tools such as FFmpeg (whose license depends on how it is built), ExifTool, and libvips are run as separate programs. Record their licenses and how they are bundled in the Docker image, and flag anything that needs the user's attention. This is a factual record for the user, not a legal judgment."
+    ]
+  },
+
+  "verification_tasks": {
+    "note": "Do these by reading official documentation, repositories, and license files. No code. If you have no internet access, mark each item 'Unverified' and list it in your report.",
+    "tasks": [
+      "For each chosen library and tool: confirm it is actively maintained and find its current stable version. Record the exact version in its ADR and in the dependency register.",
+      "Confirm the license of each dependency, and in particular the model weights for the chosen SigLIP variant, YuNet, and SFace, and the GeoNames attribution terms.",
+      "Confirm from Bleve's documentation that it supports what S06 needs: fuzzy queries, language analyzers, date and numeric ranges, keyword filters, and combining these in one query.",
+      "Confirm that tusd can be embedded as a Go library with custom storage and with hooks for authentication.",
+      "Confirm that the pure-Go SQLite driver supports WAL mode and the features planned.",
+      "Confirm that golang.org/x/net/webdav allows a custom FileSystem implementation.",
+      "If any check fails: set that ADR to 'Proposed', describe the problem, suggest an alternative, and flag it in your report."
+    ]
+  },
+
+  "adrs_to_create_or_update": [
+    { "topic": "Core server language: Go", "stage": "S01.1", "status": "Accepted" },
+    { "topic": "API style: REST with OpenAPI, router choice", "stage": "S01.1", "status": "Accepted" },
+    { "topic": "Repository layout", "stage": "S01.1", "status": "Accepted (layout above, refined by agent)" },
+    { "topic": "Testing, linting, and CI toolchain", "stage": "S01.1", "status": "Accepted" },
+    { "topic": "Development environment and packaging: Docker Compose, multi-arch", "stage": "S01.1 and S11", "status": "Accepted (native Windows and macOS deferred)" },
+    { "topic": "Database: SQLite in WAL mode, driver, migrations", "stage": "S01", "status": "Accepted" },
+    { "topic": "Resumable uploads: tus", "stage": "S01.4", "status": "Accepted" },
+    { "topic": "Web UI: SvelteKit static SPA embedded in the Go binary", "stage": "S02.1", "status": "Accepted" },
+    { "topic": "Security building blocks: Argon2id, server-side sessions, TOTP, TLS", "stage": "S03", "status": "Accepted" },
+    { "topic": "Background job queue on SQLite", "stage": "S04.3", "status": "Accepted" },
+    { "topic": "Media toolchain: ExifTool, libvips with libheif, FFmpeg", "stage": "S04 and S05", "status": "Accepted (full RAW conversion and video transcoding deferred)" },
+    { "topic": "Offline reverse geocoding: GeoNames", "stage": "S05.4", "status": "Accepted" },
+    { "topic": "Search engine: Bleve with query-time synonym expansion", "stage": "S06.1", "status": "Accepted" },
+    { "topic": "Network shares: WebDAV first", "stage": "S09.1", "status": "Accepted (SMB deferred, stays Proposed)" },
+    { "topic": "File watching: fsnotify plus reconciliation scan", "stage": "S05.7 and S09.4", "status": "Accepted" },
+    { "topic": "AI worker architecture: Python, ONNX Runtime, separate container, core as single writer", "stage": "S12.1", "status": "Accepted" },
+    { "topic": "AI models: CLIP-family classification, YuNet, SFace, HDBSCAN, license exclusions", "stage": "S12", "status": "Accepted direction; exact variants deferred to S12" }
+  ],
+
+  "pre_approved_documentation_changes": {
+    "note": "The user approves these through this prompt. Apply them and record each in the RULES.md changelog, citing P003.",
+    "changes": [
+      "Add invariant I9 to the 'Project invariants' section of RULES.md and plan.md: 'Only the core server writes sidecar files and the search index. Other processes, including the AI worker, submit results to the core server, which validates and writes them.'",
+      "Create code-agent-docs/dependencies.md as the dependency register, with columns: name, version, license, purpose, stage, ADR link, verification status. Add it to the documentation map in RULES.md.",
+      "Add to R6 in RULES.md: every new dependency must be added to the dependency register in the same commit that introduces it."
+    ]
+  },
+
+  "open_questions_resolved": {
+    "note": "Mark these as answered in plan.md section 5, with a reference to P003 and the relevant ADR.",
+    "resolved": [
+      "GUI approach: a web UI served by the NAS (SvelteKit).",
+      "Network shares: WebDAV first; SMB later, Linux-only, as an optional addition.",
+      "Deployment: Docker Compose as the primary method; native Linux secondary; native Windows and macOS undecided.",
+      "AI hardware: CPU by default, with optional GPU acceleration."
+    ]
+  },
+
+  "plan_md_updates": [
+    "Header: bump the version per R4 and update the date.",
+    "Section 3 (requirements): add an NFR stating that every dependency and AI model must have a license allowing anyone to deploy and use the project, with no non-commercial or research-only restrictions. Add an NFR for multi-architecture support (amd64 and arm64).",
+    "Section 5 (open questions): mark the resolved questions as answered; keep the rest.",
+    "Section 6 (architecture): update the diagram with the concrete components: Go core server (API, tus uploads, auth and policy, sidecar manager, job queue, Bleve index, WebDAV, embedded web UI), SQLite, the external media tools, the storage root with files/ and photos/, internal app data, and the optional AI worker container with its read-only media mount.",
+    "Section 7 (technology stack): replace the options with a 'Chosen technology stack' table (layer, choice, ADR link, status), followed by a short list of deferred items.",
+    "Section 8 (key technical concerns): add the single-writer rule (I9), the same-filesystem requirement for atomic upload moves, inotify watch limits, and the external-tool dependency for native installs.",
+    "Project invariants section: add I9.",
+    "Section 13 (risks): add risks for Bleve performance at scale (mitigated by S06.8 benchmarks and the fallback ADR), external tool availability on native installs, AI speed on CPU-only hardware (mitigated by running AI as an idle-time background job), and model license changes.",
+    "Section 14 (revision history): add an entry referencing P003 and the session log."
+  ],
+
+  "stage_document_updates": [
+    "In code-agent-docs/stages/S01-basic-nas.md, replace every 'to be confirmed after the S01.1 ADRs are accepted' placeholder with concrete details: packages, files, tools, and commands based on this stack.",
+    "Rewrite the S01.1 tasks as setup tasks for the chosen stack: Go module, repository layout, linting, tests, CI, Docker development environment, configuration, and logging.",
+    "If the user has already approved S01, keep its status but list every change in your report for re-confirmation. Otherwise the status stays 'Planned'."
+  ],
+
+  "execution_steps": [
+    { "step": 1, "action": "Run R1, archive this prompt, and log it.", "details": "See before_you_start." },
+    { "step": 2, "action": "Write-ahead.", "details": "In CURRENT_STATE.md under 'In progress', write: 'Applying plan change request #3 (technology stack)'." },
+    { "step": 3, "action": "Impact analysis.", "details": "In the session log, list the affected plan sections, the existing ADRs to update, the stage documents to change, and any conflicts." },
+    { "step": 4, "action": "Verification.", "details": "Complete verification_tasks and record the results in the session log." },
+    { "step": 5, "action": "Archive the current plan.", "details": "Copy plan.md to code-agent-docs/archive/plan-history/ before editing it." },
+    { "step": 6, "action": "Create or update the ADRs.", "details": "Follow adrs_to_create_or_update and decision_status_rules. Each ADR includes context, options considered, the decision, consequences, the verified version and license, and the approval record." },
+    { "step": 7, "action": "Create the dependency register.", "details": "Fill code-agent-docs/dependencies.md with every item in technology_stack, including external tools, datasets, and models." },
+    { "step": 8, "action": "Apply the pre-approved RULES.md changes.", "details": "See pre_approved_documentation_changes." },
+    { "step": 9, "action": "Update plan.md.", "details": "Apply every item in plan_md_updates and open_questions_resolved." },
+    { "step": 10, "action": "Update the Stage 1 document.", "details": "Apply stage_document_updates." },
+    { "step": 11, "action": "Update CURRENT_STATE.md.", "details": "Next steps: the user reviews the ADRs, the verification results, and the updated S01 document; after S01 approval, begin S01.1." },
+    { "step": 12, "action": "Consistency check.", "details": "Re-read every changed file. Check that ADR numbers and links, versions in the ADRs and the dependency register, and the stack described in plan.md and the S01 document all match." },
+    { "step": 13, "action": "Git.", "details": "Commit according to the preference recorded in RULES.md, e.g. 'docs(adr): record technology stack decisions [P003]'. If no preference is recorded, ask." },
+    { "step": 14, "action": "Report to the user and stop.", "details": "Keep it concise: (a) which ADRs are Accepted and which are Proposed or deferred; (b) verification results, with any problems and suggested alternatives first; (c) the details you chose yourself (agent decides items); (d) license items that need the user's attention; (e) the open questions that remain; (f) a request to approve the S01 stage document so implementation can begin. Log this and close the session log with a summary." }
+  ],
+
+  "definition_of_done": [
+    "This prompt is archived at code-agent-docs/prompts/P003-technology-stack.json.",
+    "All ADRs in adrs_to_create_or_update exist with correct statuses, verified versions, and licenses (or are marked 'Unverified').",
+    "code-agent-docs/dependencies.md exists and lists every dependency, tool, dataset, and model.",
+    "RULES.md contains invariant I9, the dependency register in the documentation map, the R6 addition, and changelog entries.",
+    "plan.md has a bumped version, the chosen-stack table, updated architecture, resolved questions, new risks, and a revision history entry.",
+    "The S01 stage document contains concrete, stack-specific tasks with no remaining placeholders.",
+    "CURRENT_STATE.md and the session log are current, and the session log has a closing summary.",
+    "No application code was written and no dependencies were installed.",
+    "The user has received the report described in step 14."
+  ],
+
+  "final_instruction": "Begin with the R1 startup protocol. Work through the execution steps in order, recording as you go. When everything in definition_of_done is complete, report to the user and stop."
+}
