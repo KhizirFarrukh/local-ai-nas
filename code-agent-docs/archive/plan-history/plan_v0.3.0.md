@@ -2,11 +2,11 @@
 
 | Field | Value |
 |---|---|
-| **Version** | 0.3.1 |
+| **Version** | 0.3.0 |
 | **Status** | Draft, awaiting user review |
-| **Last updated** | 2026-09-24 (session S004) |
+| **Last updated** | 2026-09-24 (session S003) |
 | **Source of vision** | `README.md` (repository root), the user's staged roadmap (`code-agent-docs/prompts/P002-staged-development-roadmap.json`), and the user's technology stack (`code-agent-docs/prompts/P003-technology-stack.json`) |
-| **Previous version** | 0.3.0, archived at `code-agent-docs/archive/plan-history/plan_v0.3.0.md` (0.1.0 and 0.2.0 also archived there) |
+| **Previous version** | 0.2.0, archived at `code-agent-docs/archive/plan-history/plan_v0.2.0.md` (0.1.0 also archived there) |
 
 > **This is a living document.** It changes as the user gives feedback. Every change follows `code-agent-docs/RULES.md` **R4**: the old version is archived, the version is bumped, and a revision entry is added. While the plan is a pre-1.0 draft, restructurings bump the MINOR version. **When the user approves this plan as the baseline, it becomes version 1.0.0.**
 >
@@ -391,7 +391,7 @@ Assumptions are numbered permanently. Ones overturned by the 0.2.0 design are ma
 
 ## 5. Open questions for the user
 
-Questions keep their numbers permanently. **★ = needed for S01**: Q22 before S01.1-T02; Q1 and Q18 before the S01.7 performance baseline. S01 can start without Q1 and Q18. Answered or superseded questions stay listed for traceability.
+Questions keep their numbers permanently. **★ = needed before S01 implementation can start.** Answered or superseded questions stay listed for traceability.
 
 **Answered by P003 (0.3.0):**
 - Q25 (GUI): web UI (SvelteKit).
@@ -404,14 +404,7 @@ Questions keep their numbers permanently. **★ = needed for S01**: Q22 before S
 - Q24 (CI: GitHub Actions; the repository is on GitHub).
 - Q16 (face models must be permissively licensed; InsightFace excluded; NFR-029).
 
-**Remaining ★ for S01:** Q22 (before S01.1-T02); Q1 and Q18 (before S01.7). Also the approval of ADR-0003 (Proposed) before S01.2.
-
-**Needed for plan baseline approval (1.0.0)** (grouped by audit A001, F-016, from the existing "Needed by" values):
-- Q38 (first usable release).
-- Q37 (not-scheduled candidates).
-- The planner changes flagged in 10.14.
-- ADR-0003 (storage layout; also gates S01.2).
-- The other open decisions listed in audit A001 section 7.
+**Remaining ★ before S01:** Q1, Q18, Q22. Also the approval of ADR-0003 (Proposed) before S01.2.
 
 ### New in 0.2.0
 
@@ -473,7 +466,7 @@ Questions keep their numbers permanently. **★ = needed for S01**: Q22 before S
 
 | Component | Stage | Responsibility |
 |---|---|---|
-| **GUI** | S02+ | SvelteKit static SPA served by the NAS and embedded in the core binary (ADR-0009; Q25 answered). Uses only the public API. |
+| **GUI** | S02+ | Web app served by the NAS (pending Q25). Uses only the public API. |
 | **HTTP API** | S01.5 | `/api/v1`, with separate namespaces for `files`, `photos`, `search`, `users`, `shares`, `admin`, `system`. OpenAPI, problem+json errors, validation. |
 | **Auth and sessions** | S03 | First-run admin, login, sessions, API tokens, 2FA (optional), HTTPS. |
 | **Policy (authorization) layer** | S03.5 → S07.4 | One `authorize(subject, action, resource)` check, called on every route, download, preview, thumbnail, search, share, and job. Default deny. |
@@ -589,7 +582,7 @@ flowchart TB
     ├── thumbnails/                   renditions keyed by content hash (S04.4)
     ├── metadata/                     albums, face-group registry, transferred-out sidecars (Q13, Q27)
     ├── ai/                           models, embeddings (S12)
-    └── logs/                         application log files, if file logging is enabled (open decision, audit A001 F-014); the audit log lives in SQLite (ADR-0007)
+    └── logs/                         application + audit logs
 Configuration file: outside the storage root (CLI flag / env var / OS default path).
 ```
 
@@ -828,7 +821,6 @@ Work is **stage-gated** and governed by `code-agent-docs/RULES.md`.
 - **Recording (R2, R8):** continuous session logs, and `CURRENT_STATE.md` always states the exact next step.
 - **Plan changes (R4):** archive, version bump, revision entry. Approving this plan makes it **1.0.0**.
 - **Every stage ends** with an integration testing and review substage: tests, documentation, completion record, and user sign-off (section 2b).
-- **Documentation audits (R12):** that final substage also runs a documentation audit with `templates/audit-checklist.md`. Audits are numbered A001, A002, … and reported in `code-agent-docs/audits/`. Critical findings must be fixed or escalated before the stage is Done.
 
 ---
 
@@ -890,7 +882,7 @@ flowchart LR
   - SQLite database with migrations wired at startup (ADR-0007).
   - CI workflow; config, logging, and error modules.
   - Developer setup documentation.
-- **Depends on:** plan baseline approval (1.0.0); S01 stage document approved; Q22 (project license, for LICENSE and the license allow-list). The stack ADRs (0001, 0002, 0004–0007) were Accepted via P003.
+- **Depends on:** plan baseline approval (1.0.0); S01 stage document approved; Q22 (project license, for LICENSE and the license allow-list). The S01.1 ADRs were Accepted via P003.
 - **Requirements:** NFR-008, NFR-009, NFR-013, NFR-014, NFR-016, NFR-025, NFR-029, NFR-030.
 - **Acceptance criteria:**
   1. CI runs lint, format check, type check, tests, and a dependency-license check on every PR, on Linux and Windows, and a deliberately failing test turns it red.
@@ -2402,7 +2394,7 @@ flowchart LR
 **Design notes (S12):**
 - A separate worker process, with results written by the core's sidecar manager (single writer).
 - Embeddings live in internal data, not in sidecars.
-- Only permissively licensed models are used (NFR-029, ADR-0018). Non-commercial or research-only weights such as InsightFace are excluded.
+- The model licensing ADR covers optional non-permissive packs (Q16).
 - Per-user AI data follows S07.
 
 **Exit criteria (quoted):** "With AI enabled, unlabelled receipt photos are found by searching 'receipts', faces are grouped correctly per the evaluation targets, and disabling AI leaves the NAS fully functional."
@@ -2467,8 +2459,6 @@ Not stages. If any is approved later, it is inserted **before** the AI stage and
 | S10 | S10.6 | Quota enforcement on every write path |
 | S11 | S11.5–S11.7 | Full-system load tests; upgrade and rollback tests; release artifact tests |
 | S12 | S12.11 | Evaluation set accuracy; CPU throughput; AI-off regression (the whole non-AI suite passes with the worker stopped) |
-
-Each final review substage above also runs a **documentation audit** (R12, `templates/audit-checklist.md`).
 
 ### 12.2 Test levels (all stages)
 
@@ -2544,4 +2534,3 @@ CI runs on Linux and Windows from S01.1.
 | 0.1.0 | 2026-09-23 | Initial draft generated from README.md: FR-001–FR-068, NFR-001–NFR-018, 24 open questions, architecture, stack options, roadmap S00–S15, MVP, testing, risks. | Bootstrap (initial prompt) | `logs/sessions/2026-09-23_S001.md` |
 | 0.2.0 | 2026-09-24 | **Staged roadmap replaces S00–S15** with S01–S12: 7 user-defined stages, 4 planner-proposed stages (S08–S11), and the AI stage always last. All 92 substages are defined with the required fields. Added sections 2a (Project invariants I1–I8), 2b (Cross-cutting principles), and 11a (Not scheduled). Two-area storage design (`files/`, `photos/`) and internal data outside both. Requirements: FR-001 deprecated; FR-069–FR-143 and NFR-019–NFR-028 added; priorities and wording updated where P002 requires. Questions Q25–Q40 added; Q2 and Q12 resolved; Q3, Q8, Q9, Q17, Q20, Q21 superseded. Architecture, concerns (forward compatibility, area separation, access data storage, search permission filtering, live watcher), MVP milestones, testing, and risks (RK-17–RK-24) updated. ADR-0001–0003 proposed for S01. | Plan change request #2 (`code-agent-docs/prompts/P002-staged-development-roadmap.json`) | `logs/sessions/2026-09-23_S002.md` |
 | 0.3.0 | 2026-09-24 | **Technology stack recorded.** Section 7 replaced by the chosen-stack table: Go core; REST/OpenAPI; SQLite WAL (from S01); tus; SvelteKit; Argon2id and sessions; SQLite job queue; ExifTool, libvips, FFmpeg; GeoNames; Bleve; WebDAV; fsnotify; Python/ONNX AI worker; model direction. ADR-0001/0002 updated and Accepted; ADR-0004–0018 Accepted; ADR-0019 (SMB) Proposed; ADR-0003 still Proposed. Invariant I9 added (2a). NFR-029 (license policy) and NFR-030 (multi-arch) added. Q25, Q7, Q4, Q24, Q16 answered; Q5, Q6, Q32 partly answered. Architecture diagram made concrete. Concerns 8.17–8.20 added (single writer, same-filesystem uploads, inotify limits, external tools on native installs), and 8.4/8.11/8.12 aligned to Go and Bleve. Stage texts updated where decisions were pending (S01.1, S01.4, S01.5, S01 design notes, S02.1, S02.3, S03.2, S04.3, S05.3, S05.4, S06.1, S09.1, S11.1, S11.6, S12.1, S12.5, 10.14). Risks RK-25–RK-28 added; RK-05 retired; RK-06 and RK-08 updated. Dependency register `dependencies.md` created. | Plan change request #3 (`code-agent-docs/prompts/P003-technology-stack.json`) | `logs/sessions/2026-09-24_S003.md` |
-| 0.3.1 | 2026-09-24 | **Documentation audit A001 fixes (PATCH, no scope or decision change).** Stale text corrected (6.1 GUI row, F-010; S12 design note contradicting ADR-0018, F-011; 6.3 audit-log location aligned with ADR-0007, F-013; S01.1 self-reference, F-008). Section 5: ★ legend clarified (F-017) and a "Needed for plan baseline approval" list added (F-016). Sections 9 and 12.1 mention the R12 documentation audits. | Documentation audit A001 (`code-agent-docs/prompts/P004-documentation-audit.json`; report `audits/A001-2026-09-24-documentation-audit.md`) | `logs/sessions/2026-09-24_S004.md` |

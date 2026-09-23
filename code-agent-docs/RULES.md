@@ -1,6 +1,6 @@
 # RULES: Permanent Operating Rules for AI Agents on local-ai-nas
 
-**RULES.md version:** 1.2.0
+**RULES.md version:** 1.3.0
 **Created:** 2026-09-23 (session S001)
 **Source:** `operating_rules` in `code-agent-docs/bootstrap/initial-prompt.json`, transcribed in full with the original rule IDs.
 
@@ -229,6 +229,14 @@ ADR files are named `ADR-<NNNN>-<short-kebab-title>.md` (e.g. `ADR-0001-backend-
 
 ---
 
+## R12: Documentation audits
+
+**Rule (added in RULES.md 1.3.0, pre-approved in P004):**
+
+- Run a documentation audit using `code-agent-docs/templates/audit-checklist.md` as part of every stage's final review substage, and whenever the user asks. Audits are numbered sequentially (A001, A002, ...) and reported in `code-agent-docs/audits/`. Critical findings must be fixed or escalated to the user before the stage can be marked Done.
+
+---
+
 ## Documentation map
 
 All agent documentation lives in `code-agent-docs/`:
@@ -239,16 +247,17 @@ All agent documentation lives in `code-agent-docs/`:
 | `code-agent-docs/CURRENT_STATE.md` | Short, always-current snapshot: where the project stands and what to do next. The first thing a resuming agent relies on. Keep under ~150 lines. |
 | `code-agent-docs/plan.md` | The master development plan. Living document, versioned (R4). |
 | `code-agent-docs/dependencies.md` | The dependency register: every dependency, external tool, dataset, and AI model, with name, version, license, purpose, stage, ADR link, and verification status. Updated in the same commit that introduces a dependency (R6). |
-| `code-agent-docs/stages/` | One detailed plan document per development stage, e.g. `S00-foundation.md`. Created only when a stage is about to be planned in detail. |
+| `code-agent-docs/stages/` | One detailed plan document per development stage, named `S<NN>-<slug>.md`, e.g. `S01-basic-nas.md`. Created only when a stage is about to be planned in detail. |
 | `code-agent-docs/decisions/` | Architecture Decision Records, e.g. `ADR-0001-backend-language.md`. |
-| `code-agent-docs/logs/sessions/` | One log per working session: `<YYYY-MM-DD>_S<NNN>.md` with a sequential session number (S001, S002, ...). |
-| `code-agent-docs/archive/plan-history/` | Every superseded version of `plan.md`, e.g. `plan_v0.1.0.md`. |
+| `code-agent-docs/logs/sessions/` | One log per working session: `<YYYY-MM-DD>_S<NNN>.md` with a sequential session number (S001, S002, ...). **Session IDs have three digits (S004); stage IDs have two (S04).** They are different things. |
+| `code-agent-docs/archive/plan-history/` | Every superseded version of `plan.md`, e.g. `plan_v0.1.0.md`. These are **verbatim** copies, so their relative links (e.g. `decisions/…`) are relative to `code-agent-docs/` and do not resolve from inside the archive folder. |
 | `code-agent-docs/archive/sessions/` | Older session logs moved here, in `<YYYY-MM>/` folders with a monthly `SUMMARY.md` (R9). |
-| `code-agent-docs/templates/` | `stage-template.md`, `session-log-template.md`, `adr-template.md`. |
+| `code-agent-docs/templates/` | `stage-template.md`, `session-log-template.md`, `adr-template.md`, `audit-checklist.md` (the reusable documentation-audit checklist for R12; update it whenever new document types or rules are added). |
 | `code-agent-docs/bootstrap/` | The original bootstrap prompt, archived verbatim (`initial-prompt.json`). It stays there. It is effectively prompt P001. |
-| `code-agent-docs/prompts/` | Later user prompts (change requests, instructions delivered as files), archived verbatim as `P<NNN>-<short-kebab-title>.<ext>`, e.g. `P002-staged-development-roadmap.json`. The session log records the USER entry as a pointer to the archived file. |
+| `code-agent-docs/prompts/` | Later user prompts (change requests, instructions delivered as files), archived verbatim as `P<NNN>-<short-kebab-title>.<ext>`, e.g. `P002-staged-development-roadmap.json`. The session log records the USER entry as a pointer to the archived file. The user's own originals live in the repository-root `prompts/` folder (user-managed, outside `code-agent-docs/`). |
+| `code-agent-docs/audits/` | Documentation audit reports, numbered sequentially: `A<NNN>-<YYYY-MM-DD>-<slug>.md` (e.g. `A001-2026-09-24-documentation-audit.md`), plus audit side documents such as README change proposals (`A<NNN>-readme-proposal.md`). See R12. |
 
-Empty folders contain a `.gitkeep` file so git tracks them.
+Folders that were created empty got a `.gitkeep` file so git tracks them. These files stay in place even after a folder gains content (R9: nothing is deleted from `code-agent-docs/`).
 
 ---
 
@@ -288,3 +297,8 @@ Filled in as the user states lasting preferences (R10). Commit behavior is recor
 | 1.2.0 | 2026-09-24 | (a) Added invariant **I9** (only the core server writes sidecars and the search index) to "Project invariants". | Pre-approved in `code-agent-docs/prompts/P003-technology-stack.json` (`pre_approved_documentation_changes`); session S003 |
 | 1.2.0 | 2026-09-24 | (b) Created `code-agent-docs/dependencies.md` (the dependency register) and added it to the documentation map. | Pre-approved in `code-agent-docs/prompts/P003-technology-stack.json`; session S003 |
 | 1.2.0 | 2026-09-24 | (c) R6: every new dependency must be added to the dependency register in the same commit that introduces it. | Pre-approved in `code-agent-docs/prompts/P003-technology-stack.json`; session S003 |
+| 1.3.0 | 2026-09-24 | (a) Added the folder `code-agent-docs/audits/` to the documentation map. | Pre-approved in `code-agent-docs/prompts/P004-documentation-audit.json` (`pre_approved_changes`); session S004, audit A001 |
+| 1.3.0 | 2026-09-24 | (b) Created the reusable audit checklist `code-agent-docs/templates/audit-checklist.md` (check groups A–L, severity levels, fix policy, report structure) and listed it under `templates/` in the documentation map. | Pre-approved in `code-agent-docs/prompts/P004-documentation-audit.json`; session S004 |
+| 1.3.0 | 2026-09-24 | (c) Added rule **R12 (Documentation audits)** with the wording given in P004. | Pre-approved in `code-agent-docs/prompts/P004-documentation-audit.json`; session S004 |
+| 1.3.0 | 2026-09-24 | (d) The stage template's final testing and review substage now includes the audit step. | Pre-approved in `code-agent-docs/prompts/P004-documentation-audit.json`; session S004 |
+| 1.3.0 | 2026-09-24 | (e) Documentation-map wording clarifications from audit A001, with no change in meaning or rules: `.gitkeep` files are kept (F-002); root `prompts/` folder described (F-003); session vs stage ID note (F-006); stage-document example updated from the obsolete `S00-foundation.md` to `S01-basic-nas.md` (F-033); note that archived plans are verbatim, so their relative links do not resolve from the archive folder (F-034). | P004 `fix_policy.fix_directly` ("unclear wording that does not change meaning"); audit A001, session S004 |
