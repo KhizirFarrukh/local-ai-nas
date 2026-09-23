@@ -11,7 +11,8 @@ No application code is written for this stage until the Approval record below is
 | Stage ID | S<NN> |
 | Status | Planned <!-- Planned / Approved / In Progress / Testing / Review / Done / Blocked --> |
 | Blocked reason | <!-- only if Status is Blocked --> |
-| Plan version this stage is based on | <e.g. 0.2.0> |
+| Plan version this stage is based on | <e.g. 1.0.0> |
+| Origin | <User-defined / Planner-proposed> |
 | Created | <YYYY-MM-DD> (session S<NNN>) |
 | Last updated | <YYYY-MM-DD> (session S<NNN>) |
 | Depends on stages | <S<NN>, ...> |
@@ -23,10 +24,10 @@ No application code is written for this stage until the Approval record below is
 
 ## 2. Linked requirements
 
-| Requirement ID | Title | Covered fully / partially |
-|---|---|---|
-| FR-### | | |
-| NFR-### | | |
+| Requirement ID | Title | Covered fully / partially | Substage(s) |
+|---|---|---|---|
+| FR-### | | | <S<NN>.n> |
+| NFR-### | | | <S<NN>.n> |
 
 ## 3. Scope
 
@@ -45,20 +46,50 @@ flowchart LR
   A[Component] --> B[Component]
 ```
 
-## 5. Task breakdown
+## 5. Substages and tasks
+
+<!--
+Hierarchy: Stage → Substage → Task (RULES.md R3).
+Substage IDs and their goals, scope, and acceptance criteria come from plan.md section 10. Copy them here, then break each substage into tasks.
+Task IDs: S<NN>.<n>-T<NN>, e.g. S01.3-T02 = task 2 of substage S01.3.
+Status values: Not started / In Progress / Testing / Review / Done / Blocked (with reason).
+-->
+
+### Substage overview
+
+| Substage | Name | Status | Depends on | Requirements |
+|---|---|---|---|---|
+| S<NN>.1 | | Not started | | |
+| S<NN>.2 | | Not started | | |
+
+### S<NN>.1: <Substage name>
+
+- **Goal:** <from plan.md>
+- **Substage acceptance criteria:** <from plan.md, refined if needed>
 
 | Task ID | Description | Status | Acceptance criteria |
 |---|---|---|---|
-| S<NN>-T01 | | Not started <!-- Not started / In Progress / Done / Blocked --> | |
-| S<NN>-T02 | | Not started | |
+| S<NN>.1-T01 | | Not started | |
+| S<NN>.1-T02 | | Not started | |
 
-Rule: one task In Progress at a time. Before starting a task, mark it In Progress here and in CURRENT_STATE.md.
+### S<NN>.2: <Substage name>
+
+- **Goal:**
+- **Substage acceptance criteria:**
+
+| Task ID | Description | Status | Acceptance criteria |
+|---|---|---|---|
+| S<NN>.2-T01 | | Not started | |
+
+<!-- Repeat for every substage. The last substage of every stage covers integration testing, documentation, the completion record, and user sign-off. -->
+
+Rule: one task In Progress at a time. Before starting a task, mark it (and its substage) In Progress here and in CURRENT_STATE.md.
 
 ## 6. Files and modules expected to be created or changed
 
-| Path | Create / Change | Purpose |
-|---|---|---|
-| | | |
+| Path | Create / Change | Purpose | Task ID(s) |
+|---|---|---|---|
+| | | | |
 
 ## 7. Dependencies to add
 

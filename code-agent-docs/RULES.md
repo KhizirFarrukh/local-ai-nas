@@ -1,6 +1,6 @@
 # RULES: Permanent Operating Rules for AI Agents on local-ai-nas
 
-**RULES.md version:** 1.0.1
+**RULES.md version:** 1.1.0
 **Created:** 2026-09-23 (session S001)
 **Source:** `operating_rules` in `code-agent-docs/bootstrap/initial-prompt.json`, transcribed in full with the original rule IDs.
 
@@ -26,6 +26,21 @@ Do this at the start of **every** session and every new chat, even if the user's
 8. Give the user a short resume summary (current stage and task, last completed action, next planned action, open questions or blockers). Then proceed, or wait for confirmation if the next action is ambiguous.
 
 **No code may be written until this checklist is complete.**
+
+---
+
+## Project invariants
+
+No code, plan change, stage document, or ADR may violate these invariants without **explicit user approval**. A change to an invariant is itself a RULES.md change: it needs approval and goes in the changelog. They are repeated in `plan.md` ("Project invariants").
+
+- **I1:** The storage root contains exactly two user-data areas: `files/` and `photos/`. They never intersect. An item moves between them only when the user explicitly copies or moves it.
+- **I2:** Internal application data (database, search index, caches, thumbnails, trash, configuration) lives outside `files/` and `photos/`.
+- **I3:** Photo sidecar JSON files are the source of truth for photo metadata. The search index is a cache that can always be rebuilt from disk.
+- **I4:** Search reads only the index. It never scans files or runs AI at query time.
+- **I5:** A user cannot access another user's files or photos unless they have been explicitly shared. This is enforced server-side on every access path: API, downloads, previews, thumbnails, search, network shares, and background jobs.
+- **I6:** Everything runs locally. No telemetry. No network calls at runtime except for features the user has explicitly enabled.
+- **I7:** AI is optional and opt-in. The NAS must be fully functional with AI disabled.
+- **I8:** AI work is always the last stage of the roadmap. Any stage added in the future is inserted before it, and the AI stage is renumbered.
 
 ---
 
@@ -66,7 +81,15 @@ Do this at the start of **every** session and every new chat, even if the user's
 
 **Golden rule:** No application code is written for a stage until that stage has a detailed stage document that the user has approved.
 
-**Stage lifecycle:** `Planned -> Approved -> In Progress -> Testing -> Review -> Done`. A stage can also be `Blocked`, with the reason recorded.
+**Three-level hierarchy: Stage → Substage → Task.**
+
+| Level | ID format | Example | Where it is defined |
+|---|---|---|---|
+| Stage | `S<NN>` | `S01` | `plan.md`: every stage, for the whole roadmap |
+| Substage | `S<NN>.<n>` | `S01.3` | `plan.md`: every substage of every stage, with goal, scope, deliverables, dependencies, requirements, acceptance criteria, risks, and status |
+| Task | `S<NN>.<n>-T<NN>` | `S01.3-T02` (task 2 of substage S01.3) | The stage document `stages/S<NN>-<slug>.md`, written just in time, before the stage starts |
+
+**Stage lifecycle:** `Planned -> Approved -> In Progress -> Testing -> Review -> Done`. A stage can also be `Blocked`, with the reason recorded. Substages and tasks use the same status values, plus `Not started` before work begins.
 
 **A stage document must contain:**
 
@@ -74,7 +97,7 @@ Do this at the start of **every** session and every new chat, even if the user's
 - Linked requirement IDs from `plan.md`
 - In scope and out of scope
 - Design approach, with diagrams or interface sketches where useful
-- Task breakdown into small tasks with IDs (e.g. `S02-T01`), each with its own acceptance criteria
+- Task breakdown: for each substage, small tasks with IDs in the form `S01.3-T02`, each with its own acceptance criteria
 - Files and modules expected to be created or changed
 - Dependencies to add, each with a justification and license
 - Test plan: what is tested and how
@@ -104,6 +127,7 @@ The template is `code-agent-docs/templates/stage-template.md`.
 3. If the impact is significant or the request is ambiguous, summarize the impact and confirm with the user before editing.
 4. Copy the current `plan.md` to `code-agent-docs/archive/plan-history/plan_v<current-version>.md`.
 5. Edit `plan.md` and bump its version: PATCH for wording or clarification, MINOR for added or changed requirements or stages, MAJOR for architecture changes or scope overhauls.
+   - **Pre-1.0 exception:** while the plan is a pre-1.0 draft (version `0.x.y`), restructurings, including architecture changes and scope overhauls, bump the **MINOR** version (e.g. `0.1.0 → 0.2.0`). The plan becomes **`1.0.0` when the user approves it as the baseline**. After that, the rules above apply unchanged.
 6. Add a revision history entry: version, date, summary of changes, reason, and a reference to the session log.
 7. Update affected stage documents, ADRs, and `CURRENT_STATE.md`.
 8. Report back to the user with a short summary of what changed.
@@ -218,7 +242,8 @@ All agent documentation lives in `code-agent-docs/`:
 | `code-agent-docs/archive/plan-history/` | Every superseded version of `plan.md`, e.g. `plan_v0.1.0.md`. |
 | `code-agent-docs/archive/sessions/` | Older session logs moved here, in `<YYYY-MM>/` folders with a monthly `SUMMARY.md` (R9). |
 | `code-agent-docs/templates/` | `stage-template.md`, `session-log-template.md`, `adr-template.md`. |
-| `code-agent-docs/bootstrap/` | The original bootstrap prompt, archived verbatim (`initial-prompt.json`). |
+| `code-agent-docs/bootstrap/` | The original bootstrap prompt, archived verbatim (`initial-prompt.json`). It stays there. It is effectively prompt P001. |
+| `code-agent-docs/prompts/` | Later user prompts (change requests, instructions delivered as files), archived verbatim as `P<NNN>-<short-kebab-title>.<ext>`, e.g. `P002-staged-development-roadmap.json`. The session log records the USER entry as a pointer to the archived file. |
 
 Empty folders contain a `.gitkeep` file so git tracks them.
 
@@ -252,3 +277,8 @@ Filled in as the user states lasting preferences (R10). Commit behavior is recor
 |---|---|---|---|
 | 1.0.0 | 2026-09-23 | Initial version. R1-R11 transcribed in full from the bootstrap prompt, plus documentation map, pointer files, User Preferences, and changelog sections. | Content mandated by the user's bootstrap prompt (`code-agent-docs/bootstrap/initial-prompt.json`); session `logs/sessions/2026-09-23_S001.md` |
 | 1.0.1 | 2026-09-23 | User Preferences: commit behavior and branching/PR workflow recorded. | User's answers in S001 (preference recorded per R10; see S001 log E013) |
+| 1.1.0 | 2026-09-23 | (a) Added folder `code-agent-docs/prompts/` for archived user prompts, and added it to the documentation map. The bootstrap prompt stays in `bootstrap/`. | Pre-approved in `code-agent-docs/prompts/P002-staged-development-roadmap.json` (`pre_approved_documentation_changes`); session S002 |
+| 1.1.0 | 2026-09-23 | (b) R3 updated to the three-level hierarchy Stage → Substage → Task, with task IDs in the form `S01.3-T02`. | Pre-approved in `code-agent-docs/prompts/P002-staged-development-roadmap.json`; session S002 |
+| 1.1.0 | 2026-09-23 | (c) R4 versioning: while the plan is a pre-1.0 draft, restructurings bump MINOR. The plan becomes 1.0.0 when the user approves it as the baseline, and the original R4 rules apply after that. | Pre-approved in `code-agent-docs/prompts/P002-staged-development-roadmap.json`; session S002 |
+| 1.1.0 | 2026-09-23 | (d) Added the "Project invariants" section (I1-I8). | Pre-approved in `code-agent-docs/prompts/P002-staged-development-roadmap.json`; session S002 |
+| 1.1.0 | 2026-09-23 | (e) `templates/stage-template.md` updated with a substages section and a task table per substage. | Pre-approved in `code-agent-docs/prompts/P002-staged-development-roadmap.json`; session S002 |

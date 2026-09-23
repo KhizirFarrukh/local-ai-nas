@@ -1,34 +1,45 @@
 # CURRENT_STATE
 
-**Last updated:** 2026-09-23 23:53 +0500 (session S001, closed)
-**Plan version:** 0.1.0 (`code-agent-docs/plan.md`)
-**Current phase:** Planning: plan v0.1.0 awaiting user review
+**Last updated:** 2026-09-24 00:33 +0500 (session S002)
+**Plan version:** 0.2.0 (`code-agent-docs/plan.md`), Draft
+**Current phase:** Planning: plan v0.2.0 and S01 stage document awaiting user review
 
 ## Active stage and task
-- **Active stage:** none. No stage has started. S00 (Foundation) is next once the plan is approved.
+- **Active stage:** none. S01 (Basic NAS implementation) is **Planned** (`stages/S01-basic-nas.md`), awaiting approval.
 - **Active task:** none
 
 ## In progress (write-ahead)
-- none
+- S002 closing steps for P002: git commit on branch `docs/P002-staged-roadmap` (step 10), session log closing summary (step 11). After that, the user has asked for **P003 only** (`prompts/3-technology-stack-prompt.json`) in a new session, S003. **Do not start prompt #4.**
 
 ## Last completed
-- S001 bootstrap finished (all 13 steps). Branch `docs/S001-bootstrap-agent-docs` pushed to origin (commit `2b5c1a7` + a log-closing commit). **PR into `develop` not yet opened** (`gh` is not installed). Link: https://github.com/KhizirFarrukh/local-ai-nas/pull/new/docs/S001-bootstrap-agent-docs
+- P002 steps 1-9:
+  - Prompt archived to `prompts/P002-staged-development-roadmap.json`.
+  - plan v0.1.0 archived.
+  - RULES.md 1.1.0 (invariants I1-I8, hierarchy, pre-1.0 versioning, `prompts/` folder).
+  - Stage template with substages.
+  - plan.md v0.2.0 (S01-S12, 92 substages).
+  - ADR-0001/0002/0003 (Proposed).
+  - `stages/S01-basic-nas.md` (Planned).
+  - Consistency check passed.
 
 ## Next steps
-1. **Wait for the user's review of `code-agent-docs/plan.md` v0.1.0** and their answers to the open questions (plan.md section 5). The Stage 0 blockers, marked ★, are Q1, Q4, Q5, Q17, Q18, Q22, Q24 (Q23 is answered). When feedback arrives: log it verbatim, then apply it per RULES.md R4 (archive `plan.md` to `archive/plan-history/plan_v0.1.0.md`, bump the version, add a revision history entry).
-2. Apply plan changes on a new branch off `develop` (e.g. `docs/S002-plan-v0.2`), per the recorded git workflow in RULES.md "User Preferences". If the bootstrap PR (branch `docs/S001-bootstrap-agent-docs`) is not yet merged, branch off `docs/S001-bootstrap-agent-docs` instead, and say so.
-3. Once the stack choices are approved: draft ADRs for backend, frontend, DB/search, packaging, project license, and sidecar schema v1 (`code-agent-docs/decisions/`, status Proposed, then Accepted on approval).
-4. Write the detailed stage document `code-agent-docs/stages/S00-foundation.md` from `templates/stage-template.md` and get it approved. Only then begin S00 work. S00 scope note: include a `.gitattributes` line-ending policy (Windows `core.autocrlf` warnings seen in S001).
+1. **Apply P003 (technology stack)** in session S003, on a branch stacked on `docs/P002-staged-roadmap`: R1, archive as `prompts/P003-technology-stack.json`, verification, ADRs, dependency register, RULES.md changes, plan v0.3.0, S01 document with the concrete stack. Stop before prompt #4.
+2. The user reviews `plan.md`, `stages/S01-basic-nas.md`, and the S01.1 ADRs.
+3. The user answers the open questions (plan.md section 5). ★ before S01: Q1, Q4, Q18, Q22, Q24. The new ones are Q25-Q40.
+4. The user accepts or changes the S01.1 ADRs (ADR-0001, ADR-0002) and ADR-0003.
+5. Approving the plan makes it the **1.0.0 baseline** (R4). Approving the S01 document allows implementation, which begins with S01.1-T01.
 
 ## Blocked or waiting on user
-- Waiting on the user: review of plan v0.1.0 and answers to open questions. The user also needs to open the PR for the bootstrap branch (and merge it when satisfied).
+- Plan review, S01 approval, ADR acceptance, and open questions.
+- The bootstrap PR (`docs/S001-bootstrap-agent-docs`) is not yet opened or merged, so this work is stacked on it.
 
 ## Open questions (short list; full text in plan.md section 5)
-- ★ Q1 host hardware · Q4 languages/frameworks · Q5 deployment method · Q17 MVP with or without AI · Q18 library size · Q22 project license · Q24 GitHub Actions CI (Q23 answered: commit per task, feature branches + PRs into `develop`)
-- Others (needed by later stages): Q2 multi-user, Q3 remote access, Q6-Q7 AI hardware/GPU, Q8 media types, Q9 in-place library, Q10 external-change policy, Q11 sidecar naming vs Google Takeout, Q12 non-media files, Q13 albums/face storage, Q14 date operator semantics, Q15 languages, Q16 face model licensing, Q19 XMP/originals, Q20 SMB, Q21 mobile backup
+- ★ Q1 hardware · Q4 languages (ADR-0001/0002) · Q18 library size · Q22 license · Q24 CI
+- New: Q25 GUI approach · Q26 photo formats/video · Q27 sidecar on photo→files move · Q28 files-area access storage · Q29 admin visibility · Q30 sharing scope · Q31 document content search · Q32 WebDAV/SMB + photos exposure · Q33 2FA · Q34 versioning · Q35 AI opt-in scope · Q36 AI extensions · Q37 not-scheduled candidates · Q38 first release · Q39 host-folder import · Q40 photos layout
+- Carried over: Q5, Q6, Q7, Q10, Q11, Q13, Q14, Q15, Q16, Q19
 
 ## Pointers
-- Latest session log: `code-agent-docs/logs/sessions/2026-09-23_S001.md`
-- Active stage document: none yet (S00 will be `code-agent-docs/stages/S00-foundation.md`)
-- Recent ADRs: none yet
-- Rules: `code-agent-docs/RULES.md` (v1.0.1) · Bootstrap prompt: `code-agent-docs/bootstrap/initial-prompt.json`
+- Latest session log: `code-agent-docs/logs/sessions/2026-09-23_S002.md`
+- Active stage document: `code-agent-docs/stages/S01-basic-nas.md` (Planned)
+- Recent ADRs: `decisions/ADR-0001-backend-language-framework.md`, `ADR-0002-api-style.md`, `ADR-0003-storage-layout.md` (all Proposed)
+- Rules: `code-agent-docs/RULES.md` (v1.1.0) · Prompts: `code-agent-docs/prompts/`
