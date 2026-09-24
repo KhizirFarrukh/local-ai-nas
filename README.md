@@ -194,7 +194,7 @@ The guide [docs/api/usage.md](docs/api/usage.md) goes through every operation wi
 - resumable (tus) uploads, including a resume after a cut connection;
 - errors.
 
-In PowerShell, use `curl.exe`, and send JSON bodies with the guide's small helper. The rules every endpoint follows are in [docs/api/conventions.md](docs/api/conventions.md), and the running server serves the full reference at `http://127.0.0.1:8080/api/docs/`.
+In PowerShell, use `curl.exe`, and send JSON bodies with the guide's small helper. To run all of it at once, with every answer checked, use `scripts/demo.sh` or, in PowerShell, `powershell -ExecutionPolicy Bypass -File scripts\demo.ps1`. The rules every endpoint follows are in [docs/api/conventions.md](docs/api/conventions.md), and the running server serves the full reference at `http://127.0.0.1:8080/api/docs/`.
 
 ### Run it in Docker
 

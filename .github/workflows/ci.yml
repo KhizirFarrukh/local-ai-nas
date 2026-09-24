@@ -97,6 +97,43 @@ jobs:
           LOCALAINAS_MEMTEST_SIZE: ${{ matrix.size }}
         run: go test -count=1 -timeout 25m -run TestMemoryBound -v ./internal/api
 
+  demo:
+    # S01.7-T06: the demo scripts against a fresh server, as a user runs
+    # them: demo.sh on Linux, demo.ps1 in Windows PowerShell 5.1. The job
+    # also fails if the server logged an error during the demo.
+    name: Demo (${{ matrix.os }})
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - uses: actions/setup-go@v7.0.0
+        with:
+          go-version-file: go.mod
+      - name: Start a fresh server and run the demo
+        shell: bash
+        run: |
+          go build -o "bin/local-ai-nas$(go env GOEXE)" ./cmd/local-ai-nas
+          "bin/local-ai-nas$(go env GOEXE)" serve --storage-root "$PWD/dev/demo" > server.log 2>&1 &
+          for i in $(seq 1 30); do
+            curl -fsS -o /dev/null http://127.0.0.1:8080/api/v1/system/health && break
+            sleep 1
+          done
+          if [ "$RUNNER_OS" = Windows ]; then
+            powershell -NoProfile -ExecutionPolicy Bypass -File scripts/demo.ps1
+          else
+            scripts/demo.sh
+          fi
+      - name: The server logged no error
+        if: always()
+        shell: bash
+        run: |
+          cat server.log
+          ! grep -q '"level":"ERROR"' server.log
+
   checks:
     name: Vulnerabilities, licenses, generated code
     runs-on: ubuntu-latest
