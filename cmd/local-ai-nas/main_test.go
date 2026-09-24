@@ -291,6 +291,31 @@ func TestLayoutErrorStopsStartup(t *testing.T) {
 	}
 }
 
+func TestRelocatedDatabase(t *testing.T) {
+	isolateEnv(t)
+	root := testutil.StorageRoot(t)
+	dbDir := filepath.Join(testutil.StorageRoot(t), "db")
+	code, _, stderr := runCmd(t, "migrate", "--storage-root", root, "--storage-db-dir", dbDir, "up")
+	if code != 0 {
+		t.Fatalf("migrate up: exit %d, stderr %q", code, stderr)
+	}
+	if _, err := os.Stat(filepath.Join(dbDir, "nas.db")); err != nil {
+		t.Errorf("database not in the configured directory: %v", err)
+	}
+	if _, err := os.Stat(filepath.Join(root, ".local-ai-nas", "db")); !os.IsNotExist(err) {
+		t.Error("the default database directory exists although the database was moved")
+	}
+}
+
+func TestOverlappingInternalDataStopsStartup(t *testing.T) {
+	isolateEnv(t)
+	root := testutil.StorageRoot(t)
+	code, _, stderr := runCmd(t, "serve", "--storage-root", root, "--storage-logs-dir", filepath.Join(root, "files"))
+	if code != 1 || !strings.Contains(stderr, "the logs directory (storage.logs_dir) and the files area are the same directory") {
+		t.Errorf("exit %d, stderr %q; want 1 and an overlap error", code, stderr)
+	}
+}
+
 func TestGracefulShutdownWaitsForInFlight(t *testing.T) {
 	started, release := make(chan struct{}), make(chan struct{})
 	srv := &http.Server{Handler: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {

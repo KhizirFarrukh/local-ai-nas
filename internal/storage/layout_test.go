@@ -65,7 +65,7 @@ func names(m map[string]time.Time) []string {
 
 func TestInitCreatesLayout(t *testing.T) {
 	root := filepath.Join(testutil.StorageRoot(t), "nas") // the root itself is created too
-	l := NewLayout(root)
+	l := NewLayout(root, Options{})
 	unknown, err := l.Init()
 	if err != nil {
 		t.Fatalf("Init: %v", err)
@@ -88,7 +88,7 @@ func TestInitCreatesLayout(t *testing.T) {
 
 func TestInitTwiceChangesNothing(t *testing.T) {
 	root := testutil.StorageRoot(t)
-	l := NewLayout(root)
+	l := NewLayout(root, Options{})
 	if _, err := l.Init(); err != nil {
 		t.Fatal(err)
 	}
@@ -118,7 +118,7 @@ func TestInitReportsUnknownEntries(t *testing.T) {
 	if err := testutil.WriteFiles(root, map[string]string{"notes.txt": "mine", "Backups/2025.zip": "old"}); err != nil {
 		t.Fatal(err)
 	}
-	unknown, err := NewLayout(root).Init()
+	unknown, err := NewLayout(root, Options{}).Init()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -141,7 +141,7 @@ func TestInitRejectsNonDirectories(t *testing.T) {
 			if err := testutil.WriteFiles(root, map[string]string{name: "not a directory"}); err != nil {
 				t.Fatal(err)
 			}
-			_, err := NewLayout(root).Init()
+			_, err := NewLayout(root, Options{}).Init()
 			if err == nil || !strings.Contains(err.Error(), "not a directory") {
 				t.Errorf("Init = %v, want a \"not a directory\" error for %s", err, name)
 			}
@@ -155,14 +155,14 @@ func TestInitRejectsSymlinkedArea(t *testing.T) {
 	if err := os.Symlink(elsewhere, filepath.Join(root, "files")); err != nil {
 		t.Skipf("cannot create a symbolic link here (on Windows this needs developer mode or admin rights): %v", err)
 	}
-	_, err := NewLayout(root).Init()
+	_, err := NewLayout(root, Options{}).Init()
 	if err == nil || !strings.Contains(err.Error(), "symbolic link") {
 		t.Errorf("Init = %v, want a symbolic-link error", err)
 	}
 }
 
 func TestInitRejectsRelativeRoot(t *testing.T) {
-	if _, err := NewLayout(filepath.Join("relative", "nas")).Init(); err == nil {
+	if _, err := NewLayout(filepath.Join("relative", "nas"), Options{}).Init(); err == nil {
 		t.Error("Init accepted a relative root")
 	}
 }
@@ -199,7 +199,7 @@ func denyWrites(t *testing.T, dir string) {
 func TestInitFailsOnReadOnlyRoot(t *testing.T) {
 	root := testutil.StorageRoot(t)
 	denyWrites(t, root)
-	_, err := NewLayout(root).Init()
+	_, err := NewLayout(root, Options{}).Init()
 	if err == nil || !strings.Contains(err.Error(), "cannot create") {
 		t.Errorf("Init = %v, want a clear \"cannot create\" error", err)
 	}
@@ -207,7 +207,7 @@ func TestInitFailsOnReadOnlyRoot(t *testing.T) {
 
 func TestInitFailsOnReadOnlyArea(t *testing.T) {
 	root := testutil.StorageRoot(t)
-	l := NewLayout(root)
+	l := NewLayout(root, Options{})
 	if _, err := l.Init(); err != nil {
 		t.Fatal(err)
 	}

@@ -44,7 +44,7 @@ func setup(ctx context.Context, fs *flag.FlagSet, stderr io.Writer) (*app, bool)
 		_, _ = fmt.Fprintf(stderr, "local-ai-nas: invalid configuration:\n%v\n", err)
 		return nil, false
 	}
-	layout := storage.NewLayout(cfg.Storage.Root)
+	layout := storage.NewLayout(cfg.Storage.Root, storage.Options{DBDir: cfg.Storage.DBDir, LogsDir: cfg.Storage.LogsDir})
 	unknown, err := layout.Init()
 	if err != nil {
 		_, _ = fmt.Fprintf(stderr, "local-ai-nas: %v\n", err)
