@@ -35,18 +35,35 @@ type Route struct {
 	Handler http.Handler
 }
 
-// Routes returns the route table.
+// Routes returns the route table. Operations of the spec go through the
+// generated handlers (spec-first); a test checks that the table and the
+// spec list the same operations.
 func Routes(o Options) []Route {
+	if o.Logger == nil {
+		o.Logger = slog.New(slog.DiscardHandler)
+	}
+	g := generated(&server{version: o.Version, checks: o.Checks}, o.Logger)
+
 	// The photos area exists on disk from S01, but its API is reserved
-	// until the media stages (S01.2-T06).
+	// until the media stages (S01.2-T06). One hand-written route answers
+	// every method and sub-path; the spec documents it under the photos tag.
 	photos := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		apperr.Write(w, r, o.Logger, apperr.New(apperr.NotAvailable, "the photos API is not available yet; it arrives with the media stages (S04)"))
 	})
 	return []Route{
-		{"GET /api/v1/system/health", health.Handler(o.Version, o.Checks...)},
+		{"GET /api/v1/system/health", http.HandlerFunc(g.GetHealth)},
 		{"/api/v1/photos", photos},
 		{"/api/v1/photos/", photos},
 	}
+}
+
+// noStore marks every API response as not cacheable by default: they all
+// reflect the current state of the storage. A handler may override it.
+func noStore(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Cache-Control", "no-store")
+		next.ServeHTTP(w, r)
+	})
 }
 
 // New builds the complete HTTP handler. From the outside in: request ID,
@@ -66,6 +83,7 @@ func New(o Options) http.Handler {
 		mux.Handle(r.Pattern, r.Handler)
 	}
 	var h = problemsForUnmatched(mux, o.Logger)
+	h = noStore(h)
 	h = apperr.Recover(o.Logger)(h)
 	h = logging.AccessLog(o.Logger)(h)
 	h = http.MaxBytesHandler(h, o.MaxBodyBytes)

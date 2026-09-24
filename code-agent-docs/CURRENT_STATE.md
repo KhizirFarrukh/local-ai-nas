@@ -6,15 +6,16 @@
 
 ## Active stage and task
 - **Active stage:** S01 (Basic NAS implementation), **In Progress** (`stages/S01-basic-nas.md`); S01.1 and S01.2 **Done**; S01.6 **In Progress** (T01, T02 done; T03–T06 later); S01.5 **In Progress** (T01–T04 now; T05/T06 later).
-- **Active task:** none (S01.5-T03 done; S01.5-T04 next)
+- **Active task:** none (S01.5-T04 done; S01.3 next)
 
 ## In progress (write-ahead)
-- S01.5-T03: push, CI, merge `feat/S01.5-T03-problem-schema` into `develop`.
+- S01.5-T04: push, CI, merge `feat/S01.5-T04-generated-server` into `develop`.
 
 ## Last completed
 - `develop` verified complete (S005): merge `c535cda` brought `cf60f72` (plan 0.4.0, which PR #3 had put on `main` only) and the user's `bda8321` (prompts 3 and 4).
 - Approval-stage decisions D-01–D-14 applied (S005 E007–E010). **Plan 1.0.0 baseline and S01 approved** (S005 E012).
-- **S01.5-T03 done** (S005 E062): Problem schema and error responses in `api/openapi.yaml`; 404/405 are problems; the contract test validates every error response and requires an error case per route.
+- **S01.5-T04 done** (S005 E064): spec-first pipeline (oapi-codegen v2.8.0 → `internal/api/gen`), strict GetHealth, error hooks → problems, spec↔route test, FuzzAPI (2.24 M requests, no 5xx).
+- **S01.5-T03 done and merged** (CI run 35967063660 green; S005 E062): Problem schema and error responses in `api/openapi.yaml`; 404/405 are problems; the contract test validates every error response and requires an error case per route.
 - **S01.5-T02 done and merged** (CI run 35966560636 green; S005 E060): `docs/api/versioning.md`; `internal/api` route table + `New`; every route is under /api/v1 or /api/docs (test).
 - **S01.5-T01 done and merged** (CI run 35966117590 green; S005 E058): `docs/api/conventions.md` with the review checklist.
 - **S01.6-T02 done and merged** (CI run 35965767428 green; S005 E056): `storage.ValidateName` / `ValidateNewPath` with 9 rules reported in the problem's `rule` field; FuzzValidateName proves every accepted name is creatable on NTFS (136 k execs) and Linux.
@@ -39,8 +40,8 @@
 - Plan 1.1.0: the user's requirement to record every dependency and build a setup script per platform (FR-149, NFR-032, S11.2, Q41; `dependencies.md` section 12; RULES 1.5.0) (S005 E015–E016).
 
 ## Next steps
-1. **S01.5-T01..T04** (API layer foundations): T01 route conventions (`docs/api/conventions.md`); T02 versioning policy (`docs/api/versioning.md`, a test that every route is under `/api/v1` or `/api/docs`); T03 error catalogue (`docs/api/errors.md` grows from S01.1/S01.6) + the problem schema in `api/openapi.yaml` + contract test; T04 request validation (generated binding + validators; fuzzing never gives a 5xx). Spec-first with oapi-codegen v2.8.0 starts here.
-2. Then S01.3, S01.6-T03..T06 (remember the container bind note in the S01 change log), S01.4, S01.5-T05/T06, S01.7.
+1. **S01.3** (core file operations): T01 FilesService interface on os.Root with hooks (internal/files); then list (cursor pagination), details (MIME, ETag), create folder, simple streamed upload (PUT /content, free-space guard, name rules), download (Range/ETag), rename, move, copy, delete. **Spec-first:** each endpoint goes into `api/openapi.yaml` first, then `go generate ./internal/api`, then the strict operation (a missing one does not compile); add `github.com/oapi-codegen/runtime` v1.7.0 with the first operation that has parameters (register, R6). Each endpoint: an error case in `errorCases` (the contract test requires it), a review in `docs/api/conventions.md`, and fake-service tests that invalid input never reaches the service.
+2. Then S01.6-T03..T06 (remember the container bind note in the S01 change log), S01.4, S01.5-T05/T06, S01.7.
 3. **Q18 (library size)** is needed before S01.7; ask the user when S01.7 comes close.
 4. CI: every push runs `.github/workflows/ci.yml`. `gh` is not installed; the repository is public. Watch a commit's run through the public REST API (`/repos/KhizirFarrukh/local-ai-nas/actions/runs?head_sha=<sha>`, then `/jobs`; 60 anonymous requests per hour) or the run's web page (its "Status" field). Step logs need sign-in: reproduce Linux failures with `GOOS=linux go test -c` binaries in the WSL Ubuntu distro, run from the package directory under /mnt/c when a test reads repo files.
 5. Every finished branch: merge it into `develop` myself and push (RULES User Preferences, S005).

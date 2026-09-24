@@ -2,10 +2,7 @@ package health
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
-	"net/http"
-	"net/http/httptest"
 	"testing"
 	"time"
 
@@ -16,56 +13,39 @@ func ok(detail string) func(context.Context) (string, error) {
 	return func(context.Context) (string, error) { return detail, nil }
 }
 
-func serve(t *testing.T, h http.Handler) (int, Report) {
-	t.Helper()
-	rec := httptest.NewRecorder()
-	h.ServeHTTP(rec, httptest.NewRequest(http.MethodGet, "/api/v1/system/health", nil))
-	var rep Report
-	if err := json.Unmarshal(rec.Body.Bytes(), &rep); err != nil {
-		t.Fatal(err)
-	}
-	if ct := rec.Header().Get("Content-Type"); ct != "application/json" {
-		t.Errorf("Content-Type = %q", ct)
-	}
-	return rec.Code, rep
-}
+// The HTTP side (200/503, content type, schema) is tested in internal/api,
+// which serves the report.
 
-func TestHandlerHealthy(t *testing.T) {
-	code, got := serve(t, Handler("1.2.3", Check{"database", ok("open")}))
+func TestRunHealthy(t *testing.T) {
+	got := Run(t.Context(), "1.2.3", []Check{{"database", ok("open")}})
 	want := Report{Status: "ok", Version: "1.2.3", Checks: []Result{{Name: "database", Status: "ok", Detail: "open"}}}
-	if code != 200 {
-		t.Errorf("status = %d, want 200", code)
-	}
 	if diff := cmp.Diff(want, got); diff != "" {
 		t.Errorf("report (-want +got):\n%s", diff)
 	}
 }
 
-func TestHandlerStatuses(t *testing.T) {
+func TestRunStatuses(t *testing.T) {
 	warn := Check{"same_filesystem", func(context.Context) (string, error) {
 		return "", Warnf("uploads are copied (upload_finalize_mode=%s)", "copy")
 	}}
 	fail := Check{"database", func(context.Context) (string, error) { return "", errors.New("database is locked") }}
 
 	tests := []struct {
-		name     string
-		checks   []Check
-		wantCode int
-		want     Report
+		name   string
+		checks []Check
+		want   Report
 	}{
 		{
-			name:     "a warning keeps the server healthy",
-			checks:   []Check{{"config", ok("valid")}, warn},
-			wantCode: 200,
+			name:   "a warning keeps the server healthy",
+			checks: []Check{{"config", ok("valid")}, warn},
 			want: Report{Status: "warn", Version: "dev", Checks: []Result{
 				{Name: "config", Status: "ok", Detail: "valid"},
 				{Name: "same_filesystem", Status: "warn", Detail: "uploads are copied (upload_finalize_mode=copy)"},
 			}},
 		},
 		{
-			name:     "a failure wins over a warning",
-			checks:   []Check{warn, fail, {"config", ok("valid")}},
-			wantCode: 503,
+			name:   "a failure wins over a warning",
+			checks: []Check{warn, fail, {"config", ok("valid")}},
 			want: Report{Status: "fail", Version: "dev", Checks: []Result{
 				{Name: "same_filesystem", Status: "warn", Detail: "uploads are copied (upload_finalize_mode=copy)"},
 				{Name: "database", Status: "fail", Error: "database is locked"},
@@ -75,11 +55,7 @@ func TestHandlerStatuses(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			code, got := serve(t, Handler("dev", tt.checks...))
-			if code != tt.wantCode {
-				t.Errorf("status = %d, want %d", code, tt.wantCode)
-			}
-			if diff := cmp.Diff(tt.want, got); diff != "" {
+			if diff := cmp.Diff(tt.want, Run(t.Context(), "dev", tt.checks)); diff != "" {
 				t.Errorf("report (-want +got):\n%s", diff)
 			}
 		})

@@ -47,7 +47,7 @@ Integration tests use a real temporary storage root and, from S01.3 on, the real
 
 ## Coverage
 
-`scripts/coverage.sh` writes `coverage.out` (git-ignored), prints the per-function report, and fails when the total for `internal/...` is below 80%. Set `COVERAGE_MIN` to try another threshold. `cmd/` is covered by the smoke test (S01.1-T11), not by the threshold.
+`scripts/coverage.sh` writes `coverage.out` (git-ignored), prints the per-function report, and fails when the total for `internal/...` is below 80%. Generated code (`internal/api/gen`, from `api/openapi.yaml`) is left out of the figure; its behavior is tested through `internal/api`. Set `COVERAGE_MIN` to try another threshold. `cmd/` is covered by the smoke test (S01.1-T11), not by the threshold.
 
 ## Test data
 
