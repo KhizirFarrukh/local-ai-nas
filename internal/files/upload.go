@@ -246,29 +246,33 @@ func numberedName(name string, n int) string {
 // without hard links.
 var linkFile = (*os.Root).Link
 
-// placeNew gives tmp the name name only if nothing has that name, and
-// returns an fs.ErrExist error otherwise. A hard link fails atomically
-// when the name exists, so concurrent writers cannot replace each other;
-// the temporary name is then removed. File systems without hard links
-// (FAT, exFAT) fall back to a check and a rename, which a concurrent write
-// to the same name can race.
-func placeNew(root *os.Root, tmp, name string) error {
-	from, to := filepath.FromSlash(tmp), filepath.FromSlash(name)
-	err := linkFile(root, from, to)
+// placeNew moves the regular file from to name only if nothing has that
+// name, and returns an fs.ErrExist error otherwise. A hard link fails
+// atomically when the name exists, so concurrent writers cannot replace
+// each other; the old name is then removed (if that fails, the new link
+// is removed too, so the file is never left under both names). File
+// systems without hard links (FAT, exFAT) fall back to a check and a
+// rename, which a concurrent write to the same name can race.
+func placeNew(root *os.Root, from, name string) error {
+	src, dst := filepath.FromSlash(from), filepath.FromSlash(name)
+	err := linkFile(root, src, dst)
 	if err == nil {
-		_ = root.Remove(from) // the file is complete under its name; a left-over temporary name stays hidden
+		if err := root.Remove(src); err != nil {
+			_ = root.Remove(dst) // undo; the file is still at from
+			return err
+		}
 		return nil
 	}
 	if errors.Is(err, fs.ErrExist) {
 		return err
 	}
-	switch _, serr := root.Lstat(to); {
+	switch _, serr := root.Lstat(dst); {
 	case serr == nil:
 		return &fs.PathError{Op: "rename", Path: name, Err: fs.ErrExist}
 	case !storage.IsNotFound(serr):
 		return serr
 	}
-	return root.Rename(from, to)
+	return root.Rename(src, dst)
 }
 
 // syncFolder makes a new name in dir durable, best effort: the file itself

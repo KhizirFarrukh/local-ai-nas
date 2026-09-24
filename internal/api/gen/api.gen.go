@@ -271,6 +271,16 @@ type ListOrder string
 // ListSort defines model for ListSort.
 type ListSort string
 
+// MoveRequest defines model for MoveRequest.
+type MoveRequest struct {
+	// From The item to move, starting with `/`.
+	From       string      `json:"from"`
+	OnConflict *OnConflict `json:"on_conflict,omitempty"`
+
+	// To The item's new path, starting with `/`.
+	To string `json:"to"`
+}
+
 // OnConflict defines model for OnConflict.
 type OnConflict string
 
@@ -303,6 +313,16 @@ type ProblemCode string
 
 // ProblemType Always `about:blank` for now; `title` is then the HTTP status text.
 type ProblemType string
+
+// RenameRequest defines model for RenameRequest.
+type RenameRequest struct {
+	// NewName The new name (one name, no `/`).
+	NewName    string      `json:"new_name"`
+	OnConflict *OnConflict `json:"on_conflict,omitempty"`
+
+	// Path The item to rename, starting with `/`.
+	Path string `json:"path"`
+}
 
 // Path defines model for Path.
 type Path = string
@@ -367,6 +387,12 @@ type GetItemsParams struct {
 // CreateFolderJSONRequestBody defines body for CreateFolder for application/json ContentType.
 type CreateFolderJSONRequestBody = CreateFolderRequest
 
+// MoveItemJSONRequestBody defines body for MoveItem for application/json ContentType.
+type MoveItemJSONRequestBody = MoveRequest
+
+// RenameItemJSONRequestBody defines body for RenameItem for application/json ContentType.
+type RenameItemJSONRequestBody = RenameRequest
+
 // ServerInterface represents all server handlers.
 type ServerInterface interface {
 	// DownloadFile Download a file
@@ -381,6 +407,12 @@ type ServerInterface interface {
 	// GetItems List a folder, or get the details of a file
 	// (GET /files/items)
 	GetItems(w http.ResponseWriter, r *http.Request, params GetItemsParams)
+	// MoveItem Move a file or folder
+	// (POST /files/operations/move)
+	MoveItem(w http.ResponseWriter, r *http.Request)
+	// RenameItem Rename a file or folder
+	// (POST /files/operations/rename)
+	RenameItem(w http.ResponseWriter, r *http.Request)
 	// GetHealth Server health and startup checks
 	// (GET /system/health)
 	GetHealth(w http.ResponseWriter, r *http.Request)
@@ -573,6 +605,34 @@ func (siw *ServerInterfaceWrapper) GetItems(w http.ResponseWriter, r *http.Reque
 	handler.ServeHTTP(w, r)
 }
 
+// MoveItem operation middleware
+func (siw *ServerInterfaceWrapper) MoveItem(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.MoveItem(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// RenameItem operation middleware
+func (siw *ServerInterfaceWrapper) RenameItem(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.RenameItem(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
 // GetHealth operation middleware
 func (siw *ServerInterfaceWrapper) GetHealth(w http.ResponseWriter, r *http.Request) {
 
@@ -710,6 +770,8 @@ func HandlerWithOptions(si ServerInterface, options StdHTTPServerOptions) http.H
 	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/files/content", wrapper.DownloadFile)
 	m.HandleFunc(http.MethodPut+" "+options.BaseURL+"/files/content", wrapper.UploadFile)
 	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/files/folders", wrapper.CreateFolder)
+	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/files/operations/rename", wrapper.RenameItem)
+	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/files/operations/move", wrapper.MoveItem)
 	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/files/items", wrapper.GetItems)
 	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/system/health", wrapper.GetHealth)
 
@@ -1346,6 +1408,248 @@ func (response GetItems500ApplicationProblemPlusJSONResponse) VisitGetItemsRespo
 	return err
 }
 
+type MoveItemRequestObject struct {
+	Body *MoveItemJSONRequestBody
+}
+
+type MoveItemResponseObject interface {
+	VisitMoveItemResponse(w http.ResponseWriter) error
+}
+
+type MoveItem200JSONResponse FileItem
+
+func (response MoveItem200JSONResponse) VisitMoveItemResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type MoveItem400ApplicationProblemPlusJSONResponse struct {
+	BadRequestApplicationProblemPlusJSONResponse
+}
+
+func (response MoveItem400ApplicationProblemPlusJSONResponse) VisitMoveItemResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(400)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type MoveItem404ApplicationProblemPlusJSONResponse struct {
+	NotFoundApplicationProblemPlusJSONResponse
+}
+
+func (response MoveItem404ApplicationProblemPlusJSONResponse) VisitMoveItemResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(404)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type MoveItem405ApplicationProblemPlusJSONResponse struct {
+	MethodNotAllowedApplicationProblemPlusJSONResponse
+}
+
+func (response MoveItem405ApplicationProblemPlusJSONResponse) VisitMoveItemResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/problem+json")
+	if response.Headers.Allow != nil {
+		w.Header().Set("Allow", fmt.Sprint(*response.Headers.Allow))
+	}
+	w.WriteHeader(405)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type MoveItem409ApplicationProblemPlusJSONResponse struct {
+	ConflictApplicationProblemPlusJSONResponse
+}
+
+func (response MoveItem409ApplicationProblemPlusJSONResponse) VisitMoveItemResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(409)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type MoveItem413ApplicationProblemPlusJSONResponse struct {
+	TooLargeApplicationProblemPlusJSONResponse
+}
+
+func (response MoveItem413ApplicationProblemPlusJSONResponse) VisitMoveItemResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(413)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type MoveItem500ApplicationProblemPlusJSONResponse struct {
+	InternalErrorApplicationProblemPlusJSONResponse
+}
+
+func (response MoveItem500ApplicationProblemPlusJSONResponse) VisitMoveItemResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(500)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type RenameItemRequestObject struct {
+	Body *RenameItemJSONRequestBody
+}
+
+type RenameItemResponseObject interface {
+	VisitRenameItemResponse(w http.ResponseWriter) error
+}
+
+type RenameItem200JSONResponse FileItem
+
+func (response RenameItem200JSONResponse) VisitRenameItemResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type RenameItem400ApplicationProblemPlusJSONResponse struct {
+	BadRequestApplicationProblemPlusJSONResponse
+}
+
+func (response RenameItem400ApplicationProblemPlusJSONResponse) VisitRenameItemResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(400)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type RenameItem404ApplicationProblemPlusJSONResponse struct {
+	NotFoundApplicationProblemPlusJSONResponse
+}
+
+func (response RenameItem404ApplicationProblemPlusJSONResponse) VisitRenameItemResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(404)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type RenameItem405ApplicationProblemPlusJSONResponse struct {
+	MethodNotAllowedApplicationProblemPlusJSONResponse
+}
+
+func (response RenameItem405ApplicationProblemPlusJSONResponse) VisitRenameItemResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/problem+json")
+	if response.Headers.Allow != nil {
+		w.Header().Set("Allow", fmt.Sprint(*response.Headers.Allow))
+	}
+	w.WriteHeader(405)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type RenameItem409ApplicationProblemPlusJSONResponse struct {
+	ConflictApplicationProblemPlusJSONResponse
+}
+
+func (response RenameItem409ApplicationProblemPlusJSONResponse) VisitRenameItemResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(409)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type RenameItem413ApplicationProblemPlusJSONResponse struct {
+	TooLargeApplicationProblemPlusJSONResponse
+}
+
+func (response RenameItem413ApplicationProblemPlusJSONResponse) VisitRenameItemResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(413)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type RenameItem500ApplicationProblemPlusJSONResponse struct {
+	InternalErrorApplicationProblemPlusJSONResponse
+}
+
+func (response RenameItem500ApplicationProblemPlusJSONResponse) VisitRenameItemResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(500)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
 type GetHealthRequestObject struct {
 }
 
@@ -1430,6 +1734,12 @@ type StrictServerInterface interface {
 	// GetItems List a folder, or get the details of a file
 	// (GET /files/items)
 	GetItems(ctx context.Context, request GetItemsRequestObject) (GetItemsResponseObject, error)
+	// MoveItem Move a file or folder
+	// (POST /files/operations/move)
+	MoveItem(ctx context.Context, request MoveItemRequestObject) (MoveItemResponseObject, error)
+	// RenameItem Rename a file or folder
+	// (POST /files/operations/rename)
+	RenameItem(ctx context.Context, request RenameItemRequestObject) (RenameItemResponseObject, error)
 	// GetHealth Server health and startup checks
 	// (GET /system/health)
 	GetHealth(ctx context.Context, request GetHealthRequestObject) (GetHealthResponseObject, error)
@@ -1578,6 +1888,68 @@ func (sh *strictHandler) GetItems(w http.ResponseWriter, r *http.Request, params
 		sh.options.ResponseErrorHandlerFunc(w, r, err)
 	} else if validResponse, ok := response.(GetItemsResponseObject); ok {
 		if err := validResponse.VisitGetItemsResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// MoveItem operation middleware
+func (sh *strictHandler) MoveItem(w http.ResponseWriter, r *http.Request) {
+	var request MoveItemRequestObject
+
+	var body MoveItemJSONRequestBody
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		sh.options.RequestErrorHandlerFunc(w, r, fmt.Errorf("can't decode JSON body: %w", err))
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.MoveItem(ctx, request.(MoveItemRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "MoveItem")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(MoveItemResponseObject); ok {
+		if err := validResponse.VisitMoveItemResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// RenameItem operation middleware
+func (sh *strictHandler) RenameItem(w http.ResponseWriter, r *http.Request) {
+	var request RenameItemRequestObject
+
+	var body RenameItemJSONRequestBody
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		sh.options.RequestErrorHandlerFunc(w, r, fmt.Errorf("can't decode JSON body: %w", err))
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.RenameItem(ctx, request.(RenameItemRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "RenameItem")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(RenameItemResponseObject); ok {
+		if err := validResponse.VisitRenameItemResponse(w); err != nil {
 			sh.options.ResponseErrorHandlerFunc(w, r, err)
 		}
 	} else if response != nil {

@@ -116,3 +116,11 @@ func (noFiles) Upload(context.Context, string, string, io.Reader, int64, files.U
 func (noFiles) Download(context.Context, string, string) (files.Item, io.ReadSeekCloser, error) {
 	return files.Item{}, nil, errNoFiles
 }
+
+func (noFiles) Rename(context.Context, string, string, string, files.MoveOptions) (files.Item, error) {
+	return files.Item{}, errNoFiles
+}
+
+func (noFiles) Move(context.Context, string, string, string, files.MoveOptions) (files.Item, error) {
+	return files.Item{}, errNoFiles
+}

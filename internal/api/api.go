@@ -75,6 +75,8 @@ func Routes(o Options) []Route {
 		{Pattern: "GET /api/v1/system/health", Handler: http.HandlerFunc(g.GetHealth)},
 		{Pattern: "GET /api/v1/files/items", Handler: http.HandlerFunc(g.GetItems)},
 		{Pattern: "POST /api/v1/files/folders", Handler: strictJSON[gen.CreateFolderRequest](o.Logger, g.CreateFolder)},
+		{Pattern: "POST /api/v1/files/operations/rename", Handler: strictJSON[gen.RenameRequest](o.Logger, g.RenameItem)},
+		{Pattern: "POST /api/v1/files/operations/move", Handler: strictJSON[gen.MoveRequest](o.Logger, g.MoveItem)},
 		{Pattern: "GET /api/v1/files/content", Handler: withRequest(g.DownloadFile)},
 		{Pattern: "PUT /api/v1/files/content", Handler: declaredSize(o.MaxUploadBytes, o.Logger, g.UploadFile), MaxBody: o.MaxUploadBytes},
 		{Pattern: "/api/v1/photos", Handler: photos},

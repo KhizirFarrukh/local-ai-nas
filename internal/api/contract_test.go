@@ -80,6 +80,10 @@ var errorCases = []struct {
 	{http.MethodPost, "/api/v1/files/items?path=/", http.StatusMethodNotAllowed, "method_not_allowed"},
 	// POST /api/v1/files/folders: other methods (the body cases are below).
 	{http.MethodGet, "/api/v1/files/folders", http.StatusMethodNotAllowed, "method_not_allowed"},
+	// POST /api/v1/files/operations/{rename,move}: other methods (the body
+	// cases are below).
+	{http.MethodGet, "/api/v1/files/operations/rename", http.StatusMethodNotAllowed, "method_not_allowed"},
+	{http.MethodPut, "/api/v1/files/operations/move", http.StatusMethodNotAllowed, "method_not_allowed"},
 	// GET /api/v1/files/content (412 and 416 need request headers; the
 	// download tests validate them against the schema).
 	{http.MethodGet, "/api/v1/files/content", http.StatusBadRequest, "invalid_request"},
@@ -116,6 +120,25 @@ var bodyErrorCases = []struct {
 	{http.MethodPost, "/api/v1/files/folders", jsonType, `{"path":"/x/y/z"}`, 0, http.StatusNotFound, "not_found"},
 	{http.MethodPost, "/api/v1/files/folders", jsonType, `{"path":"/docs"}`, 0, http.StatusConflict, "conflict"},
 	{http.MethodPost, "/api/v1/files/folders", jsonType, `{"path":"/` + strings.Repeat("a", 2<<20) + `"}`, 0, http.StatusRequestEntityTooLarge, "too_large"},
+	// POST /api/v1/files/operations/rename.
+	{http.MethodPost, "/api/v1/files/operations/rename", "", "", 0, http.StatusBadRequest, "invalid_request"},
+	{http.MethodPost, "/api/v1/files/operations/rename", jsonType, `{"path":"/docs/a.txt","new_name":"x","extra":1}`, 0, http.StatusBadRequest, "invalid_request"},
+	{http.MethodPost, "/api/v1/files/operations/rename", jsonType, `{"path":"/docs/a.txt","new_name":"x","on_conflict":"merge"}`, 0, http.StatusBadRequest, "invalid_request"},
+	{http.MethodPost, "/api/v1/files/operations/rename", jsonType, `{"path":"/","new_name":"x"}`, 0, http.StatusBadRequest, "invalid_request"},
+	{http.MethodPost, "/api/v1/files/operations/rename", jsonType, `{"path":"/docs/a.txt","new_name":"a/b"}`, 0, http.StatusBadRequest, "invalid_name"},
+	{http.MethodPost, "/api/v1/files/operations/rename", jsonType, `{"path":"/docs/a.txt","new_name":"con"}`, 0, http.StatusBadRequest, "invalid_name"},
+	{http.MethodPost, "/api/v1/files/operations/rename", jsonType, `{"path":"/docs/../../a","new_name":"x"}`, 0, http.StatusBadRequest, "outside_root"},
+	{http.MethodPost, "/api/v1/files/operations/rename", jsonType, `{"path":"/missing","new_name":"x"}`, 0, http.StatusNotFound, "not_found"},
+	{http.MethodPost, "/api/v1/files/operations/rename", jsonType, `{"path":"/docs/a.txt","new_name":"b.txt"}`, 0, http.StatusConflict, "conflict"},
+	// POST /api/v1/files/operations/move.
+	{http.MethodPost, "/api/v1/files/operations/move", jsonType, `{"from":"/docs","to":"/docs/sub"}`, 0, http.StatusBadRequest, "invalid_request"},
+	{http.MethodPost, "/api/v1/files/operations/move", jsonType, `{"from":"/docs/a.txt","to":"/"}`, 0, http.StatusBadRequest, "invalid_name"},
+	{http.MethodPost, "/api/v1/files/operations/move", jsonType, `{"from":"/docs/a.txt","to":"/../x"}`, 0, http.StatusBadRequest, "outside_root"},
+	{http.MethodPost, "/api/v1/files/operations/move", jsonType, `{"from":"/missing","to":"/x"}`, 0, http.StatusNotFound, "not_found"},
+	{http.MethodPost, "/api/v1/files/operations/move", jsonType, `{"from":"/docs/a.txt","to":"/nope/a.txt"}`, 0, http.StatusNotFound, "not_found"},
+	{http.MethodPost, "/api/v1/files/operations/move", jsonType, `{"from":"/docs/a.txt","to":"/readme.md"}`, 0, http.StatusConflict, "conflict"},
+	{http.MethodPost, "/api/v1/files/operations/move", jsonType, `{"from":"/docs/a.txt","to":"/readme.md/a.txt"}`, 0, http.StatusConflict, "conflict"},
+	{http.MethodPost, "/api/v1/files/operations/move", jsonType, `{"from":"/docs","to":"/empty","on_conflict":"overwrite"}`, 0, http.StatusConflict, "conflict"},
 	// PUT /api/v1/files/content.
 	{http.MethodPut, "/api/v1/files/content", octetType, "abc", 0, http.StatusBadRequest, "invalid_request"},
 	{http.MethodPut, "/api/v1/files/content?path=/n.txt&on_conflict=merge", octetType, "abc", 0, http.StatusBadRequest, "invalid_request"},

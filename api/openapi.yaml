@@ -188,6 +188,78 @@ paths:
           $ref: "#/components/responses/TooLarge"
         "500":
           $ref: "#/components/responses/InternalError"
+  /files/operations/rename:
+    post:
+      tags: [files]
+      operationId: renameItem
+      summary: Rename a file or folder
+      description: |
+        Gives the item at `path` the name `new_name` in the same folder.
+        `new_name` is one name (no `/`) and must follow the name rules. A
+        change of case only (`a.txt` to `A.txt`) works on every disk. When
+        the name is taken, `on_conflict` decides: `fail` (409), `rename`
+        (`name (1).ext`), or `overwrite`, which replaces a file with a file
+        and never replaces or merges a folder (409).
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RenameRequest"
+      responses:
+        "200":
+          description: The item at its new path.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FileItem"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "405":
+          $ref: "#/components/responses/MethodNotAllowed"
+        "409":
+          $ref: "#/components/responses/Conflict"
+        "413":
+          $ref: "#/components/responses/TooLarge"
+        "500":
+          $ref: "#/components/responses/InternalError"
+  /files/operations/move:
+    post:
+      tags: [files]
+      operationId: moveItem
+      summary: Move a file or folder
+      description: |
+        Moves the item at `from` to the path `to` (the full new path, so a
+        move can also rename). The parent folder of `to` must exist. A
+        folder cannot be moved into itself or below itself (400). Conflicts
+        are handled as for rename.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MoveRequest"
+      responses:
+        "200":
+          description: The item at its new path.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FileItem"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "405":
+          $ref: "#/components/responses/MethodNotAllowed"
+        "409":
+          $ref: "#/components/responses/Conflict"
+        "413":
+          $ref: "#/components/responses/TooLarge"
+        "500":
+          $ref: "#/components/responses/InternalError"
   /files/items:
     get:
       tags: [files]
@@ -350,6 +422,32 @@ components:
           type: boolean
           default: false
           description: Also create missing parent folders.
+        on_conflict:
+          $ref: "#/components/schemas/OnConflict"
+    RenameRequest:
+      type: object
+      additionalProperties: false
+      required: [path, new_name]
+      properties:
+        path:
+          type: string
+          description: The item to rename, starting with `/`.
+        new_name:
+          type: string
+          description: The new name (one name, no `/`).
+        on_conflict:
+          $ref: "#/components/schemas/OnConflict"
+    MoveRequest:
+      type: object
+      additionalProperties: false
+      required: [from, to]
+      properties:
+        from:
+          type: string
+          description: The item to move, starting with `/`.
+        to:
+          type: string
+          description: The item's new path, starting with `/`.
         on_conflict:
           $ref: "#/components/schemas/OnConflict"
     OnConflict:
