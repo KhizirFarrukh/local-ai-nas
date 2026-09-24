@@ -64,7 +64,16 @@ func (c fileContent) VisitDownloadFileResponse(w http.ResponseWriter) error {
 	// uploaded HTML or SVG file must not run scripts in the app's origin.
 	h.Set("X-Content-Type-Options", "nosniff")
 	h.Set("Content-Security-Policy", "default-src 'none'; sandbox")
-	http.ServeContent(&problemStatus{ResponseWriter: w, r: c.r, log: c.log}, c.r, "", c.item.ModTime, c.body)
+	r := c.r
+	if c.item.Size == 0 && r.Header.Get("Range") != "" {
+		// An empty file has no byte to range over. Go's ServeContent would
+		// answer a suffix range ("bytes=-1") with 206 and the invalid
+		// Content-Range "bytes 0--1/0"; RFC 9110 lets a server ignore
+		// Range, so the whole (empty) file is sent (S01.7-T03).
+		r = r.Clone(r.Context())
+		r.Header.Del("Range")
+	}
+	http.ServeContent(&problemStatus{ResponseWriter: w, r: r, log: c.log}, r, "", c.item.ModTime, c.body)
 	return nil
 }
 
