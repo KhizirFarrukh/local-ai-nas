@@ -163,8 +163,18 @@ func (e ProblemType) Valid() bool {
 
 // FileItem defines model for FileItem.
 type FileItem struct {
+	// Etag A strong entity tag of the file's current version (only for a
+	// single file, not in listings). It changes when the file is
+	// written or replaced; the download sends the same value.
+	Etag *string `json:"etag,omitempty"`
+
 	// Kind A symbolic link is listed but never followed.
 	Kind ItemKind `json:"kind"`
+
+	// Mime The media type of a file. In a listing it comes from the file
+	// name's extension only (absent when unknown); for a single file it
+	// falls back to sniffing the first 512 bytes.
+	Mime *string `json:"mime,omitempty"`
 
 	// ModTime The last modification time, in UTC.
 	ModTime time.Time `json:"mod_time"`

@@ -143,6 +143,18 @@ components:
           type: string
           format: date-time
           description: The last modification time, in UTC.
+        mime:
+          type: string
+          description: |
+            The media type of a file. In a listing it comes from the file
+            name's extension only (absent when unknown); for a single file it
+            falls back to sniffing the first 512 bytes.
+        etag:
+          type: string
+          description: |
+            A strong entity tag of the file's current version (only for a
+            single file, not in listings). It changes when the file is
+            written or replaced; the download sends the same value.
     ItemKind:
       type: string
       description: A symbolic link is listed but never followed.

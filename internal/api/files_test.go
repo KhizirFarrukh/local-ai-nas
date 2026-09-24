@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"net/url"
+	"regexp"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
@@ -74,9 +75,27 @@ func TestGetItemsFile(t *testing.T) {
 	if rec.Code != http.StatusOK {
 		t.Fatalf("status %d: %s", rec.Code, rec.Body)
 	}
-	want := gen.FileItem{Path: "/docs/a.txt", Name: "a.txt", Kind: "file", Size: 5, ModTime: resp.Item.ModTime}
+	// The media type of .txt comes from the OS's table (it varies), so only
+	// its presence is checked; the ETag format is fixed.
+	want := gen.FileItem{Path: "/docs/a.txt", Name: "a.txt", Kind: "file", Size: 5, ModTime: resp.Item.ModTime, Mime: resp.Item.Mime, Etag: resp.Item.Etag}
 	if diff := cmp.Diff(want, resp.Item); diff != "" || resp.Items != nil || resp.NextCursor != nil {
 		t.Errorf("file details (-want +got):\n%s items=%v next=%v", diff, resp.Items, resp.NextCursor)
+	}
+	if resp.Item.Mime == nil || *resp.Item.Mime == "" {
+		t.Error("file details without a media type")
+	}
+	if resp.Item.Etag == nil || !regexp.MustCompile(`^"[0-9a-f]{24}"$`).MatchString(*resp.Item.Etag) {
+		t.Errorf("ETag = %v, want a quoted 24-digit hex tag", resp.Item.Etag)
+	}
+}
+
+func TestGetItemsListingHasNoETags(t *testing.T) {
+	h := New(Options{Files: testFiles(t)})
+	_, resp := getItems(t, h, url.Values{"path": {"/docs"}})
+	for _, it := range *resp.Items {
+		if it.Etag != nil {
+			t.Errorf("listing item %s has an ETag", it.Name)
+		}
 	}
 }
 

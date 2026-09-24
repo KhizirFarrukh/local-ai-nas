@@ -74,13 +74,20 @@ func fileItem(it files.Item) gen.FileItem {
 	if it.RelPath == "." {
 		p = "/"
 	}
-	return gen.FileItem{
+	fi := gen.FileItem{
 		Path:    p,
 		Name:    it.Name,
 		Kind:    gen.ItemKind(it.Kind),
 		Size:    it.Size,
 		ModTime: it.ModTime.UTC(),
 	}
+	if it.MIME != "" {
+		fi.Mime = &it.MIME
+	}
+	if it.ETag != "" {
+		fi.Etag = &it.ETag
+	}
+	return fi
 }
 
 // noFiles stands in when no files service is configured: every call
