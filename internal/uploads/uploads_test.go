@@ -35,6 +35,12 @@ var fixture = map[string]string{"docs/.keep": "", "taken.txt": "x", "f.txt": "f"
 // adjust the files service.
 func testServer(t *testing.T, opts ...func(*files.Options)) (string, string, Index, string) {
 	t.Helper()
+	return testServerWrap(t, nil, opts...)
+}
+
+// testServerWrap is testServer with the files service wrapped by wrap.
+func testServerWrap(t *testing.T, wrap func(Target) Target, opts ...func(*files.Options)) (string, string, Index, string) {
+	t.Helper()
 	l := storage.NewLayout(testutil.StorageRoot(t), storage.Options{})
 	if _, err := l.Init(); err != nil {
 		t.Fatal(err)
@@ -55,8 +61,12 @@ func testServer(t *testing.T, opts ...func(*files.Options)) (string, string, Ind
 	if _, err := d.Migrate(t.Context()); err != nil {
 		t.Fatal(err)
 	}
+	var target Target = files.NewLocal(storage.NewResolver(l), fo)
+	if wrap != nil {
+		target = wrap(target)
+	}
 	s, err := New(Options{
-		Dir: l.TmpUploads, DB: d, Files: files.NewLocal(storage.NewResolver(l), fo),
+		Dir: l.TmpUploads, DB: d, Files: target,
 		Namespace: storage.DefaultNamespace, BasePath: basePath, MaxSize: 1 << 30,
 	})
 	if err != nil {
@@ -98,7 +108,7 @@ func tusRequest(t *testing.T, ctx context.Context, method, url string, headers m
 // creates an upload, is cut off part-way, asks for the offset, resumes
 // from there, and the stored data equals the source.
 func TestResumeInterruptedUpload(t *testing.T) {
-	url, dir, index, _ := testServer(t)
+	url, dir, index, area := testServer(t)
 	data := make([]byte, 3<<20+123)
 	rng := rand.New(rand.NewPCG(5, 6))
 	for i := range data {
@@ -183,9 +193,19 @@ func TestResumeInterruptedUpload(t *testing.T) {
 	if resp.StatusCode != http.StatusNoContent || resp.Header.Get("Upload-Offset") != strconv.Itoa(len(data)) {
 		t.Fatalf("resume: %d, offset %s", resp.StatusCode, resp.Header.Get("Upload-Offset"))
 	}
-	stored, err := os.ReadFile(filepath.Join(dir, id))
+	// The finished upload is the file in the files area (S01.4-T03).
+	if got := resp.Header.Get(ItemPathHeader); got != "/docs/big.bin" {
+		t.Errorf("%s = %q, want /docs/big.bin", ItemPathHeader, got)
+	}
+	stored, err := os.ReadFile(filepath.Join(area, "docs", "big.bin"))
 	if err != nil || sha256.Sum256(stored) != sha256.Sum256(data) {
-		t.Fatalf("the stored upload differs from the source (%d of %d bytes, %v)", len(stored), len(data), err)
+		t.Fatalf("the finished file differs from the source (%d of %d bytes, %v)", len(stored), len(data), err)
+	}
+	if entries, _ := os.ReadDir(dir); len(entries) != 0 {
+		t.Errorf("the finished upload left %d entries in the upload directory", len(entries))
+	}
+	if _, err := index.Get(t.Context(), id); !errors.Is(err, ErrNoSession) {
+		t.Errorf("the finished upload's session is still there: %v", err)
 	}
 	t.Logf("resumed at %d of %d bytes", offset, len(data))
 }

@@ -118,6 +118,7 @@ Large uploads use the **tus 1.0.0** protocol at `/api/v1/files/uploads/` (S01.4)
 - The target is checked when the upload is created, exactly as for the simple upload: the path and the name rules, the parent folder, `on_conflict` against what is there now (`fail` onto an existing item is `409` at once), and the free space for `Upload-Length` (`507`). A refused upload stores nothing.
 - Errors are problems too, with the status tus defines (for example `409 conflict` for a wrong `Upload-Offset`, `412 precondition_failed` for a missing `Tus-Resumable` header, `423 locked` while another request writes the same upload). The `Tus-Resumable` and other tus headers stay on error responses.
 - Unfinished uploads are kept in the server's internal data, never in your storage area, and expire after 24 hours.
+- **Finishing:** the request that sends the last byte (a `PATCH`, or the `POST` of a creation-with-upload) also makes the file: the server checks the optional `sha256`, syncs the data to disk, and moves it to `target_path` in one step, applying `on_conflict` against what is there at that moment. The answer carries the header `Item-Path` with the file's path (with `rename` it can differ from `target_path`). If finishing fails (a checksum mismatch `400`, a name taken meanwhile with `fail` `409`, no free space `507`), the upload is removed and the error is the answer; upload again with other settings.
 
 ## Review checklist
 

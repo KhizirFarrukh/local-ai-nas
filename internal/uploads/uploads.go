@@ -11,6 +11,7 @@ import (
 	"crypto/rand"
 	"encoding/hex"
 	"encoding/json"
+	"io"
 	"log/slog"
 	"net/http"
 	"strings"
@@ -40,6 +41,11 @@ type Target interface {
 	// CheckUpload runs every check of an upload to path that needs no
 	// content, and writes nothing (files.Local.CheckUpload).
 	CheckUpload(ctx context.Context, owner, path string, size int64, opts files.UploadOptions) error
+	// CommitUpload makes the finished upload src the file at path, or
+	// returns files.ErrNotSameDevice (files.Local.CommitUpload).
+	CommitUpload(ctx context.Context, owner, path, src string, opts files.UploadOptions) (files.Item, bool, error)
+	// Upload writes the file at path from a stream (the copy fallback).
+	Upload(ctx context.Context, owner, path string, body io.Reader, size int64, opts files.UploadOptions) (files.Item, bool, error)
 }
 
 // DefaultExpiry is how long an unfinished upload is kept by default.
@@ -102,6 +108,7 @@ func New(o Options) (*Server, error) {
 		Cors:                       &tus.CorsConfig{Disable: true}, // the web app is served from the same origin
 		Logger:                     tusLogger(o.Logger),
 		PreUploadCreateCallback:    s.beforeCreate,
+		PreFinishResponseCallback:  s.beforeFinish,
 		PreUploadTerminateCallback: s.beforeTerminate,
 	})
 	if err != nil {

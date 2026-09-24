@@ -3,6 +3,7 @@ package files
 import (
 	"context"
 	"fmt"
+	"os"
 	"sort"
 	"sync"
 	"testing"
@@ -76,6 +77,21 @@ var conflictOps = []conflictOp{
 	{"copy folder", folderOutcomes, func(s *Local, p OnConflict) (Item, *bool, error) {
 		return created(s.Copy(testCtx, owner, "/srcdir", "/t.txt", CopyOptions{OnConflict: p}))
 	}, true},
+	{"tus finalize", fileOutcomes, func(s *Local, p OnConflict) (Item, *bool, error) {
+		// A finished upload outside the area (S01.4-T03).
+		f, err := os.CreateTemp("", "finished-upload-*")
+		if err != nil {
+			return Item{}, nil, err
+		}
+		defer func() { _ = os.Remove(f.Name()) }() // gone after a commit
+		if _, err := f.WriteString("new"); err != nil {
+			return Item{}, nil, err
+		}
+		if err := f.Close(); err != nil {
+			return Item{}, nil, err
+		}
+		return created(s.CommitUpload(testCtx, owner, "/t.txt", f.Name(), UploadOptions{OnConflict: p}))
+	}, false},
 	{"move file", fileOutcomes, func(s *Local, p OnConflict) (Item, *bool, error) {
 		it, err := s.Move(testCtx, owner, "/in/src.txt", "/t.txt", MoveOptions{OnConflict: p})
 		return it, nil, err
@@ -96,7 +112,8 @@ var conflictOps = []conflictOp{
 
 // TestConflictMatrix is the S01.6-T04 acceptance test: every conflict
 // policy for every operation that creates an item, against a free name,
-// an existing file, and an existing folder.
+// an existing file, and an existing folder. The tus finalize rows came
+// with S01.4-T03.
 func TestConflictMatrix(t *testing.T) {
 	for _, op := range conflictOps {
 		for _, policy := range []OnConflict{ConflictFail, ConflictRename, ConflictOverwrite} {
