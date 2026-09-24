@@ -18,7 +18,10 @@ services:
       LOCALAINAS_STORAGE_ROOT: /data
       # Inside the container the server must listen on all interfaces, or
       # the published port cannot reach it. The port above stays loopback-only.
+      # The bind guard (S01.6-T06) allows this only inside a container, and
+      # only with the next setting.
       LOCALAINAS_SERVER_BIND: "0.0.0.0:8080"
+      LOCALAINAS_SERVER_ALLOW_CONTAINER_BIND: "true"
       LOCALAINAS_LOG_LEVEL: debug
     volumes:
       - ..:/src

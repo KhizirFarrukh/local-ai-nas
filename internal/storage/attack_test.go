@@ -37,6 +37,9 @@ var attackCorpus = []string{
 	"/%2e%2e%2f", "/a/%2F/b", "/C:%5Cx",
 	// NUL bytes.
 	"/a\x00b", "/\x00", "/..\x00/x", "/docs/\x00../x",
+	// Unicode look-alikes of dot segments (fullwidth full stop, one and
+	// two dot leaders, ellipsis), which folding tools read as dots.
+	"/\uFF0E\uFF0E/x", "/a/\uFF0E\uFF0E/\uFF0E\uFF0E/x", "/\u2025/x", "/\u2024\u2024/x", "/\uFF0E/\uFF0E\uFF0E", "/\u2026/x",
 }
 
 // windowsOnlyCorpus holds names that only Windows refuses at this layer

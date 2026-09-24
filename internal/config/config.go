@@ -8,6 +8,7 @@
 package config
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"io/fs"
@@ -47,12 +48,17 @@ type Storage struct {
 
 // Server configures the HTTP server.
 type Server struct {
-	// Bind is the listen address, host:port. S01 allows loopback only,
-	// which S01.6-T06 checks.
-	Bind              string
-	ReadHeaderTimeout Duration
-	IdleTimeout       Duration
-	ShutdownTimeout   Duration
+	// Bind is the listen address, host:port. Until stage S03 adds
+	// accounts and TLS, it must be a loopback address (S01.6-T06).
+	Bind string
+	// AllowContainerBind lets Bind be any address, but only when the
+	// server runs in a container: there it must listen on all of the
+	// container's interfaces for a published port to reach it, and the
+	// port is published on the host's loopback only.
+	AllowContainerBind bool
+	ReadHeaderTimeout  Duration
+	IdleTimeout        Duration
+	ShutdownTimeout    Duration
 }
 
 // Log configures logging (S01.1-T08).
@@ -117,6 +123,7 @@ const (
 	kindSize                 // a TOML integer (bytes) or a string with a unit
 	kindDuration             // a TOML string such as "30s"
 	kindInt                  // a TOML integer
+	kindBool                 // a TOML boolean
 )
 
 // setting describes one configuration key.
@@ -157,6 +164,17 @@ func intSetting(key string, field func(*Config) *int) setting {
 	}}
 }
 
+func boolSetting(key string, field func(*Config) *bool) setting {
+	return setting{key, kindBool, func(c *Config, v string) error {
+		b, err := strconv.ParseBool(strings.TrimSpace(v))
+		if err != nil {
+			return fmt.Errorf("must be true or false, got %q", v)
+		}
+		*field(c) = b
+		return nil
+	}}
+}
+
 // settings lists every key. A new setting needs a field in Config, a row
 // here, a validation rule if it has constraints, and a line in the example
 // config file (S01.1-T06).
@@ -166,6 +184,7 @@ var settings = []setting{
 	stringSetting("storage.db_dir", func(c *Config) *string { return &c.Storage.DBDir }),
 	stringSetting("storage.logs_dir", func(c *Config) *string { return &c.Storage.LogsDir }),
 	stringSetting("server.bind", func(c *Config) *string { return &c.Server.Bind }),
+	boolSetting("server.allow_container_bind", func(c *Config) *bool { return &c.Server.AllowContainerBind }),
 	durationSetting("server.read_header_timeout", func(c *Config) *Duration { return &c.Server.ReadHeaderTimeout }),
 	durationSetting("server.idle_timeout", func(c *Config) *Duration { return &c.Server.IdleTimeout }),
 	durationSetting("server.shutdown_timeout", func(c *Config) *Duration { return &c.Server.ShutdownTimeout }),
@@ -340,12 +359,22 @@ func (l *Loaded) readFile(path string, explicit bool) error {
 // setting and returns it in the text form that set parses.
 func (s setting) fromTOML(v any) (string, error) {
 	switch x := v.(type) {
+	case bool:
+		if s.kind == kindBool {
+			return strconv.FormatBool(x), nil
+		}
 	case string:
-		if s.kind == kindInt {
+		switch s.kind {
+		case kindInt:
 			return "", fmt.Errorf("must be an integer, got the string %q", x)
+		case kindBool:
+			return "", fmt.Errorf("must be true or false, got the string %q", x)
 		}
 		return x, nil
 	case int64:
+		if s.kind == kindBool {
+			return "", fmt.Errorf("must be true or false, got the integer %d", x)
+		}
 		switch s.kind {
 		case kindInt, kindSize:
 			return strconv.FormatInt(x, 10), nil
@@ -396,6 +425,46 @@ func (e *Error) Error() string {
 
 func (e *Error) Unwrap() error { return e.Err }
 
+// lookupHost resolves a host name; tests replace it.
+var lookupHost = net.DefaultResolver.LookupHost
+
+// inContainer reports whether the server runs in a container: Docker
+// creates /.dockerenv, Podman /run/.containerenv. Tests replace it.
+var inContainer = func() bool {
+	for _, p := range []string{"/.dockerenv", "/run/.containerenv"} {
+		if _, err := os.Stat(p); err == nil {
+			return true
+		}
+	}
+	return false
+}
+
+// checkLoopback accepts localhost, a loopback IP address, or a host name
+// whose every address is a loopback address (S01.6-T06).
+func checkLoopback(host string) error {
+	if strings.EqualFold(host, "localhost") {
+		return nil
+	}
+	if ip := net.ParseIP(host); ip != nil {
+		if ip.IsLoopback() {
+			return nil
+		}
+		return fmt.Errorf("%s is not a loopback address", host)
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+	addrs, err := lookupHost(ctx, host)
+	if err != nil || len(addrs) == 0 {
+		return fmt.Errorf("cannot resolve %s to check that it is a loopback address (%v)", host, err)
+	}
+	for _, a := range addrs {
+		if ip := net.ParseIP(a); ip == nil || !ip.IsLoopback() {
+			return fmt.Errorf("%s resolves to %s, which is not a loopback address", host, a)
+		}
+	}
+	return nil
+}
+
 // validate checks every rule, normalizes values, and returns all problems.
 func (l *Loaded) validate() error {
 	c := &l.Config
@@ -433,6 +502,16 @@ func (l *Loaded) validate() error {
 		fail("server.bind", "must be host:port, such as 127.0.0.1:8080, got %q", c.Server.Bind)
 	} else if n, err := strconv.Atoi(port); err != nil || n < 1 || n > 65535 {
 		fail("server.bind", "port must be 1 to 65535, got %q", port)
+	} else if err := checkLoopback(host); err != nil {
+		switch {
+		case c.Server.AllowContainerBind && inContainer():
+			// The container's own network: see Server.AllowContainerBind.
+		case c.Server.AllowContainerBind:
+			fail("server.bind", "%v; server.allow_container_bind applies only inside a container", err)
+		default:
+			fail("server.bind", "%v; until stage S03 adds user accounts and TLS, the server listens on this computer only: "+
+				"use 127.0.0.1, ::1, or localhost", err)
+		}
 	}
 	for _, d := range []struct {
 		key string
