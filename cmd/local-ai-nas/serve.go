@@ -30,6 +30,7 @@ const (
 // app holds what the serve and migrate commands build from the config.
 type app struct {
 	cfg    *config.Loaded
+	layout storage.Layout
 	logger *slog.Logger
 	db     *db.DB
 	close  func()
@@ -71,7 +72,7 @@ func setup(ctx context.Context, fs *flag.FlagSet, stderr io.Writer) (*app, bool)
 		_ = logCloser.Close()
 		return nil, false
 	}
-	return &app{cfg: cfg, logger: logger, db: database, close: func() {
+	return &app{cfg: cfg, layout: layout, logger: logger, db: database, close: func() {
 		if err := database.Close(); err != nil {
 			logger.Error("closing the database", "error", err.Error())
 		}
@@ -114,8 +115,18 @@ func cmdServe(ctx context.Context, args []string, stderr io.Writer) int {
 		log.Error("cannot listen", "bind", a.cfg.Server.Bind, "error", err.Error())
 		return exitError
 	}
+	guard := storage.NewSpaceGuard(a.layout.Root, int64(a.cfg.Storage.FreeSpaceReserve), nil)
+	checks := []health.Check{
+		health.Config(a.cfg.File),
+		health.StorageWritable(a.layout),
+		health.SameFilesystem(a.layout, nil),
+		health.FreeSpace(guard),
+		health.Database(a.db),
+	}
+	logStartupChecks(ctx, log, checks)
+
 	srv := &http.Server{
-		Handler:           newHandler(log, a.db),
+		Handler:           newHandler(log, checks),
 		ReadHeaderTimeout: a.cfg.Server.ReadHeaderTimeout.Duration,
 		IdleTimeout:       a.cfg.Server.IdleTimeout.Duration,
 		MaxHeaderBytes:    maxHeaderBytes,
@@ -135,16 +146,33 @@ func cmdServe(ctx context.Context, args []string, stderr io.Writer) int {
 // outside the access log because http.MaxBytesHandler passes a copy of the
 // request on, and the access log must see the request the mux fills in
 // (its route pattern).
-func newHandler(log *slog.Logger, database *db.DB) http.Handler {
+func newHandler(log *slog.Logger, checks []health.Check) http.Handler {
 	mux := http.NewServeMux()
-	mux.Handle("GET /api/v1/system/health", health.Handler(version,
-		health.Check{Name: "database", Run: database.Read.PingContext},
-	))
+	mux.Handle("GET /api/v1/system/health", health.Handler(version, checks...))
 	var h http.Handler = mux
 	h = apperr.Recover(log)(h)
 	h = logging.AccessLog(log)(h)
 	h = http.MaxBytesHandler(h, maxBodyBytes)
 	return logging.RequestID(h)
+}
+
+// logStartupChecks runs the health checks once at startup and logs the
+// outcome. Problems are logged, not fatal: the conditions that make the
+// server unusable (an invalid config, an unwritable layout, no database)
+// have already stopped setup.
+func logStartupChecks(ctx context.Context, log *slog.Logger, checks []health.Check) {
+	rep := health.Run(ctx, version, checks)
+	for _, c := range rep.Checks {
+		switch c.Status {
+		case health.StatusFail:
+			log.Error("startup check failed", "check", c.Name, "error", c.Error)
+		case health.StatusWarn:
+			log.Warn("startup check warning", "check", c.Name, "detail", c.Detail)
+		default:
+			log.Debug("startup check passed", "check", c.Name, "detail", c.Detail)
+		}
+	}
+	log.Info("startup checks", "status", rep.Status)
 }
 
 // serve runs srv on ln until ctx is cancelled, then shuts down gracefully:
