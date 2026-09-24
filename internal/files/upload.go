@@ -266,13 +266,31 @@ func placeNew(root *os.Root, from, name string) error {
 	if errors.Is(err, fs.ErrExist) {
 		return err
 	}
-	switch _, serr := root.Lstat(dst); {
-	case serr == nil:
-		return &fs.PathError{Op: "rename", Path: name, Err: fs.ErrExist}
-	case !storage.IsNotFound(serr):
-		return serr
+	return renameIfFree(root, from, name)
+}
+
+// renameIfFree renames from to name if nothing has that name, and returns
+// an fs.ErrExist error otherwise. It checks first and renames then, so a
+// concurrent create of the name can come in between; the rename then
+// fails or, on Linux, replaces an empty folder. A failed rename onto a
+// name that exists by then is reported as fs.ErrExist too, because
+// Windows reports that case as "access denied".
+func renameIfFree(root *os.Root, from, name string) error {
+	src, dst := filepath.FromSlash(from), filepath.FromSlash(name)
+	taken := &fs.PathError{Op: "rename", Path: name, Err: fs.ErrExist}
+	switch _, err := root.Lstat(dst); {
+	case err == nil:
+		return taken
+	case !storage.IsNotFound(err):
+		return err
 	}
-	return root.Rename(src, dst)
+	if err := root.Rename(src, dst); err != nil {
+		if _, serr := root.Lstat(dst); serr == nil {
+			return taken
+		}
+		return err
+	}
+	return nil
 }
 
 // syncFolder makes a new name in dir durable, best effort: the file itself

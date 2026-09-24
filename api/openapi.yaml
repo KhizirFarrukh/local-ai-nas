@@ -260,6 +260,56 @@ paths:
           $ref: "#/components/responses/TooLarge"
         "500":
           $ref: "#/components/responses/InternalError"
+  /files/operations/copy:
+    post:
+      tags: [files]
+      operationId: copyItem
+      summary: Copy a file or folder
+      description: |
+        Copies the item at `from` to the path `to` (its parent must exist).
+        Folders are copied with everything in them; modification times are
+        kept. The whole source is checked first: the synchronous copy
+        limits (422 `too_large_for_sync` above `copy.sync_max_items` or
+        `copy.sync_max_bytes`), the name rules for every new name, links
+        or special files in the tree (400; links are never followed), and
+        the free space (507). The copy appears only when it is complete.
+        A folder cannot be copied into itself (400). Conflicts are handled
+        as for move; `overwrite` replacing a file answers 200.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CopyRequest"
+      responses:
+        "201":
+          description: The copy.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FileItem"
+        "200":
+          description: The copy replaced a file (`on_conflict=overwrite`).
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FileItem"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "405":
+          $ref: "#/components/responses/MethodNotAllowed"
+        "409":
+          $ref: "#/components/responses/Conflict"
+        "413":
+          $ref: "#/components/responses/TooLarge"
+        "422":
+          $ref: "#/components/responses/TooLargeForSync"
+        "500":
+          $ref: "#/components/responses/InternalError"
+        "507":
+          $ref: "#/components/responses/InsufficientStorage"
   /files/items:
     get:
       tags: [files]
@@ -450,6 +500,19 @@ components:
           description: The item's new path, starting with `/`.
         on_conflict:
           $ref: "#/components/schemas/OnConflict"
+    CopyRequest:
+      type: object
+      additionalProperties: false
+      required: [from, to]
+      properties:
+        from:
+          type: string
+          description: The item to copy, starting with `/`.
+        to:
+          type: string
+          description: The path of the copy, starting with `/`.
+        on_conflict:
+          $ref: "#/components/schemas/OnConflict"
     OnConflict:
       type: string
       enum: [fail, rename, overwrite]
@@ -500,6 +563,7 @@ components:
             - length_required
             - precondition_failed
             - range_not_satisfiable
+            - too_large_for_sync
         rule:
           type: string
           description: The exact rule that was broken, for some codes (for example `reserved_name` for `invalid_name`).
@@ -595,6 +659,12 @@ components:
             $ref: "#/components/schemas/Problem"
     NotAvailable:
       description: The feature is part of the API but not available yet (`not_available`).
+      content:
+        application/problem+json:
+          schema:
+            $ref: "#/components/schemas/Problem"
+    TooLargeForSync:
+      description: The operation is too big for one request (`too_large_for_sync`).
       content:
         application/problem+json:
           schema:

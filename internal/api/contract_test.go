@@ -84,6 +84,7 @@ var errorCases = []struct {
 	// cases are below).
 	{http.MethodGet, "/api/v1/files/operations/rename", http.StatusMethodNotAllowed, "method_not_allowed"},
 	{http.MethodPut, "/api/v1/files/operations/move", http.StatusMethodNotAllowed, "method_not_allowed"},
+	{http.MethodDelete, "/api/v1/files/operations/copy", http.StatusMethodNotAllowed, "method_not_allowed"},
 	// GET /api/v1/files/content (412 and 416 need request headers; the
 	// download tests validate them against the schema).
 	{http.MethodGet, "/api/v1/files/content", http.StatusBadRequest, "invalid_request"},
@@ -139,6 +140,16 @@ var bodyErrorCases = []struct {
 	{http.MethodPost, "/api/v1/files/operations/move", jsonType, `{"from":"/docs/a.txt","to":"/readme.md"}`, 0, http.StatusConflict, "conflict"},
 	{http.MethodPost, "/api/v1/files/operations/move", jsonType, `{"from":"/docs/a.txt","to":"/readme.md/a.txt"}`, 0, http.StatusConflict, "conflict"},
 	{http.MethodPost, "/api/v1/files/operations/move", jsonType, `{"from":"/docs","to":"/empty","on_conflict":"overwrite"}`, 0, http.StatusConflict, "conflict"},
+	// POST /api/v1/files/operations/copy (422 too_large_for_sync is in
+	// TestCopyEndpoint, which needs a server with small limits).
+	{http.MethodPost, "/api/v1/files/operations/copy", "", "", 0, http.StatusBadRequest, "invalid_request"},
+	{http.MethodPost, "/api/v1/files/operations/copy", jsonType, `{"from":"/docs","to":"/x","extra":1}`, 0, http.StatusBadRequest, "invalid_request"},
+	{http.MethodPost, "/api/v1/files/operations/copy", jsonType, `{"from":"/docs","to":"/x","on_conflict":"merge"}`, 0, http.StatusBadRequest, "invalid_request"},
+	{http.MethodPost, "/api/v1/files/operations/copy", jsonType, `{"from":"/docs","to":"/docs/in"}`, 0, http.StatusBadRequest, "invalid_request"},
+	{http.MethodPost, "/api/v1/files/operations/copy", jsonType, `{"from":"/docs","to":"/"}`, 0, http.StatusBadRequest, "invalid_name"},
+	{http.MethodPost, "/api/v1/files/operations/copy", jsonType, `{"from":"/docs","to":"/../x"}`, 0, http.StatusBadRequest, "outside_root"},
+	{http.MethodPost, "/api/v1/files/operations/copy", jsonType, `{"from":"/missing","to":"/x"}`, 0, http.StatusNotFound, "not_found"},
+	{http.MethodPost, "/api/v1/files/operations/copy", jsonType, `{"from":"/docs","to":"/empty"}`, 0, http.StatusConflict, "conflict"},
 	// PUT /api/v1/files/content.
 	{http.MethodPut, "/api/v1/files/content", octetType, "abc", 0, http.StatusBadRequest, "invalid_request"},
 	{http.MethodPut, "/api/v1/files/content?path=/n.txt&on_conflict=merge", octetType, "abc", 0, http.StatusBadRequest, "invalid_request"},

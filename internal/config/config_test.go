@@ -210,6 +210,8 @@ func TestLoadValidation(t *testing.T) {
 		{"max file size zero", map[string]string{"uploads.max_file_size": "0"}, nil, "uploads.max_file_size", "positive"},
 		{"max chunk size zero", map[string]string{"uploads.max_chunk_size": "0"}, nil, "uploads.max_chunk_size", "positive"},
 		{"chunk larger than file", map[string]string{"uploads.max_file_size": "1MiB", "uploads.max_chunk_size": "2MiB"}, nil, "uploads.max_chunk_size", "must not exceed"},
+		{"copy items zero", map[string]string{"copy.sync_max_items": "0"}, nil, "copy.sync_max_items", "at least 1"},
+		{"copy bytes zero", map[string]string{"copy.sync_max_bytes": "0"}, nil, "copy.sync_max_bytes", "positive"},
 		{"bad env value names the variable", nil, map[string]string{"LOCALAINAS_LOG_FILE_MAX_FILES": "x"}, "log.file_max_files", "env LOCALAINAS_LOG_FILE_MAX_FILES"},
 		{"bad flag value names the flag", map[string]string{"storage.free_space_reserve": "-5"}, nil, "storage.free_space_reserve", "flag --storage-free-space-reserve"},
 	}

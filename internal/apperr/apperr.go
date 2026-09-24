@@ -54,6 +54,9 @@ const (
 	PreconditionFailed
 	// RangeNotSatisfiable is a Range request outside the file.
 	RangeNotSatisfiable
+	// TooLargeForSync is a valid operation that is too big to run within
+	// one request, such as a copy over the synchronous copy limits.
+	TooLargeForSync
 )
 
 type kindInfo struct {
@@ -75,6 +78,7 @@ var kinds = map[Kind]kindInfo{
 	LengthRequired:      {"length_required", http.StatusLengthRequired},
 	PreconditionFailed:  {"precondition_failed", http.StatusPreconditionFailed},
 	RangeNotSatisfiable: {"range_not_satisfiable", http.StatusRequestedRangeNotSatisfiable},
+	TooLargeForSync:     {"too_large_for_sync", http.StatusUnprocessableEntity},
 }
 
 // Kinds returns every defined kind, in order.

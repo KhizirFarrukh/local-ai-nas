@@ -29,6 +29,7 @@ type Config struct {
 	Server  Server
 	Log     Log
 	Uploads Uploads
+	Copy    Copy
 }
 
 // Storage configures the storage root (ADR-0003).
@@ -73,6 +74,15 @@ type Uploads struct {
 	MaxChunkSize ByteSize
 }
 
+// Copy configures the copy operation (S01.3-T08).
+type Copy struct {
+	// SyncMaxItems and SyncMaxBytes limit a copy that runs within one
+	// request: files and folders, and bytes. A larger copy is refused
+	// (too_large_for_sync) until background jobs exist (S04.3).
+	SyncMaxItems int
+	SyncMaxBytes ByteSize
+}
+
 // EnvPrefix starts every environment variable name.
 const EnvPrefix = "LOCALAINAS_"
 
@@ -95,6 +105,7 @@ func Default() Config {
 			MaxFileSize:  100 << 30,
 			MaxChunkSize: 64 << 20,
 		},
+		Copy: Copy{SyncMaxItems: 1000, SyncMaxBytes: 1 << 30},
 	}
 }
 
@@ -163,6 +174,8 @@ var settings = []setting{
 	intSetting("log.file_max_files", func(c *Config) *int { return &c.Log.FileMaxFiles }),
 	sizeSetting("uploads.max_file_size", func(c *Config) *ByteSize { return &c.Uploads.MaxFileSize }),
 	sizeSetting("uploads.max_chunk_size", func(c *Config) *ByteSize { return &c.Uploads.MaxChunkSize }),
+	intSetting("copy.sync_max_items", func(c *Config) *int { return &c.Copy.SyncMaxItems }),
+	sizeSetting("copy.sync_max_bytes", func(c *Config) *ByteSize { return &c.Copy.SyncMaxBytes }),
 }
 
 // EnvName returns the environment variable for a key:
@@ -456,6 +469,13 @@ func (l *Loaded) validate() error {
 	case c.Uploads.MaxFileSize > 0 && c.Uploads.MaxChunkSize > c.Uploads.MaxFileSize:
 		fail("uploads.max_chunk_size", "must not exceed uploads.max_file_size (%s), got %s",
 			c.Uploads.MaxFileSize, c.Uploads.MaxChunkSize)
+	}
+
+	if c.Copy.SyncMaxItems < 1 {
+		fail("copy.sync_max_items", "must be at least 1, got %d", c.Copy.SyncMaxItems)
+	}
+	if c.Copy.SyncMaxBytes <= 0 {
+		fail("copy.sync_max_bytes", "must be positive")
 	}
 
 	return errors.Join(errs...)

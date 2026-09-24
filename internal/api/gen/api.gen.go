@@ -141,6 +141,7 @@ const (
 	ProblemCodePreconditionFailed  ProblemCode = "precondition_failed"
 	ProblemCodeRangeNotSatisfiable ProblemCode = "range_not_satisfiable"
 	ProblemCodeTooLarge            ProblemCode = "too_large"
+	ProblemCodeTooLargeForSync     ProblemCode = "too_large_for_sync"
 )
 
 // Valid indicates whether the value is a known member of the ProblemCode enum.
@@ -172,6 +173,8 @@ func (e ProblemCode) Valid() bool {
 		return true
 	case ProblemCodeTooLarge:
 		return true
+	case ProblemCodeTooLargeForSync:
+		return true
 	default:
 		return false
 	}
@@ -190,6 +193,16 @@ func (e ProblemType) Valid() bool {
 	default:
 		return false
 	}
+}
+
+// CopyRequest defines model for CopyRequest.
+type CopyRequest struct {
+	// From The item to copy, starting with `/`.
+	From       string      `json:"from"`
+	OnConflict *OnConflict `json:"on_conflict,omitempty"`
+
+	// To The path of the copy, starting with `/`.
+	To string `json:"to"`
 }
 
 // CreateFolderRequest defines model for CreateFolderRequest.
@@ -357,6 +370,9 @@ type RangeNotSatisfiable = Problem
 // TooLarge An RFC 9457 problem details object (docs/api/errors.md).
 type TooLarge = Problem
 
+// TooLargeForSync An RFC 9457 problem details object (docs/api/errors.md).
+type TooLargeForSync = Problem
+
 // DownloadFileParams defines parameters for DownloadFile.
 type DownloadFileParams struct {
 	// Path A path in the caller's files area, starting with `/` (the root of the area). See docs/api/conventions.md.
@@ -387,6 +403,9 @@ type GetItemsParams struct {
 // CreateFolderJSONRequestBody defines body for CreateFolder for application/json ContentType.
 type CreateFolderJSONRequestBody = CreateFolderRequest
 
+// CopyItemJSONRequestBody defines body for CopyItem for application/json ContentType.
+type CopyItemJSONRequestBody = CopyRequest
+
 // MoveItemJSONRequestBody defines body for MoveItem for application/json ContentType.
 type MoveItemJSONRequestBody = MoveRequest
 
@@ -407,6 +426,9 @@ type ServerInterface interface {
 	// GetItems List a folder, or get the details of a file
 	// (GET /files/items)
 	GetItems(w http.ResponseWriter, r *http.Request, params GetItemsParams)
+	// CopyItem Copy a file or folder
+	// (POST /files/operations/copy)
+	CopyItem(w http.ResponseWriter, r *http.Request)
 	// MoveItem Move a file or folder
 	// (POST /files/operations/move)
 	MoveItem(w http.ResponseWriter, r *http.Request)
@@ -605,6 +627,20 @@ func (siw *ServerInterfaceWrapper) GetItems(w http.ResponseWriter, r *http.Reque
 	handler.ServeHTTP(w, r)
 }
 
+// CopyItem operation middleware
+func (siw *ServerInterfaceWrapper) CopyItem(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.CopyItem(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
 // MoveItem operation middleware
 func (siw *ServerInterfaceWrapper) MoveItem(w http.ResponseWriter, r *http.Request) {
 
@@ -772,6 +808,7 @@ func HandlerWithOptions(si ServerInterface, options StdHTTPServerOptions) http.H
 	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/files/folders", wrapper.CreateFolder)
 	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/files/operations/rename", wrapper.RenameItem)
 	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/files/operations/move", wrapper.MoveItem)
+	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/files/operations/copy", wrapper.CopyItem)
 	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/files/items", wrapper.GetItems)
 	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/system/health", wrapper.GetHealth)
 
@@ -811,6 +848,8 @@ type RangeNotSatisfiableApplicationProblemPlusJSONResponse struct {
 }
 
 type TooLargeApplicationProblemPlusJSONResponse Problem
+
+type TooLargeForSyncApplicationProblemPlusJSONResponse Problem
 
 type DownloadFileRequestObject struct {
 	Params DownloadFileParams
@@ -1408,6 +1447,173 @@ func (response GetItems500ApplicationProblemPlusJSONResponse) VisitGetItemsRespo
 	return err
 }
 
+type CopyItemRequestObject struct {
+	Body *CopyItemJSONRequestBody
+}
+
+type CopyItemResponseObject interface {
+	VisitCopyItemResponse(w http.ResponseWriter) error
+}
+
+type CopyItem200JSONResponse FileItem
+
+func (response CopyItem200JSONResponse) VisitCopyItemResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type CopyItem201JSONResponse FileItem
+
+func (response CopyItem201JSONResponse) VisitCopyItemResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(201)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type CopyItem400ApplicationProblemPlusJSONResponse struct {
+	BadRequestApplicationProblemPlusJSONResponse
+}
+
+func (response CopyItem400ApplicationProblemPlusJSONResponse) VisitCopyItemResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(400)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type CopyItem404ApplicationProblemPlusJSONResponse struct {
+	NotFoundApplicationProblemPlusJSONResponse
+}
+
+func (response CopyItem404ApplicationProblemPlusJSONResponse) VisitCopyItemResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(404)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type CopyItem405ApplicationProblemPlusJSONResponse struct {
+	MethodNotAllowedApplicationProblemPlusJSONResponse
+}
+
+func (response CopyItem405ApplicationProblemPlusJSONResponse) VisitCopyItemResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/problem+json")
+	if response.Headers.Allow != nil {
+		w.Header().Set("Allow", fmt.Sprint(*response.Headers.Allow))
+	}
+	w.WriteHeader(405)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type CopyItem409ApplicationProblemPlusJSONResponse struct {
+	ConflictApplicationProblemPlusJSONResponse
+}
+
+func (response CopyItem409ApplicationProblemPlusJSONResponse) VisitCopyItemResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(409)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type CopyItem413ApplicationProblemPlusJSONResponse struct {
+	TooLargeApplicationProblemPlusJSONResponse
+}
+
+func (response CopyItem413ApplicationProblemPlusJSONResponse) VisitCopyItemResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(413)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type CopyItem422ApplicationProblemPlusJSONResponse struct {
+	TooLargeForSyncApplicationProblemPlusJSONResponse
+}
+
+func (response CopyItem422ApplicationProblemPlusJSONResponse) VisitCopyItemResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(422)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type CopyItem500ApplicationProblemPlusJSONResponse struct {
+	InternalErrorApplicationProblemPlusJSONResponse
+}
+
+func (response CopyItem500ApplicationProblemPlusJSONResponse) VisitCopyItemResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(500)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type CopyItem507ApplicationProblemPlusJSONResponse struct {
+	InsufficientStorageApplicationProblemPlusJSONResponse
+}
+
+func (response CopyItem507ApplicationProblemPlusJSONResponse) VisitCopyItemResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(507)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
 type MoveItemRequestObject struct {
 	Body *MoveItemJSONRequestBody
 }
@@ -1734,6 +1940,9 @@ type StrictServerInterface interface {
 	// GetItems List a folder, or get the details of a file
 	// (GET /files/items)
 	GetItems(ctx context.Context, request GetItemsRequestObject) (GetItemsResponseObject, error)
+	// CopyItem Copy a file or folder
+	// (POST /files/operations/copy)
+	CopyItem(ctx context.Context, request CopyItemRequestObject) (CopyItemResponseObject, error)
 	// MoveItem Move a file or folder
 	// (POST /files/operations/move)
 	MoveItem(ctx context.Context, request MoveItemRequestObject) (MoveItemResponseObject, error)
@@ -1888,6 +2097,37 @@ func (sh *strictHandler) GetItems(w http.ResponseWriter, r *http.Request, params
 		sh.options.ResponseErrorHandlerFunc(w, r, err)
 	} else if validResponse, ok := response.(GetItemsResponseObject); ok {
 		if err := validResponse.VisitGetItemsResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// CopyItem operation middleware
+func (sh *strictHandler) CopyItem(w http.ResponseWriter, r *http.Request) {
+	var request CopyItemRequestObject
+
+	var body CopyItemJSONRequestBody
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		sh.options.RequestErrorHandlerFunc(w, r, fmt.Errorf("can't decode JSON body: %w", err))
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.CopyItem(ctx, request.(CopyItemRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "CopyItem")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(CopyItemResponseObject); ok {
+		if err := validResponse.VisitCopyItemResponse(w); err != nil {
 			sh.options.ResponseErrorHandlerFunc(w, r, err)
 		}
 	} else if response != nil {

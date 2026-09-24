@@ -43,6 +43,7 @@ Unexpected server errors (`internal`) always have the same generic `detail`. The
 | `precondition_failed` | 412 | A conditional request (`If-Match`, `If-Unmodified-Since`) does not match the file's current version. |
 | `too_large` | 413 | The upload or request is over a size limit. |
 | `range_not_satisfiable` | 416 | The `Range` of a download lies outside the file. The `Content-Range` header gives the file's size (`bytes */<size>`). |
+| `too_large_for_sync` | 422 | The operation is valid but too big to run within one request, for example a copy over the synchronous copy limits (`copy.sync_max_items`, `copy.sync_max_bytes`). Larger copies become background jobs in a later stage. |
 | `internal` | 500 | An unexpected server error. See the server log under the `correlation_id`. |
 | `not_available` | 501 | The feature is part of the API but not available yet (for example the photos API in stage 1). |
 | `insufficient_storage` | 507 | The write would use the free space kept in reserve. |
