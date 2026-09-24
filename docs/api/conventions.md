@@ -50,8 +50,8 @@ Operations that create an item (simple upload, tus upload, new folder, copy, mov
 | Value | When the target already exists |
 |---|---|
 | `fail` (default) | The request fails with `409 conflict`. |
-| `rename` | The new item gets a free name in the pattern `name (1).ext`, `name (2).ext`, and so on. The response shows the name used. |
-| `overwrite` | The existing file is replaced atomically. Folders are never merged or overwritten. |
+| `rename` | The new item gets a free name in the pattern `name (1).ext`, `name (2).ext`, and so on (a folder's name is numbered whole: `photos.2024 (1)`). The response shows the name used. Concurrent requests for one name each get their own. |
+| `overwrite` | An existing file is replaced atomically by a file. Folders are never merged or overwritten, and a folder never replaces a file (`409`). For a new folder, `overwrite` returns the folder that is already there (`200`). |
 
 ## Simple upload
 
