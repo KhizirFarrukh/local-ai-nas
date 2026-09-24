@@ -1,17 +1,18 @@
 # CURRENT_STATE
 
-**Last updated:** 2026-09-25 01:23 +0500 (session S006)
+**Last updated:** 2026-09-25 01:38 +0500 (session S006)
 **Plan version:** 1.2.0 (`code-agent-docs/plan.md`), **Approved baseline** 1.0.0 (S005) + the setup-script requirement (1.1.0, S005 E015)
-**Current phase:** **S01 (Basic NAS) Done**, signed off by the user (S005 E126). Next: plan stage S02 (NAS GUI) in detail (R3)
+**Current phase:** **S01 (Basic NAS) Done**, signed off by the user (S005 E126). **S02 (NAS GUI) Planned**: its stage document waits for the user's approval (R3)
 
 ## Active stage and task
-- **Active stage:** none in progress. S01 (Basic NAS implementation) is **Done** (`stages/S01-basic-nas.md`, completion record in section 13). The next stage is **S02: NAS GUI** (plan 10.3), which has no stage document yet.
-- **Active task:** none. The next work is planning S02 (Next steps 1)
+- **Active stage:** **S02: NAS GUI**, **Planned** (`stages/S02-nas-gui.md`, written in S006 E007; not approved yet). S01 is **Done** (`stages/S01-basic-nas.md`, completion record in section 13).
+- **Active task:** the S02 stage document (branch `docs/S02-stage-plan`): written; the user's approval is asked
 
 ## In progress (write-ahead)
-- The testing approach change (S006 E004) on `docs/S006-testing-approach`: push, CI, merge into `develop`.
+- `docs/S02-stage-plan`: the S02 stage document, committed and pushed. After the user's answer: record the approval (section 11 and the log), then CI, and merge into `develop`.
 
 ## Last completed
+- **Testing approach change merged** (CI run 36054572413 green; `develop` bdc9832).
 - **Testing approach changed** (S006 E001–E004), at the user's instruction:
   - Code first, written to be testable. Each stage's final testing substage writes its unit, integration, and system/application tests.
   - Coverage is reported on every push but not enforced until the stage end (80%).
@@ -76,18 +77,18 @@
 - Plan 1.1.0: the user's requirement to record every dependency and build a setup script per platform (FR-149, NFR-032, S11.2, Q41; `dependencies.md` section 12; RULES 1.5.0) (S005 E015–E016).
 
 ## Next steps
-1. **Plan S02 (NAS GUI)** in detail, following R3:
-   - Create `stages/S02-nas-gui.md` from `templates/stage-template.md`, based on plan 10.3 (substages S02.1–S02.8) and ADR-0009 (SvelteKit). Check the open questions that S02 needs first.
-   - **Testing approach (R6, S006):** tasks in S02.1–S02.7 deliver testable code only. S02.8 writes the unit (Vitest), integration, and system (Playwright in a browser) tests, and the regression tests for bugs recorded during the stage.
-   - Present the document to the user and get it **approved before any S02 code**.
-   - Start on a `docs/` branch off `develop`.
+1. **Get the S02 stage document approved:** `stages/S02-nas-gui.md`, with decision 2 (real Safari and phones in S02, or with S03's LAN access). After approval:
+   - set S02 to Approved (the stage document and the plan status);
+   - merge `docs/S02-stage-plan`;
+   - start **S02.1-T01** (install pnpm, create `web/`) on `feat/S02.1-T01-toolchain`.
+   - **Testing approach (R6, S006):** tasks in S02.1–S02.7 deliver testable code only. S02.8 writes the unit (Vitest), integration, and system (Playwright in real browsers) tests, and the regression tests for bugs recorded during the stage.
 2. Follow-up from S01 (the user's decision): run `scripts/perf-baseline.sh` on the Raspberry Pi and the mini-PC, over gigabit Ethernet as well, when they are available (`docs/perf/S01-baseline.md`).
 3. **Endpoint workflow (spec-first), for later API work:** spec → `go generate ./internal/api` → strict operation; an error case in `errorCases`/`bodyErrorCases`; a review row in `docs/api/conventions.md`; a fake-service test that invalid input never reaches the service.
 4. CI: every push runs `.github/workflows/ci.yml`. `gh` is not installed; the repository is public. Watch a commit's run through the public REST API (`/repos/KhizirFarrukh/local-ai-nas/actions/runs?head_sha=<sha>`, then `/jobs`; 60 anonymous requests per hour) or the run's web page (its "Status" field). Step logs need sign-in: reproduce Linux failures with `GOOS=linux go test -c` binaries in the WSL Ubuntu distro, run from the package directory under /mnt/c when a test reads repo files.
 5. Every finished branch: merge it into `develop` myself and push (RULES User Preferences, S005).
 
 ## Blocked or waiting on user
-- Nothing now. The S02 stage document will need the user's approval (R3).
+- **The user's approval of `stages/S02-nas-gui.md`** (R3), with decision 2 (real Safari and phones in S02 or S03). No S02 code before it.
 
 ## Open questions (short list; full text in plan.md section 5)
 - ★ **For S01:** none (Q18 answered in S005: 100k photos + 100k files)
@@ -97,7 +98,7 @@
 
 ## Pointers
 - Latest session log: `code-agent-docs/logs/sessions/2026-09-25_S006.md` (current); S005 is closed
-- Stage documents: `code-agent-docs/stages/S01-basic-nas.md` (**Done**; completion record in section 13). S02 has none yet
+- Stage documents: `code-agent-docs/stages/S02-nas-gui.md` (**Planned**, waiting for approval); `code-agent-docs/stages/S01-basic-nas.md` (**Done**; completion record in section 13)
 - Audit reports: `code-agent-docs/audits/A002-2026-09-24-documentation-audit.md` (the S01 final review) and `A002-readme-proposal.md`; `A001-2026-09-24-documentation-audit.md` (decisions received in section 9)
 - ADRs: `code-agent-docs/decisions/ADR-0001` … `ADR-0020` (0019 Proposed; 0012 superseded in part by 0020; the rest Accepted, including 0003 since S005)
 - Dependency register: `code-agent-docs/dependencies.md` (section 12: deployment prerequisites per platform, the input for the S11.2 setup scripts)
