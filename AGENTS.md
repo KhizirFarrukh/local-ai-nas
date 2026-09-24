@@ -15,4 +15,4 @@ Then finish the rest of the startup checklist in RULES.md (R1): read the active 
 
 **No code may be written until this startup protocol is complete.**
 
-This file is a pointer, not a copy of the rules. RULES.md is authoritative.
+This file is a pointer, not a copy of the rules. RULES.md is authoritative. Keep it in sync with `CLAUDE.md`.

@@ -1,20 +1,19 @@
 # CURRENT_STATE
 
-**Last updated:** 2026-09-24 23:20 +0500 (session S005)
-**Plan version:** 1.1.2 (`code-agent-docs/plan.md`), **Approved baseline** 1.0.0 (S005) + the setup-script requirement (1.1.0, S005 E015)
-**Current phase:** Implementation: S01 (Basic NAS implementation) in progress; S01.1 to S01.6 done; S01.7 (integration and stage review) next
+**Last updated:** 2026-09-24 23:31 +0500 (session S005)
+**Plan version:** 1.1.3 (`code-agent-docs/plan.md`), **Approved baseline** 1.0.0 (S005) + the setup-script requirement (1.1.0, S005 E015)
+**Current phase:** Implementation: S01 (Basic NAS implementation) in progress; S01.1 to S01.6 done; S01.7 (integration and stage review) in progress: T01–T06 done, T07 (audit A002) done, T08 (completion record and the user's sign-off) next
 
 ## Active stage and task
-- **Active stage:** S01 (Basic NAS implementation), **In Progress** (`stages/S01-basic-nas.md`); S01.1, S01.2, S01.3, and S01.6 **Done**; S01.4 **Done**; S01.5 **Done**; S01.7 **In Progress** (T01–T06 done).
-- **Active task:** **S01.7-T06** Demo scripts (branch `feat/S01.7-T06-demo`): done, waiting for CI and the merge; next **S01.7-T07** documentation audit (R12)
+- **Active stage:** S01 (Basic NAS implementation), **In Progress** (`stages/S01-basic-nas.md`); S01.1–S01.6 **Done**; S01.7 **In Progress** (T01–T07 done).
+- **Active task:** **S01.7-T07** Documentation audit A002 (R12) (branch `docs/S01.7-T07-audit`): done, waiting for CI and the merge; next **S01.7-T08** completion record and the user's sign-off
 
 ## In progress (write-ahead)
-- S01.7-T06: committed; push, CI (including the new `demo` job), merge into `develop`. (tus finalize is in `TestConflictMatrix` since S01.4-T03.)
+- S01.7-T07: committed; push, CI, merge into `develop`.
 
 ## Last completed
-- `develop` verified complete (S005): merge `c535cda` brought `cf60f72` (plan 0.4.0, which PR #3 had put on `main` only) and the user's `bda8321` (prompts 3 and 4).
-- Approval-stage decisions D-01–D-14 applied (S005 E007–E010). **Plan 1.0.0 baseline and S01 approved** (S005 E012).
-- **S01.7-T06 done** (S005 E121): `scripts/demo.sh` and `scripts/demo.ps1` are green on Windows (PowerShell 5.1, recorded) and on Linux, and CI job `demo` runs both. tusd's `BodyReadError` is now logged as WARN, and scripts that were not executable are fixed.
+- **S01.7-T07 done** (S005 E123): audit A002, 10 findings (1 Critical and 1 Major fixed; 7 Minor fixed; 1 accepted); plan 1.1.3; README proposal R-11/R-12 for the sign-off.
+- **S01.7-T06 done and merged** (CI run 36040515533 green, both `demo` jobs included; S005 E121): `scripts/demo.sh` and `scripts/demo.ps1` are green on Windows (PowerShell 5.1, recorded) and on Linux, and CI job `demo` runs both. tusd's `BodyReadError` is now logged as WARN, and scripts that were not executable are fixed.
 - **S01.7-T05 done and merged** (CI run 36039328692 green; S005 E119): `docs/api/usage.md`, every operation with curl for Linux/macOS and Windows PowerShell, each block run as written on Linux (WSL) and in Windows PowerShell 5.1; README "Use the API"; docs and scripts indexes.
 - **S01.7-T04 done and merged** (CI run 36037945955 green; S005 E117): `docs/perf/S01-baseline.md`: listing and memory targets met; throughput over loopback on NVMe below 80% (a deviation for the user's review at sign-off); downloads now keep sendfile.
 - **Q18 answered** (S005 E116): 100,000 photos + 100,000 files per installation (confirms A12); plan 1.1.2.
@@ -38,7 +37,7 @@
 - **S01.3-T07 done and merged** (CI run 35992364545 green; S005 E080): rename and move endpoints; folder-into-itself refused through `os.SameFile` ancestors (catches case variants on Windows); case-only renames; atomic no-replace for files (hard link + remove, undone if the remove fails); folders never replaced or merged.
 - **S01.3-T06 done and merged** (CI run 35972700242 green; S005 E077): `GET /api/v1/files/content` with ranges and conditional requests via `http.ServeContent`, 412/416 as problems (new codes `precondition_failed`, `range_not_satisfiable`), `attachment` Content-Disposition (RFC 6266/8187), nosniff + sandbox CSP; details from the open handle.
 - **S01.3-T05 done and merged** (CI run 35971985758 green; S005 E074): `PUT /api/v1/files/content`: declared size checked first (411/413/507 before any byte), temp file in the target folder + fsync + atomic commit (Link for fail/rename, Rename for overwrite), hidden temp names, per-route body limits; the simple-upload part of S01.4-T05 done early.
-- **S01.3-T04 done and merged** (CI run 35970636485 green; S005 E072): `POST /api/v1/files/folders` with `parents` and `on_conflict` (fail/rename/overwrite); every new name checked before anything is created; strict JSON bodies (`api/body.go`); the resolver reports Windows device names with the reserved_name rule.
+- **S01.3-T04 done and merged** (CI run 35970636485 green; S005 E072): `POST /api/v1/files/folders` with `parents` and `on_conflict` (fail/rename/overwrite); every new name checked before anything is created; strict JSON bodies (`internal/api/body.go`); the resolver reports Windows device names with the reserved_name rule.
 - **S01.3-T03 done and merged** (CI run 35969766390 green; S005 E070): item details with MIME (extension, else sniff) and a strong ETag (size + mtime + file ID) that changes on rewrite and on replacement.
 - **S01.3-T02 done and merged** (CI run 35969161697 green; S005 E068): `GET /api/v1/files/items` (folder page or file details), cursor pagination and 4 sort keys; 10,000-entry acceptance test; runtime v1.7.0 linked.
 - **S01.3-T01 done and merged** (CI run 35968332439 green; S005 E066): `files.Service` + hooks + `Local.Stat`; the API reaches files only through the interface (depguard + architecture test, both verified against a deliberate violation).
@@ -65,16 +64,25 @@
 - **S01.1-T03 done and merged** (`develop` f0cc48c; S005 E023): `.golangci.yml` (v2) + `scripts/install-golangci-lint.sh`; clean on the skeleton; depguard, errcheck, and gofmt violations fail (then removed).
 - **S01.1-T02 done and merged** (`develop` b0cc2ec; S005 E021): `LICENSE` (AGPL v3), README License section, `docs/licensing.md`, `scripts/allowed-licenses.txt`, `scripts/check-licenses.sh`; the check passes, and a fixture with an Unlicense license fails it (then reverted).
 - **S01.1-T01 done and merged** (`develop` 0100920; S005 E019): `go.mod` (go 1.27, toolchain go1.27.1; oapi-codegen, govulncheck, go-licenses as `tool` directives), skeleton packages, `api/openapi.yaml` stub, `.gitattributes`/`.editorconfig`/`.gitignore`. Build, vet, and test pass on Windows; Linux amd64/arm64 cross-build + vet pass; renormalize makes no changes.
+- Approval-stage decisions D-01–D-14 applied (S005 E007–E010). **Plan 1.0.0 baseline and S01 approved** (S005 E012).
+- `develop` verified complete (S005): merge `c535cda` brought `cf60f72` (plan 0.4.0, which PR #3 had put on `main` only) and the user's `bda8321` (prompts 3 and 4).
 - Plan 1.1.0: the user's requirement to record every dependency and build a setup script per platform (FR-149, NFR-032, S11.2, Q41; `dependencies.md` section 12; RULES 1.5.0) (S005 E015–E016).
 
 ## Next steps
-1. **S01.7** in order: T01 integration suite (every endpoint and status over real HTTP), T02 attack suite, T03 edge cases, T04 performance baseline (Q18 answered: 100k photos + 100k files), T05 documentation, T06 demo scripts, T07 documentation audit (R12), T08 completion record and **the user's sign-off**. **Endpoint workflow (spec-first):** spec → `go generate ./internal/api` → strict operation; an error case in `errorCases`/`bodyErrorCases`; a review row in `docs/api/conventions.md`; a fake-service test that invalid input never reaches the service.
-2. The S005 session log needs its closing summary when the session ends.
-3. CI: every push runs `.github/workflows/ci.yml`. `gh` is not installed; the repository is public. Watch a commit's run through the public REST API (`/repos/KhizirFarrukh/local-ai-nas/actions/runs?head_sha=<sha>`, then `/jobs`; 60 anonymous requests per hour) or the run's web page (its "Status" field). Step logs need sign-in: reproduce Linux failures with `GOOS=linux go test -c` binaries in the WSL Ubuntu distro, run from the package directory under /mnt/c when a test reads repo files.
-4. Every finished branch: merge it into `develop` myself and push (RULES User Preferences, S005).
+1. **S01.7-T07**: audit A002 is written and committed (`audits/A002-2026-09-24-documentation-audit.md`); push, CI, and merge into `develop`.
+2. **S01.7-T08:**
+   - Fill in section 13 (completion record) of `stages/S01-basic-nas.md` and check the stage acceptance criteria (section 9).
+   - Then ask the user for **the S01 sign-off**, together with (a) the throughput deviation (`docs/perf/S01-baseline.md`) and (b) README proposals R-11 and R-12 (`audits/A002-readme-proposal.md`).
+   - Quote the sign-off in the session log. Mark S01 Done in the plan (PATCH) and the stage document, and apply R-11/R-12 if approved.
+3. The S005 session log needs its closing summary when the session ends.
+4. **Endpoint workflow (spec-first), for later API work:** spec → `go generate ./internal/api` → strict operation; an error case in `errorCases`/`bodyErrorCases`; a review row in `docs/api/conventions.md`; a fake-service test that invalid input never reaches the service.
+5. CI: every push runs `.github/workflows/ci.yml`. `gh` is not installed; the repository is public. Watch a commit's run through the public REST API (`/repos/KhizirFarrukh/local-ai-nas/actions/runs?head_sha=<sha>`, then `/jobs`; 60 anonymous requests per hour) or the run's web page (its "Status" field). Step logs need sign-in: reproduce Linux failures with `GOOS=linux go test -c` binaries in the WSL Ubuntu distro, run from the package directory under /mnt/c when a test reads repo files.
+6. Every finished branch: merge it into `develop` myself and push (RULES User Preferences, S005).
 
 ## Blocked or waiting on user
-- At the S01 sign-off (S01.7-T08): the user's review of the throughput deviation in `docs/perf/S01-baseline.md` (S01 change log, S01.7-T04 row).
+- At the S01 sign-off (S01.7-T08):
+  - the user's review of the throughput deviation in `docs/perf/S01-baseline.md` (S01 change log, S01.7-T04 row);
+  - the user's decision on README proposals R-11 (status line) and R-12 (roadmap) in `audits/A002-readme-proposal.md`.
 
 ## Open questions (short list; full text in plan.md section 5)
 - ★ **For S01:** none (Q18 answered in S005: 100k photos + 100k files)
@@ -85,7 +93,7 @@
 ## Pointers
 - Latest session log: `code-agent-docs/logs/sessions/2026-09-24_S005.md`
 - Active stage document: `code-agent-docs/stages/S01-basic-nas.md` (In Progress)
-- Audit report: `code-agent-docs/audits/A001-2026-09-24-documentation-audit.md` (decisions received in section 9)
+- Audit reports: `code-agent-docs/audits/A002-2026-09-24-documentation-audit.md` (the S01 final review) and `A002-readme-proposal.md`; `A001-2026-09-24-documentation-audit.md` (decisions received in section 9)
 - ADRs: `code-agent-docs/decisions/ADR-0001` … `ADR-0020` (0019 Proposed; 0012 superseded in part by 0020; the rest Accepted, including 0003 since S005)
 - Dependency register: `code-agent-docs/dependencies.md` (section 12: deployment prerequisites per platform, the input for the S11.2 setup scripts)
 - Rules: `code-agent-docs/RULES.md` (v1.5.0: targeted plan reading; merge-into-develop; dependency record + per-platform setup scripts) · Prompts: `code-agent-docs/prompts/` (P002–P004)
