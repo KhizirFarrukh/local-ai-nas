@@ -2,9 +2,9 @@
 
 **Purpose:** every dependency, external tool, dataset, and AI model the project uses or has evaluated, with its version, license, and verification status. This is required by P003 and by RULES.md **R6**: every new dependency is added here **in the same commit that introduces it**. **Section 12** lists what each platform needs at runtime; the per-platform setup scripts (S11.2, FR-149) install exactly that list (NFR-032).
 
-**Last updated:** 2026-09-24 (session S005: section 12 added; S01.1-T01 created `go.mod`). Verification method and raw results: `logs/sessions/2026-09-24_S003.md` entries E005 and E007, and audit A001 group F (`audits/A001-2026-09-24-documentation-audit.md`).
+**Last updated:** 2026-09-24 (session S005: section 12 added; S01.1-T01 created `go.mod`; S01.1-T02 license policy). Verification method and raw results: `logs/sessions/2026-09-24_S003.md` entries E005 and E007, and audit A001 group F (`audits/A001-2026-09-24-documentation-audit.md`).
 
-**Licensing policy (P003, NFR-029):** every dependency and model must have a license that allows anyone to deploy and use this project. Nothing may be restricted to non-commercial or research-only use. The project's own license is **AGPL-3.0** (Q22, decided in S005). Items that need attention under it are marked ⚠.
+**Licensing policy (P003, NFR-029):** every dependency and model must have a license that allows anyone to deploy and use this project. Nothing may be restricted to non-commercial or research-only use. The project's own license is **AGPL-3.0-or-later** (Q22, decided in S005; policy and allow-list in `docs/licensing.md` and `scripts/allowed-licenses.txt`). Items that need attention under it are marked ⚠.
 
 **Status legend:**
 - **Verified (date, source):** version and license checked against an official source on that date.
@@ -52,7 +52,7 @@ Versions are the **latest stable at verification**. Only **direct** dependencies
 | github.com/google/go-cmp | v0.7.0 | BSD-3-Clause | Test comparisons and diffs | S01+ | [ADR-0005](decisions/ADR-0005-testing-linting-ci.md) | Verified 2026-09-24 |
 | golangci-lint (github.com/golangci/golangci-lint/v2) | v2.13.2 (pinned binary; CI action + local binary install, not a go.mod tool) | ⚠ GPL-3.0 (dev tool only; never linked or distributed) | Lint and format (gofmt/goimports), depguard architecture rules | S01+ | [ADR-0005](decisions/ADR-0005-testing-linting-ci.md) | Verified 2026-09-24 |
 | govulncheck (golang.org/x/vuln) | v1.8.0 | BSD-3-Clause | Vulnerability scan | S01+ | [ADR-0005](decisions/ADR-0005-testing-linting-ci.md) | Verified 2026-09-24. **In `go.mod`** as a `tool` directive (S01.1-T01); `go tool govulncheck -version` = v1.8.0 |
-| github.com/google/go-licenses/v2 | v2.0.1 | Apache-2.0 | Dependency license check | S01+ | [ADR-0005](decisions/ADR-0005-testing-linting-ci.md) | Verified 2026-09-24. **In `go.mod`** as a `tool` directive (S01.1-T01) |
+| github.com/google/go-licenses/v2 | v2.0.1 | Apache-2.0 | Dependency license check | S01+ | [ADR-0005](decisions/ADR-0005-testing-linting-ci.md) | Verified 2026-09-24. **In `go.mod`** as a `tool` directive (S01.1-T01). Run through `scripts/check-licenses.sh` with `scripts/allowed-licenses.txt` (S01.1-T02) |
 
 ## 4. Web UI (npm)
 

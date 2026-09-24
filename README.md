@@ -170,4 +170,6 @@ Contributions, ideas, and feedback are welcome! Feel free to open an issue to di
 
 ## 📄 License
 
-License to be decided.
+local-ai-nas is free software, licensed under the **GNU Affero General Public License v3.0 or later** (`AGPL-3.0-or-later`). See [LICENSE](LICENSE).
+
+If you run a modified version on a server that other people use over a network, the AGPL requires you to offer them its source code. Third-party components keep their own licenses. The policy is in [docs/licensing.md](docs/licensing.md).

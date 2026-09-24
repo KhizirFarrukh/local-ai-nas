@@ -1,0 +1,14 @@
+# Licenses allowed for code linked into the local-ai-nas binary (NFR-029).
+# One license name per line, as go-licenses reports it (SPDX short names
+# without the -only/-or-later suffix). Policy and reasons: docs/licensing.md.
+# A change to this list needs a reason recorded there.
+MIT
+BSD-2-Clause
+BSD-3-Clause
+Apache-2.0
+ISC
+MPL-2.0
+LGPL-2.1
+LGPL-3.0
+GPL-3.0
+AGPL-3.0
