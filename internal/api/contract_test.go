@@ -7,6 +7,7 @@ import (
 	"net/http/httptest"
 	"path/filepath"
 	"slices"
+	"strings"
 	"testing"
 
 	"github.com/getkin/kin-openapi/openapi3"
@@ -77,12 +78,34 @@ var errorCases = []struct {
 	{http.MethodGet, "/api/v1/files/items?path=/docs%5Ca.txt", http.StatusBadRequest, "invalid_name"},
 	{http.MethodGet, "/api/v1/files/items?path=/missing", http.StatusNotFound, "not_found"},
 	{http.MethodPost, "/api/v1/files/items?path=/", http.StatusMethodNotAllowed, "method_not_allowed"},
+	// POST /api/v1/files/folders: other methods (the JSON cases are below).
+	{http.MethodGet, "/api/v1/files/folders", http.StatusMethodNotAllowed, "method_not_allowed"},
 	// The reserved photos routes, with any method.
 	{http.MethodGet, "/api/v1/photos", http.StatusNotImplemented, "not_available"},
 	{http.MethodPost, "/api/v1/photos", http.StatusNotImplemented, "not_available"},
 	{http.MethodGet, "/api/v1/photos/timeline", http.StatusNotImplemented, "not_available"},
 	{http.MethodPut, "/api/v1/photos/items/1", http.StatusNotImplemented, "not_available"},
 	{http.MethodDelete, "/api/v1/photos/items/1", http.StatusNotImplemented, "not_available"},
+}
+
+// jsonErrorCases are POST requests with a JSON body (the empty string sends
+// no body and no Content-Type) that must produce an error. They count for
+// route coverage like errorCases.
+var jsonErrorCases = []struct {
+	path, body string
+	status     int
+	code       string
+}{
+	// POST /api/v1/files/folders.
+	{"/api/v1/files/folders", "", http.StatusBadRequest, "invalid_request"},
+	{"/api/v1/files/folders", `{"path":"/new","extra":1}`, http.StatusBadRequest, "invalid_request"},
+	{"/api/v1/files/folders", `{"path":"/new"}{}`, http.StatusBadRequest, "invalid_request"},
+	{"/api/v1/files/folders", `{"path":"/new","on_conflict":"merge"}`, http.StatusBadRequest, "invalid_request"},
+	{"/api/v1/files/folders", `{"path":"/con"}`, http.StatusBadRequest, "invalid_name"},
+	{"/api/v1/files/folders", `{"path":"/../x"}`, http.StatusBadRequest, "outside_root"},
+	{"/api/v1/files/folders", `{"path":"/x/y/z"}`, http.StatusNotFound, "not_found"},
+	{"/api/v1/files/folders", `{"path":"/docs"}`, http.StatusConflict, "conflict"},
+	{"/api/v1/files/folders", `{"path":"/` + strings.Repeat("a", 2<<20) + `"}`, http.StatusRequestEntityTooLarge, "too_large"},
 }
 
 // TestErrorResponsesMatchSchema is the S01.5-T03 contract test: every
@@ -125,9 +148,35 @@ func TestErrorResponsesMatchSchema(t *testing.T) {
 		}
 	}
 
+	for _, c := range jsonErrorCases {
+		label := "POST " + c.path + " " + c.body
+		if len(label) > 120 {
+			label = label[:120] + "…"
+		}
+		req := httptest.NewRequest(http.MethodPost, c.path, strings.NewReader(c.body))
+		if c.body != "" {
+			req.Header.Set("Content-Type", "application/json")
+		}
+		if _, pattern := routeOf.Handler(req); pattern != "" {
+			covered[pattern] = true
+		}
+		rec := httptest.NewRecorder()
+		h.ServeHTTP(rec, req)
+		if rec.Code != c.status {
+			t.Errorf("%s: status %d, want %d (%s)", label, rec.Code, c.status, rec.Body)
+			continue
+		}
+		validateProblem(t, doc, label, rec)
+		var p apperr.Problem
+		_ = json.Unmarshal(rec.Body.Bytes(), &p)
+		if p.Code != c.code {
+			t.Errorf("%s: code %q, want %q", label, p.Code, c.code)
+		}
+	}
+
 	for _, r := range Routes(Options{}) {
 		if !covered[r.Pattern] {
-			t.Errorf("route %q has no error case in errorCases", r.Pattern)
+			t.Errorf("route %q has no error case in errorCases or jsonErrorCases", r.Pattern)
 		}
 	}
 }

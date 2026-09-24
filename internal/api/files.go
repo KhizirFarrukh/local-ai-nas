@@ -103,3 +103,7 @@ func (noFiles) Stat(context.Context, string, string) (files.Item, error) {
 func (noFiles) List(context.Context, string, string, files.ListOptions) (files.ListPage, error) {
 	return files.ListPage{}, errNoFiles
 }
+
+func (noFiles) CreateFolder(context.Context, string, string, files.FolderOptions) (files.Item, bool, error) {
+	return files.Item{}, false, errNoFiles
+}

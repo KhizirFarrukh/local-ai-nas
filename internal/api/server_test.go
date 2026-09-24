@@ -103,3 +103,7 @@ func (f *failingServer) GetHealth(context.Context, gen.GetHealthRequestObject) (
 func (f *failingServer) GetItems(context.Context, gen.GetItemsRequestObject) (gen.GetItemsResponseObject, error) {
 	return nil, f.err
 }
+
+func (f *failingServer) CreateFolder(context.Context, gen.CreateFolderRequestObject) (gen.CreateFolderResponseObject, error) {
+	return nil, f.err
+}

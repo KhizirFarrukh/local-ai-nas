@@ -135,6 +135,11 @@ func (r *recordingFiles) List(context.Context, string, string, files.ListOptions
 	return files.ListPage{}, apperr.New(apperr.NotFound, "fake")
 }
 
+func (r *recordingFiles) CreateFolder(context.Context, string, string, files.FolderOptions) (files.Item, bool, error) {
+	r.calls++
+	return files.Item{}, false, apperr.New(apperr.NotFound, "fake")
+}
+
 func TestGetItemsInvalidInputNeverReachesService(t *testing.T) {
 	svc := &recordingFiles{}
 	h := New(Options{Files: svc})

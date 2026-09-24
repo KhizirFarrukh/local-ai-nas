@@ -1,6 +1,7 @@
 package storage
 
 import (
+	"errors"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -150,5 +151,22 @@ func TestRootIsSecondLayer(t *testing.T) {
 	}
 	if _, err := root.ReadFile(filepath.Join("to-photos", "secret.jpg")); err == nil {
 		t.Error("os.Root followed a symbolic link out of the namespace")
+	}
+}
+
+// TestResolveReservedRule: on Windows the resolver refuses device names
+// itself; it reports them with the same rule as the name check, so clients
+// get one answer on every OS.
+func TestResolveReservedRule(t *testing.T) {
+	if runtime.GOOS != "windows" {
+		t.Skip("only Windows refuses device names while resolving")
+	}
+	r, _ := newTestResolver(t)
+	for _, p := range []string{"/NUL", "/docs/con", "/COM1/x"} {
+		_, err := r.Resolve(FilesArea, DefaultNamespace, p)
+		var e *apperr.Error
+		if !errors.As(err, &e) || e.Kind != apperr.InvalidName || e.Rule != RuleReservedName {
+			t.Errorf("Resolve(%q) = %v, want invalid_name / reserved_name", p, err)
+		}
 	}
 }
