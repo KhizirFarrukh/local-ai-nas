@@ -128,7 +128,10 @@ func cmdServe(ctx context.Context, args []string, stderr io.Writer) int {
 			Logger:  log,
 			Version: version,
 			Checks:  checks,
-			Files:   files.NewLocal(storage.NewResolver(a.layout), files.Options{Space: guard}),
+			Files: files.NewLocal(storage.NewResolver(a.layout), files.Options{
+				Space:      guard,
+				CopyLimits: files.CopyLimits{MaxItems: a.cfg.Copy.SyncMaxItems, MaxBytes: int64(a.cfg.Copy.SyncMaxBytes)},
+			}),
 			// The simple upload has the same file size limit as tus.
 			MaxUploadBytes: int64(a.cfg.Uploads.MaxFileSize),
 		}),

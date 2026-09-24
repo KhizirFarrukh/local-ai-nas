@@ -123,3 +123,7 @@ func (f *failingServer) RenameItem(context.Context, gen.RenameItemRequestObject)
 func (f *failingServer) MoveItem(context.Context, gen.MoveItemRequestObject) (gen.MoveItemResponseObject, error) {
 	return nil, f.err
 }
+
+func (f *failingServer) CopyItem(context.Context, gen.CopyItemRequestObject) (gen.CopyItemResponseObject, error) {
+	return nil, f.err
+}

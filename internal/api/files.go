@@ -124,3 +124,7 @@ func (noFiles) Rename(context.Context, string, string, string, files.MoveOptions
 func (noFiles) Move(context.Context, string, string, string, files.MoveOptions) (files.Item, error) {
 	return files.Item{}, errNoFiles
 }
+
+func (noFiles) Copy(context.Context, string, string, string, files.CopyOptions) (files.Item, bool, error) {
+	return files.Item{}, false, errNoFiles
+}

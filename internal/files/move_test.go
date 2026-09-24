@@ -241,3 +241,31 @@ func TestMoveHooks(t *testing.T) {
 		t.Errorf("events (-want +got):\n%s", diff)
 	}
 }
+
+// TestMoveConcurrentFolders: concurrent folder moves to one name with
+// rename all succeed under distinct names (on Windows a lost race shows
+// up as "access denied" and must still count as a taken name).
+func TestMoveConcurrentFolders(t *testing.T) {
+	const n = 6
+	tree := map[string]string{}
+	for i := range n {
+		tree[fmt.Sprintf("d%d/f.txt", i)] = fmt.Sprint(i)
+	}
+	s, l := newService(t, nil, tree)
+	errs := make([]error, n)
+	var wg sync.WaitGroup
+	for i := range n {
+		wg.Go(func() {
+			_, errs[i] = s.Move(t.Context(), owner, fmt.Sprintf("/d%d", i), "/dst", MoveOptions{OnConflict: ConflictRename})
+		})
+	}
+	wg.Wait()
+	for i, err := range errs {
+		if err != nil {
+			t.Errorf("move %d: %v", i, err)
+		}
+	}
+	if disk := onDisk(t, l); len(disk) != n {
+		t.Errorf("%d files on disk, want %d: %v", len(disk), n, disk)
+	}
+}

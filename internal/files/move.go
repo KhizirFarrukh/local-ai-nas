@@ -76,7 +76,7 @@ func (s *Local) move(ctx context.Context, op Op, owner, fromAPI, toAPI string, o
 				return err
 			}
 			if src.IsDir() {
-				if err := refuseIntoItself(root, src, path.Dir(to), fromAPI); err != nil {
+				if err := refuseIntoItself(root, src, path.Dir(to), fromAPI, "moved"); err != nil {
 					return err
 				}
 			}
@@ -95,18 +95,18 @@ func (s *Local) move(ctx context.Context, op Op, owner, fromAPI, toAPI string, o
 	})
 }
 
-// refuseIntoItself refuses to move the folder src into dir when dir is
-// src or lies below it. It compares each ancestor of dir with src as a
-// file-system object, so a case variant of the path on a case-insensitive
-// disk ("/Docs" for "/docs") cannot slip past.
-func refuseIntoItself(root *os.Root, src fs.FileInfo, dir, fromAPI string) error {
+// refuseIntoItself refuses to move or copy (verb) the folder src into dir
+// when dir is src or lies below it. It compares each ancestor of dir with
+// src as a file-system object, so a case variant of the path on a
+// case-insensitive disk ("/Docs" for "/docs") cannot slip past.
+func refuseIntoItself(root *os.Root, src fs.FileInfo, dir, fromAPI, verb string) error {
 	for {
 		info, err := root.Lstat(filepath.FromSlash(dir))
 		if err != nil {
 			return fsError(err, "/"+dir)
 		}
 		if os.SameFile(info, src) {
-			return apperr.Newf(apperr.InvalidRequest, "the folder %s cannot be moved into itself", fromAPI)
+			return apperr.Newf(apperr.InvalidRequest, "the folder %s cannot be %s into itself", fromAPI, verb)
 		}
 		if dir == "." {
 			return nil
@@ -188,18 +188,11 @@ func numbered(base string, n int, dir bool) string {
 
 // moveNew moves from to name only if nothing has that name (fs.ErrExist
 // otherwise). A regular file moves with placeNew, which is atomic on file
-// systems with hard links. A folder or link is checked and then renamed:
-// os.Root has no rename that refuses an existing target, so a concurrent
-// write of the same name can race it.
+// systems with hard links. A folder or link moves with renameIfFree:
+// os.Root has no rename that refuses an existing target.
 func moveNew(root *os.Root, from, name string, src fs.FileInfo) error {
 	if src.Mode().IsRegular() {
 		return placeNew(root, from, name)
 	}
-	switch _, err := root.Lstat(filepath.FromSlash(name)); {
-	case err == nil:
-		return &fs.PathError{Op: "rename", Path: name, Err: fs.ErrExist}
-	case !storage.IsNotFound(err):
-		return err
-	}
-	return root.Rename(filepath.FromSlash(from), filepath.FromSlash(name))
+	return renameIfFree(root, from, name)
 }

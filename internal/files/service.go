@@ -38,6 +38,10 @@ type Service interface {
 	// (S01.3-T07).
 	Rename(ctx context.Context, owner, path, newName string, opts MoveOptions) (Item, error)
 	Move(ctx context.Context, owner, from, to string, opts MoveOptions) (Item, error)
+	// Copy copies the file or folder at from to the path to and reports
+	// whether it created a new item (false: it replaced a file)
+	// (S01.3-T08).
+	Copy(ctx context.Context, owner, from, to string, opts CopyOptions) (Item, bool, error)
 }
 
 // Op names a file operation, for hooks and logs.
@@ -94,15 +98,18 @@ type Options struct {
 	// Space refuses writes that would use the free-space reserve. Nil
 	// means no check (tests).
 	Space *storage.SpaceGuard
+	// CopyLimits bound a copy within one request; zero means no limit.
+	CopyLimits CopyLimits
 }
 
 // Local implements Service on the local disk. Every path goes through the
 // storage resolver, and every file-system call through the namespace's
 // os.Root.
 type Local struct {
-	resolver *storage.Resolver
-	hooks    Hooks
-	space    *storage.SpaceGuard
+	resolver   *storage.Resolver
+	hooks      Hooks
+	space      *storage.SpaceGuard
+	copyLimits CopyLimits
 }
 
 var _ Service = (*Local)(nil)
@@ -112,7 +119,7 @@ func NewLocal(r *storage.Resolver, o Options) *Local {
 	if o.Hooks == nil {
 		o.Hooks = NopHooks{}
 	}
-	return &Local{resolver: r, hooks: o.Hooks, space: o.Space}
+	return &Local{resolver: r, hooks: o.Hooks, space: o.Space, copyLimits: o.CopyLimits}
 }
 
 // run calls the hooks around op.
