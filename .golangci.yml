@@ -30,6 +30,13 @@ linters:
           deny:
             - pkg: github.com/KhizirFarrukh/local-ai-nas/internal/files
               desc: the photos area must not import the files area (I1); use internal/transfer
+  exclusions:
+    rules:
+      # Tests build hostile inputs and temporary files on purpose, which
+      # gosec reports as unsafe. Production code is always checked.
+      - path: _test\.go
+        linters:
+          - gosec
 
 formatters:
   enable:
