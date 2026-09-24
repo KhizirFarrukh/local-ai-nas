@@ -10,6 +10,8 @@ tool (
 	golang.org/x/vuln/cmd/govulncheck
 )
 
+require github.com/google/go-cmp v0.7.0
+
 require (
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
 	github.com/dprotaso/go-yit v0.0.0-20220510233725-9ba8df137936 // indirect
