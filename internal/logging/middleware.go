@@ -65,7 +65,9 @@ func RequestIDFrom(ctx context.Context) string {
 // the method, route pattern, status, response bytes, duration, and request
 // ID. Query values under sensitive names are redacted. At debug level the
 // request headers are included, with credentials redacted. Place it inside
-// RequestID and outside the ServeMux, so the matched pattern is known.
+// RequestID and outside the ServeMux, so the matched pattern is known. Any
+// middleware between AccessLog and the mux must pass the same *http.Request
+// on (not a copy such as r.WithContext), or the route is logged empty.
 func AccessLog(logger *slog.Logger) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
