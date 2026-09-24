@@ -1,0 +1,32 @@
+# Development environment (S01.1-T06, ADR-0006).
+#   docker compose -f deploy/compose.dev.yaml up --build
+# The server runs "go run" on your working copy (mounted at /src), so after
+# a code change restart it with: docker compose -f deploy/compose.dev.yaml restart
+# It is reachable at http://127.0.0.1:8080 from this computer only.
+name: local-ai-nas-dev
+
+services:
+  nas:
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile.dev
+      target: dev
+    ports:
+      # Published on loopback only: nothing on the network can reach it (NFR-020).
+      - "127.0.0.1:8080:8080"
+    environment:
+      LOCALAINAS_STORAGE_ROOT: /data
+      # Inside the container the server must listen on all interfaces, or
+      # the published port cannot reach it. The port above stays loopback-only.
+      LOCALAINAS_SERVER_BIND: "0.0.0.0:8080"
+      LOCALAINAS_LOG_LEVEL: debug
+    volumes:
+      - ..:/src
+      - nas-data:/data
+      - go-mod:/go/pkg/mod
+      - go-build:/root/.cache/go-build
+
+volumes:
+  nas-data:
+  go-mod:
+  go-build:

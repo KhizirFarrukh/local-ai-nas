@@ -1,0 +1,49 @@
+# local-ai-nas configuration (example).
+#
+# Copy this file and change what you need. Every setting is optional except
+# storage.root; the values shown are the defaults.
+#
+# Where the server looks for the file: the --config flag, then the
+# LOCALAINAS_CONFIG environment variable, then the default location
+# (/etc/local-ai-nas/config.toml on Linux, %ProgramData%\local-ai-nas\config.toml
+# on Windows). Keep it outside the storage root.
+#
+# Each setting can also be set with an environment variable or a flag, which
+# win over this file (flags win over environment variables):
+#   storage.root  ->  LOCALAINAS_STORAGE_ROOT  ->  --storage-root
+#
+# Sizes: a number of bytes (1048576) or a string with a unit: "512MiB",
+# "10GB" (KiB/MiB/GiB/TiB = 1024-based, KB/MB/GB/TB = 1000-based).
+# Durations: a string such as "30s", "2m", or "1h".
+
+[storage]
+# Required. An absolute path. It holds files/, photos/, and the internal
+# data folder .local-ai-nas/ (database, logs, uploads in progress).
+# On Windows, use forward slashes or doubled backslashes, e.g. "D:/nas".
+root = "/srv/local-ai-nas"
+
+# Free space that uploads never use.
+free_space_reserve = "1GiB"
+
+[server]
+# host:port to listen on. In S01 only loopback addresses are safe to use;
+# the server has no login yet (S03).
+bind = "127.0.0.1:8080"
+read_header_timeout = "10s"
+idle_timeout = "2m"
+# How long a shutdown waits for requests that are still running.
+shutdown_timeout = "30s"
+
+[log]
+# debug, info, warn, or error.
+level = "info"
+# The log file .local-ai-nas/logs/nas.log is rotated at this size;
+# file_max_files rotated files are kept.
+file_max_size = "10MiB"
+file_max_files = 5
+
+[uploads]
+# The largest file that can be uploaded.
+max_file_size = "100GiB"
+# The largest body of one upload request.
+max_chunk_size = "64MiB"

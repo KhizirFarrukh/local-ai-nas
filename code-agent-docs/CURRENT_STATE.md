@@ -6,15 +6,15 @@
 
 ## Active stage and task
 - **Active stage:** S01 (Basic NAS implementation), **In Progress** (`stages/S01-basic-nas.md`); substage S01.1 In Progress.
-- **Active task:** none (S01.1-T11 done; S01.1-T06 next, the last S01.1 task)
+- **Active task:** **S01.1-T06** Development environment (branch `feat/S01.1-T06-devenv`)
 
 ## In progress (write-ahead)
-- S01.1-T11: push, wait for the branch CI badge to pass, merge `feat/S01.1-T11-app` into `develop`.
+- S01.1-T06: `deploy/Dockerfile.dev` (build/dev/runtime stages), `deploy/compose.dev.yaml`, `deploy/config.example.toml` (+ a sync test), `.dockerignore`, README "Development", CI job `image` (build runtime image, run + health, compose smoke, Trivy v0.74.0), Dependabot `docker`; push, CI green, merge into `develop`.
 
 ## Last completed
 - `develop` verified complete (S005): merge `c535cda` brought `cf60f72` (plan 0.4.0, which PR #3 had put on `main` only) and the user's `bda8321` (prompts 3 and 4).
 - Approval-stage decisions D-01–D-14 applied (S005 E007–E010). **Plan 1.0.0 baseline and S01 approved** (S005 E012).
-- **S01.1-T11 done** (S005 E037): `cmd/local-ai-nas` (serve, migrate up|status, version; graceful shutdown) and `internal/health`; the smoke test runs the program as a separate process; a manual run on Windows is healthy.
+- **S01.1-T11 done and merged** (branch CI green; S005 E037): `cmd/local-ai-nas` (serve, migrate up|status, version; graceful shutdown) and `internal/health`; the smoke test runs the program as a separate process; a manual run on Windows is healthy.
 - **S01.1-T10 done and merged** (branch CI green via the badge; S005 E035): `internal/db` (WAL, writer + query-only readers, goose migrations, schema settings/uploads); licenses all allowed; no vulnerabilities.
 - **S01.1-T09 done and merged** (branch CI green; S005 E033): `internal/apperr` (kinds with stable codes, RFC 9457 problems, Write, Recover); 100% package coverage.
 - **S01.1-T08 done and merged** (branch CI green; S005 E031): `internal/logging` (RotatingFile, New with stderr + file, RequestID, AccessLog with redaction); coverage of internal/... 94.8%.

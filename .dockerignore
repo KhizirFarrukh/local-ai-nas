@@ -1,0 +1,8 @@
+# Keep the Docker build context small and free of local data.
+.git
+bin/
+dist/
+dev/
+coverage.*
+node_modules/
+*.exe

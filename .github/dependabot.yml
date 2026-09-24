@@ -1,5 +1,5 @@
 # Dependency update pull requests (ADR-0005). They target develop, like all
-# work. The docker ecosystem is added with the dev image (S01.1-T06).
+# work.
 version: 2
 updates:
   - package-ecosystem: gomod
@@ -17,3 +17,12 @@ updates:
       interval: weekly
     commit-message:
       prefix: "chore(ci)"
+
+  # Base images in deploy/Dockerfile.dev (S01.1-T06).
+  - package-ecosystem: docker
+    directory: /deploy
+    target-branch: develop
+    schedule:
+      interval: weekly
+    commit-message:
+      prefix: "chore(docker)"
