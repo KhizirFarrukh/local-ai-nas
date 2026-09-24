@@ -22,6 +22,8 @@ type server struct {
 	// owner is the namespace requests act in. S01 has one owner; S03 takes
 	// it from the session.
 	owner string
+	// log is for responses that write problems themselves (downloads).
+	log *slog.Logger
 }
 
 var _ gen.StrictServerInterface = (*server)(nil)

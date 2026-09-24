@@ -30,6 +30,9 @@ type Service interface {
 	// or nothing, and reports whether it created a new file (false: it
 	// replaced one) (S01.3-T05).
 	Upload(ctx context.Context, owner, path string, body io.Reader, size int64, opts UploadOptions) (Item, bool, error)
+	// Download opens the file at path for reading; the caller closes it.
+	// The item describes exactly the bytes that are read (S01.3-T06).
+	Download(ctx context.Context, owner, path string) (Item, io.ReadSeekCloser, error)
 }
 
 // Op names a file operation, for hooks and logs.

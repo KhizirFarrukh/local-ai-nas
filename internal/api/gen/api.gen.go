@@ -138,6 +138,8 @@ const (
 	ProblemCodeNotAvailable        ProblemCode = "not_available"
 	ProblemCodeNotFound            ProblemCode = "not_found"
 	ProblemCodeOutsideRoot         ProblemCode = "outside_root"
+	ProblemCodePreconditionFailed  ProblemCode = "precondition_failed"
+	ProblemCodeRangeNotSatisfiable ProblemCode = "range_not_satisfiable"
 	ProblemCodeTooLarge            ProblemCode = "too_large"
 )
 
@@ -163,6 +165,10 @@ func (e ProblemCode) Valid() bool {
 	case ProblemCodeNotFound:
 		return true
 	case ProblemCodeOutsideRoot:
+		return true
+	case ProblemCodePreconditionFailed:
+		return true
+	case ProblemCodeRangeNotSatisfiable:
 		return true
 	case ProblemCodeTooLarge:
 		return true
@@ -322,8 +328,20 @@ type MethodNotAllowed = Problem
 // NotFound An RFC 9457 problem details object (docs/api/errors.md).
 type NotFound = Problem
 
+// PreconditionFailed An RFC 9457 problem details object (docs/api/errors.md).
+type PreconditionFailed = Problem
+
+// RangeNotSatisfiable An RFC 9457 problem details object (docs/api/errors.md).
+type RangeNotSatisfiable = Problem
+
 // TooLarge An RFC 9457 problem details object (docs/api/errors.md).
 type TooLarge = Problem
+
+// DownloadFileParams defines parameters for DownloadFile.
+type DownloadFileParams struct {
+	// Path A path in the caller's files area, starting with `/` (the root of the area). See docs/api/conventions.md.
+	Path Path `form:"path" json:"path"`
+}
 
 // UploadFileParams defines parameters for UploadFile.
 type UploadFileParams struct {
@@ -351,6 +369,9 @@ type CreateFolderJSONRequestBody = CreateFolderRequest
 
 // ServerInterface represents all server handlers.
 type ServerInterface interface {
+	// DownloadFile Download a file
+	// (GET /files/content)
+	DownloadFile(w http.ResponseWriter, r *http.Request, params DownloadFileParams)
 	// UploadFile Upload a file (simple, streamed)
 	// (PUT /files/content)
 	UploadFile(w http.ResponseWriter, r *http.Request, params UploadFileParams)
@@ -373,6 +394,39 @@ type ServerInterfaceWrapper struct {
 }
 
 type MiddlewareFunc func(http.Handler) http.Handler
+
+// DownloadFile operation middleware
+func (siw *ServerInterfaceWrapper) DownloadFile(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params DownloadFileParams
+
+	// ------------- Required query parameter "path" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, true, "path", r.URL.Query(), &params.Path, runtime.BindQueryParameterOptions{Type: "string", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "path"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "path", Err: err})
+		}
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.DownloadFile(w, r, params)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
 
 // UploadFile operation middleware
 func (siw *ServerInterfaceWrapper) UploadFile(w http.ResponseWriter, r *http.Request) {
@@ -653,6 +707,7 @@ func HandlerWithOptions(si ServerInterface, options StdHTTPServerOptions) http.H
 		ErrorHandlerFunc:   options.ErrorHandlerFunc,
 	}
 
+	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/files/content", wrapper.DownloadFile)
 	m.HandleFunc(http.MethodPut+" "+options.BaseURL+"/files/content", wrapper.UploadFile)
 	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/files/folders", wrapper.CreateFolder)
 	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/files/items", wrapper.GetItems)
@@ -682,7 +737,222 @@ type MethodNotAllowedApplicationProblemPlusJSONResponse struct {
 
 type NotFoundApplicationProblemPlusJSONResponse Problem
 
+type PreconditionFailedApplicationProblemPlusJSONResponse Problem
+
+type RangeNotSatisfiableResponseHeaders struct {
+	ContentRange *string
+}
+type RangeNotSatisfiableApplicationProblemPlusJSONResponse struct {
+	Body Problem
+
+	Headers RangeNotSatisfiableResponseHeaders
+}
+
 type TooLargeApplicationProblemPlusJSONResponse Problem
+
+type DownloadFileRequestObject struct {
+	Params DownloadFileParams
+}
+
+type DownloadFileResponseObject interface {
+	VisitDownloadFileResponse(w http.ResponseWriter) error
+}
+
+type DownloadFile200ResponseHeaders struct {
+	AcceptRanges       *string
+	ContentDisposition *string
+	ETag               *string
+	LastModified       *string
+}
+
+type DownloadFile200AsteriskResponse struct {
+	Body          io.Reader
+	Headers       DownloadFile200ResponseHeaders
+	ContentType   string
+	ContentLength int64
+}
+
+func (response DownloadFile200AsteriskResponse) VisitDownloadFileResponse(w http.ResponseWriter) error {
+
+	w.Header().Set("Content-Type", response.ContentType)
+	if response.ContentLength != 0 {
+		w.Header().Set("Content-Length", fmt.Sprint(response.ContentLength))
+	}
+	if response.Headers.AcceptRanges != nil {
+		w.Header().Set("Accept-Ranges", fmt.Sprint(*response.Headers.AcceptRanges))
+	}
+	if response.Headers.ContentDisposition != nil {
+		w.Header().Set("Content-Disposition", fmt.Sprint(*response.Headers.ContentDisposition))
+	}
+	if response.Headers.ETag != nil {
+		w.Header().Set("ETag", fmt.Sprint(*response.Headers.ETag))
+	}
+	if response.Headers.LastModified != nil {
+		w.Header().Set("Last-Modified", fmt.Sprint(*response.Headers.LastModified))
+	}
+	w.WriteHeader(200)
+
+	if closer, ok := response.Body.(io.ReadCloser); ok {
+		defer closer.Close()
+	}
+	_, err := io.Copy(w, response.Body)
+	return err
+}
+
+type DownloadFile206ResponseHeaders struct {
+	ContentRange *string
+}
+
+type DownloadFile206AsteriskResponse struct {
+	Body          io.Reader
+	Headers       DownloadFile206ResponseHeaders
+	ContentType   string
+	ContentLength int64
+}
+
+func (response DownloadFile206AsteriskResponse) VisitDownloadFileResponse(w http.ResponseWriter) error {
+
+	w.Header().Set("Content-Type", response.ContentType)
+	if response.ContentLength != 0 {
+		w.Header().Set("Content-Length", fmt.Sprint(response.ContentLength))
+	}
+	if response.Headers.ContentRange != nil {
+		w.Header().Set("Content-Range", fmt.Sprint(*response.Headers.ContentRange))
+	}
+	w.WriteHeader(206)
+
+	if closer, ok := response.Body.(io.ReadCloser); ok {
+		defer closer.Close()
+	}
+	_, err := io.Copy(w, response.Body)
+	return err
+}
+
+type DownloadFile304Response struct {
+}
+
+func (response DownloadFile304Response) VisitDownloadFileResponse(w http.ResponseWriter) error {
+	w.WriteHeader(304)
+	return nil
+}
+
+type DownloadFile400ApplicationProblemPlusJSONResponse struct {
+	BadRequestApplicationProblemPlusJSONResponse
+}
+
+func (response DownloadFile400ApplicationProblemPlusJSONResponse) VisitDownloadFileResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(400)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type DownloadFile404ApplicationProblemPlusJSONResponse struct {
+	NotFoundApplicationProblemPlusJSONResponse
+}
+
+func (response DownloadFile404ApplicationProblemPlusJSONResponse) VisitDownloadFileResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(404)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type DownloadFile405ApplicationProblemPlusJSONResponse struct {
+	MethodNotAllowedApplicationProblemPlusJSONResponse
+}
+
+func (response DownloadFile405ApplicationProblemPlusJSONResponse) VisitDownloadFileResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/problem+json")
+	if response.Headers.Allow != nil {
+		w.Header().Set("Allow", fmt.Sprint(*response.Headers.Allow))
+	}
+	w.WriteHeader(405)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type DownloadFile409ApplicationProblemPlusJSONResponse struct {
+	ConflictApplicationProblemPlusJSONResponse
+}
+
+func (response DownloadFile409ApplicationProblemPlusJSONResponse) VisitDownloadFileResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(409)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type DownloadFile412ApplicationProblemPlusJSONResponse struct {
+	PreconditionFailedApplicationProblemPlusJSONResponse
+}
+
+func (response DownloadFile412ApplicationProblemPlusJSONResponse) VisitDownloadFileResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(412)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type DownloadFile416ApplicationProblemPlusJSONResponse struct {
+	RangeNotSatisfiableApplicationProblemPlusJSONResponse
+}
+
+func (response DownloadFile416ApplicationProblemPlusJSONResponse) VisitDownloadFileResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/problem+json")
+	if response.Headers.ContentRange != nil {
+		w.Header().Set("Content-Range", fmt.Sprint(*response.Headers.ContentRange))
+	}
+	w.WriteHeader(416)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type DownloadFile500ApplicationProblemPlusJSONResponse struct {
+	InternalErrorApplicationProblemPlusJSONResponse
+}
+
+func (response DownloadFile500ApplicationProblemPlusJSONResponse) VisitDownloadFileResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(500)
+	_, err := buf.WriteTo(w)
+	return err
+}
 
 type UploadFileRequestObject struct {
 	Params UploadFileParams
@@ -1148,6 +1418,9 @@ func (response GetHealth503JSONResponse) VisitGetHealthResponse(w http.ResponseW
 
 // StrictServerInterface represents all server handlers.
 type StrictServerInterface interface {
+	// DownloadFile Download a file
+	// (GET /files/content)
+	DownloadFile(ctx context.Context, request DownloadFileRequestObject) (DownloadFileResponseObject, error)
 	// UploadFile Upload a file (simple, streamed)
 	// (PUT /files/content)
 	UploadFile(ctx context.Context, request UploadFileRequestObject) (UploadFileResponseObject, error)
@@ -1199,6 +1472,32 @@ type strictHandler struct {
 	ssi         StrictServerInterface
 	middlewares []StrictMiddlewareFunc
 	options     StrictHTTPServerOptions
+}
+
+// DownloadFile operation middleware
+func (sh *strictHandler) DownloadFile(w http.ResponseWriter, r *http.Request, params DownloadFileParams) {
+	var request DownloadFileRequestObject
+
+	request.Params = params
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.DownloadFile(ctx, request.(DownloadFileRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "DownloadFile")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(DownloadFileResponseObject); ok {
+		if err := validResponse.VisitDownloadFileResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
 }
 
 // UploadFile operation middleware

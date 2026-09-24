@@ -63,7 +63,7 @@ func Routes(o Options) []Route {
 	if o.MaxUploadBytes <= 0 {
 		o.MaxUploadBytes = DefaultMaxUploadBytes
 	}
-	g := generated(&server{version: o.Version, checks: o.Checks, files: o.Files, owner: storage.DefaultNamespace}, o.Logger)
+	g := generated(&server{version: o.Version, checks: o.Checks, files: o.Files, owner: storage.DefaultNamespace, log: o.Logger}, o.Logger)
 
 	// The photos area exists on disk from S01, but its API is reserved
 	// until the media stages (S01.2-T06). One hand-written route answers
@@ -75,6 +75,7 @@ func Routes(o Options) []Route {
 		{Pattern: "GET /api/v1/system/health", Handler: http.HandlerFunc(g.GetHealth)},
 		{Pattern: "GET /api/v1/files/items", Handler: http.HandlerFunc(g.GetItems)},
 		{Pattern: "POST /api/v1/files/folders", Handler: strictJSON[gen.CreateFolderRequest](o.Logger, g.CreateFolder)},
+		{Pattern: "GET /api/v1/files/content", Handler: withRequest(g.DownloadFile)},
 		{Pattern: "PUT /api/v1/files/content", Handler: declaredSize(o.MaxUploadBytes, o.Logger, g.UploadFile), MaxBody: o.MaxUploadBytes},
 		{Pattern: "/api/v1/photos", Handler: photos},
 		{Pattern: "/api/v1/photos/", Handler: photos},

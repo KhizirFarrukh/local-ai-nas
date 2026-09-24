@@ -112,3 +112,7 @@ func (noFiles) CreateFolder(context.Context, string, string, files.FolderOptions
 func (noFiles) Upload(context.Context, string, string, io.Reader, int64, files.UploadOptions) (files.Item, bool, error) {
 	return files.Item{}, false, errNoFiles
 }
+
+func (noFiles) Download(context.Context, string, string) (files.Item, io.ReadSeekCloser, error) {
+	return files.Item{}, nil, errNoFiles
+}
