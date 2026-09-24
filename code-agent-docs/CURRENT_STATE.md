@@ -6,15 +6,16 @@
 
 ## Active stage and task
 - **Active stage:** S01 (Basic NAS implementation), **In Progress** (`stages/S01-basic-nas.md`); S01.1 **Done**, S01.2 **In Progress**.
-- **Active task:** none (S01.2-T03 done; S01.2-T04 next)
+- **Active task:** none (S01.2-T04 done; S01.2-T05 next)
 
 ## In progress (write-ahead)
-- S01.2-T03: push, wait for CI, merge `feat/S01.2-T03-resolver` into `develop`.
+- S01.2-T04: push, wait for CI, merge `feat/S01.2-T04-free-space` into `develop`.
 
 ## Last completed
 - `develop` verified complete (S005): merge `c535cda` brought `cf60f72` (plan 0.4.0, which PR #3 had put on `main` only) and the user's `bda8321` (prompts 3 and 4).
 - Approval-stage decisions D-01–D-14 applied (S005 E007–E010). **Plan 1.0.0 baseline and S01 approved** (S005 E012).
-- **S01.2-T03 done** (S005 E046): `storage.Resolver` (Resolve with safe path rules; OpenRoot as the second layer), `files.Item` with OwnerID, and the architecture test of `internal/files`.
+- **S01.2-T04 done** (S005 E048): `storage.DiskFree` (Statfs / GetDiskFreeSpaceEx) and `SpaceGuard` (507 insufficient_storage before any byte is stored).
+- **S01.2-T03 done and merged** (CI run 35949731329 green; S005 E046): `storage.Resolver` (Resolve with safe path rules; OpenRoot as the second layer), `files.Item` with OwnerID, and the architecture test of `internal/files`.
 - **S01.2-T02 done and merged** (CI run 35949441925 green; S005 E044): `storage.db_dir` / `storage.logs_dir` relocation; `Layout.Init` rejects every overlap of internal data with the areas (and with uploads) before creating anything.
 - **S01.2-T01 done and merged** (`develop` 843c6fd; CI run 35948981464 green; S005 E042): `internal/storage` Layout + Init (creates `files/u0001`, `photos/u0001`, `.local-ai-nas/{tmp/uploads,db,logs}`; real, writable directories; unknown root entries reported and left alone); `serve`/`migrate` use it.
 - **S01.1 closed** (S005 E040): T06 done (Docker dev environment, example config, README Development, CI image job; CI run 35948272549 green). All 11 S01.1 tasks Done; substage acceptance checked (S01 change log).
