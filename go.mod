@@ -13,6 +13,7 @@ tool (
 require (
 	github.com/getkin/kin-openapi v0.142.0
 	github.com/google/go-cmp v0.7.0
+	github.com/oapi-codegen/runtime v1.7.0
 	github.com/pelletier/go-toml/v2 v2.4.3
 	github.com/pressly/goose/v3 v3.28.0
 	golang.org/x/sys v0.48.0
@@ -21,6 +22,7 @@ require (
 )
 
 require (
+	github.com/apapsch/go-jsonmerge/v2 v2.0.0 // indirect
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
 	github.com/dprotaso/go-yit v0.0.0-20220510233725-9ba8df137936 // indirect
 	github.com/dustin/go-humanize v1.0.1 // indirect

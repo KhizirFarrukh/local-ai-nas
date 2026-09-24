@@ -7,6 +7,7 @@ import (
 
 	"github.com/KhizirFarrukh/local-ai-nas/internal/api/gen"
 	"github.com/KhizirFarrukh/local-ai-nas/internal/apperr"
+	"github.com/KhizirFarrukh/local-ai-nas/internal/files"
 	"github.com/KhizirFarrukh/local-ai-nas/internal/health"
 )
 
@@ -17,6 +18,10 @@ import (
 type server struct {
 	version string
 	checks  []health.Check
+	files   files.Service
+	// owner is the namespace requests act in. S01 has one owner; S03 takes
+	// it from the session.
+	owner string
 }
 
 var _ gen.StrictServerInterface = (*server)(nil)

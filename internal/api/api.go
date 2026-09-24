@@ -12,6 +12,7 @@ import (
 	"github.com/KhizirFarrukh/local-ai-nas/internal/files"
 	"github.com/KhizirFarrukh/local-ai-nas/internal/health"
 	"github.com/KhizirFarrukh/local-ai-nas/internal/logging"
+	"github.com/KhizirFarrukh/local-ai-nas/internal/storage"
 )
 
 // DefaultMaxBodyBytes limits request bodies unless a route sets its own
@@ -46,7 +47,10 @@ func Routes(o Options) []Route {
 	if o.Logger == nil {
 		o.Logger = slog.New(slog.DiscardHandler)
 	}
-	g := generated(&server{version: o.Version, checks: o.Checks}, o.Logger)
+	if o.Files == nil {
+		o.Files = noFiles{}
+	}
+	g := generated(&server{version: o.Version, checks: o.Checks, files: o.Files, owner: storage.DefaultNamespace}, o.Logger)
 
 	// The photos area exists on disk from S01, but its API is reserved
 	// until the media stages (S01.2-T06). One hand-written route answers
@@ -56,6 +60,7 @@ func Routes(o Options) []Route {
 	})
 	return []Route{
 		{"GET /api/v1/system/health", http.HandlerFunc(g.GetHealth)},
+		{"GET /api/v1/files/items", http.HandlerFunc(g.GetItems)},
 		{"/api/v1/photos", photos},
 		{"/api/v1/photos/", photos},
 	}

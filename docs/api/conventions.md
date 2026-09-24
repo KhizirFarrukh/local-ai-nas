@@ -88,4 +88,5 @@ Every endpoint is reviewed against this list before it is merged. The table afte
 |---|---|
 | `GET /api/v1/system/health` | 1–4 and 7 met; 5 and 6 nothing to check (no input, no request body). In the spec since S01.5-T03 and served by the generated strict handler since S01.5-T04. A failing check gives 503 with the report, not a problem, by design. |
 | `* /api/v1/photos`, `* /api/v1/photos/…` | 1–4 and 7 met; 5 and 6 nothing to check. Always `501 not_available`; in the spec as `/photos` since S01.5-T03. |
-| File endpoints (S01.3, S01.4) | Reviewed when they are added. |
+| `GET /api/v1/files/items` | 1–7 met. Path through the resolver (3); paging values checked before the service, which a fake-service test proves (5); no request body (6 n/a); errors 400/404/405/500 in the spec and in the contract test (2, 4); folder, file, paging, and error tests plus FuzzAPI (7). |
+| Other file endpoints (S01.3, S01.4) | Reviewed when they are added. |
