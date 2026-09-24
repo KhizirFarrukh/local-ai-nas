@@ -1,0 +1,11 @@
+# local-ai-nas REST API contract (ADR-0002). The Go server interfaces and
+# types are generated from this file with oapi-codegen (S01.5).
+# OpenAPI 3.0.3 because oapi-codegen v2 targets OpenAPI 3.0.x.
+# Skeleton (S01.1-T01): paths are added from S01.5 on.
+openapi: 3.0.3
+info:
+  title: local-ai-nas API
+  version: 0.0.0
+servers:
+  - url: /api/v1
+paths: {}
