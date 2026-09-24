@@ -132,7 +132,7 @@ flowchart LR
 | Substage | Name | Status | Depends on | Requirements |
 |---|---|---|---|---|
 | S01.1 | Project foundation | **Done** (S005) | plan 1.0.0; S01 approved (Q22 answered: AGPL-3.0) | NFR-008, NFR-009, NFR-013, NFR-014, NFR-016, NFR-025, NFR-029, NFR-030 |
-| S01.2 | Storage layout and configuration | Not started | S01.1; **ADR-0003 Accepted** | FR-069–FR-072, NFR-026 |
+| S01.2 | Storage layout and configuration | In Progress | S01.1; **ADR-0003 Accepted** | FR-069–FR-072, NFR-026 |
 | S01.3 | Core file operations | Not started | S01.2, S01.5 (conventions), S01.6 (resolver) | FR-003, FR-005, FR-007, FR-073 |
 | S01.4 | Large file handling | Not started | S01.2, S01.3, S01.5 | FR-004, FR-074, NFR-006, NFR-021 |
 | S01.5 | API layer | Not started | S01.1 | FR-075, NFR-001 |
@@ -179,7 +179,7 @@ flowchart LR
 
 | Task ID | Description | Status | Acceptance criteria |
 |---|---|---|---|
-| S01.2-T01 | Layout initializer (`internal/storage/layout.go`): create `files/u0001/`, `photos/u0001/`, and `.local-ai-nas/{tmp/uploads,db,logs}` if missing. Validate that they are directories and writable. Report unknown root entries without touching them. | Not started | Empty root → full layout created. The second start is a no-op. A read-only root → startup fails with a clear error (tests on Linux; Windows uses an ACL-denied directory). |
+| S01.2-T01 | Layout initializer (`internal/storage/layout.go`): create `files/u0001/`, `photos/u0001/`, and `.local-ai-nas/{tmp/uploads,db,logs}` if missing. Validate that they are directories and writable. Report unknown root entries without touching them. | **Done** (S005) | Empty root → full layout created. The second start is a no-op. A read-only root → startup fails with a clear error (tests on Linux; Windows uses an ACL-denied directory). |
 | S01.2-T02 | Internal data location (I2): default `<root>/.local-ai-nas/`; optional relocation of `db/` and `logs/` by config; `tmp/uploads/` always under the root. Reject any overlap between internal data and the areas. | Not started | Every overlap case (internal data inside `files/` or `photos/`, an area inside internal data, the same path) is rejected, with one test per case. |
 | S01.2-T03 | Namespace resolver and owner model (`internal/storage/resolver.go`, `internal/files/item.go`): `Resolve(area, ns, userPath) → (relPath, error)`. The API root `/` maps to the namespace. `Item` carries the owner. | Not started | An architecture test asserts that `internal/files` performs I/O only through the resolver and `os.Root`. Items carry `OwnerID="u0001"`. |
 | S01.2-T04 | Free-space guard (`internal/storage/space.go`): `unix.Statfs` on Linux and macOS, `windows.GetDiskFreeSpaceEx` on Windows (**golang.org/x/sys v0.48.0**, BSD-3, added to `dependencies.md`); a configurable reserve (default 1 GiB); refuses declared-size writes that would breach it with problem `insufficient_storage` (HTTP 507). | Not started | An injected low-space provider triggers 507 before any byte is stored (unit + integration). |
