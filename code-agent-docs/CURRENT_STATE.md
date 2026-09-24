@@ -1,20 +1,21 @@
 # CURRENT_STATE
 
-**Last updated:** 2026-09-24 23:09 +0500 (session S005)
+**Last updated:** 2026-09-24 23:20 +0500 (session S005)
 **Plan version:** 1.1.2 (`code-agent-docs/plan.md`), **Approved baseline** 1.0.0 (S005) + the setup-script requirement (1.1.0, S005 E015)
 **Current phase:** Implementation: S01 (Basic NAS implementation) in progress; S01.1 to S01.6 done; S01.7 (integration and stage review) next
 
 ## Active stage and task
-- **Active stage:** S01 (Basic NAS implementation), **In Progress** (`stages/S01-basic-nas.md`); S01.1, S01.2, S01.3, and S01.6 **Done**; S01.4 **Done**; S01.5 **Done**; S01.7 **In Progress** (T01–T05 done).
-- **Active task:** **S01.7-T05** Documentation (branch `feat/S01.7-T05-docs`): done, waiting for CI and the merge; next **S01.7-T06** demo scripts
+- **Active stage:** S01 (Basic NAS implementation), **In Progress** (`stages/S01-basic-nas.md`); S01.1, S01.2, S01.3, and S01.6 **Done**; S01.4 **Done**; S01.5 **Done**; S01.7 **In Progress** (T01–T06 done).
+- **Active task:** **S01.7-T06** Demo scripts (branch `feat/S01.7-T06-demo`): done, waiting for CI and the merge; next **S01.7-T07** documentation audit (R12)
 
 ## In progress (write-ahead)
-- S01.7-T05: committed; push, CI, merge into `develop`. (tus finalize is in `TestConflictMatrix` since S01.4-T03.)
+- S01.7-T06: committed; push, CI (including the new `demo` job), merge into `develop`. (tus finalize is in `TestConflictMatrix` since S01.4-T03.)
 
 ## Last completed
 - `develop` verified complete (S005): merge `c535cda` brought `cf60f72` (plan 0.4.0, which PR #3 had put on `main` only) and the user's `bda8321` (prompts 3 and 4).
 - Approval-stage decisions D-01–D-14 applied (S005 E007–E010). **Plan 1.0.0 baseline and S01 approved** (S005 E012).
-- **S01.7-T05 done** (S005 E119): `docs/api/usage.md`, every operation with curl for Linux/macOS and Windows PowerShell, each block run as written on Linux (WSL) and in Windows PowerShell 5.1; README "Use the API"; docs and scripts indexes.
+- **S01.7-T06 done** (S005 E121): `scripts/demo.sh` and `scripts/demo.ps1` are green on Windows (PowerShell 5.1, recorded) and on Linux, and CI job `demo` runs both. tusd's `BodyReadError` is now logged as WARN, and scripts that were not executable are fixed.
+- **S01.7-T05 done and merged** (CI run 36039328692 green; S005 E119): `docs/api/usage.md`, every operation with curl for Linux/macOS and Windows PowerShell, each block run as written on Linux (WSL) and in Windows PowerShell 5.1; README "Use the API"; docs and scripts indexes.
 - **S01.7-T04 done and merged** (CI run 36037945955 green; S005 E117): `docs/perf/S01-baseline.md`: listing and memory targets met; throughput over loopback on NVMe below 80% (a deviation for the user's review at sign-off); downloads now keep sendfile.
 - **Q18 answered** (S005 E116): 100,000 photos + 100,000 files per installation (confirms A12); plan 1.1.2.
 - **S01.7-T03 done and merged** (CI run 36030776899 green; S005 E115): Unicode, empty, sparse (Linux), deep, and 10,000-entry cases end to end; a Range on an empty file no longer yields Go's invalid `Content-Range`.

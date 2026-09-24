@@ -37,6 +37,28 @@ $API = 'http://127.0.0.1:8080/api/v1'
 
 **In Git Bash on Windows:** run `export MSYS_NO_PATHCONV=1` first. Otherwise Git Bash turns arguments such as `path=/docs` into Windows paths (`C:/Program Files/Git/docs`).
 
+## The whole demo in one go
+
+`scripts/demo.sh` (Linux, macOS, and Git Bash) and `scripts/demo.ps1` (Windows PowerShell) run the steps of this guide against a running server and check every answer:
+- creating folders, uploading, and listing;
+- a tus upload that is cut off and then resumed;
+- downloading a range;
+- renaming, moving, copying, and deleting.
+
+They work in a new folder, `/local-ai-nas-demo-<time>`, and remove it at the end. `KEEP=1` or `-Keep` keeps it. CI runs both on every push.
+
+```sh
+scripts/demo.sh                          # or: scripts/demo.sh http://127.0.0.1:8080
+```
+
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts\demo.ps1
+```
+
+`-ExecutionPolicy Bypass` is needed because Windows does not run downloaded scripts by default. The sections below go through the same steps one command at a time.
+
+## Reading the answers
+
 Every answer is JSON on one line. `jq` (Linux and macOS) or `ConvertFrom-Json` (PowerShell) makes it easier to read. The answers below are shortened.
 
 ## Check the server

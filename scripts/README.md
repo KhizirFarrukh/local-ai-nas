@@ -9,7 +9,6 @@ Developer helper scripts. On Windows, run the `.sh` files from Git Bash.
 | `check-licenses.sh` | Checks every dependency's license against `allowed-licenses.txt` (`docs/licensing.md`). |
 | `check-api-docs-offline.sh [browser]` | Checks that the served API documentation renders with no internet access, in a headless Edge or Chrome (not part of CI). |
 | `perf-baseline.sh [size]` | Measures listing and transfer speed against NFR-003 (`docs/perf/`). |
-
-The S01.7 demo scripts (`demo.sh`, `demo.ps1`) follow in S01.7-T06.
+| `demo.sh [URL]`, `demo.ps1 [-BaseUrl URL]` | The stage 1 API demo against a running server, every answer checked (`docs/api/usage.md`). `demo.ps1` runs in Windows PowerShell 5.1 and PowerShell 7: `powershell -ExecutionPolicy Bypass -File scripts\demo.ps1`. |
 
 The per-platform deployment setup scripts are not here. They live in [`deploy/`](../deploy/) (S11.2).

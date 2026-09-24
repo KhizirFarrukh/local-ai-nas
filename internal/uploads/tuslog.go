@@ -23,7 +23,18 @@ func (t tusHandler) Enabled(ctx context.Context, level expslog.Level) bool {
 }
 
 func (t tusHandler) Handle(ctx context.Context, r expslog.Record) error {
-	rec := slog.NewRecord(r.Time, slog.Level(r.Level), r.Message, r.PC)
+	level := slog.Level(r.Level)
+	// tusd logs a request body that ends early as an error. That happens on
+	// the client's side (a dropped connection, a timeout, a body over the
+	// limit), and resuming after it is what tus is for. So it is a warning
+	// here, and errors stay for faults of the server.
+	if r.Message == "BodyReadError" && level > slog.LevelWarn {
+		level = slog.LevelWarn
+		if !t.h.Enabled(ctx, level) {
+			return nil
+		}
+	}
+	rec := slog.NewRecord(r.Time, level, r.Message, r.PC)
 	r.Attrs(func(a expslog.Attr) bool {
 		rec.AddAttrs(convertAttr(a))
 		return true
