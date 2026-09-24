@@ -4,7 +4,7 @@
 |---|---|
 | Audit | A002 (R12, the S01 final review, S01.7-T07), session S005, 2026-09-24 |
 | Finding | F-005 (the README status line was changed outside the approved sections) |
-| Status | **Waiting for the user's decision** at the S01 sign-off (S01.7-T08) |
+| Status | **Decided (S005 E126):** R-11 and R-12 **approved and applied** to `README.md` right after the S01 sign-off. User's answer: "Apply both (Recommended)" |
 
 **Basis rule (as in A001):** only approved decisions and completed, verified work are used. The README is the source of vision (plan, header). Tasks change only the sections their stage document names: the License section (S01.1-T02) and the Development and API usage sections (S01.1-T06, S01.7-T05). Every other README change is proposed here and applied only with the user's approval.
 

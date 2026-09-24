@@ -4,7 +4,7 @@
 
 **local-ai-nas** is a network-attached storage platform that anyone can deploy on their own hardware. It keeps two separate areas: **Files**, a general-purpose file store, and **Photos**, a Google Photos–style library. It organizes your photos, understands what's in them, and lets you search both areas with natural, forgiving queries, all without sending a single byte to the cloud.
 
-> ⚠️ **Status: early development.** This project is in its initial stage. Features described below are the planned scope and are not yet implemented.
+> ⚠️ **Status: early development.** Stage 1, the NAS core, is complete: the Files area can be managed through a REST API on the same computer (see Development). Everything else below is the planned scope and is not implemented yet.
 
 ---
 
@@ -220,7 +220,7 @@ On Windows, run the `scripts/*.sh` files from Git Bash. More in [docs/testing.md
 
 ## 🗺️ Roadmap
 
-- [ ] Stage 1: Basic NAS (storage service and API; Files and Photos areas)
+- [x] Stage 1: Basic NAS (storage service and API; Files and Photos areas)
 - [ ] Stage 2: Web interface for the NAS
 - [ ] Stage 3: Security (login, HTTPS, hardening)
 - [ ] Stage 4: Media management (Photos area: timeline, albums, viewer)

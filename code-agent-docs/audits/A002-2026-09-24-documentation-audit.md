@@ -201,3 +201,12 @@ The stage's other open review item, the throughput deviation in `docs/perf/S01-b
 4. **Plan status at the stage end:** S01 → Done in the plan (a PATCH) and in the stage document at the sign-off.
 5. **Session length:** S005 is one very long session (over 1,000 log lines). R9 counts log files, not lines. Closing sessions at natural breaks keeps each log readable.
 6. **From A001, still open:** the Unverified register items at their stages; whether to commit the audit scripts (the checklist keeps them out of the repository unless the user asks).
+
+## 9. Decisions received (S005, 2026-09-24)
+
+The user answered at the S01 sign-off (log E126):
+
+| # | Decision | User's answer | Applied in |
+|---|---|---|---|
+| 1 | README proposals R-11 and R-12 (F-005) | "Apply both (Recommended)" | `README.md` (status line and roadmap); `A002-readme-proposal.md` status |
+| – | The S01 throughput deviation (not a documentation finding) | "Accept, measure later (Recommended)" | `stages/S01-basic-nas.md` section 13; `docs/perf/S01-baseline.md`; plan 1.1.4 |

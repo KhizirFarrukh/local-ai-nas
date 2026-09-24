@@ -3,9 +3,9 @@
 | Field | Value |
 |---|---|
 | Stage ID | S01 |
-| Status | **In Progress** (approved 2026-09-24, S005) |
+| Status | **Done** (approved 2026-09-24, S005; signed off by the user 2026-09-24, S005 E126) |
 | Blocked reason | |
-| Plan version this stage is based on | 1.1.1 |
+| Plan version this stage is based on | 1.1.4 |
 | Origin | User-defined |
 | Created | 2026-09-24 (session S002) |
 | Last updated | 2026-09-24 (session S005) |
@@ -259,7 +259,7 @@ flowchart LR
 | S01.7-T05 | Documentation: README development and API usage (curl examples for Linux/macOS and PowerShell), `docs/api/*`, plan status, CURRENT_STATE. | **Done** (S005) | A reader can run the demo from the docs alone. |
 | S01.7-T06 | Demo scripts `scripts/demo.sh` and `scripts/demo.ps1` (curl) covering create folder, simple upload, tus upload with a forced interruption and resume, list, ranged download, rename, move, copy, delete. | **Done** (S005; Windows run recorded in E121, both in CI) | Both scripts run green against a fresh instance (Linux in CI; Windows manually, recorded). |
 | S01.7-T07 | **Documentation audit (R12)** using `templates/audit-checklist.md`, reported as the next audit number in `audits/`. | **Done** (S005; A002: 11 findings, the Critical one fixed; README proposal R-11/R-12 for the user) | Audit report complete; no Critical finding open (each fixed or escalated to the user) |
-| S01.7-T08 | Completion record and user sign-off. | Not started | Section 13 is filled in. The user's sign-off is quoted in the session log. |
+| S01.7-T08 | Completion record and user sign-off. | **Done** (S005; signed off in E126) | Section 13 is filled in. The user's sign-off is quoted in the session log. |
 
 ## 6. Files and modules expected to be created or changed
 
@@ -350,13 +350,13 @@ go tool go-licenses check ./...         # allow-list from S01.1-T02
 
 ## 9. Stage acceptance criteria
 
-- [ ] Every S01 substage acceptance criterion in plan.md (S01.1 to S01.7) is met.
-- [ ] Using only an HTTP client, files and folders in the files area can be managed reliably, including large resumable uploads (demo scripts, S01.7-T06).
-- [ ] The server listens only on loopback, and path traversal, invalid names, and symlink escapes are impossible (attack suite).
-- [ ] `photos/` exists and is untouched. `/api/v1/photos` is reserved.
-- [ ] All commands in section 8 pass in CI on Linux and Windows. Cross-builds for linux/amd64 and linux/arm64 succeed. The dev image passes the Trivy scan (no unresolved high findings).
-- [ ] Documentation and `dependencies.md` are updated (README, API docs, plan and CURRENT_STATE status), including section 12 (deployment prerequisites per platform; NFR-032).
-- [ ] Documentation audit (R12, S01.7-T07) done; no Critical finding open.
+- [x] Every S01 substage acceptance criterion in plan.md (S01.1 to S01.7) is met. (S01.1–S01.6 were checked at each closure; see the change log. S01.7: tests green in CI on both OSes, the attack and edge suites, the baseline recorded, the demo with a resumed upload, and this record with the sign-off.)
+- [x] Using only an HTTP client, files and folders in the files area can be managed reliably, including large resumable uploads (demo scripts, S01.7-T06). (Green in CI on Linux and Windows PowerShell 5.1, and in the recorded manual runs.)
+- [x] The server listens only on loopback, and path traversal, invalid names, and symlink escapes are impossible (attack suite). (Bind guard S01.6-T06; attack suite S01.7-T02; confinement closure test S01.3.)
+- [x] `photos/` exists and is untouched. `/api/v1/photos` is reserved. (S01.2-T06; `501 not_available` in `TestIntegration`.)
+- [x] All commands in section 8 pass in CI on Linux and Windows. Cross-builds for linux/amd64 and linux/arm64 succeed. The dev image passes the Trivy scan (no unresolved high findings). (CI run 36042107504: all 12 jobs green.)
+- [x] Documentation and `dependencies.md` are updated (README, API docs, plan and CURRENT_STATE status), including section 12 (deployment prerequisites per platform; NFR-032). (S01.7-T05, T06; audit A002, including F-011.)
+- [x] Documentation audit (R12, S01.7-T07) done; no Critical finding open. (A002: its one Critical finding, F-010, is fixed.)
 
 ## 10. Risks and rollback approach
 
@@ -419,12 +419,56 @@ go tool go-licenses check ./...         # allow-list from S01.1-T02
 | 2026-09-24 | S005 | **S01.7-T04 (performance baseline, `docs/perf/S01-baseline.md`):** Q18 answered (100k photos + 100k files, plan 1.1.2). Listing 10,000 entries: p95 30–44 ms on Windows and Linux, **met** (≤ 500 ms). Heap during 10 GiB transfers: **met** (CI `memory` job; 1.6 MiB at most locally). Throughput over loopback on the NVMe development PC: simple upload 63% (Windows) / 79% (Linux) of the raw disk, download 35% (Windows) / 130% (Linux, sendfile), tus 52–62%: **not met** against ≥ 80%. On loopback the per-byte HTTP work shows; the absolute rates (400–6,500 MB/s) are 3–50× gigabit Ethernet, so the target is expected to hold where the network or a USB disk is the slower side. **Deviation recorded for the user's review** (at the S01 sign-off), with the next step: measure on the Pi and the mini-PC over the real network when available, and overlap receive and write in the simple upload if needed. Improved while measuring: downloads keep `sendfile`/`TransmitFile` (the access log and the download writer pass `ReadFrom` through) | S01.7-T04 measurement | **Needed: the user's review of the throughput deviation (S01.7-T08)** |
 | 2026-09-24 | S005 | **S01.7-T05/T06:** `docs/api/usage.md` gives every operation with curl for Linux/macOS and for Windows PowerShell; each code block was run as written on Linux and in Windows PowerShell 5.1. `scripts/demo.sh` and `scripts/demo.ps1` check every answer, including a tus upload that is cut off and resumed. A new CI job `demo` runs both against a fresh server (Linux, and Windows PowerShell 5.1), **more than the acceptance's "Windows manually"**, and fails if the server logged an error. **Found:** (1) tusd logs a client's cut-off request body (`BodyReadError`) at ERROR; the tus log adapter now makes it a WARN, and errors stay for server faults. (2) `scripts/perf-baseline.sh` and `scripts/check-api-docs-offline.sh` were not executable in Git; fixed. (3) Windows PowerShell 5.1 drops the quotes of JSON arguments to native programs, so the guide and `demo.ps1` send JSON through a file | Found while building S01.7-T05/T06 | None (same tasks and acceptance criteria) |
 | 2026-09-24 | S005 | **S01.7-T07 (audit A002, `audits/A002-2026-09-24-documentation-audit.md`):** 11 findings: 1 Critical (CURRENT_STATE's next steps still listed S01.7 from T01; fixed), 2 Major (the README status line changed in T05 outside the sections this document names: restored, and proposed as R-11 with R-12 in `audits/A002-readme-proposal.md`; the register lacked the system tools that the scripts and guides use: added), 8 Minor (7 fixed, 1 accepted). Plan 1.1.3 (NFR-031 and S06.8 no longer say that Q1 is pending). The README row of section 6 now also names S01.1-T02 (License section). The audit checklist gained product-documentation checks | Audit A002 (R12) | **Needed: the user's decision on R-11/R-12 at the S01 sign-off (S01.7-T08)** |
+| 2026-09-24 | S005 | **S01 Done.** S01.7-T08: section 9 checked with evidence; section 13 (completion record) filled in. **The user signed off S01** ("Sign off S01 (Recommended)"), **accepted the throughput deviation** ("Accept, measure later (Recommended)"), and **approved README R-11 and R-12** ("Apply both (Recommended)"), which were applied (S005 E126). Plan 1.1.4 | The user's sign-off (S005 E126) | None (the stage is complete) |
 
 ## 13. Completion record
 
-- **Completed on:**
-- **What was built:**
+- **Completed on:** 2026-09-24 (session S005). Signed off by the user: "Sign off S01 (Recommended)" (S005 E126).
+- **What was built:** a storage service for the Files area, used entirely through a REST API on the same computer (`/api/v1`, spec-first from `api/openapi.yaml`).
+  - **S01.1 foundations:**
+    - the Go 1.27.1 module under the AGPL-3.0-or-later license, with a license check for dependencies;
+    - golangci-lint with depguard; tests with a coverage gate;
+    - CI on Linux and Windows: race detector, cross-builds, vulnerability and license checks, and a dev image scanned by Trivy;
+    - native and Docker development environments;
+    - layered configuration; logging to stderr and a rotated JSON file, with request IDs and an access log;
+    - RFC 9457 errors; SQLite (WAL) with goose migrations;
+    - the program (`serve`, `migrate`, `version`) with health checks.
+  - **S01.2 storage:** the layout (`files/u0001`, `photos/u0001`, `.local-ai-nas/`), internal data that can be moved, a path resolver backed by `os.Root`, a free-space reserve, health checks, and the photos area reserved (501).
+  - **S01.3 files API:**
+    - listing and details (cursor paging, four sort keys, strong ETags);
+    - folders; simple upload (atomic, synced to disk);
+    - download (ranges, conditional requests, safe headers);
+    - rename, move, and copy (checked first, atomic, times kept); delete (recursive).
+  - **S01.4 resumable uploads:** tusd v2.10.1 embedded. The target is checked when an upload is created; finishing goes through the files service (checksum, conflict policy, copy fallback). Also: the memory bound (tested at 10 GiB in CI), size limits, and hourly cleanup.
+  - **S01.5 API contract:** conventions, versioning, and the OpenAPI spec as the source of the server code. Every error is a problem, contract tests check them, and the API documentation is served offline (vendored Redoc).
+  - **S01.6 hardening:** path and name rules with an attack corpus and fuzzing; links never followed; the conflict matrix; locks with a concurrency stress test; a bind guard that allows loopback only.
+  - **S01.7 integration and review:**
+    - the integration suite over the real program (81 statuses);
+    - the attack suite; edge cases (Unicode, empty files, a 5 GiB sparse file, 100 levels, 10,000 entries);
+    - the performance baseline (`docs/perf/S01-baseline.md`);
+    - the curl guide (`docs/api/usage.md`); the demo scripts, also run in CI on Linux and Windows;
+    - audit A002.
+  - **Size:** about 7,000 lines of Go (without generated code) and 11,000 lines of tests: 254 tests, 4 fuzz targets, 1 benchmark.
 - **Deviations from plan:**
+  1. **Throughput below NFR-003's 80%**, measured over loopback on the NVMe development PC: simple upload 63% (Windows) and 79% (Linux), download 35% on Windows (130% on Linux with sendfile), tus 52–62%. Listing and memory meet their targets. **The user accepted it as recorded** ("Accept, measure later (Recommended)", S005 E126): measure on the Raspberry Pi and the mini-PC over gigabit Ethernet when they are available, and overlap receiving and writing in the simple upload if uploads fall short there.
+  2. **Reference hardware:** only the Windows 11 PC (and WSL2 on it) was measured. The Raspberry Pi and the mini-PC were not available (Q1).
+  3. **More than planned:**
+     - the demo scripts also run in CI on Windows (the plan asked for a manual Windows run, which was recorded as well);
+     - the simple-upload half of S01.4-T05 was done early, in S01.3-T05.
+  4. **Less than planned:** the 5 GiB sparse-file test runs on Linux only, because Windows allocates the whole file.
+  5. Every design detail and addition (new error codes, fixes found by the suites) is in section 12.
 - **Known issues:**
+  1. The throughput deviation above, until it is measured on the target hardware.
+  2. macOS was not run. The scripts avoid bash 4 features, and the guide covers macOS. PowerShell 7 was not run; Windows PowerShell 5.1 was.
+  3. By design until later stages:
+     - no login or HTTPS, so the server accepts loopback addresses only (S03);
+     - no photos API (501, S04);
+     - copies are synchronous and limited to 1000 items or 1 GiB (422 above; background jobs in S04.3);
+     - delete is permanent (a trash comes later).
 - **Follow-ups:**
+  1. Measure `scripts/perf-baseline.sh` on the Raspberry Pi and the mini-PC, over gigabit Ethernet as well (the user's decision above).
+  2. When login and HTTPS arrive (S03), update `docs/api/usage.md` and the demo scripts, and run them again.
+  3. Next stage: write the S02 (NAS GUI) stage document (R3) and get the user's approval before any S02 code.
 - **Final test results:**
+  - CI run 36042107504: all 12 jobs green. They cover lint and format; tests on Linux (race) and Windows; the coverage gate; vulnerabilities, licenses, and generated code; builds for linux/amd64, linux/arm64, and windows/amd64; the dev image with Trivy; the memory bound (10 GiB Linux, 1 GiB Windows); and the demo on Linux and Windows.
+  - Coverage of `internal/...` 90.7% (gate 80%). golangci-lint 0 issues on Windows and Linux.
