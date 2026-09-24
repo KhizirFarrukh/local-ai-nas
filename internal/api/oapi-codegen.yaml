@@ -1,0 +1,15 @@
+# oapi-codegen v2.8.0 configuration (ADR-0002, S01.5-T04). Generates the
+# models and a net/http strict server from api/openapi.yaml into
+# internal/api/gen. Run: go generate ./internal/api
+# yaml-language-server: $schema=https://raw.githubusercontent.com/oapi-codegen/oapi-codegen/v2.8.0/configuration-schema.json
+package: gen
+output: gen/api.gen.go
+generate:
+  models: true
+  std-http-server: true
+  strict-server: true
+output-options:
+  # The photos area answers 501 for every method and sub-path, which one
+  # hand-written catch-all route does better than a generated operation.
+  exclude-tags:
+    - photos

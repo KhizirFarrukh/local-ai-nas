@@ -1,7 +1,10 @@
 #!/usr/bin/env bash
 # Runs the tests of internal/... with coverage and fails when the total
 # statement coverage is below the threshold (S01.1-T04, docs/testing.md).
-# Writes coverage.out and prints the per-function report.
+# Generated code (internal/api/gen) is left out of the figure: it is
+# produced by oapi-codegen from the spec, and its behavior is tested
+# through internal/api. Writes coverage.out and prints the per-function
+# report.
 #
 # Usage: scripts/coverage.sh [extra go test flags, e.g. -race]
 #        COVERAGE_MIN=80 scripts/coverage.sh
@@ -11,7 +14,9 @@ min="${COVERAGE_MIN:-80}"
 
 cd "$(dirname "$0")/.."
 
-go test -covermode=atomic -coverprofile=coverage.out "$@" ./internal/...
+pkgs=$(go list ./internal/... | grep -v '/internal/api/gen$')
+# shellcheck disable=SC2086 # the package list is split on purpose
+go test -covermode=atomic -coverprofile=coverage.out "$@" $pkgs
 go tool cover -func=coverage.out
 
 total=$(go tool cover -func=coverage.out | awk '/^total:/ { sub(/%/, "", $NF); print $NF }')

@@ -1,13 +1,12 @@
-// Package health reports the health of the server and its dependencies:
-// at startup and on GET /api/v1/system/health (S01.1-T11, S01.2-T05).
+// Package health runs the health checks of the server and its
+// dependencies: at startup and for GET /api/v1/system/health, which the API
+// layer serves (S01.1-T11, S01.2-T05).
 package health
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"fmt"
-	"net/http"
 	"time"
 )
 
@@ -83,18 +82,4 @@ func Run(ctx context.Context, version string, checks []Check) Report {
 		rep.Checks = append(rep.Checks, res)
 	}
 	return rep
-}
-
-// Handler serves the report as JSON: 200 unless a check failed, then 503.
-func Handler(version string, checks ...Check) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		rep := Run(r.Context(), version, checks)
-		body, _ := json.Marshal(rep) // A Report of strings always marshals.
-		w.Header().Set("Content-Type", "application/json")
-		w.Header().Set("Cache-Control", "no-store")
-		if rep.Status == StatusFail {
-			w.WriteHeader(http.StatusServiceUnavailable)
-		}
-		_, _ = w.Write(append(body, '\n'))
-	})
 }
