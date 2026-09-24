@@ -80,7 +80,9 @@ func (s *Local) CreateFolder(ctx context.Context, owner, apiPath string, o Folde
 			if err := ensureParent(root, parent, o.Parents, apiPath); err != nil {
 				return err
 			}
+			unlock := s.lockFolder(owner, parent)
 			made, created, err := mkdirWithPolicy(root, rel, policy, apiPath)
+			unlock()
 			if err != nil {
 				return err
 			}

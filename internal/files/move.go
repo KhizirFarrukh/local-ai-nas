@@ -86,7 +86,9 @@ func (s *Local) move(ctx context.Context, op Op, owner, fromAPI, toAPI string, o
 					return err
 				}
 			}
+			unlock := s.lockFolder(owner, path.Dir(to))
 			final, err := moveWithPolicy(root, from, to, src, policy, toAPI)
+			unlock()
 			if err != nil {
 				return err
 			}

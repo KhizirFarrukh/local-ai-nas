@@ -81,7 +81,9 @@ func (s *Local) Upload(ctx context.Context, owner, apiPath string, body io.Reade
 			if err != nil {
 				return err
 			}
+			unlock := s.lockFolder(owner, dir)
 			final, created, err := commitFile(root, tmp, rel, policy, apiPath)
+			unlock()
 			if err != nil {
 				_ = root.Remove(filepath.FromSlash(tmp)) // hidden either way; best effort
 				return err
