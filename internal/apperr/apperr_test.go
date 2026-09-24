@@ -38,6 +38,8 @@ func TestKindMapping(t *testing.T) {
 		{PreconditionFailed, "precondition_failed", 412},
 		{RangeNotSatisfiable, "range_not_satisfiable", 416},
 		{TooLargeForSync, "too_large_for_sync", 422},
+		{Locked, "locked", 423},
+		{Unavailable, "unavailable", 503},
 		{Kind(999), "internal", 500}, // unknown kinds are treated as internal
 	}
 	if len(tests)-1 != len(kinds) {
@@ -57,8 +59,8 @@ func TestKindMapping(t *testing.T) {
 
 func TestKinds(t *testing.T) {
 	ks := Kinds()
-	if len(ks) != len(kinds) || ks[0] != Internal || ks[len(ks)-1] != TooLargeForSync {
-		t.Errorf("Kinds() = %v, want all %d kinds from internal to too_large_for_sync", ks, len(kinds))
+	if len(ks) != len(kinds) || ks[0] != Internal || ks[len(ks)-1] != Unavailable {
+		t.Errorf("Kinds() = %v, want all %d kinds from internal to unavailable", ks, len(kinds))
 	}
 }
 

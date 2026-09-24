@@ -134,6 +134,7 @@ const (
 	ProblemCodeInvalidName         ProblemCode = "invalid_name"
 	ProblemCodeInvalidRequest      ProblemCode = "invalid_request"
 	ProblemCodeLengthRequired      ProblemCode = "length_required"
+	ProblemCodeLocked              ProblemCode = "locked"
 	ProblemCodeMethodNotAllowed    ProblemCode = "method_not_allowed"
 	ProblemCodeNotAvailable        ProblemCode = "not_available"
 	ProblemCodeNotFound            ProblemCode = "not_found"
@@ -142,6 +143,7 @@ const (
 	ProblemCodeRangeNotSatisfiable ProblemCode = "range_not_satisfiable"
 	ProblemCodeTooLarge            ProblemCode = "too_large"
 	ProblemCodeTooLargeForSync     ProblemCode = "too_large_for_sync"
+	ProblemCodeUnavailable         ProblemCode = "unavailable"
 )
 
 // Valid indicates whether the value is a known member of the ProblemCode enum.
@@ -159,6 +161,8 @@ func (e ProblemCode) Valid() bool {
 		return true
 	case ProblemCodeLengthRequired:
 		return true
+	case ProblemCodeLocked:
+		return true
 	case ProblemCodeMethodNotAllowed:
 		return true
 	case ProblemCodeNotAvailable:
@@ -174,6 +178,8 @@ func (e ProblemCode) Valid() bool {
 	case ProblemCodeTooLarge:
 		return true
 	case ProblemCodeTooLargeForSync:
+		return true
+	case ProblemCodeUnavailable:
 		return true
 	default:
 		return false

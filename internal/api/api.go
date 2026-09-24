@@ -7,6 +7,7 @@ package api
 import (
 	"log/slog"
 	"net/http"
+	"strings"
 
 	"github.com/KhizirFarrukh/local-ai-nas/internal/api/gen"
 	"github.com/KhizirFarrukh/local-ai-nas/internal/apperr"
@@ -24,6 +25,13 @@ const DefaultMaxBodyBytes = 1 << 20
 // of the setting uploads.max_file_size.
 const DefaultMaxUploadBytes = 100 << 30
 
+// DefaultMaxChunkBytes is the default largest body of one tus request, the
+// default of the setting uploads.max_chunk_size.
+const DefaultMaxChunkBytes = 64 << 20
+
+// UploadsPath is where the tus server is mounted (S01.4).
+const UploadsPath = "/api/v1/files/uploads/"
+
 // Options configures New.
 type Options struct {
 	Logger  *slog.Logger
@@ -37,6 +45,12 @@ type Options struct {
 	// MaxUploadBytes is the largest file a simple upload accepts
 	// (uploads.max_file_size); 0 means DefaultMaxUploadBytes.
 	MaxUploadBytes int64
+	// Uploads serves the tus protocol at UploadsPath (S01.4); nil answers
+	// 501 not_available.
+	Uploads http.Handler
+	// MaxChunkBytes limits the body of one tus request
+	// (uploads.max_chunk_size); 0 means DefaultMaxChunkBytes.
+	MaxChunkBytes int64
 }
 
 // Route is one entry of the route table.
@@ -63,6 +77,15 @@ func Routes(o Options) []Route {
 	if o.MaxUploadBytes <= 0 {
 		o.MaxUploadBytes = DefaultMaxUploadBytes
 	}
+	if o.MaxChunkBytes <= 0 {
+		o.MaxChunkBytes = DefaultMaxChunkBytes
+	}
+	uploads := o.Uploads
+	if uploads == nil {
+		uploads = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			apperr.Write(w, r, o.Logger, apperr.New(apperr.NotAvailable, "resumable uploads are not set up on this server"))
+		})
+	}
 	g := generated(&server{version: o.Version, checks: o.Checks, files: o.Files, owner: storage.DefaultNamespace, log: o.Logger}, o.Logger)
 
 	// The photos area exists on disk from S01, but its API is reserved
@@ -81,6 +104,10 @@ func Routes(o Options) []Route {
 		{Pattern: "POST /api/v1/files/operations/copy", Handler: strictJSON[gen.CopyRequest](o.Logger, g.CopyItem)},
 		{Pattern: "GET /api/v1/files/content", Handler: withRequest(g.DownloadFile)},
 		{Pattern: "PUT /api/v1/files/content", Handler: declaredSize(o.MaxUploadBytes, o.Logger, g.UploadFile), MaxBody: o.MaxUploadBytes},
+		// tus is an external protocol served by tusd; the spec documents it
+		// under the uploads tag (docs/api/conventions.md).
+		{Pattern: UploadsPath, Handler: uploads, MaxBody: o.MaxChunkBytes},
+		{Pattern: strings.TrimSuffix(UploadsPath, "/"), Handler: uploads, MaxBody: o.MaxChunkBytes},
 		{Pattern: "/api/v1/photos", Handler: photos},
 		{Pattern: "/api/v1/photos/", Handler: photos},
 	}

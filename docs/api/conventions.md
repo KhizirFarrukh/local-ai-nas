@@ -113,6 +113,11 @@ Large uploads use the **tus 1.0.0** protocol at `/api/v1/files/uploads/` (S01.4)
 | `on_conflict` | `fail`, `rename`, or `overwrite`. Default `fail`. |
 | `sha256` | Optional lowercase hex SHA-256 of the whole file. The server checks it before the file appears. |
 
+- Supported tus extensions: `creation`, `creation-with-upload`, and `termination`. Deferred length (`Upload-Defer-Length`) is refused with `411 length_required`: the size is needed to check the limits and the free space first. Concatenation and downloads from the upload endpoint are not offered.
+- Each request body may be at most `uploads.max_chunk_size`; the whole upload at most `uploads.max_file_size`.
+- Errors are problems too, with the status tus defines (for example `409 conflict` for a wrong `Upload-Offset`, `412 precondition_failed` for a missing `Tus-Resumable` header, `423 locked` while another request writes the same upload). The `Tus-Resumable` and other tus headers stay on error responses.
+- Unfinished uploads are kept in the server's internal data, never in your storage area, and expire after 24 hours.
+
 ## Review checklist
 
 Every endpoint is reviewed against this list before it is merged. The table after the list records the review of each endpoint.

@@ -46,7 +46,7 @@ var attackCorpus = []string{
 // (S01.6-T02 refuses them on every OS with its own error codes, including
 // the forms with an extension such as "aux.txt", which Go's IsLocal accepts
 // since current Windows versions allow them).
-var windowsOnlyCorpus = []string{"/NUL", "/con", "/COM1", "/a/LPT1"}
+var windowsOnlyCorpus = []string{"/NUL", "/con", "/COM1", "/a/LPT1", "/ /x", "/docs./x", "/docs /x", "/a.", "/a "}
 
 func TestAttackCorpusIsLargeEnough(t *testing.T) {
 	if len(attackCorpus) < 50 {

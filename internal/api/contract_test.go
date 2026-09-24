@@ -100,6 +100,10 @@ var errorCases = []struct {
 	{http.MethodGet, "/api/v1/files/content?path=/missing.txt", http.StatusNotFound, "not_found"},
 	// PUT /api/v1/files/content: other methods (the body cases are below).
 	{http.MethodPost, "/api/v1/files/content", http.StatusMethodNotAllowed, "method_not_allowed"},
+	// The tus endpoint without a tus server: 501 (the tus protocol and its
+	// problem bodies are tested in internal/uploads).
+	{http.MethodPost, "/api/v1/files/uploads/", http.StatusNotImplemented, "not_available"},
+	{http.MethodPost, "/api/v1/files/uploads", http.StatusNotImplemented, "not_available"},
 	// The reserved photos routes, with any method.
 	{http.MethodGet, "/api/v1/photos", http.StatusNotImplemented, "not_available"},
 	{http.MethodPost, "/api/v1/photos", http.StatusNotImplemented, "not_available"},

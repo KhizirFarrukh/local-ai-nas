@@ -32,6 +32,9 @@ func FuzzAPI(f *testing.F) {
 	}
 	for _, seed := range [][3]string{
 		{"GET", "/", ""},
+		{"POST", "/api/v1/files/uploads/", ""},
+		{"PATCH", "/api/v1/files/uploads/x", "abc"},
+		{"HEAD", "/api/v1/files/uploads/../x", ""},
 		{"PATCH", "/api/v1/system/health?x=%00", "\x00"},
 		{"DELETE", "/api/v1/../etc/passwd", ""},
 		{"GET", "/api/v1/system/health/..", ""},
@@ -41,7 +44,7 @@ func FuzzAPI(f *testing.F) {
 	}
 
 	ok := health.Check{Name: "config", Run: func(context.Context) (string, error) { return "valid", nil }}
-	h := New(Options{Version: "fuzz", Checks: []health.Check{ok}, Files: testFiles(f)})
+	h := New(Options{Version: "fuzz", Checks: []health.Check{ok}, Files: testFiles(f), Uploads: testUploads(f)})
 
 	f.Fuzz(func(t *testing.T, method, target, body string) {
 		if method == "" || strings.ContainsAny(method, " \t\r\n/") || !strings.HasPrefix(target, "/") {

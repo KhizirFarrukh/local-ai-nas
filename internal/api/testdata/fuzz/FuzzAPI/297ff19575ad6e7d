@@ -1,0 +1,4 @@
+go test fuzz v1
+string("PUT")
+string("/api/v1/files/content?path=/ /0")
+string("0")

@@ -23,6 +23,14 @@ tags:
     description: The files area of the caller's storage.
   - name: photos
     description: Reserved for the photos area (stage S04).
+  - name: uploads
+    description: |
+      Resumable uploads with the tus 1.0.0 protocol (https://tus.io),
+      served by an embedded tusd. The tus protocol is external; these
+      entries document how this server uses it. Supported extensions:
+      creation, creation-with-upload, termination. The upload metadata
+      carries `target_path`, `on_conflict`, and optionally `sha256`
+      (docs/api/conventions.md).
 paths:
   /files/content:
     get:
@@ -310,6 +318,65 @@ paths:
           $ref: "#/components/responses/InternalError"
         "507":
           $ref: "#/components/responses/InsufficientStorage"
+  /files/uploads/:
+    post:
+      tags: [uploads]
+      operationId: createUpload
+      summary: Create a resumable upload (tus)
+      description: |
+        tus "creation": send `Tus-Resumable: 1.0.0`, `Upload-Length`, and
+        `Upload-Metadata` with `target_path` (required), `on_conflict`, and
+        `sha256` (base64 values, as tus defines). The answer is 201 with the
+        upload's URL in `Location`. Refusals of the metadata are problems;
+        errors of the tus protocol itself are tusd's plain-text answers.
+      responses:
+        "201":
+          description: The upload was created; `Location` is its URL.
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "411":
+          $ref: "#/components/responses/LengthRequired"
+        "413":
+          $ref: "#/components/responses/TooLarge"
+        "500":
+          $ref: "#/components/responses/InternalError"
+        "501":
+          $ref: "#/components/responses/NotAvailable"
+  /files/uploads/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+    head:
+      tags: [uploads]
+      operationId: getUploadOffset
+      summary: Get the offset of a resumable upload (tus)
+      responses:
+        "200":
+          description: "`Upload-Offset` says how many bytes the server has."
+        "404":
+          description: No such upload.
+    patch:
+      tags: [uploads]
+      operationId: appendUpload
+      summary: Send more bytes of a resumable upload (tus)
+      description: |
+        Send `Upload-Offset` and `Content-Type: application/offset+octet-stream`;
+        the body may be at most `uploads.max_chunk_size`.
+      responses:
+        "204":
+          description: The bytes were stored; `Upload-Offset` is the new offset.
+        "409":
+          description: "`Upload-Offset` does not match the server's offset."
+    delete:
+      tags: [uploads]
+      operationId: terminateUpload
+      summary: Cancel a resumable upload (tus termination)
+      responses:
+        "204":
+          description: The upload and its data were removed.
   /files/items:
     get:
       tags: [files]
@@ -596,6 +663,8 @@ components:
             - precondition_failed
             - range_not_satisfiable
             - too_large_for_sync
+            - locked
+            - unavailable
         rule:
           type: string
           description: The exact rule that was broken, for some codes (for example `reserved_name` for `invalid_name`).

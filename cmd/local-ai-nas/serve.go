@@ -19,6 +19,7 @@ import (
 	"github.com/KhizirFarrukh/local-ai-nas/internal/health"
 	"github.com/KhizirFarrukh/local-ai-nas/internal/logging"
 	"github.com/KhizirFarrukh/local-ai-nas/internal/storage"
+	"github.com/KhizirFarrukh/local-ai-nas/internal/uploads"
 )
 
 // maxHeaderBytes limits request headers. Body limits are set by the API
@@ -123,6 +124,18 @@ func cmdServe(ctx context.Context, args []string, stderr io.Writer) int {
 	}
 	logStartupChecks(ctx, log, checks)
 
+	tus, err := uploads.New(uploads.Options{
+		Dir:       a.layout.TmpUploads,
+		DB:        a.db,
+		Namespace: storage.DefaultNamespace,
+		BasePath:  api.UploadsPath,
+		MaxSize:   int64(a.cfg.Uploads.MaxFileSize),
+		Logger:    log,
+	})
+	if err != nil {
+		log.Error("cannot start the upload server", "error", err.Error())
+		return exitError
+	}
 	srv := &http.Server{
 		Handler: api.New(api.Options{
 			Logger:  log,
@@ -134,6 +147,8 @@ func cmdServe(ctx context.Context, args []string, stderr io.Writer) int {
 			}),
 			// The simple upload has the same file size limit as tus.
 			MaxUploadBytes: int64(a.cfg.Uploads.MaxFileSize),
+			Uploads:        tus,
+			MaxChunkBytes:  int64(a.cfg.Uploads.MaxChunkSize),
 		}),
 		ReadHeaderTimeout: a.cfg.Server.ReadHeaderTimeout.Duration,
 		IdleTimeout:       a.cfg.Server.IdleTimeout.Duration,
