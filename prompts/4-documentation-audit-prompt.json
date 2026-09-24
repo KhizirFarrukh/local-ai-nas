@@ -1,0 +1,244 @@
+{
+  "prompt_meta": {
+    "name": "local-ai-nas: Documentation Audit (Request #4)",
+    "prompt_version": "1.0",
+    "type": "Documentation audit. Any resulting plan edits are handled under code-agent-docs/RULES.md R4.",
+    "how_to_read_this": "Read this entire prompt before acting. Every field is an instruction. The goal is to find everything in the documentation that is missing, incomplete, inconsistent, stale, or unfinished, fix what you are allowed to fix, and bring everything else to the user as clear decisions."
+  },
+
+  "before_you_start": [
+    "Run the full session start protocol from code-agent-docs/RULES.md (R1). Note anything confusing, missing, or slow about the startup itself: that is audit evidence too.",
+    "Save this entire prompt, unchanged, to code-agent-docs/prompts/P004-documentation-audit.json. In the session log, record the USER entry as: 'Documentation audit request #4, archived verbatim at code-agent-docs/prompts/P004-documentation-audit.json'.",
+    "In CURRENT_STATE.md under 'In progress', write: 'Documentation audit A001 (P004): in progress, findings recorded in code-agent-docs/audits/A001-<date>-documentation-audit.md'."
+  ],
+
+  "objective": "Audit every piece of project documentation against every instruction given so far (the bootstrap prompt, P002, P003, and the README), and against itself for consistency. Record every finding in an audit report, fix the findings that are safe to fix, prepare clear proposals for the findings that need the user's decision, make the audit repeatable for the future, then report to the user and stop.",
+
+  "out_of_scope": [
+    "Writing application source code or starting any stage",
+    "Adding new features, requirements, or scope",
+    "Changing any decision: Accepted ADRs, user-defined stages, invariants, or the meaning of any requirement",
+    "Editing README.md directly (see readme_policy)",
+    "Rewriting or deleting past session log entries (R2: logs are append-only)"
+  ],
+
+  "sources_of_truth": {
+    "note": "Audit against these, in this order of authority.",
+    "sources": [
+      "The user's recorded instructions: code-agent-docs/bootstrap/initial-prompt.json, code-agent-docs/prompts/P002-staged-development-roadmap.json, code-agent-docs/prompts/P003-technology-stack.json, and any verbatim USER entries in session logs",
+      "README.md (the project vision)",
+      "code-agent-docs/RULES.md",
+      "code-agent-docs/plan.md",
+      "ADRs, stage documents, and the dependency register",
+      "Git history (git log, git show) as evidence of what actually happened"
+    ]
+  },
+
+  "fix_policy": {
+    "fix_directly": {
+      "description": "Safe to fix without asking, because the correct result is already decided or unambiguous. Every fix is logged and linked to its finding ID.",
+      "examples": [
+        "A file, folder, section, or template that a previous prompt required, where that prompt fully specified its content",
+        "Broken links and wrong file paths",
+        "Numbering, ID, version, or cross-reference mismatches where the correct value is unambiguous",
+        "A required section that is missing but can be filled entirely from decisions already recorded elsewhere",
+        "A stale CURRENT_STATE.md",
+        "The dependency register out of sync with the ADRs",
+        "Missing RULES.md changelog entries for changes that were approved, citing the prompt that approved them",
+        "A missing archived plan version that can be recovered exactly from git history (git show <commit>:code-agent-docs/plan.md)",
+        "Formatting, typos, and unclear wording that does not change meaning"
+      ]
+    },
+    "needs_user_decision": {
+      "description": "Do not change these. Record the finding, describe the options, give your recommendation, and list it in your report.",
+      "examples": [
+        "Anything that would change scope, requirements, stage content, invariants, or an Accepted ADR",
+        "Conflicts between documents where it is not clear which one is correct",
+        "Rule changes other than the pre-approved ones in this prompt",
+        "README.md changes",
+        "Any missing approval record"
+      ]
+    },
+    "never": [
+      "Never invent history. If something cannot be reconstructed from files or git, record it as 'Unknown' rather than guessing.",
+      "Never create or backfill an approval record the user did not give. Mark it 'Approval not recorded' and ask.",
+      "Never edit past session log entries. Add a new entry in the current session log that references the old one, or append a clearly labelled retroactive note at the end of the old log (e.g. 'Retroactive note added during audit A001: this session has no closing summary').",
+      "Never mark something verified that you did not actually verify."
+    ]
+  },
+
+  "audit_checks": {
+    "note": "Work through every group. For each check, record either 'Pass' or one or more findings. Record findings in the audit report as you go, not at the end, so an interrupted audit keeps its progress.",
+
+    "A_structure": [
+      "Every expected folder exists: stages/, decisions/, logs/sessions/, archive/plan-history/, archive/sessions/, templates/, bootstrap/, prompts/.",
+      "Every expected file exists: RULES.md, CURRENT_STATE.md, plan.md, dependencies.md, the three templates (stage with substages, session log, ADR), bootstrap/initial-prompt.json, prompts/P002 and P003.",
+      "Root files exist: README.md, AGENTS.md, and the editor-native pointer file if one was created.",
+      "No unexpected or orphaned files. Every file is listed in the RULES.md documentation map, or the map is missing an entry.",
+      "archive/plan-history/ contains every superseded plan version, with no gaps between the versions listed in the plan's revision history."
+    ],
+
+    "B_prompt_fulfillment": [
+      "For the bootstrap prompt, P002, and P003: go through every item in definition_of_done, every execution step, and every pre-approved change. Mark each one Done, Partial, or Missing, with evidence (a file path, section, or commit).",
+      "Every archived prompt is valid JSON and appears complete (not truncated).",
+      "Every prompt is recorded as a USER entry in a session log."
+    ],
+
+    "C_rules_and_pointers": [
+      "RULES.md contains rules R1 to R11 fully written out, with no rule summarized away compared to the bootstrap prompt's operating_rules.",
+      "RULES.md includes the P002 changes (three-level hierarchy in R3, pre-1.0 versioning in R4, the Project invariants section) and the P003 changes (invariant I9, the dependency register in the documentation map, the R6 addition).",
+      "RULES.md has these sections: quick start, documentation map, pointer files, User Preferences, changelog.",
+      "Every RULES.md changelog entry cites the prompt or user message that approved it.",
+      "The User Preferences section records the commit preference. If the user was asked but never answered, that is an open finding.",
+      "No two rules contradict each other.",
+      "AGENTS.md (and any editor-native pointer file) is short, points to the correct paths, and gives the correct reading order."
+    ],
+
+    "D_plan": [
+      "The header version matches the latest revision history entry, and every previous version is archived.",
+      "Every required section is present and non-empty: overview, goals and non-goals, requirements, assumptions, open questions, architecture, chosen technology stack, key technical concerns, methodology, stage roadmap, MVP, testing strategy, risks, revision history, cross-cutting principles, project invariants, not-scheduled candidates.",
+      "All 12 stages are present, in order, with S12 (AI) last.",
+      "Every substage listed in P002 is present, and each has all required fields: goal, scope, key deliverables, depends on, requirement IDs, acceptance criteria, risks or notes, status.",
+      "Every stage ends with a testing and review substage.",
+      "Requirement traceability: every FR and NFR maps to at least one substage; every requirement ID referenced by a substage exists; no duplicate IDs; deprecated requirements are marked, not deleted.",
+      "Dependencies: every 'depends on' points to an existing substage; there are no circular dependencies; no substage depends on a substage in a later stage.",
+      "Open questions: answered ones cite where they were answered; unanswered ones name the stage or substage they block; none were silently answered without a user decision.",
+      "Invariants I1 to I9 are worded identically in plan.md and RULES.md.",
+      "The chosen-stack table matches the ADRs' current statuses and links."
+    ],
+
+    "E_readme_alignment": [
+      "Every feature and behavior described in README.md is covered by at least one requirement in plan.md: NAS storage, photo management, sidecar JSON, opt-in local AI, auto-classification, face grouping with multiple faces per photo, classifications stored in sidecars, search fields, fuzzy and synonym search, typo tolerance, search operators, privacy principles, deployment plans.",
+      "List where README.md is now out of date compared with approved decisions (e.g. the two-area files and photos design, multi-user and sharing, the technology stack, the roadmap, the operator list). These become README proposals per readme_policy, not direct edits."
+    ],
+
+    "F_adrs": [
+      "ADR numbering is sequential with no gaps or duplicates, and file names match titles.",
+      "Every ADR has every section of the ADR template.",
+      "Every status is valid (Proposed, Accepted, Superseded, Rejected) and matches what P003 specified for that decision.",
+      "Every Accepted ADR has an approval record citing the approving prompt or user message.",
+      "Superseded ADRs link both ways to their replacement.",
+      "Every ADR is linked from plan.md and, where it involves a dependency, from the dependency register.",
+      "Every item still marked 'Unverified' gets another verification attempt now. Record the result."
+    ],
+
+    "G_dependency_register": [
+      "Every dependency, external tool, dataset, and model named in plan.md or any ADR is in the register, and nothing in the register is missing from them.",
+      "Versions and licenses match the ADRs.",
+      "Every row has a verification status.",
+      "License items that need the user's attention are flagged."
+    ],
+
+    "H_stage_documents": [
+      "Only S01 has a stage document (just-in-time rule). If others exist, check their status and flag them.",
+      "The S01 document covers all seven S01 substages, with tasks numbered S01.x-Tyy, each with acceptance criteria.",
+      "It contains every section required by R3, including the approval record section (empty if not yet approved).",
+      "No placeholders remain (see K_cross_document_consistency for the search terms).",
+      "Every dependency it lists has an ADR link and a dependency register entry.",
+      "Its status is correct and consistent with CURRENT_STATE.md."
+    ],
+
+    "I_current_state": [
+      "Every field matches reality: plan version, phase, active stage and task, last completed action, next steps, blockers, open questions, pointer paths.",
+      "No stale 'In progress' entries from earlier work. A leftover one means an action was interrupted: investigate it and record what you find.",
+      "The file is under about 150 lines.",
+      "The first 'Next steps' item is concrete enough for a fresh agent to act on immediately."
+    ],
+
+    "J_session_logs_and_git": [
+      "Session numbers are sequential with no gaps.",
+      "Every log has a startup section, entries, and a closing summary. The current session is exempt until it ends.",
+      "Compare git history with the logs. Every commit touching code-agent-docs/ or the root docs should correspond to a logged action. Record unlogged commits in a reconciliation entry in the current session log.",
+      "Check git status: every documentation change is committed per the recorded preference, and commit messages follow R7.",
+      "The log archiving rule (R9, more than 20 logs) is applied if it has been triggered."
+    ],
+
+    "K_cross_document_consistency": [
+      "Stage, substage, task, requirement, ADR, and invariant IDs are identical everywhere they appear.",
+      "Terminology is consistent: 'files area' and 'photos area', the sidecar naming convention (IMG_0001.jpg.json), operator names, component names.",
+      "All relative links and paths in all Markdown files resolve.",
+      "Search all documentation for leftover placeholders and unfinished markers: TODO, TBD, FIXME, XXX, 'to be confirmed', 'placeholder', angle-bracket placeholders like <date>, and empty sections. Each one found is either resolved or recorded as a finding.",
+      "Dates are consistent and plausible across logs, the plan's revision history, ADRs, and changelogs."
+    ],
+
+    "L_resumability_test": [
+      "Act as a brand-new agent instance with no chat history. Read only AGENTS.md, then follow the R1 reading order.",
+      "Answer in the audit report, using only what the documents say: What is this project? What stage and task are active? What was the last completed action? What exactly is the next action? What is waiting on the user? What rules must I follow?",
+      "Any question that cannot be answered clearly and correctly from the documents is a Critical finding."
+    ]
+  },
+
+  "severity_levels": {
+    "Critical": "Would make a fresh agent resume incorrectly, break an invariant, or misrepresent an approval. Examples: wrong next step in CURRENT_STATE.md, a missing rule, a missing pointer file, an approval that was never given.",
+    "Major": "A required deliverable or section is missing, traceability is broken, or IDs, versions, or statuses are inconsistent.",
+    "Minor": "Formatting, typos, or wording that does not change meaning."
+  },
+
+  "audit_report": {
+    "path": "code-agent-docs/audits/A001-<YYYY-MM-DD>-documentation-audit.md",
+    "sections": [
+      "Header: audit ID, date, session number, trigger (P004), plan version at start and at end",
+      "Scope: the files and sources audited",
+      "Summary: finding counts by severity and by outcome (Fixed, Needs user decision, Deferred)",
+      "Check results: every check group (A to L), with 'Pass' or finding IDs",
+      "Findings table: ID (F-001, ...), severity, check group, location (file and section), description, outcome, fix reference (commit or session log entry) or decision options with a recommendation",
+      "Prompt fulfillment matrix: every definition_of_done item from the bootstrap prompt, P002, and P003, with Done, Partial, or Missing and evidence",
+      "Resumability test: the questions and the answers found in the documents",
+      "Decisions needed from the user: a numbered list with options and recommendations",
+      "Closing: what the next audit should pay special attention to"
+    ]
+  },
+
+  "readme_policy": {
+    "rule": "README.md is the project vision and the public face of the repository, so it is not edited in this audit.",
+    "instead": [
+      "Write the proposed changes to code-agent-docs/audits/A001-readme-proposal.md: for each change, the current text, the proposed text, and the reason, citing the ADR, prompt, or plan section it is based on.",
+      "Only propose changes based on decisions that are already approved (e.g. Accepted ADRs). Do not put draft or unapproved plan content into the README proposal.",
+      "Mention the proposal in your report. The user will approve, edit, or reject it."
+    ]
+  },
+
+  "pre_approved_changes": {
+    "note": "The user approves these through this prompt. Record each in the RULES.md changelog, citing P004.",
+    "changes": [
+      "Add the folder code-agent-docs/audits/ to the documentation map in RULES.md.",
+      "Save the audit checklist as a reusable template at code-agent-docs/templates/audit-checklist.md. It contains check groups A to L, the severity levels, the fix policy, and the report structure, written generally enough to be reused for future audits. Update it whenever new document types or rules are added.",
+      "Add rule R12 (Documentation audits) to RULES.md: 'Run a documentation audit using code-agent-docs/templates/audit-checklist.md as part of every stage's final review substage, and whenever the user asks. Audits are numbered sequentially (A001, A002, ...) and reported in code-agent-docs/audits/. Critical findings must be fixed or escalated to the user before the stage can be marked Done.'",
+      "Add the audit step to the stage template's final testing and review substage."
+    ]
+  },
+
+  "plan_versioning": "If the audit changes plan.md, archive the current version first and make a single PATCH version bump for the whole audit (e.g. 0.3.0 to 0.3.1), with a revision history entry referencing A001 and P004.",
+
+  "execution_steps": [
+    { "step": 1, "action": "Run R1, archive this prompt, log it, and write the in-progress entry.", "details": "See before_you_start." },
+    { "step": 2, "action": "Create the audit report file.", "details": "Create the report at audit_report.path with its headings, so findings can be added as you go." },
+    { "step": 3, "action": "Inventory.", "details": "List every file in code-agent-docs/ and the root documentation files, run git log and git status, and record the inventory in the audit report." },
+    { "step": 4, "action": "Run every check group, A to L, in order.", "details": "Record results and findings in the audit report continuously. Log progress in the session log after each group." },
+    { "step": 5, "action": "Classify findings.", "details": "Give each finding a severity and an outcome under fix_policy." },
+    { "step": 6, "action": "Archive plan.md if it will change.", "details": "Follow plan_versioning." },
+    { "step": 7, "action": "Apply the direct fixes.", "details": "Fix Critical findings first, then Major, then Minor. Log each fix with its finding ID and update the finding's outcome in the report." },
+    { "step": 8, "action": "Prepare decisions.", "details": "For each 'needs user decision' finding, write the options and your recommendation in the report. Write the README proposal per readme_policy." },
+    { "step": 9, "action": "Apply the pre-approved changes.", "details": "See pre_approved_changes." },
+    { "step": 10, "action": "Re-check.", "details": "Re-run the relevant checks on every file you changed, and run the resumability test (group L) again. Record the final results." },
+    { "step": 11, "action": "Update CURRENT_STATE.md.", "details": "Remove the in-progress entry. Record the audit as the last completed action. Put the user's decisions from the audit at the top of 'Next steps'." },
+    { "step": 12, "action": "Git.", "details": "Commit according to the recorded preference, e.g. 'docs(audit): documentation audit A001 with fixes [P004]'. If no preference is recorded, ask." },
+    { "step": 13, "action": "Report to the user and stop.", "details": "Keep it concise: (a) finding counts by severity and outcome; (b) a short summary of what was fixed; (c) the numbered decisions needed, with your recommendations, Critical ones first; (d) a one-paragraph summary of the README proposal; (e) the resumability test result; (f) the path to the full audit report. Log this and close the session log with a summary." }
+  ],
+
+  "definition_of_done": [
+    "This prompt is archived at code-agent-docs/prompts/P004-documentation-audit.json.",
+    "The audit report exists with every section filled, including results for all check groups A to L.",
+    "Every finding has a severity and an outcome. Every direct fix is applied, logged, and linked to its finding.",
+    "No Critical finding remains unaddressed: each one is fixed or listed as a decision for the user.",
+    "The README proposal exists if README.md is out of date; README.md itself is unchanged.",
+    "The audit checklist template exists, R12 is in RULES.md, the stage template includes the audit step, and the changelog entries cite P004.",
+    "If plan.md changed: the previous version is archived, and the version and revision history are updated.",
+    "The resumability test passes, or its failures are listed as findings.",
+    "CURRENT_STATE.md and the session log are current, and the session log has a closing summary.",
+    "No application code was written, and no decision, scope, or past log entry was changed.",
+    "The user has received the report described in step 13."
+  ],
+
+  "final_instruction": "Begin with the R1 startup protocol. Work through the execution steps in order, recording findings as you go. When everything in definition_of_done is complete, report to the user and stop."
+}

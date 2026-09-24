@@ -2,11 +2,11 @@
 
 | Field | Value |
 |---|---|
-| **Version** | 0.4.0 |
+| **Version** | 0.3.1 |
 | **Status** | Draft, awaiting user review |
 | **Last updated** | 2026-09-24 (session S004) |
 | **Source of vision** | `README.md` (repository root), the user's staged roadmap (`code-agent-docs/prompts/P002-staged-development-roadmap.json`), and the user's technology stack (`code-agent-docs/prompts/P003-technology-stack.json`) |
-| **Previous version** | 0.3.1, archived at `code-agent-docs/archive/plan-history/plan_v0.3.1.md` (0.1.0–0.3.0 also archived there) |
+| **Previous version** | 0.3.0, archived at `code-agent-docs/archive/plan-history/plan_v0.3.0.md` (0.1.0 and 0.2.0 also archived there) |
 
 > **This is a living document.** It changes as the user gives feedback. Every change follows `code-agent-docs/RULES.md` **R4**: the old version is archived, the version is bumped, and a revision entry is added. While the plan is a pre-1.0 draft, restructurings bump the MINOR version. **When the user approves this plan as the baseline, it becomes version 1.0.0.**
 >
@@ -41,7 +41,7 @@
 **local-ai-nas** is a self-hosted NAS. It runs on the user's own hardware and serves files to devices on the local network. It is built around a **two-area design**. The storage root holds exactly two user-data areas:
 
 - **`files/`**: a general-purpose file store (documents, archives, anything), managed like a classic NAS.
-- **`photos/`**: a separate photo and video library with Google Photos–style management: timeline, albums, viewer, video streaming with live quality switching, place names, and later AI tagging and face groups.
+- **`photos/`**: a separate photo and video library with Google Photos–style management: timeline, albums, viewer, place names, and later AI tagging and face groups.
 
 The areas never intersect. Content moves between them only when the user explicitly copies or moves it (invariant I1). Internal application data (database, search index, thumbnails, trash, configuration) lives outside both areas (I2).
 
@@ -75,7 +75,7 @@ The system grows into a **multi-user** NAS: each user has private files and phot
 ### Goals
 - **G1:** A reliable NAS with a storage root containing two separate user-data areas, `files/` and `photos/`. It is managed first through a versioned API (S01), then through a GUI (S02).
 - **G2:** Security suitable for a home LAN: authentication, HTTPS, hardening, audit trail, localhost-only until secure (S03).
-- **G3:** A photo library comparable to the core of Google Photos: timeline, albums, viewer, favorites, video playback with live quality switching, and explicit transfer to and from `files/` (S04).
+- **G3:** A photo library comparable to the core of Google Photos: timeline, albums, viewer, favorites, and explicit transfer to and from `files/` (S04).
 - **G4:** Portable, human-readable, versioned sidecar metadata per photo that stays correct through every operation (S05).
 - **G5:** Fast, forgiving search across both areas, with word forms, synonyms, typo tolerance, and operators (S06).
 - **G6:** Multiple users with private data by default and explicit sharing, enforced on every access path (S07).
@@ -88,7 +88,7 @@ The system grows into a **multi-user** NAS: each user has private files and phot
 - **NG1:** Cloud sync, cloud backup, or any hosted/SaaS component.
 - **NG2:** Native mobile apps and automatic phone backup. Listed as a not-scheduled candidate (11a).
 - **NG3:** Photo editing, and writing metadata back into original media files (Q19).
-- **NG4:** _Changed in 0.4.0:_ video transcoding **for streaming quality levels** is now in scope (S04.8, ADR-0020, the user's request in S004). Re-encoding or converting the original files remains out of scope, because originals are never modified.
+- **NG4:** Video transcoding. Only browser-playable formats play inline.
 - **NG5:** Remote access from outside the LAN and public share links. Both are not-scheduled candidates (11a).
 - **NG6:** _Withdrawn in 0.2.0._ The v0.1.0 non-goal "no app-provided SMB/WebDAV" is reversed by stage S09.
 - **NG7:** Running AI at search time, and any cloud AI API.
@@ -195,7 +195,7 @@ Priorities: **Must** (required for its stage to be Done), **Should** (important;
 | FR-016 | Albums as virtual collections that reference items and never duplicate files. | Must | Reworded in 0.2.0. |
 | FR-017 | Supported image formats: JPEG, PNG, WebP, GIF. | Must | |
 | FR-018 | HEIC/HEIF images. | Should | Pending Q26. |
-| FR-019 | Videos in the photos area: catalog, metadata, poster frame, and playback (HLS streaming with live quality switching, FR-144). | Must | Priority Should → Must and text updated in 0.4.0 (the user's request, S004 E005). |
+| FR-019 | Videos in the photos area: catalog, metadata, poster frame, inline playback of browser-compatible formats. | Should | Pending Q26. |
 | FR-020 | RAW image formats. | Could | Pending Q26. |
 | FR-021 | Multi-select and bulk actions (add to album, transfer, download, delete). | Should | |
 | FR-022 | Duplicate detection by content hash at ingest. | Must | Priority Could → Must in 0.2.0 (P002 S04.2). |
@@ -206,11 +206,6 @@ Priorities: **Must** (required for its stage to be Done), **Should** (important;
 | FR-096 | Favorites, and hiding or archiving items. | Must | New. |
 | FR-097 | **Explicit cross-area transfer**: copy and move between `files/` and `photos/`, in both directions, only on explicit user action. Only media may enter `photos/`. Conflicts are handled, and every transfer is audit-logged. | Must | New. |
 | FR-143 | Server-side import of an existing collection from a folder on the host into the photos or files area. | Should | New (planner-added). Pending Q39. |
-| FR-144 | **Video playback with a live quality selector**: Auto, Original (when the browser can play it), and 1080p, 720p, 480p, 360p up to the source resolution. The quality can be switched during playback without restarting (HLS). | Must | New in 0.4.0 (the user's request, S004; ADR-0020). |
-| FR-145 | **On-demand transcoding with cache**: a lower level is transcoded the first time it is requested, served while it is being produced, and cached in internal data with a configurable size cap and LRU eviction. The original quality streams without transcoding. | Must | New in 0.4.0 (the user's choice "Hybrid: on-demand + cache"). |
-| FR-146 | **Auto quality** adapts to network throughput (adaptive bitrate). | Must | New in 0.4.0 (the user's choice "Manual + Auto"). |
-| FR-147 | Quality-selectable playback in **both** the photos lightbox and the files-area video preview. | Must | New in 0.4.0 (the user's choice "Photos + files previews"). |
-| FR-148 | Hardware-accelerated encoding when available, with CPU fallback. Admin-configurable transcoding limits (concurrent sessions, maximum level). | Should | New in 0.4.0 (ADR-0020). |
 
 #### Sidecar metadata (S05)
 
@@ -364,7 +359,6 @@ Priorities: **Must** (required for its stage to be Done), **Should** (important;
 | NFR-028 | **AI quality and throughput**: a labelled evaluation set with accuracy targets, and CPU-only throughput benchmarks. | Must | New. |
 | NFR-029 | **License policy**: every dependency, external tool, dataset, and AI model has a license that allows **anyone to deploy and use** the project. Nothing is restricted to non-commercial or research-only use. Each is recorded in `dependencies.md` with its license. | Must | New in 0.3.0 (P003). |
 | NFR-030 | **Multi-architecture**: the core and its images build and run on **linux/amd64 and linux/arm64** (e.g. Raspberry Pi), via pure-Go builds and multi-arch container images. | Must | New in 0.3.0 (P003). |
-| NFR-031 | **Streaming start-up and resource bounds** (targets to confirm with Q1). A newly requested level starts playing within ≤ 4 s with a hardware encoder, or ≤ 8 s for 720p on CPU-only reference hardware. Transcoding never starves the core: sessions are bounded, and interactive API latency stays within NFR-003. | Should | New in 0.4.0 (ADR-0020). |
 
 ---
 
@@ -392,7 +386,6 @@ Assumptions are numbered permanently. Ones overturned by the 0.2.0 design are ma
 - **A18:** The storage root, including internal temp uploads and trash, sits on a single filesystem, so atomic renames work between them. Multi-disk setups are pooled by the host OS (NG8). The startup health check verifies this.
 - **A19:** Internal app data defaults to `<storage root>/.local-ai-nas/`, with an optional separate location for the database, index, and caches (ADR-0003, Proposed). The configuration file lives outside the storage root, because it is what tells the app where the root is.
 - **A20:** Within a stage, the task execution order may differ from substage numbering when dependencies require it. The stage document records the order.
-- **A21:** The target browsers play HLS natively or through Media Source Extensions / ManagedMediaSource (hls.js). Where only native HLS is available, the quality menu offers Auto only (ADR-0020).
 
 ---
 
@@ -423,7 +416,7 @@ Questions keep their numbers permanently. **★ = needed for S01**: Q22 before S
 ### New in 0.2.0
 
 25. _Answered (P003, ADR-0009):_ a web UI served by the NAS, built with SvelteKit (static SPA) and embedded in the Go binary. No desktop app.
-26. **Photos area content.** _Partly answered (S004 E005/E008):_ **videos are included**, with streaming and live quality switching (FR-144–FR-148). **Still open:** which image formats must be supported (HEIC, RAW)? _Needed by: S04.1._ _Recommendation: JPEG/PNG/WebP/GIF + HEIC; RAW later._
+26. **Photos area content.** Does it include videos? Which image formats must be supported (HEIC, RAW)? _Needed by: S04.1._ _Recommendation: JPEG/PNG/WebP/GIF + HEIC + browser-playable video; RAW later._
 27. **Photo moved from `photos/` to `files/`.** What happens to its sidecar: delete it, keep it, or keep it hidden? _Needed by: S04.6, S05.6._ _Recommendation: move the sidecar into internal app data, keyed by content hash, so moving the photo back restores its metadata, and `files/` stays clean._
 28. **Ownership and access data for the files area.** A visible sidecar per file, a hidden sidecar, or a central store? _Needed by: S07.3._ _Recommendation (per your stated approach): a hidden sidecar only for items that are actually shared, with the owner implied by the user's namespace for everything else. Full trade-offs in section 8.8._
 29. **Admin visibility.** Can the admin see all users' files and photos, or only manage accounts? _Needed by: S07.1._ _Recommendation: only manage accounts (privacy by default)._
@@ -458,7 +451,7 @@ Questions keep their numbers permanently. **★ = needed for S01**: Q22 before S
 15. **Languages** for search, synonyms, and taxonomy: English only, or Urdu too? _Needed by: S06.5, S12.3._
 16. _Answered by implication of P003 (NFR-029, ADR-0018):_ only models whose licenses let anyone deploy and use the project. **InsightFace pretrained weights are excluded.** YuNet (MIT) + SFace (Apache-2.0) are chosen.
 17. _Superseded by Q38._
-18. ★ **Library size**: current and expected number of photos, files, and GB? _Needed by: S01.7 baseline, S04.9, S06.8 targets._
+18. ★ **Library size**: current and expected number of photos, files, and GB? _Needed by: S01.7 baseline, S04.8, S06.8 targets._
 19. **Writing into originals / XMP export**: never write originals (**recommended**); XMP export later? _Needed by: S05._
 20. _Superseded by Q32._
 21. _Superseded by Q37._
@@ -492,7 +485,6 @@ Questions keep their numbers permanently. **★ = needed for S01**: Q22 before S
 | **Metadata extractor and geocoder** | S05.3–S05.4 | EXIF/XMP/IPTC and video metadata. Offline reverse geocoding. |
 | **Job system** | S04.3 | Persistent queue and workers used by thumbnails, extraction, indexing, integrity, backups, watcher, and AI. |
 | **Thumbnail service** | S04.4 | Renditions and poster frames in internal app data. |
-| **Video streaming service** | S04.8 | HLS playlists and segments, on-demand transcoding sessions (FFmpeg), transcode cache with LRU eviction, hardware-encoder detection (ADR-0020). |
 | **Search indexer and query engine** | S06 | Index of both areas with reserved owner, ACL, AI, and face fields. Parser, fuzzy matching, synonyms, ranking, permission filter. |
 | **Audit log** | S03.6 | Append-only security, transfer, and sharing events. |
 | **Reconciler and watcher** | S05.7 / S09.4 | Periodic scan plus real-time watcher for changes made outside the app. |
@@ -523,7 +515,6 @@ flowchart TB
         SIDE["Sidecar manager: single writer, I9 (S05)"]
         JOBS["Job queue on SQLite (ADR-0011)"]
         MEDIA["Media runner: ExifTool stay_open, vips, ffmpeg (ADR-0012)"]
-        STREAM["Video streaming: HLS on-demand transcoder + cache (ADR-0020)"]
         GEO["GeoNames k-d tree (ADR-0013)"]
         BLEVE["Bleve index + query parser (ADR-0014)"]
         DAV["WebDAV: x/net/webdav custom FileSystem (ADR-0015)"]
@@ -557,9 +548,6 @@ flowchart TB
     POLICY --> PHOTOSSVC
     POLICY --> XFER
     POLICY --> BLEVE
-    POLICY --> STREAM
-    STREAM --> TOOLS
-    STREAM --> INTERNAL
     TUS -->|"finalize: atomic rename"| FILESSVC
     TUS --> PHOTOSSVC
     XFER --> FILESSVC
@@ -599,7 +587,6 @@ flowchart TB
     ├── db/nas.db                     SQLite (WAL) internal database, from S01 (ADR-0007)
     ├── index/                        Bleve search index (S06, ADR-0014)
     ├── thumbnails/                   renditions keyed by content hash (S04.4)
-    ├── transcode-cache/              HLS quality levels, created on demand, size-capped with LRU eviction (S04.8, ADR-0020)
     ├── metadata/                     albums, face-group registry, transferred-out sidecars (Q13, Q27)
     ├── ai/                           models, embeddings (S12)
     └── logs/                         application log files, if file logging is enabled (open decision, audit A001 F-014); the audit log lives in SQLite (ADR-0007)
@@ -645,8 +632,7 @@ Configuration file: outside the storage root (CLI flag / env var / OS default pa
 | Web UI | SvelteKit 2 (Svelte 5) static SPA via adapter-static, TypeScript, Tailwind CSS 4; embedded with `go:embed`; pnpm; @tanstack/svelte-virtual | [ADR-0009](decisions/ADR-0009-web-ui-sveltekit.md) | Accepted |
 | Security | Argon2id (x/crypto, t=3, m=64 MiB, p=4); server-side sessions in SQLite; opaque HttpOnly/Secure/SameSite cookie; CSRF tokens; TOTP via pquerna/otp if S03.7 approved; `crypto/tls` | [ADR-0010](decisions/ADR-0010-security-building-blocks.md) | Accepted |
 | Background jobs | Custom persistent queue on SQLite inside the core (leases, retries with backoff, priorities, per-type limits, progress) | [ADR-0011](decisions/ADR-0011-job-queue-sqlite.md) | Accepted |
-| Media toolchain | ExifTool (stay_open, custom Go wrapper), libvips + libheif (WebP thumbnails), FFmpeg/ffprobe, all as subprocesses | [ADR-0012](decisions/ADR-0012-media-toolchain.md) | Accepted (RAW conversion deferred; transcoding deferral superseded in part by ADR-0020) |
-| Video streaming | HLS with a manual quality menu + Auto (hls.js 1.7.3); hybrid on-demand transcoding (FFmpeg, H.264/AAC, hardware encoder when present) with a size-capped cache; photos lightbox and files previews | [ADR-0020](decisions/ADR-0020-video-streaming-quality-levels.md) | Accepted (user decision S004; details confirmed in the S04 stage document) |
+| Media toolchain | ExifTool (stay_open, custom Go wrapper), libvips + libheif (WebP thumbnails), FFmpeg/ffprobe, all as subprocesses | [ADR-0012](decisions/ADR-0012-media-toolchain.md) | Accepted (RAW conversion, transcoding deferred) |
 | Reverse geocoding | GeoNames `cities500` + admin1/country tables, custom in-memory k-d tree, bundled at build time; CC BY 4.0 attribution | [ADR-0013](decisions/ADR-0013-reverse-geocoding-geonames.md) | Accepted |
 | Search | Bleve v2.6.1 embedded; English analyzers + fuzzy/prefix; own operator parser → range/term queries; owner/ACL keyword filters; query-time synonyms from own dictionary | [ADR-0014](decisions/ADR-0014-search-engine-bleve.md) | Accepted (fallback: new ADR if S06.8 misses targets) |
 | Network shares | WebDAV via `golang.org/x/net/webdav` with a custom FileSystem through policy, areas, and sidecars | [ADR-0015](decisions/ADR-0015-network-shares-webdav.md) | Accepted |
@@ -658,7 +644,7 @@ Configuration file: outside the storage root (CLI flag / env var / OS default pa
 ### 7.1 Deferred items
 - **Native Windows and macOS installs** (ADR-0006). Pending user decision (Q5).
 - **SMB via Samba** (ADR-0019, Proposed). Design in S09.1.
-- **Full RAW conversion** (e.g. LibRaw) (ADR-0012). _Video transcoding for streaming quality levels is in scope since 0.4.0 (ADR-0020)._
+- **Full RAW conversion** (e.g. LibRaw) and **video transcoding** (ADR-0012).
 - **Exact AI model variants**, **GPU execution providers**, and **embedding storage** (ADR-0017/0018). Chosen in S12 by benchmark.
 - **Semantic search** needs a text model at query time. That is an **exception to I4** and needs explicit user approval before it is built (ADR-0018, FR-054).
 - **Storage layout** (ADR-0003). Still Proposed; user approval needed before S01.2.
@@ -693,7 +679,7 @@ Each stage leaves defined hook points so later stages extend rather than rewrite
 - **One crossing point:** only the Transfer service holds references to both services, and only explicit user requests reach it. Architecture tests (import rules) fail the build if other code touches both.
 - **Media-only photos:** content-based type detection (not just the extension) on upload, transfer, server-side import, and network writes.
 - **Jobs and network shares** go through the same services, so they obey the same rules (S09.3).
-- **Tests:** S04.9 runs every write path (API, jobs, transfers) and asserts that no item appears in the other area implicitly.
+- **Tests:** S04.8 runs every write path (API, jobs, transfers) and asserts that no item appears in the other area implicitly.
 
 ### 8.3 Sidecar JSON as source of truth; rebuildable index
 - The index stores a projection of each sidecar plus the sidecar's size, mtime, and hash, so it can detect edits on disk.
@@ -790,7 +776,7 @@ A separate opt-in. Embeddings are stored only in internal app data, never in sid
 - Keyset pagination and virtualized lists in the GUI.
 - Job priorities: interactive work > ingest > indexing > integrity/backup > AI.
 - Streaming I/O everywhere (NFR-021).
-- Benchmarks at 50k (S04.9) and 100k+100k (S06.8), and full-system tests (S11.5).
+- Benchmarks at 50k (S04.8) and 100k+100k (S06.8), and full-system tests (S11.5).
 
 ### 8.16 Other cross-cutting concerns
 - **Security:** a single path resolver per area; strict name validation for Windows, macOS, and Linux; symlinks never followed out of an area; localhost binding until S03 (NFR-020); no default credentials; CSP; safe previews (NFR-022).
@@ -821,13 +807,6 @@ A separate opt-in. Embeddings are stored only in internal app data, never in sid
 - Features that need a missing tool are **disabled with a clear message** rather than failing silently. For example, without FFmpeg, video poster frames and metadata are unavailable.
 - S01–S03 need **no** external tools. They are first used in S04.4 and S05.3.
 - The tools' licenses and bundling are recorded in `dependencies.md` for the user's attention with Q22.
-
-### 8.21 On-demand video transcoding (new in 0.4.0, ADR-0020)
-- **Sessions:** one FFmpeg subprocess per (video, level). It writes keyframe-aligned 4 s HLS segments ahead of the playhead into `<internal>/transcode-cache/<content-hash>/<level>/`. Segment requests wait briefly for production. A seek beyond the produced range restarts the session at the target time. Idle sessions stop after a timeout.
-- **Budget:** a global cap on concurrent sessions (default 1 with the CPU encoder, 2–4 with a hardware encoder), a configurable maximum level, and yielding of background jobs while someone is watching. Interactive API latency must keep NFR-003.
-- **Hardware encoders:** detected at startup and shown in health. The Debian FFmpeg build explicitly enables libx264 and libvpl (Intel QSV). VAAPI, V4L2-M2M (Raspberry Pi), and NVENC are autodetected features, to be verified in the image in S04.8. Docker needs device passthrough (e.g. `/dev/dri`), which is documented.
-- **Cache:** content-hash keys (no duplicates across users and areas), a size cap with LRU eviction by a job (S04.3), fully rebuildable (I2). Originals are never modified.
-- **Security:** every playlist and segment request is authenticated and authorized like a download (I5). Responses use `Cache-Control: private`. The cache is not exposed through WebDAV or the files API.
 
 ---
 
@@ -881,7 +860,7 @@ flowchart LR
     S11 --> S12
 ```
 
-**Substage count:** S01: 7 · S02: 8 · S03: 9 · S04: 9 · S05: 8 · S06: 8 · S07: 7 · S08: 7 · S09: 6 · S10: 6 · S11: 7 · S12: 11. That makes **93 substages** (S04.8 added in 0.4.0), all with status "Not started". No listed substage was removed, merged, or reordered. Additions and flags are listed in 10.14.
+**Substage count:** S01: 7 · S02: 8 · S03: 9 · S04: 8 · S05: 8 · S06: 8 · S07: 7 · S08: 7 · S09: 6 · S10: 6 · S11: 7 · S12: 11. That makes **92 substages**, all with status "Not started". No listed substage was removed, merged, or reordered. Additions and flags are listed in 10.14.
 
 **Field legend for substages:** Goal · Scope · Deliverables · Depends on · Requirements · Acceptance criteria · Risks/notes · Status.
 
@@ -1132,7 +1111,7 @@ flowchart LR
   2. SVG, HTML, and other active content never execute scripts in the app's origin (tested).
   3. Large text files preview only a bounded first portion.
   4. Unsupported types show a fallback with a download action.
-- **Risks/notes:** The full CSP arrives in S03.5. S02 already serves active content as attachment or sandboxed. The video player is built so that S04.8 can add HLS playback and the quality menu without replacing it (ADR-0020).
+- **Risks/notes:** The full CSP arrives in S03.5. S02 already serves active content as attachment or sandboxed.
 - **Status:** Not started
 
 #### S02.7: Responsiveness and accessibility
@@ -1448,41 +1427,16 @@ flowchart LR
 - **Risks/notes:** None.
 - **Status:** Not started
 
-#### S04.8: Video streaming and quality levels
-- **Goal:** Play videos from either area with a live quality menu (Auto, Original, 1080p, 720p, 480p, 360p). Lower qualities are produced on demand and cached.
-- **Scope:**
-  - _Added in 0.4.0 at the user's request (S004 E005, answers E008; ADR-0020)._
-  - HLS playback: master and level playlists, segments. hls.js player with a manual quality menu and Auto (adaptive bitrate); native HLS fallback.
-  - Hybrid on-demand transcoding: the original streams without transcoding. Lower levels are transcoded on first request into cached HLS segments (FFmpeg subprocess sessions, keyframe-aligned 4 s segments, restart on seek).
-  - A transcode cache in internal data with a size cap and LRU eviction (a job on S04.3).
-  - Hardware-encoder detection with CPU fallback; concurrency and maximum-quality limits in settings.
-  - The same player in the photos lightbox (S04.7) and the files-area video preview (S02.6, upgraded).
-  - Authorization of every playlist and segment request.
-- **Deliverables:** streaming endpoints (in `api/openapi.yaml`); transcoding session manager; cache and eviction job; encoder detection in health; a shared Svelte player component with the quality menu; Docker device-passthrough documentation.
-- **Depends on:** S04.3, S04.4, S04.7, S02.6, S03.5.
-- **Requirements:** FR-019, FR-144, FR-145, FR-146, FR-147, FR-148, NFR-031, NFR-024.
-- **Acceptance criteria:**
-  1. A video plays in the photos lightbox and in the files preview, and the user can switch between Auto and each available level during playback without restarting.
-  2. The original quality plays without any transcoding. A lower level starts within the NFR-031 target and is served from the cache on later plays.
-  3. The transcode cache never exceeds its size cap. Least-recently-used levels are evicted, and eviction never touches originals.
-  4. With several viewers, concurrent transcodes stay within the configured limit, and the NAS API keeps its NFR-003 latency.
-  5. Playlist and segment requests without authorization are refused (tested), and cache contents are never listed.
-- **Risks/notes:**
-  - Weak CPUs (RK-29). H.264 encoder licensing (libx264 is GPL; RK-30, audit A001 D-04). Manual quality selection on iOS depends on hls.js support there (RK-31).
-  - Side effect for the user's confirmation: originals in codecs a browser cannot play become playable through the transcoded levels (ADR-0020).
-- **Status:** Not started
-
-#### S04.9: Testing and stage review
+#### S04.8: Testing and stage review
 - **Goal:** Prove separation, correctness, and performance, then close the stage.
-- **Scope:** tests proving that no operation places an item in the other area implicitly; performance testing with a large library (e.g. 50,000 items); _video streaming tests (added in 0.4.0)_; documentation; completion record; user sign-off.
-- **Deliverables:** separation test suite; 50k-item performance report; streaming test suite and cross-browser results; photos user guide; completion record.
-- **Depends on:** S04.1–S04.8.
-- **Requirements:** NFR-026, NFR-003, NFR-027, NFR-031.
+- **Scope:** tests proving that no operation places an item in the other area implicitly; performance testing with a large library (e.g. 50,000 items); documentation; completion record; user sign-off.
+- **Deliverables:** separation test suite; 50k-item performance report; photos user guide; completion record.
+- **Depends on:** S04.1–S04.7.
+- **Requirements:** NFR-026, NFR-003.
 - **Acceptance criteria:**
   1. Every API endpoint and job that writes files is exercised, and none places an item in the other area implicitly.
   2. With 50,000 items, timeline page loads meet NFR-003 on reference hardware.
-  3. Streaming tests pass on current Chrome, Edge, Firefox, and Safari (macOS and iOS): switching levels during playback, Auto, seeking, cache eviction under the size cap, and refusal of unauthorized segment requests.
-  4. Documentation and the completion record are written, and the user's sign-off is recorded.
+  3. Documentation and the completion record are written, and the user's sign-off is recorded.
 - **Risks/notes:** Synthetic library generator needed (section 12).
 - **Status:** Not started
 
@@ -2465,7 +2419,6 @@ No listed substage was removed, merged away, or renumbered. The planner made the
 4. **S04.2 added scope (pending Q39):** server-side import from a host folder.
 5. **S11.7 added scope:** the stage review (final integration tests, documentation, completion record, sign-off), because P002 requires every stage to end with a testing and review substage and the listed S11.7 covered only the release.
 6. **S12.6 added scope:** rejecting AI tags (existing FR-038), alongside the face corrections.
-7. **S04.8 added (0.4.0):** video streaming and quality levels, at the user's request (S004 E005/E008, ADR-0020). The listed testing substage was **renumbered from S04.8 to S04.9** so that it stays last. Approval of the renumbering goes with the baseline.
 
 ---
 
@@ -2505,7 +2458,7 @@ Not stages. If any is approved later, it is inserted **before** the AI stage and
 | S01 | S01.7 | Integration on a real temp filesystem; traversal and malicious-name attacks; Unicode, empty, huge (sparse), and deeply nested files; performance baseline (NFR-003 S01 targets) |
 | S02 | S02.8 | Component tests; Playwright end-to-end tests of the main flows; cross-browser; accessibility (axe) |
 | S03 | S03.9 | Auth bypass, CSRF, and traversal regressions; route inventory (default deny); dependency and vulnerability scanning; static analysis; threat model review |
-| S04 | S04.9 | Area-separation tests over every write path; 50k-item performance; video streaming (live level switching, Auto, seek, cache eviction, segment authorization; Chrome, Edge, Firefox, Safari on macOS and iOS) |
+| S04 | S04.8 | Area-separation tests over every write path; 50k-item performance |
 | S05 | S05.8 | Fixture library; round-trip tests; crash-injection during sidecar writes; migration dry-run and idempotency |
 | S06 | S06.8 | Golden query set; parser property tests; rebuild-equivalence; 100k + 100k benchmarks |
 | S07 | S07.7 | Cross-user refusal on every endpoint and job; search leak tests (results, counts, facets, suggestions, timing) |
@@ -2539,7 +2492,7 @@ CI runs on Linux and Windows from S01.1.
   - GPS: Karachi, Lahore, southern/western hemispheres, borders, antimeridian, 0,0, missing.
   - Formats: JPEG/PNG/WebP/GIF/HEIC, MP4/MOV, corrupt and zero-byte files.
   - Naming: same basename with different extensions; Google Takeout–style foreign `.json`.
-- **Scale:** a synthetic generator for 50k photos (S04.9) and 100k photos + 100k files (S06.8, S11.5). It is not committed.
+- **Scale:** a synthetic generator for 50k photos (S04.8) and 100k photos + 100k files (S06.8, S11.5). It is not committed.
 - **AI (S12):** a labelled, license-clean or consented evaluation set kept outside the repository, with versioned reports.
 
 ### 12.4 AI evaluation
@@ -2553,11 +2506,11 @@ CI runs on Linux and Windows from S01.1.
 
 | # | Risk | Type | Mitigation |
 |---|---|---|---|
-| RK-01 | The scope is very large (12 stages, 93 substages), so the project never reaches a usable state. | Scope | Stage gating; milestones (section 11); Could items pending user decisions; planner-proposed stages removable. |
+| RK-01 | The scope is very large (12 stages, 92 substages), so the project never reaches a usable state. | Scope | Stage gating; milestones (section 11); Could items pending user decisions; planner-proposed stages removable. |
 | RK-02 | Sidecar corruption or metadata loss. | Data | Atomic writes, single writer, locks, crash-injection tests, quarantine and recovery (S05.2). |
 | RK-03 | Foreign `<name>.json` files are overwritten. | Data | Media-only photos area; identifying marker; foreign-file detection (FR-030). |
 | RK-04 | The watcher misses external changes. | Technical | Periodic reconciliation is the correctness mechanism (S05.7); WebDAV is in-app (ADR-0015). |
-| RK-05 | ~~Python performance is insufficient at 100k+100k items.~~ | Performance | **Retired in 0.3.0:** the core is Go (ADR-0001). General performance is covered by the benchmarks in S01.7, S04.9, S06.8, and S11.5, and by RK-25. |
+| RK-05 | ~~Python performance is insufficient at 100k+100k items.~~ | Performance | **Retired in 0.3.0:** the core is Go (ADR-0001). General performance is covered by the benchmarks in S01.7, S04.8, S06.8, and S11.5, and by RK-25. |
 | RK-06 | **AI speed on CPU-only hardware** is too slow for backfilling large libraries. | Performance | _Updated in 0.3.0 (P003):_ AI runs as an **idle-time, low-priority background job** (ADR-0011/0017) with pause and resume. Small ONNX models (ADR-0018), batching, and optional GPU execution providers (S12.1). Throughput is measured on CPU-only reference hardware (S12.11). |
 | RK-07 | Classification quality is poor. | Technical | Evaluation set, thresholds, user corrections, reprocessing on model change. |
 | RK-08 | Incompatible dependency or model licenses. | Legal | Project license decided in S01.1 (Q22). License policy NFR-029. `dependencies.md` register. go-licenses and `pnpm licenses` checks in CI (ADR-0005). Audit in S11.6. GPL/LGPL external tools (FFmpeg build flags, ExifTool, libvips, libheif) run as separate programs and are recorded for the user's attention. The GPL-3.0 go-exiftool wrapper was rejected. |
@@ -2580,9 +2533,6 @@ CI runs on Linux and Windows from S01.1.
 | RK-25 | **Bleve performance at scale** (100k photos + 100k files, fuzzy and synonym queries) misses the NFR-003 latency targets. | Performance | Benchmarks in S06.8 on reference hardware; tuning fuzziness, prefix, and synonym expansion; per-field analyzers. **Fallback:** revisit the engine via a new ADR (ADR-0014). The `SearchEngine` interface keeps the swap contained. |
 | RK-26 | **External tool availability on native installs** (ExifTool + Perl, libvips + libheif, FFmpeg missing or too old). | Platform | Bundled in the Docker image (ADR-0006). Startup tool detection with versions in health. Affected features are disabled with a clear message. The install guide lists the packages (S11.2, S11.4, plan 8.20). |
 | RK-27 | **Model license changes**: an upstream model (SigLIP, YuNet, SFace, OCR models) is relicensed or withdrawn. | Legal | Pin exact model files by checksum. Record the license at the time of adoption in `dependencies.md` and ADR-0018. Re-verify licenses when upgrading models. Keep the model choice swappable through the ONNX contract (ADR-0017). |
-| RK-29 | **Transcoding load on weak hardware**: live transcoding saturates a CPU-only board, so playback stutters and the NAS slows down. | Performance | Hardware encoder when present; concurrency cap (default 1 on CPU); a maximum-level setting (e.g. 720p on weak CPUs); cache reuse; background jobs yield (ADR-0020, NFR-031). |
-| RK-30 | **H.264 encoding licensing**: libx264 is GPL-2.0-or-later (part of Debian's GPL FFmpeg build), plus possible codec-patent questions depending on the jurisdiction. | Legal | Run as a separate program; recorded in `dependencies.md`; decided together with audit A001 D-04 and Q22. Hardware encoders are an alternative. |
-| RK-31 | **HLS player compatibility**: manual quality selection needs hls.js (MSE/ManagedMediaSource). Where only native HLS works, Auto only. | UX | Cross-browser tests in S04.9, including iOS; the documented limitation in A21. |
 | RK-28 | Distribution package versions lag upstream (e.g. Debian trixie ExifTool 13.25 vs 13.59, FFmpeg 7.1.5 vs 9.0.2), missing format support. | Platform | Fixture tests catch gaps. Upgrade the base image or build specific tools from source via a new ADR if a needed feature is missing (ADR-0006, ADR-0012). |
 
 ---
@@ -2595,4 +2545,3 @@ CI runs on Linux and Windows from S01.1.
 | 0.2.0 | 2026-09-24 | **Staged roadmap replaces S00–S15** with S01–S12: 7 user-defined stages, 4 planner-proposed stages (S08–S11), and the AI stage always last. All 92 substages are defined with the required fields. Added sections 2a (Project invariants I1–I8), 2b (Cross-cutting principles), and 11a (Not scheduled). Two-area storage design (`files/`, `photos/`) and internal data outside both. Requirements: FR-001 deprecated; FR-069–FR-143 and NFR-019–NFR-028 added; priorities and wording updated where P002 requires. Questions Q25–Q40 added; Q2 and Q12 resolved; Q3, Q8, Q9, Q17, Q20, Q21 superseded. Architecture, concerns (forward compatibility, area separation, access data storage, search permission filtering, live watcher), MVP milestones, testing, and risks (RK-17–RK-24) updated. ADR-0001–0003 proposed for S01. | Plan change request #2 (`code-agent-docs/prompts/P002-staged-development-roadmap.json`) | `logs/sessions/2026-09-23_S002.md` |
 | 0.3.0 | 2026-09-24 | **Technology stack recorded.** Section 7 replaced by the chosen-stack table: Go core; REST/OpenAPI; SQLite WAL (from S01); tus; SvelteKit; Argon2id and sessions; SQLite job queue; ExifTool, libvips, FFmpeg; GeoNames; Bleve; WebDAV; fsnotify; Python/ONNX AI worker; model direction. ADR-0001/0002 updated and Accepted; ADR-0004–0018 Accepted; ADR-0019 (SMB) Proposed; ADR-0003 still Proposed. Invariant I9 added (2a). NFR-029 (license policy) and NFR-030 (multi-arch) added. Q25, Q7, Q4, Q24, Q16 answered; Q5, Q6, Q32 partly answered. Architecture diagram made concrete. Concerns 8.17–8.20 added (single writer, same-filesystem uploads, inotify limits, external tools on native installs), and 8.4/8.11/8.12 aligned to Go and Bleve. Stage texts updated where decisions were pending (S01.1, S01.4, S01.5, S01 design notes, S02.1, S02.3, S03.2, S04.3, S05.3, S05.4, S06.1, S09.1, S11.1, S11.6, S12.1, S12.5, 10.14). Risks RK-25–RK-28 added; RK-05 retired; RK-06 and RK-08 updated. Dependency register `dependencies.md` created. | Plan change request #3 (`code-agent-docs/prompts/P003-technology-stack.json`) | `logs/sessions/2026-09-24_S003.md` |
 | 0.3.1 | 2026-09-24 | **Documentation audit A001 fixes (PATCH, no scope or decision change).** Stale text corrected (6.1 GUI row, F-010; S12 design note contradicting ADR-0018, F-011; 6.3 audit-log location aligned with ADR-0007, F-013; S01.1 self-reference, F-008). Section 5: ★ legend clarified (F-017) and a "Needed for plan baseline approval" list added (F-016). Sections 9 and 12.1 mention the R12 documentation audits. | Documentation audit A001 (`code-agent-docs/prompts/P004-documentation-audit.json`; report `audits/A001-2026-09-24-documentation-audit.md`) | `logs/sessions/2026-09-24_S004.md` |
-| 0.4.0 | 2026-09-24 | **Video streaming with live quality switching** (MINOR, R4). New substage **S04.8** (video streaming and quality levels); the testing substage was renumbered S04.8 → S04.9 and extended with streaming tests (flag 10.14 item 7). FR-144–FR-148 and NFR-031 added; FR-019 raised Should → Must; NG4 changed (transcoding for streaming levels in scope; originals never re-encoded); Q26 partly answered (videos included); A21 added. Architecture: video streaming service, diagram node, `transcode-cache/`. Concern 8.21. Stack table: ADR-0020 added; ADR-0012 marked superseded in part. Risks RK-29–RK-31. Overview and G3 mention video streaming. | The user's request (S004 E005: "add a photo viewer and video playback (streaming with quality adjustment option live in video playback) in the gui part") and design answers (S004 E008) | `logs/sessions/2026-09-24_S004.md` |

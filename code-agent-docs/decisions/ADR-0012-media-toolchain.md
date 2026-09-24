@@ -3,11 +3,11 @@
 | Field | Value |
 |---|---|
 | Number | ADR-0012 |
-| Status | **Accepted** (full RAW conversion and video transcoding **deferred**) |
+| Status | **Accepted** (full RAW conversion **deferred**; the video-transcoding deferral is **superseded in part by ADR-0020** for streaming quality levels) |
 | Date proposed | 2026-09-24 (session S003) |
-| Date of last status change | 2026-09-24 (session S003) |
+| Date of last status change | 2026-09-24 (session S004) |
 | Supersedes | none |
-| Superseded by | none |
+| Superseded by | **ADR-0020, in part**: the "video transcoding deferred" clause, for streaming quality levels (2026-09-24, S004). The rest of this ADR stays Accepted |
 
 ## Context
 
@@ -60,6 +60,6 @@
 ## Links
 
 - **Related requirements:** FR-010, FR-012, FR-018, FR-019, FR-020, FR-098, NFR-029
-- **Related ADRs:** ADR-0001, ADR-0006, ADR-0011
+- **Related ADRs:** ADR-0001, ADR-0006, ADR-0011, **ADR-0020 (supersedes the video-transcoding deferral in part)**
 - **Related stages:** S04.4, S05.3
 - **Plan version:** 0.3.0
