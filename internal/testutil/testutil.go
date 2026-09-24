@@ -12,6 +12,7 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+	"runtime"
 	"testing"
 )
 
@@ -104,4 +105,33 @@ func closeWith(c io.Closer, err *error) {
 	if cerr := c.Close(); cerr != nil && *err == nil {
 		*err = cerr
 	}
+}
+
+// Symlink creates the symbolic link link pointing to target. When the OS
+// refuses (Windows without the symlink privilege or Developer Mode), the
+// test is skipped with the reason, so link tests still run wherever links
+// are allowed, such as the Windows CI runner.
+func Symlink(t testing.TB, target, link string) {
+	t.Helper()
+	if err := os.Symlink(target, link); err != nil {
+		if runtime.GOOS == "windows" {
+			t.Skipf("cannot create a symbolic link here: %v", err)
+		}
+		t.Fatalf("create the symbolic link %s: %v", link, err)
+	}
+}
+
+// TrySymlink is Symlink for tests that also check other things: where the
+// OS refuses links, it logs the reason and returns false instead of
+// skipping the whole test.
+func TrySymlink(t testing.TB, target, link string) bool {
+	t.Helper()
+	if err := os.Symlink(target, link); err != nil {
+		if runtime.GOOS == "windows" {
+			t.Logf("skipping the symbolic link cases: %v", err)
+			return false
+		}
+		t.Fatalf("create the symbolic link %s: %v", link, err)
+	}
+	return true
 }

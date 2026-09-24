@@ -4,8 +4,9 @@ import (
 	"errors"
 	"os"
 	"path/filepath"
-	"runtime"
 	"testing"
+
+	"github.com/KhizirFarrukh/local-ai-nas/internal/testutil"
 )
 
 func TestIsEscape(t *testing.T) {
@@ -20,10 +21,7 @@ func TestIsEscape(t *testing.T) {
 	if !IsEscape(err) {
 		t.Errorf("os.Root error for ../outside = %v; IsEscape does not recognize it", err)
 	}
-	if runtime.GOOS != "windows" { // links need privileges on Windows
-		if err := os.Symlink(t.TempDir(), filepath.Join(dir, "link")); err != nil {
-			t.Fatal(err)
-		}
+	if testutil.TrySymlink(t, t.TempDir(), filepath.Join(dir, "link")) {
 		if _, err := root.Lstat("link/x"); !IsEscape(err) {
 			t.Errorf("os.Root error through a link to the outside = %v; IsEscape does not recognize it", err)
 		}

@@ -68,6 +68,12 @@ func (s *Local) move(ctx context.Context, op Op, owner, fromAPI, toAPI string, o
 	return run(ctx, s.hooks, Event{Op: op, Owner: owner, Path: from, Target: to}, func() (Item, error) {
 		var it Item
 		err := s.withRoot(owner, func(root *os.Root) error {
+			if err := refuseLinkParents(root, from, fromAPI); err != nil {
+				return err
+			}
+			if err := refuseLinkParents(root, to, toAPI); err != nil {
+				return err
+			}
 			src, err := root.Lstat(filepath.FromSlash(from))
 			if err != nil {
 				return fsError(err, fromAPI)

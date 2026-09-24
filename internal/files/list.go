@@ -103,6 +103,9 @@ func (s *Local) List(ctx context.Context, owner, path string, opts ListOptions) 
 	return run(ctx, s.hooks, Event{Op: OpList, Owner: owner, Path: rel}, func() (ListPage, error) {
 		var page ListPage
 		err := s.withRoot(owner, func(root *os.Root) error {
+			if err := refuseLinkParents(root, rel, path); err != nil {
+				return err
+			}
 			items, folder, err := readFolder(root, owner, rel, path)
 			if err != nil {
 				return err

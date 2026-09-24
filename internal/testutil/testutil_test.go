@@ -118,3 +118,25 @@ func assertOnlyRoot(t *testing.T, parent string) {
 		t.Errorf("something was written outside the root (-want +got):\n%s", diff)
 	}
 }
+
+func TestSymlink(t *testing.T) {
+	dir := t.TempDir()
+	target := filepath.Join(dir, "target.txt")
+	if err := os.WriteFile(target, []byte("x"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	link := filepath.Join(dir, "link")
+	Symlink(t, target, link) // skips where links are not allowed
+	if info, err := os.Lstat(link); err != nil || info.Mode()&os.ModeSymlink == 0 {
+		t.Errorf("Lstat(link) = %v, %v; want a symbolic link", info, err)
+	}
+}
+
+func TestTrySymlink(t *testing.T) {
+	dir := t.TempDir()
+	if TrySymlink(t, dir, filepath.Join(dir, "link")) {
+		if _, err := os.Lstat(filepath.Join(dir, "link")); err != nil {
+			t.Error(err)
+		}
+	}
+}

@@ -31,6 +31,9 @@ func (s *Local) Delete(ctx context.Context, owner, apiPath string, o DeleteOptio
 	}
 	_, err = run(ctx, s.hooks, Event{Op: OpDelete, Owner: owner, Path: rel}, func() (struct{}, error) {
 		return struct{}{}, s.withRoot(owner, func(root *os.Root) error {
+			if err := refuseLinkParents(root, rel, apiPath); err != nil {
+				return err
+			}
 			name := filepath.FromSlash(rel)
 			info, err := root.Lstat(name)
 			if err != nil {

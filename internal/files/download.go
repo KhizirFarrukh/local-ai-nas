@@ -24,6 +24,9 @@ func (s *Local) Download(ctx context.Context, owner, apiPath string) (Item, io.R
 	res, err := run(ctx, s.hooks, Event{Op: OpDownload, Owner: owner, Path: rel}, func() (result, error) {
 		var r result
 		err := s.withRoot(owner, func(root *os.Root) error {
+			if err := refuseLinkParents(root, rel, apiPath); err != nil {
+				return err
+			}
 			var err error
 			r.f, r.item, err = openFile(root, owner, rel, apiPath)
 			return err
