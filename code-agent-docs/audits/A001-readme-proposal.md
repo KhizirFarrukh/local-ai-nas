@@ -4,7 +4,7 @@
 |---|---|
 | Audit | A001 (P004), session S004, 2026-09-24 |
 | Finding | F-018 (README out of date with approved decisions) |
-| Status | **Proposal. Awaiting the user's decision** (approve, edit, or reject each item). `README.md` itself is unchanged (P004 readme_policy) |
+| Status | **Decided (S005, D-05):** R-01–R-08 and R-10 **approved and applied** to `README.md` in S005; R-09 (optional technology section) not applied. User's answer: "Accept all (Recommended)" |
 
 **Basis rule:** only decisions that are already approved are used. That means:
 - the user's own instructions in P002/P003;

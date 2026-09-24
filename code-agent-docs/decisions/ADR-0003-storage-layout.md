@@ -3,9 +3,9 @@
 | Field | Value |
 |---|---|
 | Number | ADR-0003 |
-| Status | Proposed |
+| Status | **Accepted** |
 | Date proposed | 2026-09-24 (session S002) |
-| Date of last status change | 2026-09-24 (session S002) |
+| Date of last status change | 2026-09-24 (session S005) |
 | Supersedes | none |
 | Superseded by | none |
 
@@ -42,7 +42,7 @@
 
 ## Decision
 
-**Recommendation (Proposed, not decided):**
+**Decision (Accepted in S005; this was the recommendation the user accepted):**
 - **Namespaces:** Option A with **stable short IDs** (option i). S01 creates `files/u0001/` and `photos/u0001/` for a single default owner. In S03.2 the first-run admin is **bound** to `u0001` (no file move). S07 creates `u0002`, and so on. The API presents each user's namespace as `/`.
 - **Internal data:** option (a). Default `<root>/.local-ai-nas/` with `tmp/uploads/`, `trash/`, `db/`, `index/`, `thumbnails/`, `metadata/`, `ai/`, and `logs/`. Database, index, thumbnails, and logs may be relocated by configuration. `tmp/` and `trash/` always stay on the root's filesystem.
 - **Configuration file:** lives **outside** the storage root. Its location comes from a CLI flag, then an environment variable, then an OS default path, because it is what tells the app where the root is.
@@ -56,11 +56,12 @@
 
 ## Approval record
 
-> _Pending user review (S002)._
+> Accepted by the user in S005 as decision D-01 of audit A001 (the storage layout recommended above: per-user namespace folders `files/u0001/`, `photos/u0001/` from S01; internal data in `<root>/.local-ai-nas/`). User's answer: "Accept all (Recommended)"
+> (2026-09-24, session S005, log E007)
 
 ## Links
 
 - **Related requirements:** FR-069, FR-070, FR-071, FR-072, FR-074, FR-008, NFR-025, NFR-026
 - **Related ADRs:** ADR-0001 (Go), ADR-0002 (API), ADR-0004 (repository layout), ADR-0007 (SQLite database at `<internal>/db/`), ADR-0008 (tus temp uploads at `<internal>/tmp/uploads/`), ADR-0014 (index at `<internal>/index/`)
 - **Related stages:** S01.2, S03.2, S07.2, S08.1
-- **Plan version:** 0.3.0. _S003 note: P003 did not cover this decision, so it **remains Proposed** and gates S01.2. Only the links were updated in S003._
+- **Plan version:** 0.5.0. _History: Proposed in S002; not covered by P003 (links updated in S003); Accepted in S005._

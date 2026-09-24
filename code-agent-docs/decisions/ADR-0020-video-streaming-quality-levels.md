@@ -91,6 +91,8 @@
 > (2026-09-24, session S004)
 >
 > The option descriptions the user selected included: "Lower qualities (e.g. 1080p/720p/480p) are transcoded into HLS segments the first time they're requested and cached in internal data (size-capped)… Uses a hardware encoder if present" and "Uses HLS (hls.js in browsers, native on Safari/iOS)." The implementation-detail table above is **not** separately approved. It is confirmed when the S04 stage document is approved.
+>
+> **Side effect confirmed (S005, decision D-14):** browser-incompatible originals may play through the transcoded levels. User's answer: "Accept all (Recommended)" (2026-09-24, session S005, log E007).
 
 ## Links
 
