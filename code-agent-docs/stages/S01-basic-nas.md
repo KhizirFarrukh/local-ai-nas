@@ -5,7 +5,7 @@
 | Stage ID | S01 |
 | Status | **Approved** (2026-09-24, S005) |
 | Blocked reason | |
-| Plan version this stage is based on | 1.0.0 |
+| Plan version this stage is based on | 1.1.0 |
 | Origin | User-defined |
 | Created | 2026-09-24 (session S002) |
 | Last updated | 2026-09-24 (session S005) |
@@ -293,6 +293,8 @@ flowchart LR
 
 All are recorded in `code-agent-docs/dependencies.md` in the same commit that adds them (R6). Licenses were verified on 2026-09-24 (S003 log E005/E007/E011; audit A001).
 
+**Deployment prerequisites (NFR-032, `dependencies.md` section 12):** S01 adds **no runtime prerequisite** on the target machine. The binary is pure Go with SQLite compiled in (`CGO_ENABLED=0`). Only the build needs Go. If a task finds that it does need something on the target, it adds a section 12 row in the same commit.
+
 | Dependency | Version | Justification | License | License compatible? | ADR |
 |---|---|---|---|---|---|
 | Go toolchain | go1.27.1 | Core language; `os.Root` for traversal-resistant I/O | BSD-3-Clause | Yes | ADR-0001 |
@@ -353,7 +355,7 @@ go tool go-licenses check ./...         # allow-list from S01.1-T02
 - [ ] The server listens only on loopback, and path traversal, invalid names, and symlink escapes are impossible (attack suite).
 - [ ] `photos/` exists and is untouched. `/api/v1/photos` is reserved.
 - [ ] All commands in section 8 pass in CI on Linux and Windows. Cross-builds for linux/amd64 and linux/arm64 succeed. The dev image passes the Trivy scan (no unresolved high findings).
-- [ ] Documentation and `dependencies.md` are updated (README, API docs, plan and CURRENT_STATE status).
+- [ ] Documentation and `dependencies.md` are updated (README, API docs, plan and CURRENT_STATE status), including section 12 (deployment prerequisites per platform; NFR-032).
 - [ ] Documentation audit (R12, S01.7-T07) done; no Critical finding open.
 
 ## 10. Risks and rollback approach
@@ -385,6 +387,7 @@ go tool go-licenses check ./...         # allow-list from S01.1-T02
 | 2026-09-24 | S004 | Re-based on plan 0.4.0 (video streaming change). **No S01 content affected** (the change lives in S04.8). Status stays Planned | Plan change 0.4.0 | None (no S01 change) |
 | 2026-09-24 | S005 | Applied the approval-stage decisions: ADR-0003 Accepted (gates removed); S01.1-T02 concrete for AGPL-3.0; S01.1-T08 and 4.2 add the size-rotated log file (D-07); S01.7-T04 reference hardware (Q1); based on plan 0.5.0. Status stays **Planned** until the user approves this document | S005 decisions (E007) | Needed: user approval |
 | 2026-09-24 | S005 | **Approved by the user**; status Planned → Approved; based on plan 1.0.0 | User approval (S005 E012) | Given |
+| 2026-09-24 | S005 | Plan 1.1.0 (user requirement E015): section 7 states that S01 adds no runtime prerequisite on the target (NFR-032); the stage acceptance checklist includes `dependencies.md` section 12. No task, scope, or design change | The user's instruction (S005 E015) | Given (the user's instruction) |
 
 ## 13. Completion record
 
