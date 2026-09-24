@@ -9,7 +9,8 @@ import (
 // TestSpecOperationsAreRouted keeps the spec and the route table in step:
 // every operation in api/openapi.yaml has a route with the same method and
 // path, and every method-specific route is an operation in the spec. The
-// photos tag is the exception: one hand-written catch-all serves it.
+// photos and uploads tags are the exceptions: a hand-written catch-all
+// serves each (uploads is the tus protocol, served by tusd).
 func TestSpecOperationsAreRouted(t *testing.T) {
 	doc := loadSpec(t)
 	routes := map[string]bool{}
@@ -19,7 +20,7 @@ func TestSpecOperationsAreRouted(t *testing.T) {
 	inSpec := map[string]bool{}
 	for path, item := range doc.Paths.Map() {
 		for method, op := range item.Operations() {
-			if slices.Contains(op.Tags, "photos") {
+			if slices.Contains(op.Tags, "photos") || slices.Contains(op.Tags, "uploads") {
 				continue
 			}
 			pattern := method + " /api/v1" + path

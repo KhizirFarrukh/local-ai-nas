@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"path"
 	"path/filepath"
+	"runtime"
 	"strings"
 
 	"golang.org/x/text/unicode/norm"
@@ -23,7 +24,9 @@ import (
 //  3. No segment is "..", a run of three or more dots, or dots mixed with
 //     spaces (".. ", ". ."): Windows may treat those as "..". Unicode
 //     look-alikes of those (fullwidth "．．", "‥") are refused too.
-//  4. No segment is a drive letter ("C:").
+//  4. No segment is a drive letter ("C:"). On Windows, no segment ends
+//     with a dot or a space: Windows ignores those, so "docs." would be
+//     "docs" and " " the folder itself.
 //  5. The result is NFC-normalized, so the same visible name is always
 //     the same file (macOS clients often send decomposed names).
 //  6. filepath.IsLocal must accept it on this OS (it also refuses names
@@ -58,6 +61,11 @@ func cleanUserPath(userPath string) (string, error) {
 			return "", apperr.Newf(apperr.OutsideRoot, "a path must not contain the segment %q, which reads as dots", seg)
 		case isDriveLetter(seg):
 			return "", apperr.Newf(apperr.InvalidName, "a path must not contain a drive letter (%q)", seg)
+		case runtime.GOOS == "windows" && seg != "." && (strings.HasSuffix(seg, ".") || strings.HasSuffix(seg, " ")):
+			// Windows ignores trailing dots and spaces, so "docs." is "docs"
+			// and " " is the folder itself: such a segment names another item.
+			return "", apperr.NewRule(apperr.InvalidName, RuleTrailingChar,
+				fmt.Sprintf("%q ends with a dot or a space, which Windows ignores, so it would name another item", seg))
 		}
 	}
 	rel := strings.TrimPrefix(path.Clean(norm.NFC.String(userPath)), "/")

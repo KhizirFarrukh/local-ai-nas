@@ -1,11 +1,16 @@
 package api
 
 import (
+	"context"
+	"net/http"
+	"path/filepath"
 	"testing"
 
+	"github.com/KhizirFarrukh/local-ai-nas/internal/db"
 	"github.com/KhizirFarrukh/local-ai-nas/internal/files"
 	"github.com/KhizirFarrukh/local-ai-nas/internal/storage"
 	"github.com/KhizirFarrukh/local-ai-nas/internal/testutil"
+	"github.com/KhizirFarrukh/local-ai-nas/internal/uploads"
 )
 
 // fixtureFiles is the content of the files area in API tests.
@@ -37,4 +42,23 @@ func testFilesDir(t testing.TB) (files.Service, string) {
 		t.Fatal(err)
 	}
 	return files.NewLocal(storage.NewResolver(l), files.Options{}), dir
+}
+
+// testUploads returns a real tus server on a fresh upload directory and
+// database, mounted at UploadsPath.
+func testUploads(t testing.TB) http.Handler {
+	t.Helper()
+	d, err := db.Open(context.Background(), filepath.Join(t.TempDir(), db.FileName))
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() { _ = d.Close() })
+	if _, err := d.Migrate(context.Background()); err != nil {
+		t.Fatal(err)
+	}
+	s, err := uploads.New(uploads.Options{Dir: t.TempDir(), DB: d, Namespace: storage.DefaultNamespace, BasePath: UploadsPath})
+	if err != nil {
+		t.Fatal(err)
+	}
+	return s
 }

@@ -57,6 +57,12 @@ const (
 	// TooLargeForSync is a valid operation that is too big to run within
 	// one request, such as a copy over the synchronous copy limits.
 	TooLargeForSync
+	// Locked is an item busy with another request, such as a resumable
+	// upload that another request is writing; retry later.
+	Locked
+	// Unavailable means the server cannot take the request now, for
+	// example while it shuts down; retry later.
+	Unavailable
 )
 
 type kindInfo struct {
@@ -79,6 +85,8 @@ var kinds = map[Kind]kindInfo{
 	PreconditionFailed:  {"precondition_failed", http.StatusPreconditionFailed},
 	RangeNotSatisfiable: {"range_not_satisfiable", http.StatusRequestedRangeNotSatisfiable},
 	TooLargeForSync:     {"too_large_for_sync", http.StatusUnprocessableEntity},
+	Locked:              {"locked", http.StatusLocked},
+	Unavailable:         {"unavailable", http.StatusServiceUnavailable},
 }
 
 // Kinds returns every defined kind, in order.

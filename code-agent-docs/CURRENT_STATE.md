@@ -1,20 +1,21 @@
 # CURRENT_STATE
 
-**Last updated:** 2026-09-24 17:05 +0500 (session S005)
+**Last updated:** 2026-09-24 17:28 +0500 (session S005)
 **Plan version:** 1.1.1 (`code-agent-docs/plan.md`), **Approved baseline** 1.0.0 (S005) + the setup-script requirement (1.1.0, S005 E015)
-**Current phase:** Implementation: S01 (Basic NAS implementation) in progress; S01.1, S01.2, S01.3, and S01.6 done; S01.5 in progress; S01.4 next
+**Current phase:** Implementation: S01 (Basic NAS implementation) in progress; S01.1, S01.2, S01.3, and S01.6 done; S01.4 and S01.5 in progress
 
 ## Active stage and task
-- **Active stage:** S01 (Basic NAS implementation), **In Progress** (`stages/S01-basic-nas.md`); S01.1, S01.2, S01.3, and S01.6 **Done**; S01.5 **In Progress** (T01–T04 done; T05/T06 after S01.4); S01.4 next.
-- **Active task:** **S01.6-T06** Bind guard + S01.6 closure (branch `feat/S01.6-T06-bind-guard`): done, waiting for CI and the merge; next **S01.4-T01** (tusd v2.10.1: register it in `dependencies.md` in the same commit, R6)
+- **Active stage:** S01 (Basic NAS implementation), **In Progress** (`stages/S01-basic-nas.md`); S01.1, S01.2, S01.3, and S01.6 **Done**; S01.4 **In Progress** (T01 done); S01.5 **In Progress** (T01–T04 done; T05/T06 after S01.4).
+- **Active task:** **S01.4-T01** Embed tusd (branch `feat/S01.4-T01-tusd`): done, waiting for CI and the merge; next **S01.4-T02** metadata validation
 
 ## In progress (write-ahead)
-- S01.6-T06 and the S01.6 closure: committed; push, CI (the image job checks the container exception), merge into `develop`. **When S01.4-T03 is built, add tus finalize to `TestConflictMatrix`.**
+- S01.4-T01: committed; push, CI, merge into `develop`. **When S01.4-T03 is built, add tus finalize to `TestConflictMatrix`.**
 
 ## Last completed
 - `develop` verified complete (S005): merge `c535cda` brought `cf60f72` (plan 0.4.0, which PR #3 had put on `main` only) and the user's `bda8321` (prompts 3 and 4).
 - Approval-stage decisions D-01–D-14 applied (S005 E007–E010). **Plan 1.0.0 baseline and S01 approved** (S005 E012).
-- **S01.6 closed** (S005 E093): T06 bind guard (loopback only; host names resolved; container-only exception `server.allow_container_bind`); Unicode look-alike gap fixed (resolver + name rules + corpus); all 5 criteria checked (S01 change log).
+- **S01.4-T01 done** (S005 E096): `internal/uploads` embeds tusd v2.10.1 at `/api/v1/files/uploads/` (sessions in SQLite, problems for every error, codes `locked` and `unavailable`); FuzzAPI covers it; a Windows path-aliasing fix in the resolver.
+- **S01.6 closed and merged** (CI run 35996941498 green; S005 E093): T06 bind guard (loopback only; host names resolved; container-only exception `server.allow_container_bind`); Unicode look-alike gap fixed (resolver + name rules + corpus); all 5 criteria checked (S01 change log).
 - **S01.6-T05 done and merged** (CI run 35995930046 green; S005 E091): `storage.Locks`; the files service locks the target folder during commits only; downloads retry a replaced file; `TestStressConcurrentWriters` (50 writers × 3 policies with readers: one consistent result, no partial or temporary files).
 - **S01.6-T04 done and merged** (S005 E090): `TestConflictMatrix` (72 cases) and `TestConcurrentRenameCollisions` (every operation); tus finalize joins with S01.4-T03.
 - **S01.6-T03 done and merged** (CI run 35994898119 green; S005 E088): links are never followed by any operation (a path through a link → 400, inside or outside the area), listed without a target, never created by the API (architecture test); link tests run wherever the OS allows links.

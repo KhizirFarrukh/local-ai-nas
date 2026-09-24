@@ -13,3 +13,6 @@ output-options:
   # hand-written catch-all route does better than a generated operation.
   exclude-tags:
     - photos
+    # tus uploads are served by the embedded tusd (S01.4); the spec only
+    # documents the external protocol.
+    - uploads

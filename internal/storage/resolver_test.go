@@ -33,7 +33,11 @@ func TestResolve(t *testing.T) {
 		{"/./docs/./a.txt", "docs/a.txt"},
 		{"/ñandú/report 2026.pdf", "ñandú/report 2026.pdf"},
 		{"/.hidden", ".hidden"},
-		{"/a..b/c...", "a..b/c..."},
+		{"/a..b/c", "a..b/c"},
+	}
+	if runtime.GOOS != "windows" {
+		// Distinct names on Linux; Windows would read "c..." as "c".
+		tests = append(tests, struct{ in, want string }{"/a..b/c...", "a..b/c..."}, struct{ in, want string }{"/a /b.", "a /b."})
 	}
 	for _, tt := range tests {
 		got, err := r.Resolve(FilesArea, DefaultNamespace, tt.in)
