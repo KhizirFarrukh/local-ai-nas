@@ -170,7 +170,7 @@ curl http://127.0.0.1:8080/api/v1/system/health
 # {"status":"ok","version":"dev","checks":[{"name":"database","status":"ok"}]}
 ```
 
-Stop it with Ctrl+C. The `dev/` folder is ignored by Git.
+The API documentation is at `http://127.0.0.1:8080/api/docs/` (it works offline). Stop the server with Ctrl+C. The `dev/` folder is ignored by Git.
 
 To use a config file instead of flags, copy [`deploy/config.example.toml`](deploy/config.example.toml) to `dev/config.toml`, set `storage.root` to an absolute path, and run `go run ./cmd/local-ai-nas serve --config dev/config.toml`. Every setting can also come from an environment variable or a flag (`storage.root` = `LOCALAINAS_STORAGE_ROOT` = `--storage-root`); flags win over environment variables, which win over the file. `go run ./cmd/local-ai-nas serve -h` lists all flags.
 

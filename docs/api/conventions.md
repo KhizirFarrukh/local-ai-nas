@@ -120,6 +120,10 @@ Large uploads use the **tus 1.0.0** protocol at `/api/v1/files/uploads/` (S01.4)
 - Unfinished uploads are kept in the server's internal data, never in your storage area. One that has been idle for `uploads.expiry` (default 24 hours) after its expiry time is removed by an hourly cleanup, which also removes the server's own temporary files left in your area by a crash.
 - **Finishing:** the request that sends the last byte (a `PATCH`, or the `POST` of a creation-with-upload) also makes the file: the server checks the optional `sha256`, syncs the data to disk, and moves it to `target_path` in one step, applying `on_conflict` against what is there at that moment. The answer carries the header `Item-Path` with the file's path (with `rename` it can differ from `target_path`). If finishing fails (a checksum mismatch `400`, a name taken meanwhile with `fail` `409`, no free space `507`), the upload is removed and the error is the answer; upload again with other settings.
 
+## Documentation
+
+The server serves this API's documentation at `/api/docs/`: the spec (`/api/docs/openapi.yaml`) rendered by a vendored copy of Redoc. It needs no internet access. The page is outside `/api/v1` because it is not part of the versioned API.
+
 ## Review checklist
 
 Every endpoint is reviewed against this list before it is merged. The table after the list records the review of each endpoint.

@@ -10,6 +10,7 @@ import (
 	"io"
 	"math/rand/v2"
 	"net/http"
+	neturl "net/url"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -398,6 +399,27 @@ func TestCreateChecksTarget(t *testing.T) {
 		_ = resp.Body.Close()
 		if resp.StatusCode != http.StatusBadRequest {
 			t.Errorf("an upload through a link: %d, want 400", resp.StatusCode)
+		}
+	}
+}
+
+// TestForeignIDsAreNotFound: an upload ID this server cannot have made is
+// not found (404, a problem), whatever it contains; on Windows some of
+// them are not even valid file names.
+func TestForeignIDsAreNotFound(t *testing.T) {
+	url, _, _, _ := testServer(t)
+	for _, id := range []string{`"`, "x", "a b", "ABCDEFGHIJKLMNOPQRSTUVWXYZ", "abcdefghijklmnopqrstuvwxy1", "abcdefghijklmnopqrstuvwxyz0", "con", "a:b"} {
+		for _, method := range []string{http.MethodHead, http.MethodPatch, http.MethodDelete} {
+			resp, err := tusRequest(t, t.Context(), method, url+basePath+neturl.PathEscape(id), map[string]string{
+				"Upload-Offset": "0", "Content-Type": "application/offset+octet-stream",
+			}, nil, 0)
+			if err != nil {
+				t.Fatal(err)
+			}
+			_ = resp.Body.Close()
+			if resp.StatusCode != http.StatusNotFound || resp.Header.Get("Content-Type") != apperr.ContentType {
+				t.Errorf("%s %q: %d %s, want a 404 problem", method, id, resp.StatusCode, resp.Header.Get("Content-Type"))
+			}
 		}
 	}
 }

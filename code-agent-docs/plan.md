@@ -996,7 +996,7 @@ flowchart LR
   4. CI fails if the committed OpenAPI spec differs from the generated one.
   5. The API docs page works with the network disconnected.
 - **Risks/notes:** The docs renderer is vendored and served by the core, with no CDN (I6, ADR-0002).
-- **Status:** In Progress (S005)
+- **Status:** Done (S005, 2026-09-24; details in `stages/S01-basic-nas.md`)
 
 #### S01.6: Safety baseline
 - **Goal:** Path traversal is impossible, filenames are safe on every OS, concurrent operations are safe, and the server is reachable only from localhost.

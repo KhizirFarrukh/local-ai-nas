@@ -1,20 +1,21 @@
 # CURRENT_STATE
 
-**Last updated:** 2026-09-24 18:11 +0500 (session S005)
+**Last updated:** 2026-09-24 21:34 +0500 (session S005)
 **Plan version:** 1.1.1 (`code-agent-docs/plan.md`), **Approved baseline** 1.0.0 (S005) + the setup-script requirement (1.1.0, S005 E015)
-**Current phase:** Implementation: S01 (Basic NAS implementation) in progress; S01.1, S01.2, S01.3, S01.4, and S01.6 done; S01.5 in progress (T06 left); S01.7 after it
+**Current phase:** Implementation: S01 (Basic NAS implementation) in progress; S01.1 to S01.6 done; S01.7 (integration and stage review) next
 
 ## Active stage and task
-- **Active stage:** S01 (Basic NAS implementation), **In Progress** (`stages/S01-basic-nas.md`); S01.1, S01.2, S01.3, and S01.6 **Done**; S01.4 **Done**; S01.5 **In Progress** (T01–T05 done; T06 next).
-- **Active task:** **S01.5-T05** Spec complete + drift check (branch `feat/S01.5-T05-spec`): done, waiting for CI and the merge; next **S01.5-T06** offline API docs (Redoc)
+- **Active stage:** S01 (Basic NAS implementation), **In Progress** (`stages/S01-basic-nas.md`); S01.1, S01.2, S01.3, and S01.6 **Done**; S01.4 **Done**; S01.5 **Done**; S01.7 next.
+- **Active task:** **S01.5-T06** Offline API docs + S01.5 closure (branch `feat/S01.5-T06-docs`): done, waiting for CI and the merge; next **S01.7-T01** integration suite
 
 ## In progress (write-ahead)
-- S01.5-T05: committed; push, CI, merge into `develop`. (tus finalize is in `TestConflictMatrix` since S01.4-T03.)
+- S01.5-T06 and the S01.5 closure: committed; push, CI, merge into `develop`. (tus finalize is in `TestConflictMatrix` since S01.4-T03.)
 
 ## Last completed
 - `develop` verified complete (S005): merge `c535cda` brought `cf60f72` (plan 0.4.0, which PR #3 had put on `main` only) and the user's `bda8321` (prompts 3 and 4).
 - Approval-stage decisions D-01–D-14 applied (S005 E007–E010). **Plan 1.0.0 baseline and S01 approved** (S005 E012).
-- **S01.5-T05 done** (S005 E107): `TestErrorStatusesAreInTheSpec` and `TestTusStatusesAreInTheSpec` (every status a case gets is declared); the tus operations complete in the spec; the CI drift check verified by a deliberate drift (red) and its fix (green); a missing operation does not compile (checked).
+- **S01.5 closed** (S005 E109): T06 offline docs (vendored Redoc 2.5.4, checksum registered; `/api/docs/`; offline render checked with headless Edge); the tus server refuses foreign upload IDs with 404 (fuzz finding); all 5 criteria checked (S01 change log).
+- **S01.5-T05 done and merged** (CI run 36004028905 green; S005 E107): `TestErrorStatusesAreInTheSpec` and `TestTusStatusesAreInTheSpec` (every status a case gets is declared); the tus operations complete in the spec; the CI drift check verified by a deliberate drift (red) and its fix (green); a missing operation does not compile (checked).
 - **S01.4 closed and merged** (S005 E105): T06 cleanup (`uploads.expiry`, `Server.Cleanup`, `files.CleanTemp`, `internal/schedule`); closure test `TestResumeAtAnyPoint`; all 5 criteria checked (S01 change log).
 - **S01.4-T05 done** (S005 E104): `chunkLimit` refuses a tus request declaring more than `uploads.max_chunk_size` with 413 before tusd reads it.
 - **S01.4-T04 done and merged** (CI run 36001374478 green, including the 10 GiB memory job; S005 E103): `TestMemoryBound` (simple upload, tus, copy, download; heap growth < 256 MiB) in a CI `memory` job, 10 GiB on Linux and 1 GiB on Windows.
@@ -60,8 +61,8 @@
 - Plan 1.1.0: the user's requirement to record every dependency and build a setup script per platform (FR-149, NFR-032, S11.2, Q41; `dependencies.md` section 12; RULES 1.5.0) (S005 E015–E016).
 
 ## Next steps
-1. **S01.5-T06** (vendored Redoc 2.5.4 at `/api/docs/`, checksum in `dependencies.md`, R6; a test that the page references no external URL; the render with the network off needs a browser: ask the user to check it, or record how it was checked). **Endpoint workflow (spec-first):** spec → `go generate ./internal/api` → strict operation; an error case in `errorCases`/`bodyErrorCases`; a review row in `docs/api/conventions.md`; a fake-service test that invalid input never reaches the service.
-2. Then **S01.7** (integration and stage review). **Ask the user Q18 (library size) before S01.7-T04 (performance baseline).**
+1. **S01.7** in order: T01 integration suite (every endpoint and status over real HTTP), T02 attack suite, T03 edge cases, T04 performance baseline (**ask the user Q18, library size, first**), T05 documentation, T06 demo scripts, T07 documentation audit (R12), T08 completion record and **the user's sign-off**. **Endpoint workflow (spec-first):** spec → `go generate ./internal/api` → strict operation; an error case in `errorCases`/`bodyErrorCases`; a review row in `docs/api/conventions.md`; a fake-service test that invalid input never reaches the service.
+2. The S005 session log needs its closing summary when the session ends.
 3. **Q18 (library size)** is needed before S01.7; ask the user when S01.7 comes close.
 4. CI: every push runs `.github/workflows/ci.yml`. `gh` is not installed; the repository is public. Watch a commit's run through the public REST API (`/repos/KhizirFarrukh/local-ai-nas/actions/runs?head_sha=<sha>`, then `/jobs`; 60 anonymous requests per hour) or the run's web page (its "Status" field). Step logs need sign-in: reproduce Linux failures with `GOOS=linux go test -c` binaries in the WSL Ubuntu distro, run from the package directory under /mnt/c when a test reads repo files.
 5. Every finished branch: merge it into `develop` myself and push (RULES User Preferences, S005).
