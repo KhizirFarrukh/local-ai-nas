@@ -14,6 +14,7 @@ import (
 
 	"github.com/KhizirFarrukh/local-ai-nas/internal/apperr"
 	"github.com/KhizirFarrukh/local-ai-nas/internal/logging"
+	"github.com/KhizirFarrukh/local-ai-nas/internal/testutil"
 )
 
 // loadSpec loads and validates api/openapi.yaml.
@@ -302,5 +303,130 @@ func TestHealthMatchesSchema(t *testing.T) {
 	}
 	if err := doc.Components.Schemas["HealthReport"].Value.VisitJSON(body); err != nil {
 		t.Errorf("health body does not match HealthReport: %v\n%s", err, rec.Body)
+	}
+}
+
+// TestErrorStatusesAreInTheSpec is part of S01.5-T05 (the spec is
+// complete for S01): every status that a contract case gets is declared
+// in the spec for its operation; a 405 for the path. A new error that the
+// spec does not document fails here.
+func TestErrorStatusesAreInTheSpec(t *testing.T) {
+	doc := loadSpec(t)
+	routeOf := http.NewServeMux()
+	for _, r := range Routes(Options{}) {
+		routeOf.Handle(r.Pattern, r.Handler)
+	}
+	check := func(method, target string, status int) {
+		t.Helper()
+		req := httptest.NewRequest(method, target, nil)
+		_, pattern := routeOf.Handler(req)
+		if pattern == "" {
+			_, pattern = routeOf.Handler(httptest.NewRequest(http.MethodGet, target, nil))
+		}
+		if pattern == "" {
+			return // no endpoint at all: the 404 of an unknown path
+		}
+		if !specDeclares(doc, pattern, method, status) {
+			t.Errorf("%s %s answers %d, which the spec does not declare for %q", method, target, status, pattern)
+		}
+	}
+	for _, c := range errorCases {
+		check(c.method, c.path, c.status)
+	}
+	for _, c := range bodyErrorCases {
+		check(c.method, c.path, c.status)
+	}
+}
+
+// specDeclares reports whether the spec declares status for the route
+// pattern: for its method, or for any operation of the path when the
+// pattern has no method (hand-written catch-alls) or the status is 405.
+func specDeclares(doc *openapi3.T, pattern, method string, status int) bool {
+	m, p, found := strings.Cut(pattern, " ")
+	if !found {
+		m, p = "", pattern
+	}
+	p = strings.TrimPrefix(p, "/api/v1")
+	item := doc.Paths.Find(p)
+	if item == nil {
+		item = doc.Paths.Find(strings.TrimSuffix(p, "/"))
+	}
+	if item == nil {
+		item = doc.Paths.Find(p + "/")
+	}
+	if item == nil {
+		return false
+	}
+	for opMethod, op := range item.Operations() {
+		if (m == "" || status == http.StatusMethodNotAllowed || strings.EqualFold(opMethod, method)) && op.Responses.Status(status) != nil {
+			return true
+		}
+	}
+	return false
+}
+
+// TestTusStatusesAreInTheSpec runs tus requests against a real tus server
+// and checks that the spec's uploads operations declare every status they
+// get, and that each error is a problem.
+func TestTusStatusesAreInTheSpec(t *testing.T) {
+	doc := loadSpec(t)
+	svc, _ := testFilesDir(t)
+	c := client{t, testutil.NewServer(t, New(Options{Files: svc, Uploads: testUploads(t, svc)})).URL}
+	tus := map[string]string{"Tus-Resumable": "1.0.0"}
+	with := func(extra map[string]string) map[string]string {
+		h := map[string]string{"Tus-Resumable": "1.0.0"}
+		for k, v := range extra {
+			h[k] = v
+		}
+		return h
+	}
+	st, hdr, b := c.do("POST", UploadsPath, "", nil, with(map[string]string{"Upload-Length": "4", "Upload-Metadata": "target_path " + b64("/t.bin")}))
+	if st != http.StatusCreated {
+		t.Fatalf("create: %d %s", st, b)
+	}
+	upload := strings.TrimPrefix(hdr.Get("Location"), c.url)
+	const create, one = "/files/uploads/", "/files/uploads/{id}"
+	tests := []struct {
+		name, method, specPath, target string
+		headers                        map[string]string
+		body                           string
+		status                         int
+	}{
+		{"no Tus-Resumable", "POST", create, UploadsPath, nil, "", 412},
+		{"no target", "POST", create, UploadsPath, with(map[string]string{"Upload-Length": "4"}), "", 400},
+		{"deferred length", "POST", create, UploadsPath, with(map[string]string{"Upload-Defer-Length": "1", "Upload-Metadata": "target_path " + b64("/d.bin")}), "", 411},
+		{"missing parent", "POST", create, UploadsPath, with(map[string]string{"Upload-Length": "4", "Upload-Metadata": "target_path " + b64("/nope/x.bin")}), "", 404},
+		{"target exists", "POST", create, UploadsPath, with(map[string]string{"Upload-Length": "4", "Upload-Metadata": "target_path " + b64("/docs/a.txt")}), "", 409},
+		{"wrong method", "GET", create, UploadsPath, tus, "", 405},
+		{"unknown upload", "HEAD", one, UploadsPath + "nope", tus, "", 404},
+		{"unknown upload", "PATCH", one, UploadsPath + "nope", with(map[string]string{"Upload-Offset": "0", "Content-Type": "application/offset+octet-stream"}), "ab", 404},
+		{"wrong offset", "PATCH", one, upload, with(map[string]string{"Upload-Offset": "2", "Content-Type": "application/offset+octet-stream"}), "ab", 409},
+		{"wrong content type", "PATCH", one, upload, with(map[string]string{"Upload-Offset": "0", "Content-Type": "text/plain"}), "ab", 400},
+		{"no Tus-Resumable", "PATCH", one, upload, nil, "ab", 412},
+		{"unknown upload", "DELETE", one, UploadsPath + "nope", tus, "", 404},
+	}
+	for _, tt := range tests {
+		var body []byte
+		if tt.body != "" {
+			body = []byte(tt.body)
+		}
+		st, hdr, b := c.do(tt.method, tt.target, "", body, tt.headers)
+		if st != tt.status {
+			t.Errorf("%s %s (%s): %d %s, want %d", tt.method, tt.target, tt.name, st, b, tt.status)
+			continue
+		}
+		if tt.method != "HEAD" && hdr.Get("Content-Type") != apperr.ContentType {
+			t.Errorf("%s %s (%s): the error is not a problem: %s", tt.method, tt.target, tt.name, b)
+		}
+		item := doc.Paths.Find(tt.specPath)
+		declared := false
+		for m, op := range item.Operations() {
+			if (strings.EqualFold(m, tt.method) || st == http.StatusMethodNotAllowed) && op.Responses.Status(st) != nil {
+				declared = true
+			}
+		}
+		if !declared {
+			t.Errorf("%s %s (%s) answers %d, which the spec does not declare", tt.method, tt.specPath, tt.name, st)
+		}
 	}
 }
