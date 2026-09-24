@@ -381,20 +381,20 @@ type TooLargeForSync = Problem
 
 // DownloadFileParams defines parameters for DownloadFile.
 type DownloadFileParams struct {
-	// Path A path in the caller's files area, starting with `/` (the root of the area). See docs/api/conventions.md.
+	// Path A path in the caller's files area, starting with `/` (the root of the area), in Unicode NFC. See docs/api/conventions.md.
 	Path Path `form:"path" json:"path"`
 }
 
 // UploadFileParams defines parameters for UploadFile.
 type UploadFileParams struct {
-	// Path A path in the caller's files area, starting with `/` (the root of the area). See docs/api/conventions.md.
+	// Path A path in the caller's files area, starting with `/` (the root of the area), in Unicode NFC. See docs/api/conventions.md.
 	Path       Path        `form:"path" json:"path"`
 	OnConflict *OnConflict `form:"on_conflict,omitempty" json:"on_conflict,omitempty"`
 }
 
 // DeleteItemParams defines parameters for DeleteItem.
 type DeleteItemParams struct {
-	// Path A path in the caller's files area, starting with `/` (the root of the area). See docs/api/conventions.md.
+	// Path A path in the caller's files area, starting with `/` (the root of the area), in Unicode NFC. See docs/api/conventions.md.
 	Path Path `form:"path" json:"path"`
 
 	// Recursive Delete a folder with everything in it.
@@ -403,7 +403,7 @@ type DeleteItemParams struct {
 
 // GetItemsParams defines parameters for GetItems.
 type GetItemsParams struct {
-	// Path A path in the caller's files area, starting with `/` (the root of the area). See docs/api/conventions.md.
+	// Path A path in the caller's files area, starting with `/` (the root of the area), in Unicode NFC. See docs/api/conventions.md.
 	Path Path `form:"path" json:"path"`
 
 	// Cursor The `next_cursor` of the previous page. Only valid with the same sort and order.

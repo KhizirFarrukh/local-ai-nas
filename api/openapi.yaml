@@ -326,22 +326,46 @@ paths:
       description: |
         tus "creation": send `Tus-Resumable: 1.0.0`, `Upload-Length`, and
         `Upload-Metadata` with `target_path` (required), `on_conflict`, and
-        `sha256` (base64 values, as tus defines). The answer is 201 with the
-        upload's URL in `Location`. Refusals of the metadata are problems;
-        errors of the tus protocol itself are tusd's plain-text answers.
+        `sha256` (base64 values, as tus defines). The target is checked
+        at once, as for the simple upload. With a body
+        (creation-with-upload, `Content-Type: application/offset+octet-stream`)
+        the data starts at once; if it completes the upload, the file is
+        made and `Item-Path` names it. Every error is a problem.
       responses:
         "201":
           description: The upload was created; `Location` is its URL.
+          headers:
+            Location:
+              schema:
+                type: string
+            Upload-Offset:
+              description: With a body, how many bytes the server has.
+              schema:
+                type: integer
+            Item-Path:
+              description: When the upload is complete, the path of the file.
+              schema:
+                type: string
         "400":
           $ref: "#/components/responses/BadRequest"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "405":
+          $ref: "#/components/responses/MethodNotAllowed"
+        "409":
+          $ref: "#/components/responses/Conflict"
         "411":
           $ref: "#/components/responses/LengthRequired"
+        "412":
+          $ref: "#/components/responses/PreconditionFailed"
         "413":
           $ref: "#/components/responses/TooLarge"
         "500":
           $ref: "#/components/responses/InternalError"
         "501":
           $ref: "#/components/responses/NotAvailable"
+        "507":
+          $ref: "#/components/responses/InsufficientStorage"
   /files/uploads/{id}:
     parameters:
       - name: id
@@ -355,21 +379,58 @@ paths:
       summary: Get the offset of a resumable upload (tus)
       responses:
         "200":
-          description: "`Upload-Offset` says how many bytes the server has."
+          description: How many bytes the server has.
+          headers:
+            Upload-Offset:
+              schema:
+                type: integer
+            Upload-Length:
+              schema:
+                type: integer
         "404":
-          description: No such upload.
+          $ref: "#/components/responses/NotFound"
+        "412":
+          $ref: "#/components/responses/PreconditionFailed"
+        "423":
+          $ref: "#/components/responses/Locked"
     patch:
       tags: [uploads]
       operationId: appendUpload
       summary: Send more bytes of a resumable upload (tus)
       description: |
         Send `Upload-Offset` and `Content-Type: application/offset+octet-stream`;
-        the body may be at most `uploads.max_chunk_size`.
+        the body may be at most `uploads.max_chunk_size`. The request that
+        sends the last byte also makes the file (checksum, conflict
+        policy); `Item-Path` names it. If that fails, the upload is removed.
       responses:
         "204":
-          description: The bytes were stored; `Upload-Offset` is the new offset.
+          description: The bytes were stored.
+          headers:
+            Upload-Offset:
+              schema:
+                type: integer
+            Item-Path:
+              description: When the upload is complete, the path of the file.
+              schema:
+                type: string
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "405":
+          $ref: "#/components/responses/MethodNotAllowed"
         "409":
-          description: "`Upload-Offset` does not match the server's offset."
+          $ref: "#/components/responses/Conflict"
+        "412":
+          $ref: "#/components/responses/PreconditionFailed"
+        "413":
+          $ref: "#/components/responses/TooLarge"
+        "423":
+          $ref: "#/components/responses/Locked"
+        "500":
+          $ref: "#/components/responses/InternalError"
+        "507":
+          $ref: "#/components/responses/InsufficientStorage"
     delete:
       tags: [uploads]
       operationId: terminateUpload
@@ -377,6 +438,12 @@ paths:
       responses:
         "204":
           description: The upload and its data were removed.
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "412":
+          $ref: "#/components/responses/PreconditionFailed"
+        "423":
+          $ref: "#/components/responses/Locked"
   /files/items:
     get:
       tags: [files]
@@ -502,7 +569,7 @@ components:
       name: path
       in: query
       required: true
-      description: A path in the caller's files area, starting with `/` (the root of the area). See docs/api/conventions.md.
+      description: A path in the caller's files area, starting with `/` (the root of the area), in Unicode NFC. See docs/api/conventions.md.
       schema:
         type: string
       example: /docs/report.pdf
@@ -766,6 +833,12 @@ components:
             $ref: "#/components/schemas/Problem"
     TooLargeForSync:
       description: The operation is too big for one request (`too_large_for_sync`).
+      content:
+        application/problem+json:
+          schema:
+            $ref: "#/components/schemas/Problem"
+    Locked:
+      description: The item is busy with another request (`locked`); retry later.
       content:
         application/problem+json:
           schema:
