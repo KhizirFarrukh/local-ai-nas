@@ -41,6 +41,20 @@ func testServer(t *testing.T, opts ...func(*files.Options)) (string, string, Ind
 // testServerWrap is testServer with the files service wrapped by wrap.
 func testServerWrap(t *testing.T, wrap func(Target) Target, opts ...func(*files.Options)) (string, string, Index, string) {
 	t.Helper()
+	e := newTestEnv(t, wrap, nil, opts...)
+	return e.url, e.dir, e.server.index, e.area
+}
+
+// testEnv is a tus server on a real HTTP server with a real files area.
+type testEnv struct {
+	server         *Server
+	url, dir, area string
+}
+
+// newTestEnv builds a testEnv; wrap wraps the files service, now is the
+// server's clock (nil: time.Now), and opts adjust the files service.
+func newTestEnv(t *testing.T, wrap func(Target) Target, now func() time.Time, opts ...func(*files.Options)) testEnv {
+	t.Helper()
 	l := storage.NewLayout(testutil.StorageRoot(t), storage.Options{})
 	if _, err := l.Init(); err != nil {
 		t.Fatal(err)
@@ -66,7 +80,7 @@ func testServerWrap(t *testing.T, wrap func(Target) Target, opts ...func(*files.
 		target = wrap(target)
 	}
 	s, err := New(Options{
-		Dir: l.TmpUploads, DB: d, Files: target,
+		Dir: l.TmpUploads, DB: d, Files: target, Now: now,
 		Namespace: storage.DefaultNamespace, BasePath: basePath, MaxSize: 1 << 30,
 	})
 	if err != nil {
@@ -75,7 +89,7 @@ func testServerWrap(t *testing.T, wrap func(Target) Target, opts ...func(*files.
 	mux := http.NewServeMux()
 	mux.Handle(basePath, s)
 	mux.Handle(strings.TrimSuffix(basePath, "/"), s)
-	return testutil.NewServer(t, mux).URL, l.TmpUploads, s.index, area
+	return testEnv{server: s, url: testutil.NewServer(t, mux).URL, dir: l.TmpUploads, area: area}
 }
 
 // metadata encodes Upload-Metadata as tus defines it.

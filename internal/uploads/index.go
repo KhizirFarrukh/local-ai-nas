@@ -76,3 +76,35 @@ func (x Index) Remove(ctx context.Context, id string) error {
 	}
 	return nil
 }
+
+// Expired returns the sessions whose expiry time is before now.
+func (x Index) Expired(ctx context.Context, now time.Time) ([]Session, error) {
+	rows, err := x.db.Read.QueryContext(ctx, `SELECT id FROM uploads WHERE expires_at < ? ORDER BY expires_at`, now.UnixMilli())
+	if err != nil {
+		return nil, fmt.Errorf("uploads: list expired sessions: %w", err)
+	}
+	var ids []string
+	for rows.Next() {
+		var id string
+		if err := rows.Scan(&id); err != nil {
+			_ = rows.Close()
+			return nil, fmt.Errorf("uploads: list expired sessions: %w", err)
+		}
+		ids = append(ids, id)
+	}
+	if err := errors.Join(rows.Err(), rows.Close()); err != nil {
+		return nil, fmt.Errorf("uploads: list expired sessions: %w", err)
+	}
+	out := make([]Session, 0, len(ids))
+	for _, id := range ids {
+		s, err := x.Get(ctx, id)
+		if errors.Is(err, ErrNoSession) {
+			continue // removed meanwhile
+		}
+		if err != nil {
+			return nil, err
+		}
+		out = append(out, s)
+	}
+	return out, nil
+}

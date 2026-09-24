@@ -18,6 +18,7 @@ import (
 	"github.com/KhizirFarrukh/local-ai-nas/internal/files"
 	"github.com/KhizirFarrukh/local-ai-nas/internal/health"
 	"github.com/KhizirFarrukh/local-ai-nas/internal/logging"
+	"github.com/KhizirFarrukh/local-ai-nas/internal/schedule"
 	"github.com/KhizirFarrukh/local-ai-nas/internal/storage"
 	"github.com/KhizirFarrukh/local-ai-nas/internal/uploads"
 )
@@ -135,12 +136,24 @@ func cmdServe(ctx context.Context, args []string, stderr io.Writer) int {
 		Namespace: storage.DefaultNamespace,
 		BasePath:  api.UploadsPath,
 		MaxSize:   int64(a.cfg.Uploads.MaxFileSize),
+		Expiry:    a.cfg.Uploads.Expiry.Duration,
 		Logger:    log,
 	})
 	if err != nil {
 		log.Error("cannot start the upload server", "error", err.Error())
 		return exitError
 	}
+	// Abandoned uploads and temporary files left by a crash (S01.4-T06).
+	cleanCtx, stopCleanup := context.WithCancel(ctx)
+	sched := &schedule.Ticker{Log: log}
+	defer func() {
+		stopCleanup()
+		sched.Wait()
+	}()
+	sched.Every(cleanCtx, "upload cleanup", cleanupInterval, func(ctx context.Context) {
+		cleanup(ctx, log, tus, fsvc, a.cfg.Uploads.Expiry.Duration)
+	})
+
 	srv := &http.Server{
 		Handler: api.New(api.Options{
 			Logger:  log,
@@ -208,4 +221,22 @@ func serve(ctx context.Context, srv *http.Server, ln net.Listener, timeout time.
 		return err
 	}
 	return nil
+}
+
+// cleanupInterval is how often abandoned uploads are looked for.
+const cleanupInterval = time.Hour
+
+// cleanup removes abandoned uploads and old temporary files, logging what
+// it did.
+func cleanup(ctx context.Context, log *slog.Logger, tus *uploads.Server, fsvc *files.Local, expiry time.Duration) {
+	if n, err := tus.Cleanup(ctx); err != nil {
+		log.WarnContext(ctx, "the upload cleanup failed", "error", err.Error())
+	} else if n > 0 {
+		log.InfoContext(ctx, "abandoned uploads removed", "count", n)
+	}
+	if n, err := fsvc.CleanTemp(ctx, storage.DefaultNamespace, expiry, time.Now()); err != nil {
+		log.WarnContext(ctx, "the temporary file cleanup failed", "error", err.Error())
+	} else if n > 0 {
+		log.InfoContext(ctx, "old temporary files removed", "count", n)
+	}
 }
