@@ -1,0 +1,45 @@
+# golangci-lint v2 configuration (ADR-0005). The pinned binary is installed
+# with scripts/install-golangci-lint.sh.
+version: "2"
+
+linters:
+  default: none
+  enable:
+    - depguard
+    - errcheck
+    - gosec
+    - govet
+    - ineffassign
+    - staticcheck
+    - unused
+  settings:
+    depguard:
+      # Area separation (invariant I1): the files area and the photos area
+      # never import each other. Content moves between them only through
+      # internal/transfer (S04.6).
+      rules:
+        files-area:
+          files:
+            - "**/internal/files/**"
+          deny:
+            - pkg: github.com/KhizirFarrukh/local-ai-nas/internal/photos
+              desc: the files area must not import the photos area (I1); use internal/transfer
+        photos-area:
+          files:
+            - "**/internal/photos/**"
+          deny:
+            - pkg: github.com/KhizirFarrukh/local-ai-nas/internal/files
+              desc: the photos area must not import the files area (I1); use internal/transfer
+
+formatters:
+  enable:
+    - gofmt
+    - goimports
+  settings:
+    goimports:
+      local-prefixes:
+        - github.com/KhizirFarrukh/local-ai-nas
+
+issues:
+  max-issues-per-linter: 0
+  max-same-issues: 0
