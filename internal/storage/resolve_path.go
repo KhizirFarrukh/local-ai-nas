@@ -21,7 +21,8 @@ import (
 //     Windows), and no percent-encoded separator or NUL (%2F, %5C, %00),
 //     which would mean the client encoded the path twice.
 //  3. No segment is "..", a run of three or more dots, or dots mixed with
-//     spaces (".. ", ". ."): Windows may treat those as "..".
+//     spaces (".. ", ". ."): Windows may treat those as "..". Unicode
+//     look-alikes of those (fullwidth "．．", "‥") are refused too.
 //  4. No segment is a drive letter ("C:").
 //  5. The result is NFC-normalized, so the same visible name is always
 //     the same file (macOS clients often send decomposed names).
@@ -53,6 +54,8 @@ func cleanUserPath(userPath string) (string, error) {
 			return "", apperr.New(apperr.OutsideRoot, `a path must not contain ".."`)
 		case isDotsAndSpaces(seg):
 			return "", apperr.Newf(apperr.OutsideRoot, "a path must not contain the segment %q", seg)
+		case isLookalikeDots(seg):
+			return "", apperr.Newf(apperr.OutsideRoot, "a path must not contain the segment %q, which reads as dots", seg)
 		case isDriveLetter(seg):
 			return "", apperr.Newf(apperr.InvalidName, "a path must not contain a drive letter (%q)", seg)
 		}
@@ -82,6 +85,16 @@ func isDotsAndSpaces(seg string) bool {
 		return false
 	}
 	return strings.Trim(seg, ". ") == "" && strings.Contains(seg, ".")
+}
+
+// isLookalikeDots reports segments that are not dots as written but
+// become "." or ".." or a dot run in compatibility form (NFKC), such as
+// "．．" (fullwidth) or "‥" (two dot leader): tools that fold such
+// characters, including the Windows "best fit" conversion to legacy code
+// pages, would read them as dots.
+func isLookalikeDots(seg string) bool {
+	folded := norm.NFKC.String(seg)
+	return folded != seg && (folded == "." || folded == ".." || isDotsAndSpaces(folded))
 }
 
 // isDriveLetter reports segments such as "C:" or "c:".

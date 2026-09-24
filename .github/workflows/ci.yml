@@ -139,7 +139,7 @@ jobs:
       - name: Run the runtime image and check health
         run: |
           docker run -d --name nas -p 127.0.0.1:8080:8080 \
-            -e LOCALAINAS_SERVER_BIND=0.0.0.0:8080 local-ai-nas:ci
+            -e LOCALAINAS_SERVER_BIND=0.0.0.0:8080 -e LOCALAINAS_SERVER_ALLOW_CONTAINER_BIND=true local-ai-nas:ci
           for i in $(seq 1 60); do
             if curl -fsS http://127.0.0.1:8080/api/v1/system/health; then
               docker rm -f nas >/dev/null

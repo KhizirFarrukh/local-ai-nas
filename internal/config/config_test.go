@@ -161,6 +161,8 @@ func TestLoadFileErrors(t *testing.T) {
 		{"boolean for a string", "[storage]\nroot = true\n", []string{"storage.root", "wrong type (boolean)"}},
 		{"integer for a string", "[server]\nbind = 8080\n", []string{"server.bind", "must be a string, got the integer 8080"}},
 		{"string for an integer", "[log]\nfile_max_files = \"5\"\n", []string{"log.file_max_files", "must be an integer"}},
+		{"string for a boolean", "[server]\nallow_container_bind = \"yes\"\n", []string{"server.allow_container_bind", "true or false"}},
+		{"integer for a boolean", "[server]\nallow_container_bind = 1\n", []string{"server.allow_container_bind", "true or false"}},
 		{"float", "[uploads]\nmax_file_size = 1.5\n", []string{"uploads.max_file_size", "wrong type (float)"}},
 		{"array", "[log]\nlevel = [\"info\"]\n", []string{"log.level", "wrong type (array)"}},
 		{"table", "[log.level]\nx = 1\n", []string{"log.level", "wrong type (table)"}},

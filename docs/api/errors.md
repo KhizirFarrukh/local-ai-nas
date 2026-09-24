@@ -57,7 +57,7 @@ A name the API is asked to create (an upload, a new folder, the target of a rena
 | `rule` | The name is refused when |
 |---|---|
 | `empty_name` | it is empty |
-| `dot_name` | it is `.` or `..` |
+| `dot_name` | it is `.` or `..`, or reads as dots in compatibility form (such as fullwidth `．．` or `‥`) |
 | `reserved_name` | it is a Windows device name, with any extension and in any case: `CON`, `PRN`, `AUX`, `NUL`, `CONIN$`, `CONOUT$`, `COM0`–`COM9`, `LPT0`–`LPT9`, `COM¹`–`COM³`, `LPT¹`–`LPT³` (for example `aux.txt`), or it starts with `.local-ai-nas-tmp-`, the prefix of the server's temporary files |
 | `forbidden_character` | it contains any of `<` `>` `:` `"` `/` `\` `\|` `?` `*` |
 | `control_character` | it contains a control character (U+0000 to U+001F, or U+007F) |
@@ -65,5 +65,6 @@ A name the API is asked to create (an upload, a new folder, the target of a rena
 | `name_too_long` | it is longer than 255 bytes in UTF-8 |
 | `path_too_long` | the whole path inside your storage area is longer than 4096 bytes |
 | `invalid_utf8` | it is not valid UTF-8 |
+| `lookalike_separator` | it contains a character that looks like `/` or `\` and that some tools turn into one: `／` `＼` `∕` `⁄` `∖` `⧵` `⧸` `⧹` `﹨` (other fullwidth characters, such as `？`, are fine) |
 
 Paths are also normalized to Unicode NFC: a name sent in decomposed form (common on macOS) is the same file as its composed form.

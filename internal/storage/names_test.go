@@ -64,6 +64,20 @@ func TestValidateName(t *testing.T) {
 		{"CONIN$", RuleReservedName},
 		{"conout$.txt", RuleReservedName},
 
+		// Look-alikes of separators and of dot names; other fullwidth
+		// characters are ordinary (common in CJK names).
+		{"a\uFF0Fb", RuleLookalikeSep},
+		{"a\uFF3Cb", RuleLookalikeSep},
+		{"1\u22152", RuleLookalikeSep},
+		{"a\u2044b", RuleLookalikeSep},
+		{"\uFF0E\uFF0E", RuleDotName},
+		{"\uFF0E", RuleDotName},
+		{"\u2025", RuleDotName},
+		{"\u2026", RuleDotName},
+		{"なぜ\uFF1F.txt", ""},
+		{"\uFF26\uFF55\uFF4C\uFF4C.txt", ""},
+		{"Wait\u2026 more.txt", ""},
+
 		// The prefix of the server's temporary files.
 		{".local-ai-nas-tmp-1a2b.part", RuleReservedName},
 		{".local-ai-nas-tmp-", RuleReservedName},

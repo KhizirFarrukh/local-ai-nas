@@ -1015,7 +1015,7 @@ flowchart LR
   4. Concurrent writes to the same path produce one consistent result and no partial file (stress test).
   5. By default the server listens only on loopback. Configuring any other address is refused until S03 is Done.
 - **Risks/notes:** The resolver and name validation are built early in S01's execution order because S01.3 depends on them.
-- **Status:** In Progress (S005)
+- **Status:** Done (S005, 2026-09-24; details in `stages/S01-basic-nas.md`)
 
 #### S01.7: Integration, testing, and stage review
 - **Goal:** Prove that S01 works end to end and is safe, then close the stage.

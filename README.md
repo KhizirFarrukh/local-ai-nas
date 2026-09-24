@@ -182,7 +182,7 @@ Other commands: `migrate up` and `migrate status` (database migrations; `serve` 
 docker compose -f deploy/compose.dev.yaml up --build
 ```
 
-The container runs your working copy with `go run` and keeps its data in a Docker volume. It is reachable at `http://127.0.0.1:8080` from this computer only. After a code change: `docker compose -f deploy/compose.dev.yaml restart`.
+The container runs your working copy with `go run` and keeps its data in a Docker volume. It is reachable at `http://127.0.0.1:8080` from this computer only. Inside the container the server listens on all of the container's interfaces (`LOCALAINAS_SERVER_ALLOW_CONTAINER_BIND`, set in the compose file); on its own the server accepts only loopback addresses for `server.bind` until login and HTTPS exist (stage 3). After a code change: `docker compose -f deploy/compose.dev.yaml restart`.
 
 ### Tests and checks
 

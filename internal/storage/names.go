@@ -29,7 +29,13 @@ const (
 	RuleNameTooLong   = "name_too_long"
 	RulePathTooLong   = "path_too_long"
 	RuleInvalidUTF8   = "invalid_utf8"
+	RuleLookalikeSep  = "lookalike_separator"
 )
+
+// lookalikeSeparators look like a slash or a backslash. Tools that fold
+// them (the Windows "best fit" conversion, NFKC) can turn them into real
+// separators, so new names must not contain them.
+const lookalikeSeparators = "\uFF0F\uFF3C\u2215\u2044\u2216\u29F5\u29F8\u29F9\uFE68"
 
 // TempPrefix starts the names of the server's temporary files, such as
 // an upload that is still being written next to its target. Listings hide
@@ -76,6 +82,13 @@ func ValidateName(name string) error {
 		case strings.ContainsRune(`<>:"/\|?*`, r):
 			return nameErr(RuleForbiddenChar, fmt.Sprintf(`a name must not contain any of < > : " / \ | ? * (found %q)`, r))
 		}
+	}
+	if i := strings.IndexAny(name, lookalikeSeparators); i >= 0 {
+		r, _ := utf8.DecodeRuneInString(name[i:])
+		return nameErr(RuleLookalikeSep, fmt.Sprintf("a name must not contain %q (U+%04X), which looks like a path separator", r, r))
+	}
+	if isLookalikeDots(name) {
+		return nameErr(RuleDotName, fmt.Sprintf("%q reads as dots and is not a valid name", name))
 	}
 	if strings.HasSuffix(name, ".") || strings.HasSuffix(name, " ") {
 		return nameErr(RuleTrailingChar, "a name must not end with a dot or a space")

@@ -34,9 +34,13 @@ db_dir = ""
 logs_dir = ""
 
 [server]
-# host:port to listen on. In S01 only loopback addresses are safe to use;
-# the server has no login yet (S03).
+# host:port to listen on. Until stage S03 adds login and TLS, only loopback
+# addresses are accepted: 127.0.0.1, ::1, localhost, or a name that
+# resolves only to loopback addresses.
 bind = "127.0.0.1:8080"
+# Only inside a container: allow any bind address, such as "0.0.0.0:8080",
+# so a port published on the host's loopback can reach the server.
+allow_container_bind = false
 read_header_timeout = "10s"
 idle_timeout = "2m"
 # How long a shutdown waits for requests that are still running.
