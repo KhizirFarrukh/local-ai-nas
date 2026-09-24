@@ -2,11 +2,11 @@
 
 | Field | Value |
 |---|---|
-| **Version** | 1.1.3 |
+| **Version** | 1.1.2 |
 | **Status** | **Approved baseline** (approved by the user in S005, 2026-09-24); 1.1.0 adds the user's setup-script requirement (S005 E015) |
 | **Last updated** | 2026-09-24 (session S005) |
 | **Source of vision** | `README.md` (repository root), the user's staged roadmap (`code-agent-docs/prompts/P002-staged-development-roadmap.json`), and the user's technology stack (`code-agent-docs/prompts/P003-technology-stack.json`) |
-| **Previous version** | 1.1.2, archived at `code-agent-docs/archive/plan-history/plan_v1.1.2.md` (0.1.0–1.1.1 also archived there) |
+| **Previous version** | 1.1.1, archived at `code-agent-docs/archive/plan-history/plan_v1.1.1.md` (0.1.0–1.1.0 also archived there) |
 
 > **This is a living document.** It changes as the user gives feedback. Every change follows `code-agent-docs/RULES.md` **R4**: the old version is archived, the version is bumped, and a revision entry is added. While the plan is a pre-1.0 draft, restructurings bump the MINOR version. **When the user approves this plan as the baseline, it becomes version 1.0.0.**
 >
@@ -365,7 +365,7 @@ Priorities: **Must** (required for its stage to be Done), **Should** (important;
 | NFR-028 | **AI quality and throughput**: a labelled evaluation set with accuracy targets, and CPU-only throughput benchmarks. | Must | New. |
 | NFR-029 | **License policy**: every dependency, external tool, dataset, and AI model has a license that allows **anyone to deploy and use** the project. Nothing is restricted to non-commercial or research-only use. Each is recorded in `dependencies.md` with its license. | Must | New in 0.3.0 (P003). |
 | NFR-030 | **Multi-architecture**: the core and its images build and run on **linux/amd64 and linux/arm64** (e.g. Raspberry Pi), via pure-Go builds and multi-arch container images. | Must | New in 0.3.0 (P003). |
-| NFR-031 | **Streaming start-up and resource bounds** (measured on the Q1 platforms, see Q1). A newly requested level starts playing within ≤ 4 s with a hardware encoder, or ≤ 8 s for 720p on CPU-only reference hardware. Transcoding never starves the core: sessions are bounded, and interactive API latency stays within NFR-003. | Should | New in 0.4.0 (ADR-0020). |
+| NFR-031 | **Streaming start-up and resource bounds** (targets to confirm with Q1). A newly requested level starts playing within ≤ 4 s with a hardware encoder, or ≤ 8 s for 720p on CPU-only reference hardware. Transcoding never starves the core: sessions are bounded, and interactive API latency stays within NFR-003. | Should | New in 0.4.0 (ADR-0020). |
 | NFR-032 | **Dependency record for deployment**: every dependency needed to build or deploy the NAS is recorded in `dependencies.md` in the same commit that introduces it (R6), and every **runtime prerequisite** also gets a per-platform entry (minimum version and install method for Linux x86-64, Raspberry Pi, Windows 11, and the Docker image) in section 12. The setup scripts (FR-149) are checked against this record. | Must | New in 1.1.0 (user, S005 E015). All stages from S01. |
 
 ---
@@ -1754,7 +1754,7 @@ flowchart LR
 
 #### S06.8: Performance and stage review
 - **Goal:** Search meets its latency targets at scale, then the stage closes.
-- **Scope:** benchmarks at scale (100,000 photos plus 100,000 files, Q18) against the latency targets in NFR-003; documentation; completion record; user sign-off.
+- **Scope:** benchmarks at scale (e.g. 100,000 photos plus 100,000 files) against the latency targets in NFR-003; documentation; completion record; user sign-off.
 - **Deliverables:** benchmark suite and report; search user guide (including the operator reference); completion record.
 - **Depends on:** S06.1–S06.7.
 - **Requirements:** NFR-003.
@@ -1762,7 +1762,7 @@ flowchart LR
   1. At 100k photos + 100k files, search p95 meets NFR-003 on reference hardware.
   2. A full rebuild from disk meets NFR-003.
   3. The completion record is written and the user's sign-off is recorded.
-- **Risks/notes:** Reference hardware (Q1, S005): an x86-64 mini-PC or old PC, a Raspberry Pi, and the Windows 11 PC.
+- **Risks/notes:** Reference hardware pending Q1.
 - **Status:** Not started
 
 **Design notes (S06):**
@@ -2615,4 +2615,3 @@ CI runs on Linux and Windows from S01.1.
 | 1.1.0 | 2026-09-24 | **Deployment dependency record and per-platform setup scripts** (MINOR, R4). FR-149 (a separate setup script per platform that deploys the NAS automatically) and NFR-032 (every dependency recorded; runtime prerequisites per platform in `dependencies.md` section 12) added. S11.2 rewritten around the setup scripts (goal, scope, deliverables, requirements, acceptance criteria); S11.4 install guide built around them. Q5 partly answered (Windows 11 gets a setup script; macOS still open). Q41 added (Linux script default mode). Concern 8.20 updated. | The user's request (S005 E015): "one thing to add: keep record of all dependencies needed, in the end you will have to make a setup script, a separate one for each platform, which when run, will automatically handle the deployment." | `logs/sessions/2026-09-24_S005.md` |
 | 1.1.1 | 2026-09-24 | Clarification (PATCH): Q22 and RK-08 record the license form **AGPL-3.0-or-later**. | The user's answer (S005 E020): "AGPL-3.0-or-later (Recommended)" | `logs/sessions/2026-09-24_S005.md` |
 | 1.1.2 | 2026-09-24 | Clarification (PATCH): **Q18 answered**: the library size is 100,000 photos + 100,000 files per installation, confirming A12; NFR-003, section 5, and the S01.7 notes updated; no target changes. S01.7 status In Progress. | The user's answer (S005 E116): "100k photos + 100k files (Recommended)" | `logs/sessions/2026-09-24_S005.md` |
-| 1.1.3 | 2026-09-24 | Clarification (PATCH), audit A002: NFR-031 and S06.8 no longer say that Q1 is pending (it was answered in S005), and S06.8 names the Q18 library size. No requirement or target changes. | Audit A002 findings F-003, F-004 (R12, S01.7-T07) | `audits/A002-2026-09-24-documentation-audit.md`; `logs/sessions/2026-09-24_S005.md` |

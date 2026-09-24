@@ -3,6 +3,7 @@
 <!--
 Template for documentation audits under RULES.md R12.
 Created in audit A001 (session S004) from P004. Written generally so that every later audit (A002, A003, ...) can reuse it.
+Updated in audit A002 (session S005): checks for the product documentation (docs/, scripts/, README sections owned by stages) in groups A, E, and K.
 UPDATE THIS CHECKLIST whenever a new document type, folder, rule, or invariant is added (R12 / P004).
 
 How to use:
@@ -58,6 +59,7 @@ How to use:
 - [ ] Root files exist: README.md, AGENTS.md, and every editor-native pointer file listed in RULES.md.
 - [ ] No orphaned files: every file is covered by the documentation map (or the map needs an entry).
 - [ ] `archive/plan-history/` holds every superseded plan version listed in the revision history, and each equals `git show <commit>:code-agent-docs/plan.md`.
+- [ ] Every script the documentation shows as `scripts/<name>.sh` is executable in git (`git ls-files -s`: mode 100755).
 
 ### B. Prompt fulfillment
 - [ ] For every user prompt: each definition_of_done item, execution step, and pre-approved change is marked Done / Partial / Missing with evidence.
@@ -88,6 +90,7 @@ How to use:
 ### E. README alignment
 - [ ] Every README feature maps to at least one requirement.
 - [ ] Every place where README.md is out of date with **approved** decisions is written up as a proposal (current text → proposed text → reason with source), never as a direct edit.
+- [ ] README edits made by tasks stay inside the sections their stage document names (its files table). Any other change is reverted and written up as a proposal.
 
 ### F. ADRs
 - [ ] Numbering is sequential with no gaps or duplicates. File names match titles (or the exception is documented).
@@ -127,6 +130,7 @@ How to use:
 - [ ] Stage, substage, task, requirement, ADR, and invariant IDs are identical everywhere.
 - [ ] Terminology is consistent (areas, sidecar naming, operators, component names).
 - [ ] All relative links and backticked `code-agent-docs/…` paths resolve.
+- [ ] Product documentation (`docs/`, `scripts/README.md`, the README's Development section): links and anchors resolve, and every command it shows was run as written (for example by extracting its code blocks into a script), or the report says which were not.
 - [ ] Placeholder search (TODO, TBD, FIXME, XXX, "to be confirmed", "placeholder", `<date>`, empty sections). Each hit is resolved, deferred with a named stage, or explained as notation.
 - [ ] Dates are consistent and plausible across logs, revision history, ADRs, and changelogs.
 
