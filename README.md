@@ -140,12 +140,60 @@ The sidecar files are the **source of truth**. Any search index built by the app
 
 ## 🚀 Getting Started
 
-> Installation instructions will be added once the first release is ready.
+> Installation instructions will be added once the first release is ready. To run the current development version from source, see the Development section below.
 
 Planned deployment options:
 - [ ] Docker Compose (primary), with images for x86-64 and ARM64 (e.g. Raspberry Pi); optional AI component enabled with a Compose profile
 - [ ] Native install on Linux (single binary + systemd service)
 - [ ] Native install on Windows and macOS (under consideration)
+
+---
+
+## 🛠️ Development
+
+The project is in its first stage: the NAS core, a REST API on this computer only, with no web interface or login yet. To run it from source:
+
+**You need** Git and Go 1.27 or newer. The exact Go version the project pins (go1.27.1) is downloaded automatically on the first build. Docker is optional.
+
+### Run it on your computer (Linux, macOS, or Windows)
+
+```sh
+git clone https://github.com/KhizirFarrukh/local-ai-nas.git
+cd local-ai-nas
+go run ./cmd/local-ai-nas serve --storage-root "$PWD/dev/data"
+```
+
+The same command works in PowerShell. The server creates the folder, its database, and its log file (`dev/data/.local-ai-nas/`), and listens on `http://127.0.0.1:8080`. Check it from a second terminal:
+
+```sh
+curl http://127.0.0.1:8080/api/v1/system/health
+# {"status":"ok","version":"dev","checks":[{"name":"database","status":"ok"}]}
+```
+
+Stop it with Ctrl+C. The `dev/` folder is ignored by Git.
+
+To use a config file instead of flags, copy [`deploy/config.example.toml`](deploy/config.example.toml) to `dev/config.toml`, set `storage.root` to an absolute path, and run `go run ./cmd/local-ai-nas serve --config dev/config.toml`. Every setting can also come from an environment variable or a flag (`storage.root` = `LOCALAINAS_STORAGE_ROOT` = `--storage-root`); flags win over environment variables, which win over the file. `go run ./cmd/local-ai-nas serve -h` lists all flags.
+
+Other commands: `migrate up` and `migrate status` (database migrations; `serve` also migrates on start) and `version`.
+
+### Run it in Docker
+
+```sh
+docker compose -f deploy/compose.dev.yaml up --build
+```
+
+The container runs your working copy with `go run` and keeps its data in a Docker volume. It is reachable at `http://127.0.0.1:8080` from this computer only. After a code change: `docker compose -f deploy/compose.dev.yaml restart`.
+
+### Tests and checks
+
+| What | Command |
+|---|---|
+| Tests | `go test ./...` |
+| Coverage (minimum 80%) | `scripts/coverage.sh` |
+| Lint and format | `scripts/install-golangci-lint.sh` once, then `./bin/golangci-lint run ./...` and `./bin/golangci-lint fmt --diff` |
+| Dependency licenses | `scripts/check-licenses.sh` |
+
+On Windows, run the `scripts/*.sh` files from Git Bash. More in [docs/testing.md](docs/testing.md). CI runs all of these on Linux and Windows for every push.
 
 ---
 

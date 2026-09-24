@@ -57,6 +57,18 @@ jobs:
       - name: Coverage gate (internal/..., minimum 80%)
         if: runner.os == 'Linux'
         run: bash scripts/coverage.sh
+      - name: Quick start from the README (fresh clone)
+        shell: bash
+        run: |
+          go run ./cmd/local-ai-nas serve --storage-root "$PWD/dev/data" > quickstart.log 2>&1 &
+          for i in $(seq 1 90); do
+            if curl -fsS http://127.0.0.1:8080/api/v1/system/health; then
+              exit 0
+            fi
+            sleep 2
+          done
+          cat quickstart.log
+          exit 1
 
   checks:
     name: Vulnerabilities, licenses, generated code
@@ -110,3 +122,51 @@ jobs:
           path: dist/
           retention-days: 7
           if-no-files-found: error
+
+  image:
+    name: Dev image (build, run, compose, scan)
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - uses: docker/setup-buildx-action@v4.4.1
+      - name: Build the runtime image
+        run: >
+          docker buildx build --load
+          -f deploy/Dockerfile.dev --target runtime
+          --build-arg VERSION=${GITHUB_SHA::12}
+          -t local-ai-nas:ci .
+      - name: Run the runtime image and check health
+        run: |
+          docker run -d --name nas -p 127.0.0.1:8080:8080 \
+            -e LOCALAINAS_SERVER_BIND=0.0.0.0:8080 local-ai-nas:ci
+          for i in $(seq 1 60); do
+            if curl -fsS http://127.0.0.1:8080/api/v1/system/health; then
+              docker rm -f nas >/dev/null
+              exit 0
+            fi
+            sleep 1
+          done
+          docker logs nas
+          exit 1
+      - name: Start the compose dev environment and check health
+        run: |
+          docker compose -f deploy/compose.dev.yaml up -d --build
+          for i in $(seq 1 90); do
+            if curl -fsS http://127.0.0.1:8080/api/v1/system/health; then
+              docker compose -f deploy/compose.dev.yaml down -v
+              exit 0
+            fi
+            sleep 2
+          done
+          docker compose -f deploy/compose.dev.yaml logs
+          docker compose -f deploy/compose.dev.yaml down -v
+          exit 1
+      - name: Scan the runtime image (Trivy)
+        uses: aquasecurity/trivy-action@v0.36.0
+        with:
+          version: v0.74.0
+          image-ref: local-ai-nas:ci
+          severity: HIGH,CRITICAL
+          ignore-unfixed: true
+          exit-code: "1"
