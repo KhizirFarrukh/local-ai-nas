@@ -78,6 +78,13 @@ var errorCases = []struct {
 	{http.MethodGet, "/api/v1/files/items?path=/docs%5Ca.txt", http.StatusBadRequest, "invalid_name"},
 	{http.MethodGet, "/api/v1/files/items?path=/missing", http.StatusNotFound, "not_found"},
 	{http.MethodPost, "/api/v1/files/items?path=/", http.StatusMethodNotAllowed, "method_not_allowed"},
+	// DELETE /api/v1/files/items.
+	{http.MethodDelete, "/api/v1/files/items", http.StatusBadRequest, "invalid_request"},
+	{http.MethodDelete, "/api/v1/files/items?path=/docs&recursive=maybe", http.StatusBadRequest, "invalid_request"},
+	{http.MethodDelete, "/api/v1/files/items?path=/", http.StatusBadRequest, "invalid_request"},
+	{http.MethodDelete, "/api/v1/files/items?path=/docs/../../x", http.StatusBadRequest, "outside_root"},
+	{http.MethodDelete, "/api/v1/files/items?path=/missing", http.StatusNotFound, "not_found"},
+	{http.MethodDelete, "/api/v1/files/items?path=/docs", http.StatusConflict, "conflict"},
 	// POST /api/v1/files/folders: other methods (the body cases are below).
 	{http.MethodGet, "/api/v1/files/folders", http.StatusMethodNotAllowed, "method_not_allowed"},
 	// POST /api/v1/files/operations/{rename,move}: other methods (the body

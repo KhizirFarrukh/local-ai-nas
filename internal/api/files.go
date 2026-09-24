@@ -9,6 +9,15 @@ import (
 	"github.com/KhizirFarrukh/local-ai-nas/internal/files"
 )
 
+// DeleteItem deletes a file or folder (S01.3-T09).
+func (s *server) DeleteItem(ctx context.Context, req gen.DeleteItemRequestObject) (gen.DeleteItemResponseObject, error) {
+	opts := files.DeleteOptions{Recursive: req.Params.Recursive != nil && *req.Params.Recursive}
+	if err := s.files.Delete(ctx, s.owner, req.Params.Path, opts); err != nil {
+		return nil, err
+	}
+	return gen.DeleteItem204Response{}, nil
+}
+
 // GetItems lists a folder, or returns the details of a file (S01.3-T02).
 // Every parameter is checked before the service is called, so invalid
 // input never reaches it.
@@ -127,4 +136,8 @@ func (noFiles) Move(context.Context, string, string, string, files.MoveOptions) 
 
 func (noFiles) Copy(context.Context, string, string, string, files.CopyOptions) (files.Item, bool, error) {
 	return files.Item{}, false, errNoFiles
+}
+
+func (noFiles) Delete(context.Context, string, string, files.DeleteOptions) error {
+	return errNoFiles
 }

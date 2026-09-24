@@ -1,20 +1,21 @@
 # CURRENT_STATE
 
-**Last updated:** 2026-09-24 16:28 +0500 (session S005)
+**Last updated:** 2026-09-24 16:37 +0500 (session S005)
 **Plan version:** 1.1.1 (`code-agent-docs/plan.md`), **Approved baseline** 1.0.0 (S005) + the setup-script requirement (1.1.0, S005 E015)
-**Current phase:** Implementation: S01 (Basic NAS implementation) in progress; S01.1 and S01.2 done; S01.3, S01.5, and S01.6 in progress
+**Current phase:** Implementation: S01 (Basic NAS implementation) in progress; S01.1, S01.2, and S01.3 done; S01.5 and S01.6 in progress
 
 ## Active stage and task
-- **Active stage:** S01 (Basic NAS implementation), **In Progress** (`stages/S01-basic-nas.md`); S01.1 and S01.2 **Done**; S01.6 **In Progress** (T01, T02 done; T03–T06 later); S01.5 **In Progress** (T01–T04 done; T05/T06 later); S01.3 **In Progress**.
-- **Active task:** **S01.3-T08** Copy (branch `feat/S01.3-T08-copy`): done, waiting for CI and the merge; next **S01.3-T09** delete, then the S01.3 closure
+- **Active stage:** S01 (Basic NAS implementation), **In Progress** (`stages/S01-basic-nas.md`); S01.1, S01.2, and S01.3 **Done**; S01.6 **In Progress** (T01, T02 done; T03–T06 next); S01.5 **In Progress** (T01–T04 done; T05/T06 later).
+- **Active task:** **S01.3-T09** Delete + S01.3 closure (branch `feat/S01.3-T09-delete`): done, waiting for CI and the merge; next **S01.6-T03** symlink policy
 
 ## In progress (write-ahead)
-- S01.3-T08: committed; push, CI, merge into `develop`.
+- S01.3-T09 and the S01.3 closure: committed; push, CI, merge into `develop`.
 
 ## Last completed
 - `develop` verified complete (S005): merge `c535cda` brought `cf60f72` (plan 0.4.0, which PR #3 had put on `main` only) and the user's `bda8321` (prompts 3 and 4).
 - Approval-stage decisions D-01–D-14 applied (S005 E007–E010). **Plan 1.0.0 baseline and S01 approved** (S005 E012).
-- **S01.3-T08 done** (S005 E083): `POST /api/v1/files/operations/copy`: a scan first (limits → 422 `too_large_for_sync`, name rules, links refused, free space), a hidden temp file or temp tree committed in one step, times kept; settings `copy.sync_max_items`/`sync_max_bytes`; `renameIfFree` fixes a Windows race in folder renames (also for T07 moves).
+- **S01.3 closed** (S005 E085): T09 delete (`DELETE /api/v1/files/items`, `recursive`); closure tests over a real server (every operation) and for confinement (10 operations × escape paths and links; sentinels unchanged); `storage.IsEscape` maps os.Root escape refusals to `outside_root` (they were 500). All 5 substage criteria checked (S01 change log).
+- **S01.3-T08 done and merged** (CI run 35993223778 green; S005 E083): `POST /api/v1/files/operations/copy`: a scan first (limits → 422 `too_large_for_sync`, name rules, links refused, free space), a hidden temp file or temp tree committed in one step, times kept; settings `copy.sync_max_items`/`sync_max_bytes`; `renameIfFree` fixes a Windows race in folder renames (also for T07 moves).
 - **S01.3-T07 done and merged** (CI run 35992364545 green; S005 E080): rename and move endpoints; folder-into-itself refused through `os.SameFile` ancestors (catches case variants on Windows); case-only renames; atomic no-replace for files (hard link + remove, undone if the remove fails); folders never replaced or merged.
 - **S01.3-T06 done and merged** (CI run 35972700242 green; S005 E077): `GET /api/v1/files/content` with ranges and conditional requests via `http.ServeContent`, 412/416 as problems (new codes `precondition_failed`, `range_not_satisfiable`), `attachment` Content-Disposition (RFC 6266/8187), nosniff + sandbox CSP; details from the open handle.
 - **S01.3-T05 done and merged** (CI run 35971985758 green; S005 E074): `PUT /api/v1/files/content`: declared size checked first (411/413/507 before any byte), temp file in the target folder + fsync + atomic commit (Link for fail/rename, Rename for overwrite), hidden temp names, per-route body limits; the simple-upload part of S01.4-T05 done early.
@@ -48,8 +49,8 @@
 - Plan 1.1.0: the user's requirement to record every dependency and build a setup script per platform (FR-149, NFR-032, S11.2, Q41; `dependencies.md` section 12; RULES 1.5.0) (S005 E015–E016).
 
 ## Next steps
-1. **S01.3** (core file operations): T01 FilesService interface on os.Root with hooks (internal/files); then list (cursor pagination), details (MIME, ETag), create folder, simple streamed upload (PUT /content, free-space guard, name rules), download (Range/ETag), rename, move, copy, delete. **Spec-first:** each endpoint goes into `api/openapi.yaml` first, then `go generate ./internal/api`, then the strict operation (a missing one does not compile); add `github.com/oapi-codegen/runtime` v1.7.0 with the first operation that has parameters (register, R6). Each endpoint: an error case in `errorCases` (the contract test requires it), a review in `docs/api/conventions.md`, and fake-service tests that invalid input never reaches the service.
-2. **S01.4-T06 must also clean stale `.local-ai-nas-tmp-*` files** (S01 change log, T05 row). Then S01.6-T03..T06 (remember the container bind note in the S01 change log), S01.4, S01.5-T05/T06, S01.7.
+1. **S01.6-T03..T06** in order: T03 symlink policy (os.Root still follows links that stay inside the area; decide and test "never followed" for reads, writes, and traversal; see the T09 change-log row), T04 conflict handling (every policy for every operation is mostly covered; decide on no-replace renames for folders, T07 row), T05 locks, T06 bind guard (container exception note). **Endpoint workflow (spec-first):** spec → `go generate ./internal/api` → strict operation; an error case in `errorCases`/`bodyErrorCases`; a review row in `docs/api/conventions.md`; a fake-service test that invalid input never reaches the service.
+2. Then S01.4 (tus; **S01.4-T06 must also clean stale `.local-ai-nas-tmp-*` files**, T05 row), S01.5-T05/T06, S01.7.
 3. **Q18 (library size)** is needed before S01.7; ask the user when S01.7 comes close.
 4. CI: every push runs `.github/workflows/ci.yml`. `gh` is not installed; the repository is public. Watch a commit's run through the public REST API (`/repos/KhizirFarrukh/local-ai-nas/actions/runs?head_sha=<sha>`, then `/jobs`; 60 anonymous requests per hour) or the run's web page (its "Status" field). Step logs need sign-in: reproduce Linux failures with `GOOS=linux go test -c` binaries in the WSL Ubuntu distro, run from the package directory under /mnt/c when a test reads repo files.
 5. Every finished branch: merge it into `develop` myself and push (RULES User Preferences, S005).

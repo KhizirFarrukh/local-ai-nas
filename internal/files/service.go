@@ -42,6 +42,8 @@ type Service interface {
 	// whether it created a new item (false: it replaced a file)
 	// (S01.3-T08).
 	Copy(ctx context.Context, owner, from, to string, opts CopyOptions) (Item, bool, error)
+	// Delete deletes the item at path permanently (S01.3-T09).
+	Delete(ctx context.Context, owner, path string, opts DeleteOptions) error
 }
 
 // Op names a file operation, for hooks and logs.
@@ -187,6 +189,8 @@ func (s *Local) Stat(ctx context.Context, owner, path string) (Item, error) {
 // the client used.
 func fsError(err error, path string) error {
 	switch {
+	case storage.IsEscape(err):
+		return apperr.Wrap(apperr.OutsideRoot, path+" leads outside your storage area (through a symbolic link)", err)
 	case storage.IsNotFound(err):
 		return apperr.Wrap(apperr.NotFound, "no item at "+path, err)
 	case errors.Is(err, fs.ErrExist):
