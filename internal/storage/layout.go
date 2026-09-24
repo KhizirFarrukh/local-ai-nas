@@ -213,13 +213,19 @@ func samePath(a, b string) bool {
 // ensureDir creates dir (and missing parents, for relocated directories)
 // if it is missing and checks that it is a real directory.
 func ensureDir(dir string) error {
-	info, err := os.Lstat(dir)
-	if errors.Is(err, fs.ErrNotExist) {
+	if _, err := os.Lstat(dir); errors.Is(err, fs.ErrNotExist) {
 		if err := os.MkdirAll(dir, 0o750); err != nil {
 			return fmt.Errorf("storage: cannot create %s: %w", dir, err)
 		}
 		return nil
 	}
+	return ensureExistingDir(dir)
+}
+
+// ensureExistingDir checks that dir exists and is a real directory (not a
+// file or a symbolic link). It never creates anything.
+func ensureExistingDir(dir string) error {
+	info, err := os.Lstat(dir)
 	if err != nil {
 		return fmt.Errorf("storage: cannot check %s: %w", dir, err)
 	}

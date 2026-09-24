@@ -20,6 +20,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/google/go-cmp/cmp"
+
 	"github.com/KhizirFarrukh/local-ai-nas/internal/health"
 	"github.com/KhizirFarrukh/local-ai-nas/internal/logging"
 	"github.com/KhizirFarrukh/local-ai-nas/internal/testutil"
@@ -186,7 +188,17 @@ func TestServeInProcess(t *testing.T) {
 	exited := func() bool { return len(done) > 0 }
 
 	rep, hdr := waitHealthy(t, addr, exited)
-	if rep.Status != "ok" || rep.Version != "dev" || len(rep.Checks) != 1 || rep.Checks[0].Name != "database" {
+	var names []string
+	for _, c := range rep.Checks {
+		names = append(names, c.Name)
+		if c.Status != "ok" {
+			t.Errorf("check %s = %s (%s%s)", c.Name, c.Status, c.Detail, c.Error)
+		}
+	}
+	if diff := cmp.Diff([]string{"config", "storage_writable", "same_filesystem", "free_space", "database"}, names); diff != "" {
+		t.Errorf("health checks (-want +got):\n%s", diff)
+	}
+	if rep.Status != "ok" || rep.Version != "dev" {
 		t.Errorf("health report = %+v", rep)
 	}
 	if id := hdr.Get(logging.RequestIDHeader); len(id) != 32 {
@@ -217,7 +229,7 @@ func TestServeInProcess(t *testing.T) {
 	if err != nil {
 		t.Fatalf("log file: %v", err)
 	}
-	for _, want := range []string{`"msg":"starting"`, `"msg":"database migration applied"`, `"msg":"listening"`, `"msg":"request"`, `"route":"GET /api/v1/system/health"`, `"msg":"shutting down"`, `"msg":"stopped"`} {
+	for _, want := range []string{`"msg":"starting"`, `"msg":"database migration applied"`, `"msg":"startup checks"`, `"msg":"listening"`, `"msg":"request"`, `"route":"GET /api/v1/system/health"`, `"msg":"shutting down"`, `"msg":"stopped"`} {
 		if !strings.Contains(string(logFile), want) {
 			t.Errorf("log file lacks %s", want)
 		}
