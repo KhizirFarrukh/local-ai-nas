@@ -363,13 +363,27 @@ func TestSmokeBinary(t *testing.T) {
 	if err := cmd.Start(); err != nil {
 		t.Fatal(err)
 	}
-	waitc := make(chan error, 1)
-	go func() { waitc <- cmd.Wait() }()
-	exited := func() bool { return len(waitc) > 0 }
+	// done is closed when the process has exited; waitErr is set before.
+	// (A buffered channel's length cannot tell "exited" once the result
+	// has been received, which made the cleanup below wait forever.)
+	done := make(chan struct{})
+	var waitErr error
+	go func() {
+		waitErr = cmd.Wait()
+		close(done)
+	}()
+	exited := func() bool {
+		select {
+		case <-done:
+			return true
+		default:
+			return false
+		}
+	}
 	defer func() {
 		if !exited() {
 			_ = cmd.Process.Kill()
-			<-waitc
+			<-done
 		}
 	}()
 
@@ -385,9 +399,9 @@ func TestSmokeBinary(t *testing.T) {
 		t.Fatal(err)
 	}
 	select {
-	case err := <-waitc:
-		if err != nil {
-			t.Errorf("process exit: %v; stderr:\n%s", err, stderr.String())
+	case <-done:
+		if waitErr != nil {
+			t.Errorf("process exit: %v; stderr:\n%s", waitErr, stderr.String())
 		}
 		if !strings.Contains(stderr.String(), `"msg":"stopped"`) {
 			t.Errorf("no graceful stop in the log:\n%s", stderr.String())
