@@ -105,6 +105,10 @@ var errorCases = []struct {
 	// problem bodies are tested in internal/uploads).
 	{http.MethodPost, "/api/v1/files/uploads/", http.StatusNotImplemented, "not_available"},
 	{http.MethodPost, "/api/v1/files/uploads", http.StatusNotImplemented, "not_available"},
+	// The offline API documentation: GET and HEAD only; known files only.
+	{http.MethodPost, "/api/docs/", http.StatusMethodNotAllowed, "method_not_allowed"},
+	{http.MethodGet, "/api/docs/nothing.js", http.StatusNotFound, "not_found"},
+	{http.MethodPut, "/api/docs", http.StatusMethodNotAllowed, "method_not_allowed"},
 	// The reserved photos routes, with any method.
 	{http.MethodGet, "/api/v1/photos", http.StatusNotImplemented, "not_available"},
 	{http.MethodPost, "/api/v1/photos", http.StatusNotImplemented, "not_available"},
@@ -325,6 +329,9 @@ func TestErrorStatusesAreInTheSpec(t *testing.T) {
 		}
 		if pattern == "" {
 			return // no endpoint at all: the 404 of an unknown path
+		}
+		if _, p, _ := strings.Cut(pattern, " "); !strings.HasPrefix(p, "/api/v1/") && !strings.HasPrefix(pattern, "/api/v1/") {
+			return // the documentation at /api/docs is not part of the versioned API
 		}
 		if !specDeclares(doc, pattern, method, status) {
 			t.Errorf("%s %s answers %d, which the spec does not declare for %q", method, target, status, pattern)

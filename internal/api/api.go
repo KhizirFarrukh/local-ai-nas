@@ -108,6 +108,9 @@ func Routes(o Options) []Route {
 		// under the uploads tag (docs/api/conventions.md).
 		{Pattern: UploadsPath, Handler: chunkLimit(o.MaxChunkBytes, o.Logger, uploads), MaxBody: o.MaxChunkBytes},
 		{Pattern: strings.TrimSuffix(UploadsPath, "/"), Handler: chunkLimit(o.MaxChunkBytes, o.Logger, uploads), MaxBody: o.MaxChunkBytes},
+		// The offline API documentation (S01.5-T06).
+		{Pattern: DocsPath, Handler: apiDocs(o.Logger)},
+		{Pattern: strings.TrimSuffix(DocsPath, "/"), Handler: docsRedirect(o.Logger)},
 		{Pattern: "/api/v1/photos", Handler: photos},
 		{Pattern: "/api/v1/photos/", Handler: photos},
 	}

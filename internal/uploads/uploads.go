@@ -115,8 +115,36 @@ func New(o Options) (*Server, error) {
 		return nil, err
 	}
 	// tusd routes on the path below its base path.
-	s.Handler = problemBodies(http.StripPrefix(strings.TrimSuffix(o.BasePath, "/"), h), o.Logger)
+	s.Handler = problemBodies(knownIDs(o.BasePath, o.Logger, http.StripPrefix(strings.TrimSuffix(o.BasePath, "/"), h)), o.Logger)
 	return s, nil
+}
+
+// knownIDs answers 404 for a path whose upload ID this server cannot have
+// made (isUploadID) before tusd sees it: tusd uses the ID as a file name,
+// and a name such as `"` is an error on Windows, not "not found".
+func knownIDs(base string, log *slog.Logger, next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if id, ok := strings.CutPrefix(r.URL.Path, base); ok && id != "" && !isUploadID(id) {
+			w.Header().Set("Tus-Resumable", "1.0.0") // tus puts it on every answer
+			apperr.Write(w, r, log, apperr.Newf(apperr.NotFound, "there is no upload %q", id))
+			return
+		}
+		next.ServeHTTP(w, r)
+	})
+}
+
+// isUploadID reports whether id has the form of the IDs beforeCreate
+// makes: 26 characters of lowercase base32.
+func isUploadID(id string) bool {
+	if len(id) != 26 {
+		return false
+	}
+	for _, c := range id {
+		if (c < 'a' || c > 'z') && (c < '2' || c > '7') {
+			return false
+		}
+	}
+	return true
 }
 
 // beforeCreate runs before tusd creates an upload. It checks the metadata

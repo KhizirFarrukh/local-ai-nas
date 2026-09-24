@@ -32,3 +32,9 @@
 *.onnx binary
 *.db binary
 *.sqlite binary
+
+# Vendored files are kept byte for byte: their checksums are recorded in
+# code-agent-docs/dependencies.md (S01.5-T06).
+internal/api/docs/redoc.standalone.js -text -diff
+internal/api/docs/redoc.standalone.js.LICENSE.txt -text
+internal/api/docs/REDOC-LICENSE -text
