@@ -15,6 +15,7 @@ import (
 	"github.com/KhizirFarrukh/local-ai-nas/internal/api"
 	"github.com/KhizirFarrukh/local-ai-nas/internal/config"
 	"github.com/KhizirFarrukh/local-ai-nas/internal/db"
+	"github.com/KhizirFarrukh/local-ai-nas/internal/files"
 	"github.com/KhizirFarrukh/local-ai-nas/internal/health"
 	"github.com/KhizirFarrukh/local-ai-nas/internal/logging"
 	"github.com/KhizirFarrukh/local-ai-nas/internal/storage"
@@ -123,7 +124,12 @@ func cmdServe(ctx context.Context, args []string, stderr io.Writer) int {
 	logStartupChecks(ctx, log, checks)
 
 	srv := &http.Server{
-		Handler:           api.New(api.Options{Logger: log, Version: version, Checks: checks}),
+		Handler: api.New(api.Options{
+			Logger:  log,
+			Version: version,
+			Checks:  checks,
+			Files:   files.NewLocal(storage.NewResolver(a.layout), nil),
+		}),
 		ReadHeaderTimeout: a.cfg.Server.ReadHeaderTimeout.Duration,
 		IdleTimeout:       a.cfg.Server.IdleTimeout.Duration,
 		MaxHeaderBytes:    maxHeaderBytes,

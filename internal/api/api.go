@@ -9,6 +9,7 @@ import (
 	"net/http"
 
 	"github.com/KhizirFarrukh/local-ai-nas/internal/apperr"
+	"github.com/KhizirFarrukh/local-ai-nas/internal/files"
 	"github.com/KhizirFarrukh/local-ai-nas/internal/health"
 	"github.com/KhizirFarrukh/local-ai-nas/internal/logging"
 )
@@ -22,6 +23,9 @@ type Options struct {
 	Logger  *slog.Logger
 	Version string         // shown by the health endpoint
 	Checks  []health.Check // the health checks
+	// Files is the files area. Handlers reach the disk only through it
+	// (S01.3-T01); the file endpoints use it from S01.3-T02.
+	Files files.Service
 	// MaxBodyBytes limits request bodies; 0 means DefaultMaxBodyBytes.
 	MaxBodyBytes int64
 }

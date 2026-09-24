@@ -2,19 +2,20 @@
 
 **Last updated:** 2026-09-24 11:38 +0500 (session S005)
 **Plan version:** 1.1.1 (`code-agent-docs/plan.md`), **Approved baseline** 1.0.0 (S005) + the setup-script requirement (1.1.0, S005 E015)
-**Current phase:** Implementation: S01 (Basic NAS implementation) in progress; S01.1 and S01.2 done; S01.5 and S01.6 in progress
+**Current phase:** Implementation: S01 (Basic NAS implementation) in progress; S01.1 and S01.2 done; S01.3, S01.5, and S01.6 in progress
 
 ## Active stage and task
-- **Active stage:** S01 (Basic NAS implementation), **In Progress** (`stages/S01-basic-nas.md`); S01.1 and S01.2 **Done**; S01.6 **In Progress** (T01, T02 done; T03–T06 later); S01.5 **In Progress** (T01–T04 now; T05/T06 later).
-- **Active task:** none (S01.5-T04 done; S01.3 next)
+- **Active stage:** S01 (Basic NAS implementation), **In Progress** (`stages/S01-basic-nas.md`); S01.1 and S01.2 **Done**; S01.6 **In Progress** (T01, T02 done; T03–T06 later); S01.5 **In Progress** (T01–T04 done; T05/T06 later); S01.3 **In Progress**.
+- **Active task:** none (S01.3-T01 done; S01.3-T02 next)
 
 ## In progress (write-ahead)
-- S01.5-T04: push, CI, merge `feat/S01.5-T04-generated-server` into `develop`.
+- S01.3-T01: push, CI, merge `feat/S01.3-T01-files-service` into `develop`.
 
 ## Last completed
 - `develop` verified complete (S005): merge `c535cda` brought `cf60f72` (plan 0.4.0, which PR #3 had put on `main` only) and the user's `bda8321` (prompts 3 and 4).
 - Approval-stage decisions D-01–D-14 applied (S005 E007–E010). **Plan 1.0.0 baseline and S01 approved** (S005 E012).
-- **S01.5-T04 done** (S005 E064): spec-first pipeline (oapi-codegen v2.8.0 → `internal/api/gen`), strict GetHealth, error hooks → problems, spec↔route test, FuzzAPI (2.24 M requests, no 5xx).
+- **S01.3-T01 done** (S005 E066): `files.Service` + hooks + `Local.Stat`; the API reaches files only through the interface (depguard + architecture test, both verified against a deliberate violation).
+- **S01.5-T04 done and merged** (CI run 35967714415 green; S005 E064): spec-first pipeline (oapi-codegen v2.8.0 → `internal/api/gen`), strict GetHealth, error hooks → problems, spec↔route test, FuzzAPI (2.24 M requests, no 5xx).
 - **S01.5-T03 done and merged** (CI run 35967063660 green; S005 E062): Problem schema and error responses in `api/openapi.yaml`; 404/405 are problems; the contract test validates every error response and requires an error case per route.
 - **S01.5-T02 done and merged** (CI run 35966560636 green; S005 E060): `docs/api/versioning.md`; `internal/api` route table + `New`; every route is under /api/v1 or /api/docs (test).
 - **S01.5-T01 done and merged** (CI run 35966117590 green; S005 E058): `docs/api/conventions.md` with the review checklist.
