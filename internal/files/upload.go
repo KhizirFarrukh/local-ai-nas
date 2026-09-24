@@ -35,30 +35,11 @@ const copyBufferSize = 1 << 20
 // ConflictOverwrite replaced one.
 //
 // Everything that can be checked before the body is read is checked
-// first: the path, the name rules, the free space for size bytes, the
-// parent folder, and the conflict policy against the current target.
+// first (see CheckUpload).
 func (s *Local) Upload(ctx context.Context, owner, apiPath string, body io.Reader, size int64, o UploadOptions) (Item, bool, error) {
-	policy, err := o.OnConflict.normalize()
+	policy, rel, err := s.prepareUpload(owner, apiPath, size, o)
 	if err != nil {
 		return Item{}, false, err
-	}
-	if size < 0 {
-		return Item{}, false, apperr.Newf(apperr.InvalidRequest, "the upload size must be known, got %d", size)
-	}
-	rel, err := s.resolver.Resolve(storage.FilesArea, owner, apiPath)
-	if err != nil {
-		return Item{}, false, err
-	}
-	if rel == "." {
-		return Item{}, false, apperr.NewRule(apperr.InvalidName, storage.RuleDotName, "the root folder cannot be replaced by a file")
-	}
-	if err := checkNewName(rel); err != nil {
-		return Item{}, false, err
-	}
-	if s.space != nil {
-		if err := s.space.Check(size); err != nil {
-			return Item{}, false, err
-		}
 	}
 	type result struct {
 		item    Item
@@ -67,16 +48,10 @@ func (s *Local) Upload(ctx context.Context, owner, apiPath string, body io.Reade
 	res, err := run(ctx, s.hooks, Event{Op: OpUpload, Owner: owner, Path: rel}, func() (result, error) {
 		var r result
 		err := s.withRoot(owner, func(root *os.Root) error {
-			if err := refuseLinkParents(root, rel, apiPath); err != nil {
+			if err := checkUploadTarget(root, rel, policy, apiPath); err != nil {
 				return err
 			}
 			dir := path.Dir(rel)
-			if err := ensureParent(root, dir, false, apiPath); err != nil {
-				return err
-			}
-			if err := checkTarget(root, rel, policy, apiPath); err != nil {
-				return err
-			}
 			tmp, err := writeTemp(ctx, root, dir, body, size)
 			if err != nil {
 				return err
@@ -100,6 +75,60 @@ func (s *Local) Upload(ctx context.Context, owner, apiPath string, body io.Reade
 		return r, err
 	})
 	return res.item, res.created, err
+}
+
+// CheckUpload runs every check of an upload of size bytes to path that
+// needs no content, and writes nothing: the path, the name rules, links
+// among the parents, the parent folder, the conflict policy against the
+// current target, and the free space. Upload runs the same checks; the
+// resumable upload runs them when an upload is created (S01.4-T02).
+func (s *Local) CheckUpload(_ context.Context, owner, apiPath string, size int64, o UploadOptions) error {
+	policy, rel, err := s.prepareUpload(owner, apiPath, size, o)
+	if err != nil {
+		return err
+	}
+	return s.withRoot(owner, func(root *os.Root) error {
+		return checkUploadTarget(root, rel, policy, apiPath)
+	})
+}
+
+// prepareUpload checks what needs no disk access and returns the policy
+// and the resolved path.
+func (s *Local) prepareUpload(owner, apiPath string, size int64, o UploadOptions) (OnConflict, string, error) {
+	policy, err := o.OnConflict.normalize()
+	if err != nil {
+		return "", "", err
+	}
+	if size < 0 {
+		return "", "", apperr.Newf(apperr.InvalidRequest, "the upload size must be known, got %d", size)
+	}
+	rel, err := s.resolver.Resolve(storage.FilesArea, owner, apiPath)
+	if err != nil {
+		return "", "", err
+	}
+	if rel == "." {
+		return "", "", apperr.NewRule(apperr.InvalidName, storage.RuleDotName, "the root folder cannot be replaced by a file")
+	}
+	if err := checkNewName(rel); err != nil {
+		return "", "", err
+	}
+	if s.space != nil {
+		if err := s.space.Check(size); err != nil {
+			return "", "", err
+		}
+	}
+	return policy, rel, nil
+}
+
+// checkUploadTarget runs the checks of an upload inside the namespace.
+func checkUploadTarget(root *os.Root, rel string, policy OnConflict, apiPath string) error {
+	if err := refuseLinkParents(root, rel, apiPath); err != nil {
+		return err
+	}
+	if err := ensureParent(root, path.Dir(rel), false, apiPath); err != nil {
+		return err
+	}
+	return checkTarget(root, rel, policy, apiPath)
 }
 
 // checkTarget refuses, before the body is read, what the commit would

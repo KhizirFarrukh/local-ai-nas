@@ -31,7 +31,7 @@ func testFiles(t testing.TB) files.Service {
 
 // testFilesDir is testFiles that also returns the namespace's directory,
 // so a test can check the disk.
-func testFilesDir(t testing.TB) (files.Service, string) {
+func testFilesDir(t testing.TB) (*files.Local, string) {
 	t.Helper()
 	l := storage.NewLayout(testutil.StorageRoot(t), storage.Options{})
 	if _, err := l.Init(); err != nil {
@@ -45,8 +45,8 @@ func testFilesDir(t testing.TB) (files.Service, string) {
 }
 
 // testUploads returns a real tus server on a fresh upload directory and
-// database, mounted at UploadsPath.
-func testUploads(t testing.TB) http.Handler {
+// database, mounted at UploadsPath, finishing uploads into svc.
+func testUploads(t testing.TB, svc uploads.Target) http.Handler {
 	t.Helper()
 	d, err := db.Open(context.Background(), filepath.Join(t.TempDir(), db.FileName))
 	if err != nil {
@@ -56,7 +56,7 @@ func testUploads(t testing.TB) http.Handler {
 	if _, err := d.Migrate(context.Background()); err != nil {
 		t.Fatal(err)
 	}
-	s, err := uploads.New(uploads.Options{Dir: t.TempDir(), DB: d, Namespace: storage.DefaultNamespace, BasePath: UploadsPath})
+	s, err := uploads.New(uploads.Options{Dir: t.TempDir(), DB: d, Files: svc, Namespace: storage.DefaultNamespace, BasePath: UploadsPath})
 	if err != nil {
 		t.Fatal(err)
 	}

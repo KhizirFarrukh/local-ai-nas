@@ -22,6 +22,7 @@ import (
 
 	"github.com/KhizirFarrukh/local-ai-nas/internal/apperr"
 	"github.com/KhizirFarrukh/local-ai-nas/internal/db"
+	"github.com/KhizirFarrukh/local-ai-nas/internal/files"
 	"github.com/KhizirFarrukh/local-ai-nas/internal/logging"
 )
 
@@ -33,6 +34,14 @@ const (
 	MetaSHA256     = "sha256"
 )
 
+// Target is where finished uploads go: the files service. Its checks run
+// when an upload is created, so a refused upload stores nothing.
+type Target interface {
+	// CheckUpload runs every check of an upload to path that needs no
+	// content, and writes nothing (files.Local.CheckUpload).
+	CheckUpload(ctx context.Context, owner, path string, size int64, opts files.UploadOptions) error
+}
+
 // DefaultExpiry is how long an unfinished upload is kept by default.
 const DefaultExpiry = 24 * time.Hour
 
@@ -42,6 +51,8 @@ type Options struct {
 	Dir string
 	// DB holds the index of upload sessions.
 	DB *db.DB
+	// Files checks and, when an upload is finished, receives the file.
+	Files Target
 	// Namespace owns every upload; S01 has one owner, S03 takes it from
 	// the session.
 	Namespace string
@@ -132,9 +143,13 @@ func (s *Server) beforeCreate(ev tus.HookEvent) (tus.HTTPResponse, tus.FileInfoC
 		return tus.HTTPResponse{}, tus.FileInfoChanges{}, refuse(ctx, s.o.Logger,
 			apperr.New(apperr.LengthRequired, "an upload needs Upload-Length when it is created, to check the limits and the free space"))
 	}
+	err := s.o.Files.CheckUpload(ctx, s.o.Namespace, target, up.Size, files.UploadOptions{OnConflict: files.OnConflict(policy)})
+	if err != nil {
+		return tus.HTTPResponse{}, tus.FileInfoChanges{}, refuse(ctx, s.o.Logger, err)
+	}
 	now := s.o.Now().UTC()
 	id := strings.ToLower(rand.Text())
-	err := s.index.Add(ctx, Session{
+	err = s.index.Add(ctx, Session{
 		ID: id, Namespace: s.o.Namespace, TargetPath: target, OnConflict: policy,
 		DeclaredSize: up.Size, SHA256: sum, CreatedAt: now, ExpiresAt: now.Add(s.o.Expiry),
 	})
