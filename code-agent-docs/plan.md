@@ -926,7 +926,7 @@ flowchart LR
   4. Logs are structured, carry a request ID, and never contain secrets (tested).
   5. All errors use one documented format. Unexpected exceptions return a generic body with a correlation ID.
 - **Risks/notes:** The stack ADRs were accepted in 0.3.0 (P003), and ADR-0003 and Q22 (AGPL-3.0) in S005. The remaining gate is the approval of the S01 stage document.
-- **Status:** Not started
+- **Status:** Done (S005, 2026-09-24; details in `stages/S01-basic-nas.md`)
 
 #### S01.2: Storage layout and configuration
 - **Goal:** Create and validate the storage root with `files/` and `photos/`, place internal data outside both, and make the layout ready for per-user namespaces.
