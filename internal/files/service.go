@@ -126,8 +126,8 @@ func (s *Local) Stat(ctx context.Context, owner, path string) (Item, error) {
 			if err != nil {
 				return fsError(err, path)
 			}
-			it = NewItem(owner, rel, info)
-			return nil
+			it, err = withDetails(root, NewItem(owner, rel, info), path)
+			return err
 		})
 		return it, err
 	})

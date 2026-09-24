@@ -159,7 +159,11 @@ func readFolder(root *os.Root, owner, rel, apiPath string) ([]Item, Item, error)
 		if err != nil {
 			return nil, Item{}, fsError(err, apiPath)
 		}
-		items = append(items, NewItem(owner, path.Join(rel, e.Name()), info))
+		it := NewItem(owner, path.Join(rel, e.Name()), info)
+		if it.Kind == KindFile {
+			it.MIME = mimeByExtension(it.Name) // no sniffing in listings
+		}
+		items = append(items, it)
 	}
 	return items, folder, nil
 }
