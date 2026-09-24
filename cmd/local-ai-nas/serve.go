@@ -149,6 +149,14 @@ func cmdServe(ctx context.Context, args []string, stderr io.Writer) int {
 func newHandler(log *slog.Logger, checks []health.Check) http.Handler {
 	mux := http.NewServeMux()
 	mux.Handle("GET /api/v1/system/health", health.Handler(version, checks...))
+
+	// The photos area exists on disk from S01, but its API is reserved
+	// until the media stages (S01.2-T06).
+	photos := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		apperr.Write(w, r, log, apperr.New(apperr.NotAvailable, "the photos API is not available yet; it arrives with the media stages (S04)"))
+	})
+	mux.Handle("/api/v1/photos", photos)
+	mux.Handle("/api/v1/photos/", photos)
 	var h http.Handler = mux
 	h = apperr.Recover(log)(h)
 	h = logging.AccessLog(log)(h)
