@@ -4,7 +4,7 @@
 
 **local-ai-nas** is a network-attached storage platform that anyone can deploy on their own hardware. It keeps two separate areas: **Files**, a general-purpose file store, and **Photos**, a Google Photos–style library. It organizes your photos, understands what's in them, and lets you search both areas with natural, forgiving queries, all without sending a single byte to the cloud.
 
-> ⚠️ **Status: early development.** This project is in its initial stage. Features described below are the planned scope and are not yet implemented.
+> ⚠️ **Status: early development.** Stage 1, the NAS core, is being finished: the Files area can be used through a REST API on this computer (see the Development section below). Everything else below is the planned scope and is not implemented yet.
 
 ---
 
@@ -176,6 +176,26 @@ To use a config file instead of flags, copy [`deploy/config.example.toml`](deplo
 
 Other commands: `migrate up` and `migrate status` (database migrations; `serve` also migrates on start) and `version`.
 
+### Use the API
+
+With the server running, you manage the Files area over HTTP. For example, from a second terminal on Linux or macOS:
+
+```sh
+API=http://127.0.0.1:8080/api/v1
+curl -s -X POST "$API/files/folders" -H 'Content-Type: application/json' -d '{"path":"/docs"}'
+curl -s -T README.md "$API/files/content?path=/docs/README.md"
+curl -s "$API/files/items?path=/docs"
+```
+
+The guide [docs/api/usage.md](docs/api/usage.md) goes through every operation with curl, for Linux and macOS and for Windows PowerShell:
+- creating folders, uploading, and listing;
+- downloading, including ranges;
+- renaming, moving, copying, and deleting;
+- resumable (tus) uploads, including a resume after a cut connection;
+- errors.
+
+In PowerShell, use `curl.exe`, and send JSON bodies with the guide's small helper. The rules every endpoint follows are in [docs/api/conventions.md](docs/api/conventions.md), and the running server serves the full reference at `http://127.0.0.1:8080/api/docs/`.
+
 ### Run it in Docker
 
 ```sh
@@ -192,8 +212,9 @@ The container runs your working copy with `go run` and keeps its data in a Docke
 | Coverage (minimum 80%) | `scripts/coverage.sh` |
 | Lint and format | `scripts/install-golangci-lint.sh` once, then `./bin/golangci-lint run ./...` and `./bin/golangci-lint fmt --diff` |
 | Dependency licenses | `scripts/check-licenses.sh` |
+| Performance baseline | `scripts/perf-baseline.sh` (results in [docs/perf/](docs/perf/)) |
 
-On Windows, run the `scripts/*.sh` files from Git Bash. More in [docs/testing.md](docs/testing.md). CI runs all of these on Linux and Windows for every push.
+On Windows, run the `scripts/*.sh` files from Git Bash. More in [docs/testing.md](docs/testing.md). CI runs all of these except the performance baseline on Linux and Windows for every push.
 
 ---
 
