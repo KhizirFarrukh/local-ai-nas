@@ -10,7 +10,10 @@ tool (
 	golang.org/x/vuln/cmd/govulncheck
 )
 
-require github.com/google/go-cmp v0.7.0
+require (
+	github.com/google/go-cmp v0.7.0
+	github.com/pelletier/go-toml/v2 v2.4.3
+)
 
 require (
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
