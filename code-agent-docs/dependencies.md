@@ -1,8 +1,8 @@
 # Dependency register
 
-**Purpose:** every dependency, external tool, dataset, and AI model the project uses or has evaluated, with its version, license, and verification status. This is required by P003 and by RULES.md **R6**: every new dependency is added here **in the same commit that introduces it**.
+**Purpose:** every dependency, external tool, dataset, and AI model the project uses or has evaluated, with its version, license, and verification status. This is required by P003 and by RULES.md **R6**: every new dependency is added here **in the same commit that introduces it**. **Section 12** lists what each platform needs at runtime; the per-platform setup scripts (S11.2, FR-149) install exactly that list (NFR-032).
 
-**Last updated:** 2026-09-24 (session S004, audit A001). Verification method and raw results: `logs/sessions/2026-09-24_S003.md` entries E005 and E007, and audit A001 group F (`audits/A001-2026-09-24-documentation-audit.md`).
+**Last updated:** 2026-09-24 (session S005: section 12 added). Verification method and raw results: `logs/sessions/2026-09-24_S003.md` entries E005 and E007, and audit A001 group F (`audits/A001-2026-09-24-documentation-audit.md`).
 
 **Licensing policy (P003, NFR-029):** every dependency and model must have a license that allows anyone to deploy and use this project. Nothing may be restricted to non-commercial or research-only use. The project's own license is **AGPL-3.0** (Q22, decided in S005). Items that need attention under it are marked ⚠.
 
@@ -171,3 +171,29 @@ These are listed so the register covers every technology named in the ADRs (audi
 | fanotify / OS-specific watchers | ADR-0016 | fsnotify chosen |
 | PyTorch, onnxruntime-go via cgo | ADR-0017 | ONNX Runtime in a Python worker chosen |
 | OpenCLIP (family member), fixed-label CNNs, captioning VLMs, SCRFD/RetinaFace, ArcFace/InsightFace, DBSCAN, Chinese Whispers, Tesseract | ADR-0018 | SigLIP-family, YuNet, SFace, HDBSCAN, RapidOCR chosen; InsightFace excluded by policy |
+
+## 12. Deployment prerequisites per platform (input for the setup scripts)
+
+**Why:** the user's requirement (S005 E015): "keep record of all dependencies needed, in the end you will have to make a setup script, a separate one for each platform, which when run, will automatically handle the deployment." The setup scripts are built in S11.2 (FR-149). This section is their source list (NFR-032).
+
+**Rules:**
+- Every stage that adds something the running NAS needs on the target machine adds or updates its row here **in the same commit** (R6).
+- Package names are only marked verified after they were checked against the platform's package index. Everything else says when it is verified.
+- Build-only tools (Go, Node.js, pnpm, linters) are **not** needed on the target when a release binary is installed. They are listed in sections 1 and 3, and at the end of this section for from-source installs.
+
+**Platforms** (Q1, answered in S005): **Linux x86-64** (mini-PC or old PC; Debian 13 or a current Ubuntu LTS), **Raspberry Pi** (Raspberry Pi OS 64-bit, ARM64; 32-bit is not supported, NFR-030), **Windows 11** (x86-64; also the test PC). **Docker mode**: the host needs only Docker Engine and Compose; everything else is inside the image (Q41 decides the Linux default).
+
+| Prerequisite | Needed for | First needed | Linux x86-64 | Raspberry Pi (ARM64) | Windows 11 | Docker image | Status |
+|---|---|---|---|---|---|---|---|
+| local-ai-nas binary (pure Go, `CGO_ENABLED=0`; SQLite compiled in) | The whole NAS | S01 | Release binary `linux/amd64` | Release binary `linux/arm64` | Release binary `windows/amd64` (`.exe`) | Built into the image | Built from source until release binaries exist (S11.7). **S01 needs nothing else on the target** |
+| System service manager | Running as a service (FR-132) | S11.2 | systemd (part of the OS) | systemd (part of the OS) | Windows Service Control Manager (part of the OS); service support inside the binary | Docker restart policy | Unit file and service registration are written in S11.2 |
+| ExifTool (+ Perl) | Photo and video metadata | S04.4, S05.3 | apt `libimage-exiftool-perl` (pulls in Perl) | apt `libimage-exiftool-perl` | Windows build from exiftool.org (bundles Perl) | Bundled (Debian package) | Debian package: section 6. Windows source: verify in S11.2 |
+| libvips command-line tools (`vips`, `vipsthumbnail`) | Thumbnails and previews | S04.4 | apt `libvips-tools` | apt `libvips-tools` | Official libvips Windows binaries | Bundled (Debian package) | Debian package name: verify in S04.4. Windows source: verify in S11.2 |
+| libheif + libde265 decoder plugin | HEIC decoding (via libvips) | S04.4 | apt `libheif1` + `libheif-plugin-libde265` | same | Included in the libvips Windows build (check) | Bundled | Package names: verify in S04.4 (Q26) |
+| FFmpeg + ffprobe | Video poster frames, metadata, streaming quality levels | S04.4, S04.8 | apt `ffmpeg` | apt `ffmpeg` | A Windows FFmpeg build (source chosen in S11.2) | Bundled (Debian build, GPL, D-04) | Debian package: section 6. Windows source: verify in S11.2 |
+| Hardware video encoder drivers (optional) | Faster transcoding (FR-148) | S04.8 | VAAPI / Intel QSV drivers | V4L2 M2M (if the model supports it) | Vendor GPU drivers | Device passthrough | Optional. Verified in S04.8 |
+| GeoNames data (`cities500`) | Offline place names | S05.4 | Shipped with the NAS | Shipped with the NAS | Shipped with the NAS | Bundled | No install step. Attribution required (section 7) |
+| Docker Engine + Compose plugin | **Docker mode only** | S11.1 | Docker's apt repository (`docker-ce`, `docker-compose-plugin`) | same (arm64) | Docker Desktop (only if Docker mode is chosen on Windows) | n/a | Mode default per Q41. Verify in S11.1 |
+| Python 3.14 + uv + AI worker packages (section 5) | **Optional AI** (S12) | S12 | AI worker install (S12.1) | AI worker install (S12.1) | AI worker install (S12.1) | `ai` Compose profile | Decided in S12.1 |
+
+**From-source installs only** (not needed with release binaries): Go go1.27.1 (S01+), Node.js LTS + pnpm (S02+, to build the web UI). See sections 1 and 3.

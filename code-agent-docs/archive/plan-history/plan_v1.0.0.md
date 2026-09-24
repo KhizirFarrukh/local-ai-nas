@@ -2,11 +2,11 @@
 
 | Field | Value |
 |---|---|
-| **Version** | 1.1.0 |
-| **Status** | **Approved baseline** (approved by the user in S005, 2026-09-24); 1.1.0 adds the user's setup-script requirement (S005 E015) |
+| **Version** | 1.0.0 |
+| **Status** | **Approved baseline** (approved by the user in S005, 2026-09-24) |
 | **Last updated** | 2026-09-24 (session S005) |
 | **Source of vision** | `README.md` (repository root), the user's staged roadmap (`code-agent-docs/prompts/P002-staged-development-roadmap.json`), and the user's technology stack (`code-agent-docs/prompts/P003-technology-stack.json`) |
-| **Previous version** | 1.0.0 (approved baseline), archived at `code-agent-docs/archive/plan-history/plan_v1.0.0.md` (0.1.0–0.5.0 also archived there) |
+| **Previous version** | 0.5.0, archived at `code-agent-docs/archive/plan-history/plan_v0.5.0.md` (0.1.0–0.4.0 also archived there) |
 
 > **This is a living document.** It changes as the user gives feedback. Every change follows `code-agent-docs/RULES.md` **R4**: the old version is archived, the version is bumped, and a revision entry is added. While the plan is a pre-1.0 draft, restructurings bump the MINOR version. **When the user approves this plan as the baseline, it becomes version 1.0.0.**
 >
@@ -297,7 +297,6 @@ Priorities: **Must** (required for its stage to be Done), **Should** (important;
 | FR-130 | Viewer for application logs and the audit log (admin only). | Should | New (S10.5). |
 | FR-131 | Container packaging: Docker image and Docker Compose setup. | Must | New (S11.1). |
 | FR-132 | Native installation as a system service on the platforms the user chooses. | Should | New (S11.2). Q5. |
-| FR-149 | **Per-platform setup scripts**: a separate setup script for each supported platform (Linux x86-64, Raspberry Pi, Windows 11) that, when run, deploys the NAS automatically: it installs or verifies every prerequisite, installs the NAS, creates the configuration and storage root, and starts the service. | Must | New in 1.1.0 (user, S005 E015). S11.2. |
 | FR-133 | An update mechanism with automatic data and schema migrations and a backup before every update. | Should | New (S11.3). |
 | FR-134 | Install guide, admin guide, user guide, and published hardware requirements. | Must | New (S11.4). |
 | FR-135 | A release process: versioning, changelog, tagged releases. | Should | New (S11.7). |
@@ -366,7 +365,6 @@ Priorities: **Must** (required for its stage to be Done), **Should** (important;
 | NFR-029 | **License policy**: every dependency, external tool, dataset, and AI model has a license that allows **anyone to deploy and use** the project. Nothing is restricted to non-commercial or research-only use. Each is recorded in `dependencies.md` with its license. | Must | New in 0.3.0 (P003). |
 | NFR-030 | **Multi-architecture**: the core and its images build and run on **linux/amd64 and linux/arm64** (e.g. Raspberry Pi), via pure-Go builds and multi-arch container images. | Must | New in 0.3.0 (P003). |
 | NFR-031 | **Streaming start-up and resource bounds** (targets to confirm with Q1). A newly requested level starts playing within ≤ 4 s with a hardware encoder, or ≤ 8 s for 720p on CPU-only reference hardware. Transcoding never starves the core: sessions are bounded, and interactive API latency stays within NFR-003. | Should | New in 0.4.0 (ADR-0020). |
-| NFR-032 | **Dependency record for deployment**: every dependency needed to build or deploy the NAS is recorded in `dependencies.md` in the same commit that introduces it (R6), and every **runtime prerequisite** also gets a per-platform entry (minimum version and install method for Linux x86-64, Raspberry Pi, Windows 11, and the Docker image) in section 12. The setup scripts (FR-149) are checked against this record. | Must | New in 1.1.0 (user, S005 E015). All stages from S01. |
 
 ---
 
@@ -442,7 +440,6 @@ Questions keep their numbers permanently. **★ = needed for S01**: Q18 before t
 38. _Answered (S005, D-08):_ the first usable release is **S01–S11** (milestone M3 in section 11).
 39. _(Planner-added)_ **Importing an existing collection.** Besides browser upload, should the admin be able to import a folder already on the host into `photos/` or `files/` (server-side copy or move)? _Needed by: S04.2._
 40. _(Planner-added)_ **Organization inside `photos/`.** Store media by date taken (`photos/<user>/YYYY/MM/`), by import batch, or in user-created folders? _Needed by: S04.1 (layout ADR)._
-41. _(Planner-added, 1.1.0)_ **Setup script default mode on Linux** (x86-64 and Raspberry Pi): should the setup script deploy with **Docker Compose** (installs Docker if missing, then starts the stack; ADR-0006 primary) or as a **native service** (binary + systemd + distribution packages)? _Needed by: S11.2._ _Recommendation: offer both; Docker Compose by default on Linux, native service on Windows 11._
 
 ### Carried over from 0.1.0
 
@@ -450,7 +447,7 @@ Questions keep their numbers permanently. **★ = needed for S01**: Q18 before t
 2. _Resolved by P002:_ single admin account from S03; multi-user in S07.
 3. _Superseded by Q37_ (remote access is a not-scheduled candidate).
 4. _Answered by P003:_ Go for the core (ADR-0001), REST + OpenAPI (ADR-0002), SvelteKit + TypeScript for the UI (ADR-0009), Python for the AI worker only (ADR-0017).
-5. **Deployment method.** _Partly answered (P003, ADR-0006):_ Docker Compose primary (linux/amd64 + arm64); native Linux secondary (binary + systemd). _Informed by Q1 (S005):_ the server must run natively on Windows 11 for testing (already required by CI and S01.1). _Partly answered by the user (S005 E015):_ **a separate setup script for each platform** that deploys the NAS automatically (FR-149): Linux x86-64, Raspberry Pi, and Windows 11. **Still open:** macOS; and the default mode of the Linux scripts (Q41). _Needed by: S11.2._
+5. **Deployment method.** _Partly answered (P003, ADR-0006):_ Docker Compose primary (linux/amd64 + arm64); native Linux secondary (binary + systemd). _Informed by Q1 (S005):_ the server must run natively on Windows 11 for testing (already required by CI and S01.1). **Still open:** whether to ship native **Windows and macOS installers** (S11.2). _Needed by: S11.2._
 6. **AI hardware and speed expectations.** _Partly answered (P003):_ CPU by default, optional GPU. **Still open:** what minimum machine and processing speed are acceptable (e.g. "backfill 50,000 photos overnight")? _Needed by: S12.1._
 7. _Answered (P003, ADR-0017):_ CPU by default. Optional GPU acceleration through ONNX Runtime execution providers (e.g. CUDA, OpenVINO); which ones are supported is evaluated in S12.1.
 8. _Superseded by Q26._
@@ -822,7 +819,6 @@ A separate opt-in. Embeddings are stored only in internal app data, never in sid
 ### 8.20 External-tool dependency for native installs (new in 0.3.0)
 - The Docker image bundles ExifTool (with Perl), libvips with libheif, and FFmpeg (ADR-0006/0012). **Native installs do not.**
 - The S11.2 native Linux install and the install guide (S11.4) must list the distribution packages and the minimum versions.
-- _Since 1.1.0 (user, S005 E015):_ every prerequisite is recorded **per platform** in `dependencies.md` section 12 at the time it is introduced (NFR-032), and the S11.2 setup scripts (FR-149) install or check exactly that list.
 - The core **detects the tools at startup** (path and version) and reports missing or too-old tools in health.
 - Features that need a missing tool are **disabled with a clear message** rather than failing silently. For example, without FFmpeg, video poster frames and metadata are unavailable.
 - S01–S03 need **no** external tools. They are first used in S04.4 and S05.3.
@@ -2201,20 +2197,15 @@ flowchart LR
 - **Status:** Not started
 
 #### S11.2: Native installation
-- **Goal:** Deploy the NAS on each supported platform by running one setup script (user requirement, S005 E015).
-- **Scope:**
-  - A **separate setup script for each platform** (FR-149): Linux x86-64 (mini-PC or old PC; Debian/Ubuntu), Raspberry Pi (Raspberry Pi OS 64-bit, ARM64), and Windows 11 (Q1, Q5). macOS only if Q5 adds it.
-  - Each script checks the platform, installs or verifies every prerequisite listed for it in `dependencies.md` section 12 (NFR-032), installs the NAS, creates the configuration and the storage root, registers and starts the system service (systemd; Windows service), and finishes with a health check.
-  - The default mode of the Linux scripts (Docker Compose or native service) is decided by Q41.
-- **Deliverables:** one setup script per platform (e.g. `deploy/setup/setup-linux-x86_64.sh`, `deploy/setup/setup-raspberry-pi.sh`, `deploy/setup/setup-windows.ps1`; names fixed in the S11 stage document); service definitions; a matching uninstall path; a CI check that each script's prerequisite list matches `dependencies.md` section 12.
+- **Goal:** Run without containers on the chosen platforms.
+- **Scope:** native installs for the platforms the user chooses (Q5); running as a system service (e.g. systemd, Windows service).
+- **Deliverables:** installers or packages per platform; service definitions.
 - **Depends on:** S11.1.
-- **Requirements:** FR-132, FR-149, NFR-009, NFR-032.
+- **Requirements:** FR-132, NFR-009.
 - **Acceptance criteria:**
-  1. On a clean machine of each platform, running only its setup script gives a running NAS that passes the health check, runs as a service, and survives a reboot.
-  2. The script installs or verifies every prerequisite listed for its platform in `dependencies.md` section 12, and stops with a clear message when one cannot be installed.
-  3. Running the script again is safe (idempotent) and never touches user data.
-  4. Uninstalling leaves user data untouched.
-- **Risks/notes:** Package sources and names differ per platform (ExifTool, libvips, FFmpeg); the Windows sources are verified in S11.2. Scripts run with administrator rights, so they are reviewed in S11.6.
+  1. On each chosen platform, the NAS installs, runs as a service, and survives a reboot.
+  2. Uninstalling leaves user data untouched.
+- **Risks/notes:** System dependencies (ExifTool, libvips, ffmpeg) per platform.
 - **Status:** Not started
 
 #### S11.3: Updates and migrations
@@ -2232,7 +2223,7 @@ flowchart LR
 
 #### S11.4: First-run polish and documentation
 - **Goal:** A new user can succeed without help.
-- **Scope:** polished first-run experience; install guide (built around the S11.2 setup scripts), admin guide, user guide, hardware requirements.
+- **Scope:** polished first-run experience; install guide, admin guide, user guide, hardware requirements.
 - **Deliverables:** guides; improved first-run wizard.
 - **Depends on:** S11.1.
 - **Requirements:** FR-134.
@@ -2611,4 +2602,3 @@ CI runs on Linux and Windows from S01.1.
 | 0.4.0 | 2026-09-24 | **Video streaming with live quality switching** (MINOR, R4). New substage **S04.8** (video streaming and quality levels); the testing substage was renumbered S04.8 → S04.9 and extended with streaming tests (flag 10.14 item 7). FR-144–FR-148 and NFR-031 added; FR-019 raised Should → Must; NG4 changed (transcoding for streaming levels in scope; originals never re-encoded); Q26 partly answered (videos included); A21 added. Architecture: video streaming service, diagram node, `transcode-cache/`. Concern 8.21. Stack table: ADR-0020 added; ADR-0012 marked superseded in part. Risks RK-29–RK-31. Overview and G3 mention video streaming. | The user's request (S004 E005: "add a photo viewer and video playback (streaming with quality adjustment option live in video playback) in the gui part") and design answers (S004 E008) | `logs/sessions/2026-09-24_S004.md` |
 | 0.5.0 | 2026-09-24 | **Approval-stage decisions applied** (MINOR, pre-1.0 per R4). Q1 (multi-platform: x86-64 mini-PC/old PC, Raspberry Pi, Windows 11 for testing), Q16 closed, Q22 (AGPL-3.0), Q37 (none), Q38 (first usable release S01–S11) answered. ADR-0003 Accepted. 10.14 flags approved. Section 11: M3 chosen. FR-054/S12.10: semantic search precomputed-only by default (D-06). NFR-016: rotated log file from S01 (D-07). NFR-003/NFR-009, A13, A19 updated. S04.8 side effect confirmed (D-14). RK-08/RK-30 updated (D-04, license). Baseline-approval list resolved; explicit 1.0.0 approval pending. | The user's answers in S005 (E007): "Accept all (Recommended)", "AGPL-3.0 (Recommended)", "S01–S11, add none", and the hardware answer | `logs/sessions/2026-09-24_S005.md` |
 | 1.0.0 | 2026-09-24 | **Approved as the baseline.** No content change from 0.5.0 except the version, status, and S01 status (Approved). From now on, plan changes follow the normal R4 versioning (PATCH/MINOR/MAJOR). | The user's approval in S005 (E012): "Approve as 1.0.0 (Recommended)"; S01 stage document: "Approve S01 (Recommended)" | `logs/sessions/2026-09-24_S005.md` |
-| 1.1.0 | 2026-09-24 | **Deployment dependency record and per-platform setup scripts** (MINOR, R4). FR-149 (a separate setup script per platform that deploys the NAS automatically) and NFR-032 (every dependency recorded; runtime prerequisites per platform in `dependencies.md` section 12) added. S11.2 rewritten around the setup scripts (goal, scope, deliverables, requirements, acceptance criteria); S11.4 install guide built around them. Q5 partly answered (Windows 11 gets a setup script; macOS still open). Q41 added (Linux script default mode). Concern 8.20 updated. | The user's request (S005 E015): "one thing to add: keep record of all dependencies needed, in the end you will have to make a setup script, a separate one for each platform, which when run, will automatically handle the deployment." | `logs/sessions/2026-09-24_S005.md` |
