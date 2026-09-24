@@ -30,6 +30,23 @@ linters:
           deny:
             - pkg: github.com/KhizirFarrukh/local-ai-nas/internal/files
               desc: the photos area must not import the files area (I1); use internal/transfer
+        api-no-disk:
+          # The API layer reaches files only through files.Service (S01.3-T01).
+          # Tests may read the spec and the sources from disk.
+          files:
+            - "**/internal/api/**"
+            - "!$test"
+          deny:
+            - pkg: os
+              desc: the API reaches the disk only through files.Service
+            - pkg: path/filepath
+              desc: the API reaches the disk only through files.Service
+            - pkg: io/ioutil
+              desc: the API reaches the disk only through files.Service
+            - pkg: syscall
+              desc: the API reaches the disk only through files.Service
+            - pkg: golang.org/x/sys
+              desc: the API reaches the disk only through files.Service
   exclusions:
     rules:
       # Tests build hostile inputs and temporary files on purpose, which

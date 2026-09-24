@@ -960,7 +960,7 @@ flowchart LR
   4. No operation can read or write outside the caller's files namespace (tested).
   5. Endpoints reach the filesystem only through the service interface (architecture test).
 - **Risks/notes:** Copying large folders is synchronous in S01, with limits. It moves onto the job system in S04.3.
-- **Status:** Not started
+- **Status:** In Progress (S005)
 
 #### S01.4: Large file handling
 - **Goal:** Upload and download files of any size reliably, with bounded memory, and never expose partial files.

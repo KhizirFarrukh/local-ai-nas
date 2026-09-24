@@ -133,7 +133,7 @@ flowchart LR
 |---|---|---|---|---|
 | S01.1 | Project foundation | **Done** (S005) | plan 1.0.0; S01 approved (Q22 answered: AGPL-3.0) | NFR-008, NFR-009, NFR-013, NFR-014, NFR-016, NFR-025, NFR-029, NFR-030 |
 | S01.2 | Storage layout and configuration | **Done** (S005) | S01.1; **ADR-0003 Accepted** | FR-069–FR-072, NFR-026 |
-| S01.3 | Core file operations | Not started | S01.2, S01.5 (conventions), S01.6 (resolver) | FR-003, FR-005, FR-007, FR-073 |
+| S01.3 | Core file operations | In Progress | S01.2, S01.5 (conventions), S01.6 (resolver) | FR-003, FR-005, FR-007, FR-073 |
 | S01.4 | Large file handling | Not started | S01.2, S01.3, S01.5 | FR-004, FR-074, NFR-006, NFR-021 |
 | S01.5 | API layer | In Progress | S01.1 | FR-075, NFR-001 |
 | S01.6 | Safety baseline | In Progress | S01.2 | FR-076, FR-077, NFR-010, NFR-019, NFR-020 |
@@ -193,7 +193,7 @@ flowchart LR
 
 | Task ID | Description | Status | Acceptance criteria |
 |---|---|---|---|
-| S01.3-T01 | `FilesService` interface and local implementation on `os.Root` (`internal/files`), with before/after hooks (no-op subscribers). | Not started | Handlers use only the interface (golangci-lint depguard rule + an architecture test). Hook order is covered by unit tests. |
+| S01.3-T01 | `FilesService` interface and local implementation on `os.Root` (`internal/files`), with before/after hooks (no-op subscribers). | **Done** (S005) | Handlers use only the interface (golangci-lint depguard rule + an architecture test). Hook order is covered by unit tests. |
 | S01.3-T02 | List directory: cursor pagination (an opaque base64 cursor of the sort key + name); sort by name, size, mtime, type (asc/desc); stable tie-break by name. | Not started | A 10,000-entry folder paginates without duplicates or gaps in every sort order (integration test). |
 | S01.3-T03 | Item details: size, mtime, kind, MIME type (`mime.TypeByExtension`, with a `http.DetectContentType` sniff of the first 512 bytes), ETag (size + mtime + inode/file-ID hash). | Not started | Details match the filesystem for fixtures. The ETag changes when content changes. |
 | S01.3-T04 | Create folder (`parents` option) via `os.Root.Mkdir`/`MkdirAll`. | Not started | Created. An existing path follows the conflict policy. Invalid names are rejected (S01.6). |
