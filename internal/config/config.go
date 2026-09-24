@@ -78,6 +78,9 @@ type Uploads struct {
 	MaxFileSize ByteSize
 	// MaxChunkSize is the largest body of one tus upload request.
 	MaxChunkSize ByteSize
+	// Expiry is how long an unfinished upload is kept after its creation
+	// and its last write (S01.4-T06).
+	Expiry Duration
 }
 
 // Copy configures the copy operation (S01.3-T08).
@@ -110,6 +113,7 @@ func Default() Config {
 		Uploads: Uploads{
 			MaxFileSize:  100 << 30,
 			MaxChunkSize: 64 << 20,
+			Expiry:       Duration{24 * time.Hour},
 		},
 		Copy: Copy{SyncMaxItems: 1000, SyncMaxBytes: 1 << 30},
 	}
@@ -193,6 +197,7 @@ var settings = []setting{
 	intSetting("log.file_max_files", func(c *Config) *int { return &c.Log.FileMaxFiles }),
 	sizeSetting("uploads.max_file_size", func(c *Config) *ByteSize { return &c.Uploads.MaxFileSize }),
 	sizeSetting("uploads.max_chunk_size", func(c *Config) *ByteSize { return &c.Uploads.MaxChunkSize }),
+	durationSetting("uploads.expiry", func(c *Config) *Duration { return &c.Uploads.Expiry }),
 	intSetting("copy.sync_max_items", func(c *Config) *int { return &c.Copy.SyncMaxItems }),
 	sizeSetting("copy.sync_max_bytes", func(c *Config) *ByteSize { return &c.Copy.SyncMaxBytes }),
 }
@@ -550,6 +555,9 @@ func (l *Loaded) validate() error {
 			c.Uploads.MaxFileSize, c.Uploads.MaxChunkSize)
 	}
 
+	if c.Uploads.Expiry.Duration < time.Minute {
+		fail("uploads.expiry", "must be at least 1m, got %s", c.Uploads.Expiry.Duration)
+	}
 	if c.Copy.SyncMaxItems < 1 {
 		fail("copy.sync_max_items", "must be at least 1, got %d", c.Copy.SyncMaxItems)
 	}

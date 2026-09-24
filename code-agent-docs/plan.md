@@ -978,7 +978,7 @@ flowchart LR
   4. Uploads over the configured limit are refused before data is stored.
   5. Abandoned uploads are deleted after the configured expiry.
 - **Risks/notes:** Atomic rename requires one filesystem (A18), which S01.2 checks.
-- **Status:** Not started
+- **Status:** Done (S005, 2026-09-24; details in `stages/S01-basic-nas.md`)
 
 #### S01.5: API layer
 - **Goal:** A consistent, versioned, documented HTTP API that later stages extend without breaking clients.
