@@ -106,8 +106,8 @@ func Routes(o Options) []Route {
 		{Pattern: "PUT /api/v1/files/content", Handler: declaredSize(o.MaxUploadBytes, o.Logger, g.UploadFile), MaxBody: o.MaxUploadBytes},
 		// tus is an external protocol served by tusd; the spec documents it
 		// under the uploads tag (docs/api/conventions.md).
-		{Pattern: UploadsPath, Handler: uploads, MaxBody: o.MaxChunkBytes},
-		{Pattern: strings.TrimSuffix(UploadsPath, "/"), Handler: uploads, MaxBody: o.MaxChunkBytes},
+		{Pattern: UploadsPath, Handler: chunkLimit(o.MaxChunkBytes, o.Logger, uploads), MaxBody: o.MaxChunkBytes},
+		{Pattern: strings.TrimSuffix(UploadsPath, "/"), Handler: chunkLimit(o.MaxChunkBytes, o.Logger, uploads), MaxBody: o.MaxChunkBytes},
 		{Pattern: "/api/v1/photos", Handler: photos},
 		{Pattern: "/api/v1/photos/", Handler: photos},
 	}

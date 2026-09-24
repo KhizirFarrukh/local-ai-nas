@@ -35,6 +35,21 @@ func declaredSize(limit int64, log *slog.Logger, next http.HandlerFunc) http.Han
 	})
 }
 
+// chunkLimit refuses a tus request whose declared body is over limit
+// (uploads.max_chunk_size) with 413 before tusd reads any of it, so no
+// data is stored (S01.4-T05). A body without Content-Length is cut at the
+// limit by the route's body limit instead.
+func chunkLimit(limit int64, log *slog.Logger, next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.ContentLength > limit {
+			apperr.Write(w, r, log, apperr.Newf(apperr.TooLarge,
+				"one upload request may carry at most %d bytes (uploads.max_chunk_size), this one has %d", limit, r.ContentLength))
+			return
+		}
+		next.ServeHTTP(w, r)
+	})
+}
+
 // UploadFile stores the request body as a file (S01.3-T05): 201 when a
 // new file was created, 200 when on_conflict=overwrite replaced one.
 func (s *server) UploadFile(ctx context.Context, req gen.UploadFileRequestObject) (gen.UploadFileResponseObject, error) {
