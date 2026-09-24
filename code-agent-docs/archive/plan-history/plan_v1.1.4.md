@@ -2,11 +2,11 @@
 
 | Field | Value |
 |---|---|
-| **Version** | 1.2.0 |
+| **Version** | 1.1.4 |
 | **Status** | **Approved baseline** (approved by the user in S005, 2026-09-24); 1.1.0 adds the user's setup-script requirement (S005 E015) |
 | **Last updated** | 2026-09-24 (session S005) |
 | **Source of vision** | `README.md` (repository root), the user's staged roadmap (`code-agent-docs/prompts/P002-staged-development-roadmap.json`), and the user's technology stack (`code-agent-docs/prompts/P003-technology-stack.json`) |
-| **Previous version** | 1.1.4, archived at `code-agent-docs/archive/plan-history/plan_v1.1.4.md` (0.1.0–1.1.3 also archived there) |
+| **Previous version** | 1.1.3, archived at `code-agent-docs/archive/plan-history/plan_v1.1.3.md` (0.1.0–1.1.2 also archived there) |
 
 > **This is a living document.** It changes as the user gives feedback. Every change follows `code-agent-docs/RULES.md` **R4**: the old version is archived, the version is bumped, and a revision entry is added. While the plan is a pre-1.0 draft, restructurings bump the MINOR version. **When the user approves this plan as the baseline, it becomes version 1.0.0.**
 >
@@ -127,7 +127,7 @@ Every stage must follow these:
 3. **Secure-by-default baseline from S01**, even though the dedicated security stage is S03. The server binds to localhost only by default, path traversal is impossible, and all input is validated. The NAS must not be exposed on the network without authentication.
 4. **Shared infrastructure is built once**, in the first stage that needs it, and reused later. Examples: the background job system (S04.3) is reused by S05, S06, S08, S09, and S12. The authorization policy check (S03.5) is extended by S07.
 5. **S01 is API-only and S02 is the GUI stage.** From S03 onward, any stage that adds user-facing features includes its own GUI substage.
-6. **The last substage of every stage** writes and runs the stage's tests (unit, integration, and system/application; S006), then covers documentation updates, the completion record, and user sign-off.
+6. **The last substage of every stage** covers integration testing, documentation updates, the completion record, and user sign-off.
 
 ---
 
@@ -849,13 +849,13 @@ Work is **stage-gated** and governed by `code-agent-docs/RULES.md`.
 - **Decisions** become ADRs (R5), Accepted only with user approval. Stage documents list the ADRs they depend on. Tasks that depend on unaccepted ADRs say so.
 - **Engineering (R6):**
   - One task at a time.
-  - **Code first, written to be testable.** Each stage's tests (unit, integration, and system/application) are written in its final testing substage, including the regression tests for bugs recorded during the stage (the user's instruction, S006).
-  - Lint, format, type checks, and the existing tests pass, and the task was checked by running it, before a task is Done.
+  - Tests written with or before the code.
+  - Lint, format, type checks, and tests pass before a task is Done.
   - Every dependency is justified and license-checked.
 - **Git (R7):** one feature branch per stage or task off `develop`, a PR into `develop`, Conventional Commits with task IDs (e.g. `feat(files): add range downloads [S01.3-T06]`).
 - **Recording (R2, R8):** continuous session logs, and `CURRENT_STATE.md` always states the exact next step.
 - **Plan changes (R4):** archive, version bump, revision entry. Approving this plan makes it **1.0.0**.
-- **Every stage ends** with a testing and review substage: it writes and runs the stage's unit, integration, and system/application tests, then documentation, completion record, and user sign-off (section 2b). Coverage of at least 80% is one of its exit criteria. CI reports coverage on every push without blocking during the stage (S006).
+- **Every stage ends** with an integration testing and review substage: tests, documentation, completion record, and user sign-off (section 2b).
 - **Documentation audits (R12):** that final substage also runs a documentation audit with `templates/audit-checklist.md`. Audits are numbered A001, A002, … and reported in `code-agent-docs/audits/`. Critical findings must be fixed or escalated before the stage is Done.
 
 ---
@@ -2529,8 +2529,6 @@ Not stages. If any is approved later, it is inserted **before** the AI stage and
 | S11 | S11.5–S11.7 | Full-system load tests; upgrade and rollback tests; release artifact tests |
 | S12 | S12.11 | Evaluation set accuracy; CPU throughput; AI-off regression (the whole non-AI suite passes with the worker stopped) |
 
-Each final substage above **writes the stage's tests** (S006): unit, integration, and system/application tests for everything the stage built, plus the regression tests for bugs recorded during the stage. Tests named in the deliverables or acceptance criteria of earlier substages are written and checked there. The stage's code is written first, to be testable. Coverage of at least 80% (Go: `internal/...`) is an exit criterion.
-
 Each final review substage above also runs a **documentation audit** (R12, `templates/audit-checklist.md`).
 
 ### 12.2 Test levels (all stages)
@@ -2539,7 +2537,7 @@ Each final review substage above also runs a **documentation audit** (R12, `temp
 |---|---|
 | Unit | Pure logic: resolvers, validators, parser, schema, migrations, ranking |
 | Integration | Real filesystem and SQLite; HTTP-level API tests |
-| System / application | The whole program used as a user uses it: the binary over HTTP (S01: `TestIntegration`, the demo scripts); from S02 the GUI in a browser (end-to-end, Playwright) |
+| End-to-end | GUI (from S02) |
 | Security | From S01.6; formalized in S03.9 |
 | Performance | At the scales named in NFR-003 |
 
@@ -2619,4 +2617,3 @@ CI runs on Linux and Windows from S01.1.
 | 1.1.2 | 2026-09-24 | Clarification (PATCH): **Q18 answered**: the library size is 100,000 photos + 100,000 files per installation, confirming A12; NFR-003, section 5, and the S01.7 notes updated; no target changes. S01.7 status In Progress. | The user's answer (S005 E116): "100k photos + 100k files (Recommended)" | `logs/sessions/2026-09-24_S005.md` |
 | 1.1.3 | 2026-09-24 | Clarification (PATCH), audit A002: NFR-031 and S06.8 no longer say that Q1 is pending (it was answered in S005), and S06.8 names the Q18 library size. No requirement or target changes. | Audit A002 findings F-003, F-004 (R12, S01.7-T07) | `audits/A002-2026-09-24-documentation-audit.md`; `logs/sessions/2026-09-24_S005.md` |
 | 1.1.4 | 2026-09-24 | Status (PATCH): **S01 Done**, signed off by the user. S01.7 is Done. The S01.7 throughput deviation is accepted as recorded, and it is measured on the Raspberry Pi and the mini-PC when they are available. No requirement or target changes. (Substage status updates were not versioned; a whole stage's completion is.) | The user's sign-off and decisions (S005 E126) | `logs/sessions/2026-09-24_S005.md`; `stages/S01-basic-nas.md` section 13 |
-| 1.2.0 | 2026-09-25 | Methodology (MINOR): **code first, tests at the end of each stage.** Code is written to be testable. Each stage's final testing substage writes its unit, integration, and system/application tests, including those named by earlier substages and the regression tests for recorded bugs. Coverage of 80% is enforced at the stage end, and CI reports it without blocking during the stage. Changed: 2b principle 6, section 9, 12.1, and 12.2 ("System / application" replaces "End-to-end"). No requirement or target changes. | The user's instruction (S006 E001) and answers (S006 E003) | `logs/sessions/2026-09-25_S006.md` |

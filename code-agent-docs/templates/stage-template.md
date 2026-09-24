@@ -81,18 +81,21 @@ Status values: Not started / In Progress / Testing / Review / Done / Blocked (wi
 |---|---|---|---|
 | S<NN>.2-T01 | | Not started | |
 
-<!-- Repeat for every substage. The last substage of every stage covers integration testing, documentation, the documentation audit (R12), the completion record, and user sign-off. -->
+<!-- Repeat for every substage. Tasks before the last substage deliver code, written to be testable; their tests are written in the last substage (RULES R6). The last substage of every stage writes the stage's tests (unit, integration, system/application), then covers documentation, the documentation audit (R12), the completion record, and user sign-off. -->
 
 ### S<NN>.<last>: Testing and stage review (final substage, required shape)
 
 | Task ID | Description | Status | Acceptance criteria |
 |---|---|---|---|
-| S<NN>.<last>-T01 | Integration and end-to-end tests for the stage | Not started | All stage tests pass in CI |
-| S<NN>.<last>-T02 | Documentation updates (README if user-facing, plan status, CURRENT_STATE, register) | Not started | Documents match what was built |
-| S<NN>.<last>-T03 | **Documentation audit (R12)** using `templates/audit-checklist.md`; report in `audits/A<NNN>-<date>-<slug>.md` | Not started | Audit complete; no Critical finding open (each fixed or escalated to the user) |
-| S<NN>.<last>-T04 | Completion record and user sign-off | Not started | Section 13 filled in; the user's sign-off quoted in the session log |
+| S<NN>.<last>-T01 | **Unit tests** for the code the stage built, including the regression tests for the bugs recorded during the stage (change log) | Not started | Every package the stage added or changed is tested; each recorded bug has its test; coverage ≥ 80% |
+| S<NN>.<last>-T02 | **Integration tests** (real file system, database, HTTP) and **system/application tests** (the real program, used as a user uses it; from S02 the GUI in a browser) | Not started | All stage tests pass in CI on Linux and Windows |
+| S<NN>.<last>-T03 | Documentation updates (README if user-facing, plan status, CURRENT_STATE, register) | Not started | Documents match what was built |
+| S<NN>.<last>-T04 | **Documentation audit (R12)** using `templates/audit-checklist.md`; report in `audits/A<NNN>-<date>-<slug>.md` | Not started | Audit complete; no Critical finding open (each fixed or escalated to the user) |
+| S<NN>.<last>-T05 | Completion record and user sign-off | Not started | Section 13 filled in; the user's sign-off quoted in the session log |
 
 Rule: one task In Progress at a time. Before starting a task, mark it (and its substage) In Progress here and in CURRENT_STATE.md.
+
+Rule (R6): tasks before the last substage deliver code, written to be testable. Such a task is Done when it builds, lint/format and the existing tests pass, and it was checked by running it. Its tests are written in the last substage.
 
 ## 6. Files and modules expected to be created or changed
 
@@ -108,11 +111,13 @@ Rule: one task In Progress at a time. Before starting a task, mark it (and its s
 
 ## 8. Test plan
 
-| What is tested | Test type (unit / integration / e2e / perf) | How | Task ID |
+<!-- Every row is written in the last substage (its Task ID is a task of that substage); the code it tests comes from the earlier substages. -->
+
+| What is tested | Test type (unit / integration / system / perf) | How | Task ID |
 |---|---|---|---|
 | | | | |
 
-Commands (lint, format, test) that must pass before a task is marked Done:
+Commands that must pass before a task is marked Done (build, lint, format, and the existing tests; the stage's new tests come in the last substage):
 ```
 <commands>
 ```
@@ -120,7 +125,7 @@ Commands (lint, format, test) that must pass before a task is marked Done:
 ## 9. Stage acceptance criteria
 
 - [ ] 
-- [ ] All tests pass. Linter and formatter are clean.
+- [ ] The stage's unit, integration, and system/application tests are written and pass in CI on Linux and Windows; coverage ≥ 80%. Linter and formatter are clean.
 - [ ] Documentation audit (R12) done; no Critical finding open.
 - [ ] Documentation (plan.md, CURRENT_STATE.md, ADRs, README if user-facing) is updated.
 
