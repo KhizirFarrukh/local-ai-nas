@@ -33,6 +33,11 @@ type Service interface {
 	// Download opens the file at path for reading; the caller closes it.
 	// The item describes exactly the bytes that are read (S01.3-T06).
 	Download(ctx context.Context, owner, path string) (Item, io.ReadSeekCloser, error)
+	// Rename gives the item at path a new name in its folder, and Move
+	// moves it to another path; both return the item at its new path
+	// (S01.3-T07).
+	Rename(ctx context.Context, owner, path, newName string, opts MoveOptions) (Item, error)
+	Move(ctx context.Context, owner, from, to string, opts MoveOptions) (Item, error)
 }
 
 // Op names a file operation, for hooks and logs.

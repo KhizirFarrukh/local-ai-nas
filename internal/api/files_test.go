@@ -151,6 +151,16 @@ func (r *recordingFiles) Download(context.Context, string, string) (files.Item, 
 	return files.Item{}, nil, apperr.New(apperr.NotFound, "fake")
 }
 
+func (r *recordingFiles) Rename(context.Context, string, string, string, files.MoveOptions) (files.Item, error) {
+	r.calls++
+	return files.Item{}, apperr.New(apperr.NotFound, "fake")
+}
+
+func (r *recordingFiles) Move(context.Context, string, string, string, files.MoveOptions) (files.Item, error) {
+	r.calls++
+	return files.Item{}, apperr.New(apperr.NotFound, "fake")
+}
+
 func TestGetItemsInvalidInputNeverReachesService(t *testing.T) {
 	svc := &recordingFiles{}
 	h := New(Options{Files: svc})

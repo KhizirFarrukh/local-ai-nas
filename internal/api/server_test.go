@@ -115,3 +115,11 @@ func (f *failingServer) UploadFile(context.Context, gen.UploadFileRequestObject)
 func (f *failingServer) DownloadFile(context.Context, gen.DownloadFileRequestObject) (gen.DownloadFileResponseObject, error) {
 	return nil, f.err
 }
+
+func (f *failingServer) RenameItem(context.Context, gen.RenameItemRequestObject) (gen.RenameItemResponseObject, error) {
+	return nil, f.err
+}
+
+func (f *failingServer) MoveItem(context.Context, gen.MoveItemRequestObject) (gen.MoveItemResponseObject, error) {
+	return nil, f.err
+}

@@ -1,20 +1,21 @@
 # CURRENT_STATE
 
-**Last updated:** 2026-09-24 12:59 +0500 (session S005)
+**Last updated:** 2026-09-24 16:19 +0500 (session S005)
 **Plan version:** 1.1.1 (`code-agent-docs/plan.md`), **Approved baseline** 1.0.0 (S005) + the setup-script requirement (1.1.0, S005 E015)
 **Current phase:** Implementation: S01 (Basic NAS implementation) in progress; S01.1 and S01.2 done; S01.3, S01.5, and S01.6 in progress
 
 ## Active stage and task
 - **Active stage:** S01 (Basic NAS implementation), **In Progress** (`stages/S01-basic-nas.md`); S01.1 and S01.2 **Done**; S01.6 **In Progress** (T01, T02 done; T03–T06 later); S01.5 **In Progress** (T01–T04 done; T05/T06 later); S01.3 **In Progress**.
-- **Active task:** **S01.3-T06** Download (branch `feat/S01.3-T06-download`): done, waiting for CI and the merge; next **S01.3-T07** rename and move
+- **Active task:** **S01.3-T07** Rename and move (branch `feat/S01.3-T07-rename-move`): done, waiting for CI and the merge; next **S01.3-T08** copy
 
 ## In progress (write-ahead)
-- S01.3-T06: committed; push, CI, merge into `develop`.
+- S01.3-T07: committed; push, CI, merge into `develop`.
 
 ## Last completed
 - `develop` verified complete (S005): merge `c535cda` brought `cf60f72` (plan 0.4.0, which PR #3 had put on `main` only) and the user's `bda8321` (prompts 3 and 4).
 - Approval-stage decisions D-01–D-14 applied (S005 E007–E010). **Plan 1.0.0 baseline and S01 approved** (S005 E012).
-- **S01.3-T06 done** (S005 E077): `GET /api/v1/files/content` with ranges and conditional requests via `http.ServeContent`, 412/416 as problems (new codes `precondition_failed`, `range_not_satisfiable`), `attachment` Content-Disposition (RFC 6266/8187), nosniff + sandbox CSP; details from the open handle.
+- **S01.3-T07 done** (S005 E080): rename and move endpoints; folder-into-itself refused through `os.SameFile` ancestors (catches case variants on Windows); case-only renames; atomic no-replace for files (hard link + remove, undone if the remove fails); folders never replaced or merged.
+- **S01.3-T06 done and merged** (CI run 35972700242 green; S005 E077): `GET /api/v1/files/content` with ranges and conditional requests via `http.ServeContent`, 412/416 as problems (new codes `precondition_failed`, `range_not_satisfiable`), `attachment` Content-Disposition (RFC 6266/8187), nosniff + sandbox CSP; details from the open handle.
 - **S01.3-T05 done and merged** (CI run 35971985758 green; S005 E074): `PUT /api/v1/files/content`: declared size checked first (411/413/507 before any byte), temp file in the target folder + fsync + atomic commit (Link for fail/rename, Rename for overwrite), hidden temp names, per-route body limits; the simple-upload part of S01.4-T05 done early.
 - **S01.3-T04 done and merged** (CI run 35970636485 green; S005 E072): `POST /api/v1/files/folders` with `parents` and `on_conflict` (fail/rename/overwrite); every new name checked before anything is created; strict JSON bodies (`api/body.go`); the resolver reports Windows device names with the reserved_name rule.
 - **S01.3-T03 done and merged** (CI run 35969766390 green; S005 E070): item details with MIME (extension, else sniff) and a strong ETag (size + mtime + file ID) that changes on rewrite and on replacement.
