@@ -6,15 +6,16 @@
 
 ## Active stage and task
 - **Active stage:** S01 (Basic NAS implementation), **In Progress** (`stages/S01-basic-nas.md`); substage S01.1 In Progress.
-- **Active task:** none (S01.1-T07 done; S01.1-T08 next)
+- **Active task:** none (S01.1-T08 done; S01.1-T09 next)
 
 ## In progress (write-ahead)
-- S01.1-T07: push, wait for the branch CI to pass, merge `feat/S01.1-T07-config` into `develop`.
+- S01.1-T08: push, wait for the branch CI to pass, merge `feat/S01.1-T08-logging` into `develop`.
 
 ## Last completed
 - `develop` verified complete (S005): merge `c535cda` brought `cf60f72` (plan 0.4.0, which PR #3 had put on `main` only) and the user's `bda8321` (prompts 3 and 4).
 - Approval-stage decisions D-01–D-14 applied (S005 E007–E010). **Plan 1.0.0 baseline and S01 approved** (S005 E012).
-- **S01.1-T07 done** (S005 E029): `internal/config` (settings table; file/env/flag precedence; strict keys; typed values; all errors name key + source); coverage of internal/... 95.4%.
+- **S01.1-T08 done** (S005 E031): `internal/logging` (RotatingFile, New with stderr + file, RequestID, AccessLog with redaction); coverage of internal/... 94.8%.
+- **S01.1-T07 done and merged** (`develop` 69a0f7b; branch CI green; S005 E029): `internal/config` (settings table; file/env/flag precedence; strict keys; typed values; all errors name key + source); coverage of internal/... 95.4%.
 - **S01.1-T05 done and merged** (`develop` f662664; S005 E027): CI green on GitHub (run 35945085750, 7 jobs), red on a deliberate failing test (run 35945229679), green again after the revert (run 35945387694); arm64/amd64/windows artifacts produced.
 - **S01.1-T04 done and merged** (`develop` dc9c0a0; S005 E025): `internal/testutil` + tests (unit, integration, fuzz seeds), `scripts/coverage.sh` (83.0%, gate works), `docs/testing.md`; 45 s of fuzzing found nothing.
 - **S01.1-T03 done and merged** (`develop` f0cc48c; S005 E023): `.golangci.yml` (v2) + `scripts/install-golangci-lint.sh`; clean on the skeleton; depguard, errcheck, and gofmt violations fail (then removed).
@@ -23,8 +24,8 @@
 - Plan 1.1.0: the user's requirement to record every dependency and build a setup script per platform (FR-149, NFR-032, S11.2, Q41; `dependencies.md` section 12; RULES 1.5.0) (S005 E015–E016).
 
 ## Next steps
-1. **S01.1-T08** (logging, `internal/logging`): slog JSON to stderr + size-rotated file in `.local-ai-nas/logs/` (in-house rotator; `log.file_max_size`, `log.file_max_files`), level from `log.level`, request-ID middleware, access log line, redaction. Branch `feat/S01.1-T08-logging`.
-2. Then T09 (errors), T10 (SQLite), T11 (app skeleton), then **T06** (dev environment + image/Trivy CI job + Dependabot docker).
+1. **S01.1-T09** (error conventions, `internal/apperr`): typed domain errors mapped to RFC 9457 problem+json with stable `code` and `correlation_id` (= request ID); panic-recovery middleware with a generic 500. Branch `feat/S01.1-T09-errors`.
+2. Then T10 (SQLite), T11 (app skeleton), then **T06** (dev environment + image/Trivy CI job + Dependabot docker).
 3. Then S01.2 onwards, in the execution order of the S01 document. Local Go: `C:\Program Files\Go\bin` (a new shell has it on PATH).
 4. CI runs on every push (`.github/workflows/ci.yml`). Watch it anonymously with the public API (the repository is public; `gh` is not installed).
 5. Every finished branch: merge it into `develop` myself and push (RULES User Preferences, S005).
