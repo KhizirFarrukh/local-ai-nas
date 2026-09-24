@@ -11,6 +11,7 @@ import (
 	"net/url"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"testing"
 	"time"
@@ -186,5 +187,42 @@ func TestUploadOverHTTP(t *testing.T) {
 	}
 	if _, err := os.Stat(filepath.Join(dir, "chunked.bin")); !os.IsNotExist(err) {
 		t.Errorf("a refused upload left a file: %v", err)
+	}
+}
+
+// TestTusChunkLimit is part of S01.4-T05: a tus request over
+// uploads.max_chunk_size gets 413 before any byte is stored.
+func TestTusChunkLimit(t *testing.T) {
+	svc, _ := testFilesDir(t)
+	h := New(Options{Files: svc, Uploads: testUploads(t, svc), MaxChunkBytes: 1024})
+	c := client{t, testutil.NewServer(t, h).URL}
+	st, hdr, b := c.do("POST", UploadsPath, "", nil, map[string]string{
+		"Tus-Resumable": "1.0.0", "Upload-Length": "4096", "Upload-Metadata": "target_path " + b64("/chunks.bin"),
+	})
+	if st != http.StatusCreated {
+		t.Fatalf("create: %d %s", st, b)
+	}
+	location := strings.TrimPrefix(hdr.Get("Location"), c.url)
+	patch := func(offset, n int) (int, http.Header, []byte) {
+		return c.do("PATCH", location, "application/offset+octet-stream", bytes.Repeat([]byte("x"), n), map[string]string{
+			"Tus-Resumable": "1.0.0", "Upload-Offset": strconv.Itoa(offset),
+		})
+	}
+	st, _, b = patch(0, 2048)
+	if st != http.StatusRequestEntityTooLarge {
+		t.Fatalf("a 2 KiB chunk over a 1 KiB limit: %d %s", st, b)
+	}
+	var p apperr.Problem
+	if err := json.Unmarshal(b, &p); err != nil || p.Code != "too_large" {
+		t.Errorf("the refusal is not a too_large problem: %s", b)
+	}
+	st, hdr, _ = c.do("HEAD", location, "", nil, map[string]string{"Tus-Resumable": "1.0.0"})
+	if st != http.StatusOK || hdr.Get("Upload-Offset") != "0" {
+		t.Errorf("after the refused chunk the offset is %q (%d), want 0", hdr.Get("Upload-Offset"), st)
+	}
+	for off := 0; off < 4096; off += 1024 {
+		if st, _, b := patch(off, 1024); st != http.StatusNoContent {
+			t.Fatalf("chunk at %d: %d %s", off, st, b)
+		}
 	}
 }

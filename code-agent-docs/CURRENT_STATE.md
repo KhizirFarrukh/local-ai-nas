@@ -1,20 +1,21 @@
 # CURRENT_STATE
 
-**Last updated:** 2026-09-24 17:47 +0500 (session S005)
+**Last updated:** 2026-09-24 17:53 +0500 (session S005)
 **Plan version:** 1.1.1 (`code-agent-docs/plan.md`), **Approved baseline** 1.0.0 (S005) + the setup-script requirement (1.1.0, S005 E015)
 **Current phase:** Implementation: S01 (Basic NAS implementation) in progress; S01.1, S01.2, S01.3, and S01.6 done; S01.4 and S01.5 in progress
 
 ## Active stage and task
-- **Active stage:** S01 (Basic NAS implementation), **In Progress** (`stages/S01-basic-nas.md`); S01.1, S01.2, S01.3, and S01.6 **Done**; S01.4 **In Progress** (T01–T04 done); S01.5 **In Progress** (T01–T04 done; T05/T06 after S01.4).
-- **Active task:** **S01.4-T04** Memory bound (branch `feat/S01.4-T04-memory`): done, waiting for CI (the new `memory` job runs 10 GiB on Linux) and the merge; next **S01.4-T05** size limits and **T06** cleanup (both drafted in the working tree, E102)
+- **Active stage:** S01 (Basic NAS implementation), **In Progress** (`stages/S01-basic-nas.md`); S01.1, S01.2, S01.3, and S01.6 **Done**; S01.4 **In Progress** (T01–T05 done); S01.5 **In Progress** (T01–T04 done; T05/T06 after S01.4).
+- **Active task:** **S01.4-T05** Size limits (branch `feat/S01.4-T05-limits`): done, waiting for CI and the merge; next **S01.4-T06** cleanup + the S01.4 closure (drafted in the working tree)
 
 ## In progress (write-ahead)
-- S01.4-T04: committed alone (the T05/T06 draft stays uncommitted); push, CI, merge into `develop`. (tus finalize is in `TestConflictMatrix` since S01.4-T03.)
+- S01.4-T05: committed alone (the T06 draft stays uncommitted); push, CI, merge into `develop`. (tus finalize is in `TestConflictMatrix` since S01.4-T03.)
 
 ## Last completed
 - `develop` verified complete (S005): merge `c535cda` brought `cf60f72` (plan 0.4.0, which PR #3 had put on `main` only) and the user's `bda8321` (prompts 3 and 4).
 - Approval-stage decisions D-01–D-14 applied (S005 E007–E010). **Plan 1.0.0 baseline and S01 approved** (S005 E012).
-- **S01.4-T04 done** (S005 E103): `TestMemoryBound` (simple upload, tus, copy, download; heap growth < 256 MiB) in a CI `memory` job, 10 GiB on Linux and 1 GiB on Windows.
+- **S01.4-T05 done** (S005 E104): `chunkLimit` refuses a tus request declaring more than `uploads.max_chunk_size` with 413 before tusd reads it.
+- **S01.4-T04 done and merged** (CI run 36001374478 green, including the 10 GiB memory job; S005 E103): `TestMemoryBound` (simple upload, tus, copy, download; heap growth < 256 MiB) in a CI `memory` job, 10 GiB on Linux and 1 GiB on Windows.
 - **S01.4-T03 done and merged** (CI run 36000680420 green; S005 E100): finished uploads become files through `files.Local.CommitUpload` (MoveInto + shared commit), the copy fallback across file systems, SHA-256 check, `Item-Path` header, fault-injection tests; tus rows in `TestConflictMatrix`.
 - **S01.4-T02 done and merged** (CI run 35999796296 green; S005 E098): the creation hook runs `files.Local.CheckUpload` (the simple upload's checks, shared); refusals are problems and store nothing.
 - **S01.4-T01 done and merged** (CI run 35999368786 green; S005 E096): `internal/uploads` embeds tusd v2.10.1 at `/api/v1/files/uploads/` (sessions in SQLite, problems for every error, codes `locked` and `unavailable`); FuzzAPI covers it; a Windows path-aliasing fix in the resolver.
