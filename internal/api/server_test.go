@@ -127,3 +127,7 @@ func (f *failingServer) MoveItem(context.Context, gen.MoveItemRequestObject) (ge
 func (f *failingServer) CopyItem(context.Context, gen.CopyItemRequestObject) (gen.CopyItemResponseObject, error) {
 	return nil, f.err
 }
+
+func (f *failingServer) DeleteItem(context.Context, gen.DeleteItemRequestObject) (gen.DeleteItemResponseObject, error) {
+	return nil, f.err
+}

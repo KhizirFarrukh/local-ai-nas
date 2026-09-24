@@ -357,6 +357,38 @@ paths:
           $ref: "#/components/responses/MethodNotAllowed"
         "500":
           $ref: "#/components/responses/InternalError"
+    delete:
+      tags: [files]
+      operationId: deleteItem
+      summary: Delete a file or folder
+      description: |
+        Deletes the item at `path` permanently (a trash comes in a later
+        stage). A symbolic link is deleted itself, never what it points
+        to. A folder with anything in it needs `recursive=true` (409
+        otherwise). The root folder cannot be deleted (400). A recursive
+        delete that fails part-way leaves the rest; repeating it finishes
+        it.
+      parameters:
+        - $ref: "#/components/parameters/Path"
+        - name: recursive
+          in: query
+          description: Delete a folder with everything in it.
+          schema:
+            type: boolean
+            default: false
+      responses:
+        "204":
+          description: The item was deleted.
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "405":
+          $ref: "#/components/responses/MethodNotAllowed"
+        "409":
+          $ref: "#/components/responses/Conflict"
+        "500":
+          $ref: "#/components/responses/InternalError"
   /system/health:
     get:
       tags: [system]

@@ -166,6 +166,11 @@ func (r *recordingFiles) Copy(context.Context, string, string, string, files.Cop
 	return files.Item{}, false, apperr.New(apperr.NotFound, "fake")
 }
 
+func (r *recordingFiles) Delete(context.Context, string, string, files.DeleteOptions) error {
+	r.calls++
+	return apperr.New(apperr.NotFound, "fake")
+}
+
 func TestGetItemsInvalidInputNeverReachesService(t *testing.T) {
 	svc := &recordingFiles{}
 	h := New(Options{Files: svc})
