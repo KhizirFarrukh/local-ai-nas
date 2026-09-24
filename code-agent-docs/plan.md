@@ -945,7 +945,7 @@ flowchart LR
   4. Writes that would push free space below the configured reserve are refused with a clear error.
   5. The health endpoint reports each startup check: root writable, temp and areas on one filesystem, free space, config valid.
 - **Risks/notes:** The layout affects S07.2 and S09. ADR-0003 avoids a later data move by creating namespaces now.
-- **Status:** Not started
+- **Status:** In Progress (S005)
 
 #### S01.3: Core file operations
 - **Goal:** A service layer and API that perform every basic file operation on the files area, confined to it.

@@ -2,18 +2,19 @@
 
 **Last updated:** 2026-09-24 07:45 +0500 (session S005)
 **Plan version:** 1.1.1 (`code-agent-docs/plan.md`), **Approved baseline** 1.0.0 (S005) + the setup-script requirement (1.1.0, S005 E015)
-**Current phase:** Implementation: S01 (Basic NAS implementation) in progress; S01.1 done, S01.2 next
+**Current phase:** Implementation: S01 (Basic NAS implementation) in progress; S01.1 done, S01.2 in progress
 
 ## Active stage and task
-- **Active stage:** S01 (Basic NAS implementation), **In Progress** (`stages/S01-basic-nas.md`); S01.1 **Done**, S01.2 next.
-- **Active task:** none (S01.1 closed; S01.2-T01 next)
+- **Active stage:** S01 (Basic NAS implementation), **In Progress** (`stages/S01-basic-nas.md`); S01.1 **Done**, S01.2 **In Progress**.
+- **Active task:** none (S01.2-T01 done; S01.2-T02 next)
 
 ## In progress (write-ahead)
-- Merge `feat/S01.1-T06-devenv` (T06 + S01.1 closure) into `develop` and push.
+- S01.2-T01: push, wait for CI, merge `feat/S01.2-T01-layout` into `develop`.
 
 ## Last completed
 - `develop` verified complete (S005): merge `c535cda` brought `cf60f72` (plan 0.4.0, which PR #3 had put on `main` only) and the user's `bda8321` (prompts 3 and 4).
 - Approval-stage decisions D-01–D-14 applied (S005 E007–E010). **Plan 1.0.0 baseline and S01 approved** (S005 E012).
+- **S01.2-T01 done** (S005 E042): `internal/storage` Layout + Init (creates `files/u0001`, `photos/u0001`, `.local-ai-nas/{tmp/uploads,db,logs}`; real, writable directories; unknown root entries reported and left alone); `serve`/`migrate` use it.
 - **S01.1 closed** (S005 E040): T06 done (Docker dev environment, example config, README Development, CI image job; CI run 35948272549 green). All 11 S01.1 tasks Done; substage acceptance checked (S01 change log).
 - **S01.1-T11 done and merged** (branch CI green; S005 E037): `cmd/local-ai-nas` (serve, migrate up|status, version; graceful shutdown) and `internal/health`; the smoke test runs the program as a separate process; a manual run on Windows is healthy.
 - **S01.1-T10 done and merged** (branch CI green via the badge; S005 E035): `internal/db` (WAL, writer + query-only readers, goose migrations, schema settings/uploads); licenses all allowed; no vulnerabilities.

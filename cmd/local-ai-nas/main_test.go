@@ -260,6 +260,37 @@ func TestMigrateCommand(t *testing.T) {
 	}
 }
 
+func TestUnknownRootEntriesAreReported(t *testing.T) {
+	isolateEnv(t)
+	root := testutil.StorageRoot(t)
+	if err := testutil.WriteFiles(root, map[string]string{"notes.txt": "mine"}); err != nil {
+		t.Fatal(err)
+	}
+	code, _, stderr := runCmd(t, "migrate", "--storage-root", root, "status")
+	if code != 0 || !strings.Contains(stderr, "left alone") || !strings.Contains(stderr, "notes.txt") {
+		t.Errorf("exit %d, stderr %q; want a warning naming notes.txt", code, stderr)
+	}
+	files, err := testutil.ReadFiles(root)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if files["notes.txt"] != "mine" {
+		t.Error("the unknown entry was changed")
+	}
+}
+
+func TestLayoutErrorStopsStartup(t *testing.T) {
+	isolateEnv(t)
+	root := testutil.StorageRoot(t)
+	if err := testutil.WriteFiles(root, map[string]string{"files": "a file where the area should be"}); err != nil {
+		t.Fatal(err)
+	}
+	code, _, stderr := runCmd(t, "serve", "--storage-root", root)
+	if code != 1 || !strings.Contains(stderr, "is not a directory") {
+		t.Errorf("exit %d, stderr %q; want 1 and a layout error", code, stderr)
+	}
+}
+
 func TestGracefulShutdownWaitsForInFlight(t *testing.T) {
 	started, release := make(chan struct{}), make(chan struct{})
 	srv := &http.Server{Handler: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {

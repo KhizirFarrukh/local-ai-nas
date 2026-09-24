@@ -17,11 +17,8 @@ import (
 	"github.com/KhizirFarrukh/local-ai-nas/internal/db"
 	"github.com/KhizirFarrukh/local-ai-nas/internal/health"
 	"github.com/KhizirFarrukh/local-ai-nas/internal/logging"
+	"github.com/KhizirFarrukh/local-ai-nas/internal/storage"
 )
-
-// internalDirName is the internal data directory under the storage root
-// (ADR-0003). S01.2 moves the layout into internal/storage.
-const internalDirName = ".local-ai-nas"
 
 // Request limits. Routes with large bodies (uploads, S01.3/S01.4) set
 // their own limits.
@@ -38,19 +35,25 @@ type app struct {
 	close  func()
 }
 
-// setup loads the config from the parsed flags, starts logging, and opens
-// the database. On error it has already reported to stderr.
+// setup loads the config from the parsed flags, prepares the storage
+// layout, starts logging, and opens the database. On error it has already
+// reported to stderr.
 func setup(ctx context.Context, fs *flag.FlagSet, stderr io.Writer) (*app, bool) {
 	cfg, err := config.Load(config.SourcesFromFlags(fs))
 	if err != nil {
 		_, _ = fmt.Fprintf(stderr, "local-ai-nas: invalid configuration:\n%v\n", err)
 		return nil, false
 	}
-	internal := filepath.Join(cfg.Storage.Root, internalDirName)
+	layout := storage.NewLayout(cfg.Storage.Root)
+	unknown, err := layout.Init()
+	if err != nil {
+		_, _ = fmt.Fprintf(stderr, "local-ai-nas: %v\n", err)
+		return nil, false
+	}
 	logger, logCloser, err := logging.New(logging.Options{
 		Level:        cfg.Log.Level,
 		Stderr:       stderr,
-		Dir:          filepath.Join(internal, "logs"),
+		Dir:          layout.Logs,
 		FileMaxSize:  int64(cfg.Log.FileMaxSize),
 		FileMaxFiles: cfg.Log.FileMaxFiles,
 	})
@@ -58,7 +61,11 @@ func setup(ctx context.Context, fs *flag.FlagSet, stderr io.Writer) (*app, bool)
 		_, _ = fmt.Fprintf(stderr, "local-ai-nas: %v\n", err)
 		return nil, false
 	}
-	database, err := db.Open(ctx, filepath.Join(internal, "db", db.FileName))
+	if len(unknown) > 0 {
+		logger.Warn("the storage root has entries the server does not use; they are left alone",
+			"root", layout.Root, "entries", unknown)
+	}
+	database, err := db.Open(ctx, filepath.Join(layout.DB, db.FileName))
 	if err != nil {
 		logger.Error("cannot open the database", "error", err.Error())
 		_ = logCloser.Close()
