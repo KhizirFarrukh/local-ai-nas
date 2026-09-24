@@ -118,6 +118,19 @@ func (p *problemStatus) Write(b []byte) (int, error) {
 	return p.ResponseWriter.Write(b)
 }
 
+// ReadFrom passes the file's content to the underlying writer, which can
+// send it with sendfile (S01.7-T04); after an error status the content is
+// dropped, like Write drops ServeContent's text.
+func (p *problemStatus) ReadFrom(src io.Reader) (int64, error) {
+	if p.failed {
+		return io.Copy(io.Discard, src)
+	}
+	if rf, ok := p.ResponseWriter.(io.ReaderFrom); ok {
+		return rf.ReadFrom(src)
+	}
+	return io.Copy(struct{ io.Writer }{p.ResponseWriter}, src)
+}
+
 // Unwrap lets http.ResponseController reach the underlying writer.
 func (p *problemStatus) Unwrap() http.ResponseWriter { return p.ResponseWriter }
 

@@ -13,6 +13,7 @@ How tests are written and run (ADR-0005, S01.1-T04). On Windows, run the `script
 | Lint and format | `./bin/golangci-lint run ./...` and `./bin/golangci-lint fmt --diff` (install: `scripts/install-golangci-lint.sh`) |
 | Dependency licenses | `scripts/check-licenses.sh` |
 | Memory bound of large transfers (writes the size several times) | `LOCALAINAS_MEMTEST_SIZE=1GiB go test -run TestMemoryBound -v ./internal/api` |
+| Performance baseline (NFR-003; see `docs/perf/`) | `scripts/perf-baseline.sh 1GiB` |
 
 CI runs the tests on Linux (with `-race`) and Windows, plus the coverage gate (S01.1-T05), and a separate memory job: `TestMemoryBound` with 10 GiB on Linux and 1 GiB on Windows (S01.4-T04; without `LOCALAINAS_MEMTEST_SIZE` the test is skipped).
 

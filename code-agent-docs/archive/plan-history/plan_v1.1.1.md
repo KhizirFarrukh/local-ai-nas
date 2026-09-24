@@ -2,11 +2,11 @@
 
 | Field | Value |
 |---|---|
-| **Version** | 1.1.2 |
+| **Version** | 1.1.1 |
 | **Status** | **Approved baseline** (approved by the user in S005, 2026-09-24); 1.1.0 adds the user's setup-script requirement (S005 E015) |
 | **Last updated** | 2026-09-24 (session S005) |
 | **Source of vision** | `README.md` (repository root), the user's staged roadmap (`code-agent-docs/prompts/P002-staged-development-roadmap.json`), and the user's technology stack (`code-agent-docs/prompts/P003-technology-stack.json`) |
-| **Previous version** | 1.1.1, archived at `code-agent-docs/archive/plan-history/plan_v1.1.1.md` (0.1.0–1.1.0 also archived there) |
+| **Previous version** | 1.1.0, archived at `code-agent-docs/archive/plan-history/plan_v1.1.0.md` (0.1.0–1.0.0 also archived there) |
 
 > **This is a living document.** It changes as the user gives feedback. Every change follows `code-agent-docs/RULES.md` **R4**: the old version is archived, the version is bumped, and a revision entry is added. While the plan is a pre-1.0 draft, restructurings bump the MINOR version. **When the user approves this plan as the baseline, it becomes version 1.0.0.**
 >
@@ -337,7 +337,7 @@ Priorities: **Must** (required for its stage to be Done), **Should** (important;
 |---|---|---|---|
 | NFR-001 | **Local-only and private** (I6): no telemetry, no cloud dependencies, no runtime network calls unless the user explicitly enables a feature that needs one. The GUI and API docs load no remote assets. | Must | All stages. |
 | NFR-002 | **AI optional and isolated** (I7): AI runs as a separate optional process/container, and the NAS is fully functional without it. AI failures cannot affect the core. | Must | S12. |
-| NFR-003 | **Performance** (measured on the Q1 platforms, see Q1; library size confirmed by Q18: 100,000 photos + 100,000 files): S01, listing a 10,000-entry folder p95 ≤ 500 ms and transfer throughput ≥ 80% of raw disk/network. S04, timeline page p95 ≤ 500 ms at 50,000 photos. S06, search p95 ≤ 300 ms and full index rebuild ≤ 15 min at 100,000 photos + 100,000 files. S11, targets met under the target user count. | Must | Priority Should → Must and targets updated in 0.2.0. |
+| NFR-003 | **Performance** (measured on the Q1 platforms, see Q1; library-size targets to confirm with Q18): S01, listing a 10,000-entry folder p95 ≤ 500 ms and transfer throughput ≥ 80% of raw disk/network. S04, timeline page p95 ≤ 500 ms at 50,000 photos. S06, search p95 ≤ 300 ms and full index rebuild ≤ 15 min at 100,000 photos + 100,000 files. S11, targets met under the target user count. | Must | Priority Should → Must and targets updated in 0.2.0. |
 | NFR-004 | **Modest hardware**: the core runs on a 4-core CPU with 4 GB RAM. AI runs CPU-only by default with bounded memory. | Must | |
 | NFR-005 | Optional GPU acceleration for AI. | Could | |
 | NFR-006 | **Data integrity**: originals are never altered by background work. File and sidecar writes are atomic, so a crash never leaves partial files. | Must | |
@@ -385,7 +385,7 @@ Assumptions are numbered permanently. Ones overturned by the 0.2.0 design are ma
 - **A9:** Capture times are stored in ISO 8601 with the original UTC offset when known. Otherwise a configured default timezone applies and the sidecar marks it as assumed.
 - **A10:** English for the UI, the taxonomy, and the synonym dictionary in the first releases (Q15).
 - **A11:** AI model weights are either bundled in the optional AI image or downloaded once at opt-in with explicit consent, and are checksum-verified (FR-032, ADR-0017). They are never fetched at runtime otherwise.
-- **A12:** Performance planning targets 100,000 photos + 100,000 files per installation. **Confirmed by the user (Q18, S005).**
+- **A12:** Performance planning targets 100,000 photos + 100,000 files per installation (Q18).
 - **A13:** The primary deployment target is containers on Linux (x86-64, ARM64). Native installs come in S11.2 (Q5). Windows 11 is a supported development and test platform, and the server must run natively there (Q1, S005).
 - **A14:** The README sidecar draft is a starting point. The schema is finalized by ADR in S05.1.
 - **A15:** The project lives on GitHub (`origin`: `KhizirFarrukh/local-ai-nas`), with CI on GitHub Actions (Q24).
@@ -400,7 +400,7 @@ Assumptions are numbered permanently. Ones overturned by the 0.2.0 design are ma
 
 ## 5. Open questions for the user
 
-Questions keep their numbers permanently. **★ = needed for S01**: none left (Q1, Q22, and Q18 were answered in S005). Answered or superseded questions stay listed for traceability.
+Questions keep their numbers permanently. **★ = needed for S01**: Q18 before the S01.7 performance baseline (Q1 and Q22 were answered in S005). Answered or superseded questions stay listed for traceability.
 
 **Answered by the user in S005 (approval stage, decisions D-01–D-14 of audit A001):**
 - Q1 (platforms: x86-64 mini-PC/old PC, Raspberry Pi, and Windows 11 for testing).
@@ -408,7 +408,6 @@ Questions keep their numbers permanently. **★ = needed for S01**: none left (Q
 - Q22 (**AGPL-3.0-or-later**).
 - Q37 (no candidates added).
 - Q38 (first usable release = **S01–S11**).
-- Q18 (library size: **100,000 photos + 100,000 files** per installation, confirming A12; before the S01.7 baseline).
 
 **Answered by P003 (0.3.0):**
 - Q25 (GUI): web UI (SvelteKit).
@@ -421,7 +420,7 @@ Questions keep their numbers permanently. **★ = needed for S01**: none left (Q
 - Q24 (CI: GitHub Actions; the repository is on GitHub).
 - Q16 (face models must be permissively licensed; InsightFace excluded; NFR-029).
 
-**Remaining ★ for S01:** none. ADR-0003 was Accepted in S005 (D-01).
+**Remaining ★ for S01:** Q18 (library size, before S01.7). ADR-0003 was Accepted in S005 (D-01).
 
 **Needed for plan baseline approval (1.0.0)** (grouped by audit A001, F-016): all items were resolved in S005: Q38, Q37, the 10.14 flags (D-02), ADR-0003 (D-01), and the other A001 decisions. **What remains is the user's explicit approval of this plan as the 1.0.0 baseline** (R4).
 
@@ -1034,8 +1033,8 @@ flowchart LR
   3. The performance baseline (listing, throughput, memory during a 10 GB transfer) is recorded against NFR-003.
   4. A scripted API demo manages files and folders end to end, including a resumed upload.
   5. The completion record is written and the user's sign-off is recorded.
-- **Risks/notes:** Reference hardware (Q1, S005): the Windows 11 development PC, plus a Raspberry Pi and an x86-64 mini-PC when available. Library size: 100,000 photos + 100,000 files (Q18, S005).
-- **Status:** In Progress (S005)
+- **Risks/notes:** Reference hardware (Q1, S005): the Windows 11 development PC, plus a Raspberry Pi and an x86-64 mini-PC when available. Library-size targets are pending Q18.
+- **Status:** Not started
 
 **Design notes (S01):**
 - Storage access sits behind a service interface with hook points (trash, sharing checks, quotas, sidecar sync, indexing), so later features never touch every endpoint.
@@ -2614,4 +2613,3 @@ CI runs on Linux and Windows from S01.1.
 | 1.0.0 | 2026-09-24 | **Approved as the baseline.** No content change from 0.5.0 except the version, status, and S01 status (Approved). From now on, plan changes follow the normal R4 versioning (PATCH/MINOR/MAJOR). | The user's approval in S005 (E012): "Approve as 1.0.0 (Recommended)"; S01 stage document: "Approve S01 (Recommended)" | `logs/sessions/2026-09-24_S005.md` |
 | 1.1.0 | 2026-09-24 | **Deployment dependency record and per-platform setup scripts** (MINOR, R4). FR-149 (a separate setup script per platform that deploys the NAS automatically) and NFR-032 (every dependency recorded; runtime prerequisites per platform in `dependencies.md` section 12) added. S11.2 rewritten around the setup scripts (goal, scope, deliverables, requirements, acceptance criteria); S11.4 install guide built around them. Q5 partly answered (Windows 11 gets a setup script; macOS still open). Q41 added (Linux script default mode). Concern 8.20 updated. | The user's request (S005 E015): "one thing to add: keep record of all dependencies needed, in the end you will have to make a setup script, a separate one for each platform, which when run, will automatically handle the deployment." | `logs/sessions/2026-09-24_S005.md` |
 | 1.1.1 | 2026-09-24 | Clarification (PATCH): Q22 and RK-08 record the license form **AGPL-3.0-or-later**. | The user's answer (S005 E020): "AGPL-3.0-or-later (Recommended)" | `logs/sessions/2026-09-24_S005.md` |
-| 1.1.2 | 2026-09-24 | Clarification (PATCH): **Q18 answered**: the library size is 100,000 photos + 100,000 files per installation, confirming A12; NFR-003, section 5, and the S01.7 notes updated; no target changes. S01.7 status In Progress. | The user's answer (S005 E116): "100k photos + 100k files (Recommended)" | `logs/sessions/2026-09-24_S005.md` |

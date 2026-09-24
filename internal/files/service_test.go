@@ -18,7 +18,7 @@ const owner = storage.DefaultNamespace
 
 // newService returns a service on a fresh storage root with files placed
 // in the default namespace, and the layout.
-func newService(t *testing.T, hooks Hooks, files map[string]string) (*Local, storage.Layout) {
+func newService(t testing.TB, hooks Hooks, files map[string]string) (*Local, storage.Layout) {
 	t.Helper()
 	l := storage.NewLayout(testutil.StorageRoot(t), storage.Options{})
 	if _, err := l.Init(); err != nil {

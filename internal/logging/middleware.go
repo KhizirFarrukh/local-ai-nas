@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/rand"
 	"encoding/hex"
+	"io"
 	"log/slog"
 	"net/http"
 	"net/url"
@@ -171,6 +172,24 @@ func (r *recorder) Write(p []byte) (int, error) {
 	}
 	n, err := r.ResponseWriter.Write(p)
 	r.bytes += int64(n)
+	return n, err
+}
+
+// ReadFrom passes large copies, such as downloads, to the underlying
+// writer, which can send a file with sendfile (S01.7-T04); it counts the
+// bytes like Write.
+func (r *recorder) ReadFrom(src io.Reader) (int64, error) {
+	if r.status == 0 {
+		r.status = http.StatusOK
+	}
+	var n int64
+	var err error
+	if rf, ok := r.ResponseWriter.(io.ReaderFrom); ok {
+		n, err = rf.ReadFrom(src)
+	} else {
+		n, err = io.Copy(struct{ io.Writer }{r.ResponseWriter}, src)
+	}
+	r.bytes += n
 	return n, err
 }
 
