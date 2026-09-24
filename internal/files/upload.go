@@ -77,6 +77,60 @@ func (s *Local) Upload(ctx context.Context, owner, apiPath string, body io.Reade
 	return res.item, res.created, err
 }
 
+// ErrNotSameDevice is CommitUpload's answer when the finished upload lies
+// on another file system than the area: copy it with Upload instead.
+var ErrNotSameDevice = storage.ErrNotSameDevice
+
+// CommitUpload makes the finished upload src, a complete and synced file
+// outside the areas (S01.4-T03), the file at path under the conflict
+// policy. It moves src into the target folder under a hidden temporary
+// name and then commits it like Upload, so the name never shows a partial
+// file. It returns ErrNotSameDevice, and changes nothing, when src cannot
+// be renamed into the area.
+func (s *Local) CommitUpload(ctx context.Context, owner, apiPath, src string, o UploadOptions) (Item, bool, error) {
+	policy, rel, err := s.prepareUpload(owner, apiPath, 0, o) // a rename needs no free space
+	if err != nil {
+		return Item{}, false, err
+	}
+	type result struct {
+		item    Item
+		created bool
+	}
+	res, err := run(ctx, s.hooks, Event{Op: OpUpload, Owner: owner, Path: rel}, func() (result, error) {
+		var r result
+		err := s.withRoot(owner, func(root *os.Root) error {
+			if err := checkUploadTarget(root, rel, policy, apiPath); err != nil {
+				return err
+			}
+			dir := path.Dir(rel)
+			tmp := path.Join(dir, storage.TempPrefix+rand.Text()+".part")
+			if err := s.resolver.MoveInto(storage.FilesArea, owner, tmp, src); err != nil {
+				if errors.Is(err, storage.ErrNotSameDevice) {
+					return err
+				}
+				return apperr.Wrap(apperr.Internal, "moving the upload into place failed", err)
+			}
+			unlock := s.lockFolder(owner, dir)
+			final, created, err := commitFile(root, tmp, rel, policy, apiPath)
+			unlock()
+			if err != nil {
+				_ = root.Remove(filepath.FromSlash(tmp)) // the upload is given up
+				return err
+			}
+			syncFolder(root, dir)
+			info, err := root.Lstat(filepath.FromSlash(final))
+			if err != nil {
+				return fsError(err, apiPath)
+			}
+			it, err := withDetails(root, NewItem(owner, final, info), "/"+final)
+			r = result{it, created}
+			return err
+		})
+		return r, err
+	})
+	return res.item, res.created, err
+}
+
 // CheckUpload runs every check of an upload of size bytes to path that
 // needs no content, and writes nothing: the path, the name rules, links
 // among the parents, the parent folder, the conflict policy against the
