@@ -1,6 +1,6 @@
 # API conventions
 
-The rules every local-ai-nas API endpoint follows (S01.5-T01, ADR-0002). New endpoints are checked against the [review checklist](#review-checklist) at the end.
+The rules every local-ai-nas API endpoint follows (S01.5-T01, ADR-0002). New endpoints are checked against the [review checklist](#review-checklist) at the end. For a step-by-step guide with curl, see [usage.md](usage.md).
 
 The contract is [`api/openapi.yaml`](../../api/openapi.yaml) (OpenAPI 3.0.3). The Go server code is generated from it (spec-first), so the spec and the server cannot drift apart.
 
@@ -118,6 +118,7 @@ Large uploads use the **tus 1.0.0** protocol at `/api/v1/files/uploads/` (S01.4)
 - The target is checked when the upload is created, exactly as for the simple upload: the path and the name rules, the parent folder, `on_conflict` against what is there now (`fail` onto an existing item is `409` at once), and the free space for `Upload-Length` (`507`). A refused upload stores nothing.
 - Errors are problems too, with the status tus defines (for example `409 conflict` for a wrong `Upload-Offset`, `412 precondition_failed` for a missing `Tus-Resumable` header, `423 locked` while another request writes the same upload). The `Tus-Resumable` and other tus headers stay on error responses.
 - Unfinished uploads are kept in the server's internal data, never in your storage area. One that has been idle for `uploads.expiry` (default 24 hours) after its expiry time is removed by an hourly cleanup, which also removes the server's own temporary files left in your area by a crash.
+- **Resuming:** after a broken connection, `HEAD` on the upload's URL gives `Upload-Offset`, the number of bytes the server has. The next `PATCH` continues from that offset. [usage.md](usage.md#resumable-upload-tus) shows it with curl.
 - **Finishing:** the request that sends the last byte (a `PATCH`, or the `POST` of a creation-with-upload) also makes the file: the server checks the optional `sha256`, syncs the data to disk, and moves it to `target_path` in one step, applying `on_conflict` against what is there at that moment. The answer carries the header `Item-Path` with the file's path (with `rename` it can differ from `target_path`). If finishing fails (a checksum mismatch `400`, a name taken meanwhile with `fail` `409`, no free space `507`), the upload is removed and the error is the answer; upload again with other settings.
 
 ## Documentation
