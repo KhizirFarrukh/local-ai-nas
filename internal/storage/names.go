@@ -37,6 +37,10 @@ const (
 // separators, so new names must not contain them.
 const lookalikeSeparators = "\uFF0F\uFF3C\u2215\u2044\u2216\u29F5\u29F8\u29F9\uFE68"
 
+// forbiddenChars may not appear in names: Windows does not allow them, and
+// / is the path separator.
+const forbiddenChars = `<>:"/\|?*`
+
 // TempPrefix starts the names of the server's temporary files, such as
 // an upload that is still being written next to its target. Listings hide
 // such names, and the API refuses to create them (reserved_name), so a
@@ -79,7 +83,7 @@ func ValidateName(name string) error {
 		switch {
 		case r < 0x20 || r == 0x7f:
 			return nameErr(RuleControlChar, fmt.Sprintf("a name must not contain control characters (found U+%04X)", r))
-		case strings.ContainsRune(`<>:"/\|?*`, r):
+		case strings.ContainsRune(forbiddenChars, r):
 			return nameErr(RuleForbiddenChar, fmt.Sprintf(`a name must not contain any of < > : " / \ | ? * (found %q)`, r))
 		}
 	}
