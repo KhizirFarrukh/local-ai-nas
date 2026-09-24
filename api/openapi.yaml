@@ -569,7 +569,7 @@ components:
       name: path
       in: query
       required: true
-      description: A path in the caller's files area, starting with `/` (the root of the area). See docs/api/conventions.md.
+      description: A path in the caller's files area, starting with `/` (the root of the area), in Unicode NFC. See docs/api/conventions.md.
       schema:
         type: string
       example: /docs/report.pdf
