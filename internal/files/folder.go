@@ -73,6 +73,9 @@ func (s *Local) CreateFolder(ctx context.Context, owner, apiPath string, o Folde
 	res, err := run(ctx, s.hooks, Event{Op: OpCreateFolder, Owner: owner, Path: rel}, func() (result, error) {
 		var r result
 		err := s.withRoot(owner, func(root *os.Root) error {
+			if err := refuseLinkParents(root, rel, apiPath); err != nil {
+				return err
+			}
 			parent := path.Dir(rel)
 			if err := ensureParent(root, parent, o.Parents, apiPath); err != nil {
 				return err

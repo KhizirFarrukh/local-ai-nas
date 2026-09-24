@@ -71,6 +71,12 @@ func (s *Local) Copy(ctx context.Context, owner, fromAPI, toAPI string, o CopyOp
 	res, err := run(ctx, s.hooks, Event{Op: OpCopy, Owner: owner, Path: from, Target: to}, func() (result, error) {
 		var r result
 		err := s.withRoot(owner, func(root *os.Root) error {
+			if err := refuseLinkParents(root, from, fromAPI); err != nil {
+				return err
+			}
+			if err := refuseLinkParents(root, to, toAPI); err != nil {
+				return err
+			}
 			src, err := root.Lstat(filepath.FromSlash(from))
 			if err != nil {
 				return fsError(err, fromAPI)

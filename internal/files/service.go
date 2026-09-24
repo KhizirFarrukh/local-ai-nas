@@ -174,6 +174,9 @@ func (s *Local) Stat(ctx context.Context, owner, path string) (Item, error) {
 	return run(ctx, s.hooks, Event{Op: OpStat, Owner: owner, Path: rel}, func() (Item, error) {
 		var it Item
 		err := s.withRoot(owner, func(root *os.Root) error {
+			if err := refuseLinkParents(root, rel, path); err != nil {
+				return err
+			}
 			info, err := root.Lstat(filepath.FromSlash(rel))
 			if err != nil {
 				return fsError(err, path)

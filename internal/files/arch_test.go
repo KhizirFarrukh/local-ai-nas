@@ -116,3 +116,60 @@ func leak() {
 		t.Errorf("violations (-want +got):\n%s", diff)
 	}
 }
+
+// TestNoLinksCreated is part of the symlink policy (S01.6-T03): the API
+// never creates symbolic links, so no non-test file of this package calls
+// a Symlink function or method (os.Symlink is also on the forbidden list,
+// and os.Root.Symlink would slip past it).
+func TestNoLinksCreated(t *testing.T) {
+	sources, err := filepath.Glob("*.go")
+	if err != nil {
+		t.Fatal(err)
+	}
+	fset := token.NewFileSet()
+	for _, src := range sources {
+		if strings.HasSuffix(src, "_test.go") {
+			continue
+		}
+		f, err := parser.ParseFile(fset, src, nil, 0)
+		if err != nil {
+			t.Fatal(err)
+		}
+		for _, pos := range symlinkCalls(fset, f) {
+			t.Errorf("%s uses Symlink; the API never creates symbolic links", pos)
+		}
+	}
+}
+
+// symlinkCalls returns the positions of every use of a name Symlink, as
+// a function or a method.
+func symlinkCalls(fset *token.FileSet, f *ast.File) []string {
+	var found []string
+	ast.Inspect(f, func(n ast.Node) bool {
+		if sel, ok := n.(*ast.SelectorExpr); ok && sel.Sel.Name == "Symlink" {
+			found = append(found, fset.Position(sel.Pos()).String())
+		}
+		return true
+	})
+	return found
+}
+
+func TestSymlinkCallsDetected(t *testing.T) {
+	src := `package files
+
+import "os"
+
+func bad(root *os.Root) {
+	_ = root.Symlink("target", "link")
+	_ = os.Symlink("target", "link")
+}
+`
+	fset := token.NewFileSet()
+	f, err := parser.ParseFile(fset, "bad.go", src, 0)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got := symlinkCalls(fset, f); len(got) != 2 {
+		t.Errorf("symlinkCalls found %v, want both calls", got)
+	}
+}

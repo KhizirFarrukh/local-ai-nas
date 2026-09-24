@@ -67,6 +67,9 @@ func (s *Local) Upload(ctx context.Context, owner, apiPath string, body io.Reade
 	res, err := run(ctx, s.hooks, Event{Op: OpUpload, Owner: owner, Path: rel}, func() (result, error) {
 		var r result
 		err := s.withRoot(owner, func(root *os.Root) error {
+			if err := refuseLinkParents(root, rel, apiPath); err != nil {
+				return err
+			}
 			dir := path.Dir(rel)
 			if err := ensureParent(root, dir, false, apiPath); err != nil {
 				return err

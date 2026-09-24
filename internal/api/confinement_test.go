@@ -6,7 +6,6 @@ import (
 	"io/fs"
 	"os"
 	"path/filepath"
-	"runtime"
 	"strings"
 	"testing"
 
@@ -88,12 +87,9 @@ func TestNoOperationLeavesTheNamespace(t *testing.T) {
 		t.Fatal(err)
 	}
 	photos := l.Area(storage.PhotosArea, storage.DefaultNamespace)
-	if runtime.GOOS != "windows" { // links need privileges on Windows
-		for name, target := range map[string]string{"escape-abs": photos, "escape-rel": "../../photos/u0001", "escape-file": outside} {
-			if err := os.Symlink(target, filepath.Join(ns, name)); err != nil {
-				t.Fatal(err)
-			}
-		}
+	links := true
+	for name, target := range map[string]string{"escape-abs": photos, "escape-rel": filepath.FromSlash("../../photos/u0001"), "escape-file": outside} {
+		links = links && testutil.TrySymlink(t, target, filepath.Join(ns, name))
 	}
 	before := snapshotOutside(t, root, ns)
 
@@ -105,7 +101,7 @@ func TestNoOperationLeavesTheNamespace(t *testing.T) {
 	}
 	// Paths through a link to the outside (os.Root refuses them).
 	var linkItems []string
-	if runtime.GOOS != "windows" {
+	if links {
 		escapes = append(escapes, "/escape-abs/secret.jpg", "/escape-rel/secret.jpg", "/escape-file/x",
 			"/escape-abs/new", "/escape-rel/sub/new")
 		linkItems = []string{"/escape-abs", "/escape-rel", "/escape-file"}

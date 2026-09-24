@@ -3,7 +3,6 @@ package files
 import (
 	"os"
 	"path/filepath"
-	"runtime"
 	"strings"
 	"testing"
 
@@ -11,6 +10,7 @@ import (
 
 	"github.com/KhizirFarrukh/local-ai-nas/internal/apperr"
 	"github.com/KhizirFarrukh/local-ai-nas/internal/storage"
+	"github.com/KhizirFarrukh/local-ai-nas/internal/testutil"
 )
 
 func TestDelete(t *testing.T) {
@@ -81,15 +81,10 @@ func TestDeleteFolderWithUnfinishedWrite(t *testing.T) {
 // TestDeleteLinkNotTarget: deleting a link, or a folder holding one,
 // never deletes what the link points to.
 func TestDeleteLinkNotTarget(t *testing.T) {
-	if runtime.GOOS == "windows" {
-		t.Skip("symbolic links need privileges on Windows")
-	}
 	s, l := newService(t, nil, map[string]string{"target/t.txt": "t", "links/.keep": ""})
 	area := l.Area(storage.FilesArea, owner)
 	for _, link := range []string{"links/to-dir", "direct"} {
-		if err := os.Symlink(filepath.Join(area, "target"), filepath.Join(area, filepath.FromSlash(link))); err != nil {
-			t.Fatal(err)
-		}
+		testutil.Symlink(t, filepath.Join(area, "target"), filepath.Join(area, filepath.FromSlash(link)))
 	}
 	if err := s.Delete(t.Context(), owner, "/direct", DeleteOptions{Recursive: true}); err != nil {
 		t.Fatal(err)

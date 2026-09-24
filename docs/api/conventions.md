@@ -86,6 +86,14 @@ Operations that create an item (simple upload, tus upload, new folder, copy, mov
 
 `DELETE /api/v1/files/items?path=&recursive=` deletes an item permanently and answers `204` (a trash comes in a later stage). A symbolic link is deleted itself, never what it points to. A folder with anything in it needs `recursive=true` (`409` otherwise); when the folder only holds an unfinished upload or copy, the `409` says so. The root folder cannot be deleted (`400`). A recursive delete that fails part-way leaves the rest; repeating it finishes it.
 
+## Symbolic links
+
+Links that exist in the storage (the API never creates them) are items of their own, and the server never follows them:
+
+- A listing shows a link as `kind: symlink`, with nothing about its target (no size, media type, or ETag).
+- A path that goes *through* a link, such as `/link/file.txt`, is refused with `400` by every operation, whether the link points inside or outside your storage area.
+- A link cannot be downloaded, copied, or overwritten (`400` or `409`). It can be renamed, moved, and deleted; that acts on the link itself, never on what it points to.
+
 ## Errors
 
 - Every error response is an RFC 9457 problem (`application/problem+json`) with a stable `code`, sometimes a `rule`, and the `correlation_id`. See [errors.md](errors.md).

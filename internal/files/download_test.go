@@ -2,13 +2,13 @@ package files
 
 import (
 	"io"
-	"os"
 	"path/filepath"
 	"runtime"
 	"testing"
 
 	"github.com/KhizirFarrukh/local-ai-nas/internal/apperr"
 	"github.com/KhizirFarrukh/local-ai-nas/internal/storage"
+	"github.com/KhizirFarrukh/local-ai-nas/internal/testutil"
 )
 
 func TestDownload(t *testing.T) {
@@ -91,11 +91,7 @@ func TestDownloadRefuses(t *testing.T) {
 		{"/docs/" + storage.TempPrefix + "1.part", apperr.NotFound},
 		{"/docs/../../x", apperr.OutsideRoot},
 	}
-	if runtime.GOOS != "windows" { // symbolic links need privileges on Windows
-		area := l.Area(storage.FilesArea, owner)
-		if err := os.Symlink("a.txt", filepath.Join(area, "docs", "link.txt")); err != nil {
-			t.Fatal(err)
-		}
+	if testutil.TrySymlink(t, "a.txt", filepath.Join(l.Area(storage.FilesArea, owner), "docs", "link.txt")) {
 		tests = append(tests, struct {
 			path string
 			want apperr.Kind
