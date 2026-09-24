@@ -71,7 +71,9 @@ Not measured yet: these machines were not available (Q1). `scripts/perf-baseline
    - The absolute figures are 400 to 530 MB/s on Windows and 650 to 6,500 MB/s on Linux: 3 to 50 times the ~117 MB/s of gigabit Ethernet. On the target hardware, where the network or a USB disk is the slower side, the 80% target is expected to hold, but that has to be measured there.
 2. **tus uploads are slower than simple uploads** (52–62% of raw): tusd's own chunk handling (its request body reader and the file store) adds cost that the project does not control. For large files the resumability is worth it; for LAN transfers of files under `uploads.max_file_size`, the simple upload is the fast path.
 
-**Proposed next steps:** measure on the Raspberry Pi and the mini-PC over gigabit Ethernet when they are available. If uploads fall short there, overlap receiving and writing (two buffers in flight) in the simple upload; it is a small, contained change in `files.copyExactly`.
+**The user's review (S01 sign-off, 2026-09-24):** accepted as recorded ("Accept, measure later").
+
+**Next steps:** measure on the Raspberry Pi and the mini-PC over gigabit Ethernet when they are available. If uploads fall short there, overlap receiving and writing (two buffers in flight) in the simple upload; it is a small, contained change in `files.copyExactly`.
 
 ## What was improved while measuring
 

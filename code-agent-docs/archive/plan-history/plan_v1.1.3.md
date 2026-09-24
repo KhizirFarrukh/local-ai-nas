@@ -2,11 +2,11 @@
 
 | Field | Value |
 |---|---|
-| **Version** | 1.1.4 |
+| **Version** | 1.1.3 |
 | **Status** | **Approved baseline** (approved by the user in S005, 2026-09-24); 1.1.0 adds the user's setup-script requirement (S005 E015) |
 | **Last updated** | 2026-09-24 (session S005) |
 | **Source of vision** | `README.md` (repository root), the user's staged roadmap (`code-agent-docs/prompts/P002-staged-development-roadmap.json`), and the user's technology stack (`code-agent-docs/prompts/P003-technology-stack.json`) |
-| **Previous version** | 1.1.3, archived at `code-agent-docs/archive/plan-history/plan_v1.1.3.md` (0.1.0–1.1.2 also archived there) |
+| **Previous version** | 1.1.2, archived at `code-agent-docs/archive/plan-history/plan_v1.1.2.md` (0.1.0–1.1.1 also archived there) |
 
 > **This is a living document.** It changes as the user gives feedback. Every change follows `code-agent-docs/RULES.md` **R4**: the old version is archived, the version is bumped, and a revision entry is added. While the plan is a pre-1.0 draft, restructurings bump the MINOR version. **When the user approves this plan as the baseline, it becomes version 1.0.0.**
 >
@@ -866,7 +866,7 @@ Work is **stage-gated** and governed by `code-agent-docs/RULES.md`.
 
 | ID | Name | Origin | Goal | Depends on | Status |
 |---|---|---|---|---|---|
-| S01 | Basic NAS implementation | User-defined | A reliable storage service that manages the files area through an API, with the two-area layout in place. | Plan baseline approval | Done |
+| S01 | Basic NAS implementation | User-defined | A reliable storage service that manages the files area through an API, with the two-area layout in place. | Plan baseline approval | In Progress |
 | S02 | NAS GUI | User-defined | A graphical application that lets people use the NAS without touching the API. | S01 | Not started |
 | S03 | Security | User-defined | Comprehensive security so the NAS can be safely reached from the local network (single admin). | S01, S02 | Not started |
 | S04 | Media management | User-defined | A separate photos area with Google Photos style management. | S03 | Not started |
@@ -902,7 +902,7 @@ flowchart LR
   > "Stage 1 is basic NAS implementation."
   > "The NAS has two folders at the root: files and photos."
 - **Scope note (from P002):** S01 creates both the `files/` and `photos/` roots but implements only the files area. The photos area is managed from S04. There is no GUI and no authentication yet, so the server must bind to localhost only.
-- **Status:** **Done** (signed off by the user on 2026-09-24, S005; completion record in `stages/S01-basic-nas.md` section 13)
+- **Status:** **In Progress** (stage document `stages/S01-basic-nas.md` approved by the user in S005; work started in S005)
 
 #### S01.1: Project foundation
 - **Goal:** Establish the approved stack, repository, tooling, and conventions, so every later change is built, checked, and tested the same way.
@@ -1035,7 +1035,7 @@ flowchart LR
   4. A scripted API demo manages files and folders end to end, including a resumed upload.
   5. The completion record is written and the user's sign-off is recorded.
 - **Risks/notes:** Reference hardware (Q1, S005): the Windows 11 development PC, plus a Raspberry Pi and an x86-64 mini-PC when available. Library size: 100,000 photos + 100,000 files (Q18, S005).
-- **Status:** Done (S005, 2026-09-24; details in `stages/S01-basic-nas.md`)
+- **Status:** In Progress (S005)
 
 **Design notes (S01):**
 - Storage access sits behind a service interface with hook points (trash, sharing checks, quotas, sidecar sync, indexing), so later features never touch every endpoint.
@@ -2616,4 +2616,3 @@ CI runs on Linux and Windows from S01.1.
 | 1.1.1 | 2026-09-24 | Clarification (PATCH): Q22 and RK-08 record the license form **AGPL-3.0-or-later**. | The user's answer (S005 E020): "AGPL-3.0-or-later (Recommended)" | `logs/sessions/2026-09-24_S005.md` |
 | 1.1.2 | 2026-09-24 | Clarification (PATCH): **Q18 answered**: the library size is 100,000 photos + 100,000 files per installation, confirming A12; NFR-003, section 5, and the S01.7 notes updated; no target changes. S01.7 status In Progress. | The user's answer (S005 E116): "100k photos + 100k files (Recommended)" | `logs/sessions/2026-09-24_S005.md` |
 | 1.1.3 | 2026-09-24 | Clarification (PATCH), audit A002: NFR-031 and S06.8 no longer say that Q1 is pending (it was answered in S005), and S06.8 names the Q18 library size. No requirement or target changes. | Audit A002 findings F-003, F-004 (R12, S01.7-T07) | `audits/A002-2026-09-24-documentation-audit.md`; `logs/sessions/2026-09-24_S005.md` |
-| 1.1.4 | 2026-09-24 | Status (PATCH): **S01 Done**, signed off by the user. S01.7 is Done. The S01.7 throughput deviation is accepted as recorded, and it is measured on the Raspberry Pi and the mini-PC when they are available. No requirement or target changes. (Substage status updates were not versioned; a whole stage's completion is.) | The user's sign-off and decisions (S005 E126) | `logs/sessions/2026-09-24_S005.md`; `stages/S01-basic-nas.md` section 13 |

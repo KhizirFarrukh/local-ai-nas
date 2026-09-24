@@ -1,18 +1,19 @@
 # CURRENT_STATE
 
-**Last updated:** 2026-09-24 23:33 +0500 (session S005)
-**Plan version:** 1.1.3 (`code-agent-docs/plan.md`), **Approved baseline** 1.0.0 (S005) + the setup-script requirement (1.1.0, S005 E015)
-**Current phase:** Implementation: S01 (Basic NAS implementation) in progress; S01.1 to S01.6 done; S01.7 (integration and stage review) in progress: T01–T06 done, T07 (audit A002) done, T08 (completion record and the user's sign-off) next
+**Last updated:** 2026-09-24 23:51 +0500 (session S005)
+**Plan version:** 1.1.4 (`code-agent-docs/plan.md`), **Approved baseline** 1.0.0 (S005) + the setup-script requirement (1.1.0, S005 E015)
+**Current phase:** **S01 (Basic NAS) Done**, signed off by the user (S005 E126). Next: plan stage S02 (NAS GUI) in detail (R3)
 
 ## Active stage and task
-- **Active stage:** S01 (Basic NAS implementation), **In Progress** (`stages/S01-basic-nas.md`); S01.1–S01.6 **Done**; S01.7 **In Progress** (T01–T07 done).
-- **Active task:** **S01.7-T07** Documentation audit A002 (R12) (branch `docs/S01.7-T07-audit`): done, waiting for CI and the merge; next **S01.7-T08** completion record and the user's sign-off
+- **Active stage:** none in progress. S01 (Basic NAS implementation) is **Done** (`stages/S01-basic-nas.md`, completion record in section 13). The next stage is **S02: NAS GUI** (plan 10.3), which has no stage document yet.
+- **Active task:** **S01.7-T08** (branch `docs/S01.7-T08-completion`): done, waiting for CI and the merge
 
 ## In progress (write-ahead)
-- S01.7-T07: committed; push, CI, merge into `develop`.
+- S01.7-T08: committed; push, CI, merge into `develop`.
 
 ## Last completed
-- **S01.7-T07 done** (S005 E123): audit A002, 11 findings (1 Critical and 2 Major fixed; 7 Minor fixed; 1 accepted; the register now lists the system tools); plan 1.1.3; README proposal R-11/R-12 for the sign-off.
+- **S01 Done: the user signed off** (S005 E126): "Sign off S01 (Recommended)". The throughput deviation was accepted ("Accept, measure later (Recommended)"), and README R-11/R-12 were approved and applied ("Apply both (Recommended)"). Plan 1.1.4.
+- **S01.7-T07 done and merged** (CI run 36042107504 green; S005 E123, E124): audit A002, 11 findings (1 Critical and 2 Major fixed; 7 Minor fixed; 1 accepted; the register now lists the system tools); plan 1.1.3; README proposal R-11/R-12 for the sign-off.
 - **S01.7-T06 done and merged** (CI run 36040515533 green, both `demo` jobs included; S005 E121): `scripts/demo.sh` and `scripts/demo.ps1` are green on Windows (PowerShell 5.1, recorded) and on Linux, and CI job `demo` runs both. tusd's `BodyReadError` is now logged as WARN, and scripts that were not executable are fixed.
 - **S01.7-T05 done and merged** (CI run 36039328692 green; S005 E119): `docs/api/usage.md`, every operation with curl for Linux/macOS and Windows PowerShell, each block run as written on Linux (WSL) and in Windows PowerShell 5.1; README "Use the API"; docs and scripts indexes.
 - **S01.7-T04 done and merged** (CI run 36037945955 green; S005 E117): `docs/perf/S01-baseline.md`: listing and memory targets met; throughput over loopback on NVMe below 80% (a deviation for the user's review at sign-off); downloads now keep sendfile.
@@ -69,20 +70,18 @@
 - Plan 1.1.0: the user's requirement to record every dependency and build a setup script per platform (FR-149, NFR-032, S11.2, Q41; `dependencies.md` section 12; RULES 1.5.0) (S005 E015–E016).
 
 ## Next steps
-1. **S01.7-T07**: audit A002 is written and committed (`audits/A002-2026-09-24-documentation-audit.md`); push, CI, and merge into `develop`.
-2. **S01.7-T08:**
-   - Fill in section 13 (completion record) of `stages/S01-basic-nas.md` and check the stage acceptance criteria (section 9).
-   - Then ask the user for **the S01 sign-off**, together with (a) the throughput deviation (`docs/perf/S01-baseline.md`) and (b) README proposals R-11 and R-12 (`audits/A002-readme-proposal.md`).
-   - Quote the sign-off in the session log. Mark S01 Done in the plan (PATCH) and the stage document, and apply R-11/R-12 if approved.
-3. The S005 session log needs its closing summary when the session ends.
+1. **Plan S02 (NAS GUI)** in detail, following R3:
+   - Create `stages/S02-nas-gui.md` from `templates/stage-template.md`, based on plan 10.3 (substages S02.1–S02.8) and ADR-0009 (SvelteKit). Check the open questions that S02 needs first.
+   - Present the document to the user and get it **approved before any S02 code**.
+   - Start on a `docs/` branch off `develop`.
+2. The S005 session log needs its closing summary when the session ends.
+3. Follow-up from S01 (the user's decision): run `scripts/perf-baseline.sh` on the Raspberry Pi and the mini-PC, over gigabit Ethernet as well, when they are available (`docs/perf/S01-baseline.md`).
 4. **Endpoint workflow (spec-first), for later API work:** spec → `go generate ./internal/api` → strict operation; an error case in `errorCases`/`bodyErrorCases`; a review row in `docs/api/conventions.md`; a fake-service test that invalid input never reaches the service.
 5. CI: every push runs `.github/workflows/ci.yml`. `gh` is not installed; the repository is public. Watch a commit's run through the public REST API (`/repos/KhizirFarrukh/local-ai-nas/actions/runs?head_sha=<sha>`, then `/jobs`; 60 anonymous requests per hour) or the run's web page (its "Status" field). Step logs need sign-in: reproduce Linux failures with `GOOS=linux go test -c` binaries in the WSL Ubuntu distro, run from the package directory under /mnt/c when a test reads repo files.
 6. Every finished branch: merge it into `develop` myself and push (RULES User Preferences, S005).
 
 ## Blocked or waiting on user
-- At the S01 sign-off (S01.7-T08):
-  - the user's review of the throughput deviation in `docs/perf/S01-baseline.md` (S01 change log, S01.7-T04 row);
-  - the user's decision on README proposals R-11 (status line) and R-12 (roadmap) in `audits/A002-readme-proposal.md`.
+- Nothing now. The S02 stage document will need the user's approval (R3).
 
 ## Open questions (short list; full text in plan.md section 5)
 - ★ **For S01:** none (Q18 answered in S005: 100k photos + 100k files)
@@ -92,7 +91,7 @@
 
 ## Pointers
 - Latest session log: `code-agent-docs/logs/sessions/2026-09-24_S005.md`
-- Active stage document: `code-agent-docs/stages/S01-basic-nas.md` (In Progress)
+- Stage documents: `code-agent-docs/stages/S01-basic-nas.md` (**Done**; completion record in section 13). S02 has none yet
 - Audit reports: `code-agent-docs/audits/A002-2026-09-24-documentation-audit.md` (the S01 final review) and `A002-readme-proposal.md`; `A001-2026-09-24-documentation-audit.md` (decisions received in section 9)
 - ADRs: `code-agent-docs/decisions/ADR-0001` … `ADR-0020` (0019 Proposed; 0012 superseded in part by 0020; the rest Accepted, including 0003 since S005)
 - Dependency register: `code-agent-docs/dependencies.md` (section 12: deployment prerequisites per platform, the input for the S11.2 setup scripts)
