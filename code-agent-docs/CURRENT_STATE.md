@@ -1,7 +1,7 @@
 # CURRENT_STATE
 
-**Last updated:** 2026-09-24 23:56 +0500 (session S005, closed)
-**Plan version:** 1.1.4 (`code-agent-docs/plan.md`), **Approved baseline** 1.0.0 (S005) + the setup-script requirement (1.1.0, S005 E015)
+**Last updated:** 2026-09-25 01:23 +0500 (session S006)
+**Plan version:** 1.2.0 (`code-agent-docs/plan.md`), **Approved baseline** 1.0.0 (S005) + the setup-script requirement (1.1.0, S005 E015)
 **Current phase:** **S01 (Basic NAS) Done**, signed off by the user (S005 E126). Next: plan stage S02 (NAS GUI) in detail (R3)
 
 ## Active stage and task
@@ -9,9 +9,14 @@
 - **Active task:** none. The next work is planning S02 (Next steps 1)
 
 ## In progress (write-ahead)
-- Nothing. Session S005 is closed (closing summary in its log); every branch is merged into `develop`.
+- The testing approach change (S006 E004) on `docs/S006-testing-approach`: push, CI, merge into `develop`.
 
 ## Last completed
+- **Testing approach changed** (S006 E001–E004), at the user's instruction:
+  - Code first, written to be testable. Each stage's final testing substage writes its unit, integration, and system/application tests.
+  - Coverage is reported on every push but not enforced until the stage end (80%).
+  - A bug is fixed at once, and its test is written at the stage end.
+  - RULES 1.6.0 (R6), plan 1.2.0, the stage template, `docs/testing.md`, and CI updated.
 - **S01.7-T08 done and merged** (CI run 36044157203 green; `develop` e5311a8; S005 E127).
 - **S01 Done: the user signed off** (S005 E126): "Sign off S01 (Recommended)". The throughput deviation was accepted ("Accept, measure later (Recommended)"), and README R-11/R-12 were approved and applied ("Apply both (Recommended)"). Plan 1.1.4.
 - **S01.7-T07 done and merged** (CI run 36042107504 green; S005 E123, E124): audit A002, 11 findings (1 Critical and 2 Major fixed; 7 Minor fixed; 1 accepted; the register now lists the system tools); plan 1.1.3; README proposal R-11/R-12 for the sign-off.
@@ -73,6 +78,7 @@
 ## Next steps
 1. **Plan S02 (NAS GUI)** in detail, following R3:
    - Create `stages/S02-nas-gui.md` from `templates/stage-template.md`, based on plan 10.3 (substages S02.1–S02.8) and ADR-0009 (SvelteKit). Check the open questions that S02 needs first.
+   - **Testing approach (R6, S006):** tasks in S02.1–S02.7 deliver testable code only. S02.8 writes the unit (Vitest), integration, and system (Playwright in a browser) tests, and the regression tests for bugs recorded during the stage.
    - Present the document to the user and get it **approved before any S02 code**.
    - Start on a `docs/` branch off `develop`.
 2. Follow-up from S01 (the user's decision): run `scripts/perf-baseline.sh` on the Raspberry Pi and the mini-PC, over gigabit Ethernet as well, when they are available (`docs/perf/S01-baseline.md`).
@@ -90,9 +96,9 @@
 - **Answered in S005:** Q1 (multi-platform), Q16 (closed), Q18 (100k photos + 100k files), Q22 (AGPL-3.0), Q37 (none), Q38 (S01–S11)
 
 ## Pointers
-- Latest session log: `code-agent-docs/logs/sessions/2026-09-24_S005.md` (closed). The next session is S006: open a new log (R2)
+- Latest session log: `code-agent-docs/logs/sessions/2026-09-25_S006.md` (current); S005 is closed
 - Stage documents: `code-agent-docs/stages/S01-basic-nas.md` (**Done**; completion record in section 13). S02 has none yet
 - Audit reports: `code-agent-docs/audits/A002-2026-09-24-documentation-audit.md` (the S01 final review) and `A002-readme-proposal.md`; `A001-2026-09-24-documentation-audit.md` (decisions received in section 9)
 - ADRs: `code-agent-docs/decisions/ADR-0001` … `ADR-0020` (0019 Proposed; 0012 superseded in part by 0020; the rest Accepted, including 0003 since S005)
 - Dependency register: `code-agent-docs/dependencies.md` (section 12: deployment prerequisites per platform, the input for the S11.2 setup scripts)
-- Rules: `code-agent-docs/RULES.md` (v1.5.0: targeted plan reading; merge-into-develop; dependency record + per-platform setup scripts) · Prompts: `code-agent-docs/prompts/` (P002–P004)
+- Rules: `code-agent-docs/RULES.md` (v1.6.0: targeted plan reading; merge-into-develop; dependency record + per-platform setup scripts; code first, tests at the end of each stage) · Prompts: `code-agent-docs/prompts/` (P002–P004)

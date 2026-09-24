@@ -1,6 +1,6 @@
 # RULES: Permanent Operating Rules for AI Agents on local-ai-nas
 
-**RULES.md version:** 1.5.0
+**RULES.md version:** 1.6.0
 **Created:** 2026-09-23 (session S001)
 **Source:** `operating_rules` in `code-agent-docs/bootstrap/initial-prompt.json`, transcribed in full with the original rule IDs.
 
@@ -153,7 +153,14 @@ ADR files are named `ADR-<NNNN>-<short-kebab-title>.md` (e.g. `ADR-0001-backend-
 **Rules:**
 
 - Small, incremental, reviewable changes. Do not modify code unrelated to the current task.
-- Write tests alongside or before the code (test-first where practical). No task is complete without its tests.
+- **Code first, tests at the end of the stage** (the user's instruction, S006; User Preferences):
+  - Write code that is **testable**:
+    - dependencies are passed in (interfaces or parameters);
+    - time, randomness, the file system, and the network can be replaced in tests;
+    - there is no hidden global state;
+    - functions are small, with clear inputs and outputs.
+  - During a stage, a task delivers code. It is complete when it builds, the linter, the formatter, and the **existing** tests pass, and it was checked by running it (for example a real request against the program), with the results in the session log.
+  - The stage's final testing substage writes the stage's **unit, integration, and system/application tests** (the real program, used as a user uses it), plus the regression tests for bugs recorded during the stage. The stage is not Done until they pass and coverage is at least 80%.
 - Run the linter, formatter, and test suite before marking a task complete. Record results in the session log.
 - No new dependency without a recorded justification and a compatible license.
 - Every new dependency must be added to the dependency register (`code-agent-docs/dependencies.md`) in the same commit that introduces it.
@@ -161,7 +168,7 @@ ADR files are named `ADR-<NNNN>-<short-kebab-title>.md` (e.g. `ADR-0001-backend-
 - Privacy is non-negotiable: no telemetry, no cloud services, no outbound network calls at runtime unless the user explicitly enables a feature that requires one.
 - Never write secrets into code, logs, or documentation.
 - Keep code readable: consistent structure, meaningful names, comments where the reasoning is not obvious.
-- When a bug is found, record it, write a failing test that reproduces it, then fix it.
+- When a bug is found, record it (session log and the stage document's change log) and fix it. Its regression test is written with the stage's tests in the final testing substage, from that record, so none is forgotten. A bug found by those tests already has its failing test.
 
 ---
 
@@ -283,6 +290,7 @@ Filled in as the user states lasting preferences (R10). Commit behavior is recor
 - **Merging finished branches into develop** (S005, 2026-09-24): when the agent is done with a branch (the task or documentation change is complete, checks pass, documents are updated, and the branch is committed and pushed), the agent **merges that branch into `develop` itself** (`git merge --no-ff <branch>`, then push `develop`). Opening a PR is optional. Still in force: no direct commits onto `develop` other than these merge commits; **never merge into `main`** unless the user asks (e.g. for a release); never force-push, rewrite history, or delete branches without explicit permission. User's words: "when you are done with a branch, you yourself should do a merge of that branch into develop (another rule you should remember)".
 - **Dependency record and per-platform setup scripts** (S005, 2026-09-24): keep a record of **every dependency needed** to build and deploy the NAS. Besides the R6 register entry, anything the running NAS needs on the target machine gets a per-platform row in `dependencies.md` section 12 (Linux x86-64, Raspberry Pi, Windows 11, Docker image) in the same commit (NFR-032). At the end (S11.2), a **separate setup script for each platform** uses that record to deploy the NAS automatically (FR-149). Each stage's documentation audit (R12) checks that section 12 is complete. User's words: "one thing to add: keep record of all dependencies needed, in the end you will have to make a setup script, a separate one for each platform, which when run, will automatically handle the deployment."
 - **Stacked branches** (S005, 2026-09-24, decision D-03 of audit A001): if an earlier branch is not merged yet, a new branch may be created on top of it (and the user is told). With the merge rule above this should be rare. User's answer: "Accept all (Recommended)".
+- **Testing approach** (S006, 2026-09-25): the user's instruction: "Make sure to add unit tests and integration tests and system/ application tests a part of development process but focus on coding first, write code that is testable, but write tests in the end (of the stage)". Code comes first and is written to be testable. Each stage's final testing substage writes its unit, integration, and system/application tests (R6). CI reports coverage on every push but does not block during a stage; 80% is an exit criterion of the final testing substage ("Report now, enforce at stage end (Recommended)"). A bug is recorded and fixed at once, and its regression test is written with the stage's tests ("Fix now, test at stage end (Recommended)").
 
 ---
 
@@ -308,3 +316,4 @@ Filled in as the user states lasting preferences (R10). Commit behavior is recor
 | 1.4.0 | 2026-09-24 | (a) R1 step 3 (and the Quick start): plan.md is read selectively (sections 2a, 5, 7, 10.1, plus the active or next stage in full; others on demand) instead of completely. | Approved by the user in S005 ("Accept all (Recommended)", decision D-09 of audit A001, finding F-007); session log S005 E007 |
 | 1.4.0 | 2026-09-24 | (b) User Preferences: the agent merges its finished branches into `develop` itself; stacked branches allowed while an earlier branch is unmerged (D-03). The S001 branching bullet is marked partly superseded. | The user's lasting preference (S005 E008, recorded per R10) and D-03 approval (S005 E007) |
 | 1.5.0 | 2026-09-24 | User Preferences: keep a record of every dependency, with per-platform runtime prerequisites in `dependencies.md` section 12; per-platform setup scripts at the end (S11.2). | The user's lasting instruction (S005 E015, recorded per R10) |
+| 1.6.0 | 2026-09-25 | R6: code first, written to be testable. Each stage's final testing substage writes its unit, integration, and system/application tests, and the regression tests for bugs recorded during the stage. Coverage of 80% is enforced at the stage end, not on every push. User Preferences: the testing approach. | The user's instruction (S006 E001) and answers (S006 E003), recorded per R10 |
