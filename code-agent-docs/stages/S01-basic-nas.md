@@ -135,7 +135,7 @@ flowchart LR
 | S01.2 | Storage layout and configuration | **Done** (S005) | S01.1; **ADR-0003 Accepted** | FR-069–FR-072, NFR-026 |
 | S01.3 | Core file operations | Not started | S01.2, S01.5 (conventions), S01.6 (resolver) | FR-003, FR-005, FR-007, FR-073 |
 | S01.4 | Large file handling | Not started | S01.2, S01.3, S01.5 | FR-004, FR-074, NFR-006, NFR-021 |
-| S01.5 | API layer | Not started | S01.1 | FR-075, NFR-001 |
+| S01.5 | API layer | In Progress | S01.1 | FR-075, NFR-001 |
 | S01.6 | Safety baseline | In Progress | S01.2 | FR-076, FR-077, NFR-010, NFR-019, NFR-020 |
 | S01.7 | Integration, testing, and stage review | Not started | S01.1–S01.6 | NFR-003, NFR-014 |
 
@@ -224,7 +224,7 @@ flowchart LR
 
 | Task ID | Description | Status | Acceptance criteria |
 |---|---|---|---|
-| S01.5-T01 | Route conventions document (`docs/api/conventions.md`): namespaces, naming, path addressing, cursor pagination, sorting, `on_conflict`, reserved `/api/v1/photos`, and tus as an external protocol. | Not started | Committed. A review checklist is applied to every endpoint. |
+| S01.5-T01 | Route conventions document (`docs/api/conventions.md`): namespaces, naming, path addressing, cursor pagination, sorting, `on_conflict`, reserved `/api/v1/photos`, and tus as an external protocol. | **Done** (S005) | Committed. A review checklist is applied to every endpoint. |
 | S01.5-T02 | Versioning policy (`docs/api/versioning.md`): `/api/v1`; what counts as a breaking change; deprecation process. | Not started | Committed. A test asserts that every registered route is under `/api/v1` or `/api/docs`. |
 | S01.5-T03 | Error catalogue (`docs/api/errors.md`) and the problem schema in `api/openapi.yaml`. | Not started | A contract test validates every error response against the schema across all endpoints. |
 | S01.5-T04 | Request validation: generated parameter binding plus explicit validators, mapped to 4xx problems. | Not started | Fuzz tests (`go test -fuzz`) over query and body inputs never produce a 5xx or reach the service with invalid data. |
@@ -394,6 +394,7 @@ go tool go-licenses check ./...         # allow-list from S01.1-T02
 | 2026-09-24 | S005 | **Note for S01.6-T06 (bind-address guard):** the dev container must listen on `0.0.0.0:8080` inside its own network namespace, so the port published on the host (`127.0.0.1:8080`) can reach it (S01.1-T06). The loopback-only guard therefore needs an explicit, documented container exception (for example a setting that is only honoured when the server runs in a container), or the dev compose setup breaks. Decide and test this in S01.6-T06 | Found while building T06 | None (a design note for a later task) |
 | 2026-09-24 | S005 | **S01.1 closed.** All 11 tasks Done. Substage acceptance (plan S01.1) checked: (1) CI runs lint, format, vet, tests (Linux + Windows), licenses, vulnerabilities, and cross-builds on every push and PR, and turned red on a deliberately failing test; (2) the README quick start works from a fresh clone on Windows (checked by hand in Git Bash and PowerShell) and on Linux and Windows in CI; (3) an invalid config stops startup with a message naming the key, and env overrides the file (tests); (4) logs are JSON with request IDs, and secrets are redacted (tests); (5) one error format, documented in `docs/api/errors.md`; panics give a generic body with the correlation ID (tests) | S01.1 complete | None |
 | 2026-09-24 | S005 | **S01.2 closed.** All 6 tasks Done. Substage acceptance (plan S01.2) checked: (1) an empty root gets files/, photos/, u0001, and the internal data, and a second start changes nothing, including directory times (T01 tests); (2) internal data inside an area, an area inside internal data, and the same path are rejected at startup (T02, 10 cases + a cmd test); (3) items carry OwnerID/namespace, and the resolver + os.Root keep every path inside its namespace, with the photos area unreachable (T03, T06); (4) a declared write that would breach the reserve gets 507 before any byte is stored (T04 integration test); (5) the health endpoint reports config, storage_writable, same_filesystem, free_space, and database by name (T05) | S01.2 complete | None |
+| 2026-09-24 | S005 | **S01.5 work split adjusted:** (a) the HTTP routes move from `cmd/local-ai-nas` into `internal/api` (as in design 4.1) with an explicit route table, because S01.5-T02's test must list every registered route and `http.ServeMux` cannot enumerate them; (b) the **oapi-codegen generation pipeline** (config, `go:generate`, `internal/api/gen/`, runtime v1.7.0) moves from T05 into **T04**, because T04's "generated parameter binding" and the spec-first S01.3 handlers need it. T05 keeps "spec complete for S01 + CI drift check verified once"; (c) unmatched routes (404) and wrong methods (405) become problems in T03, so every error response follows the schema | S01.5 dependencies found while planning | None (same tasks and acceptance criteria) |
 
 ## 13. Completion record
 
