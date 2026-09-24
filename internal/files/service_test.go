@@ -27,7 +27,7 @@ func newService(t *testing.T, hooks Hooks, files map[string]string) (*Local, sto
 	if err := testutil.WriteFiles(l.Area(storage.FilesArea, owner), files); err != nil {
 		t.Fatal(err)
 	}
-	return NewLocal(storage.NewResolver(l), hooks), l
+	return NewLocal(storage.NewResolver(l), Options{Hooks: hooks}), l
 }
 
 func TestStat(t *testing.T) {

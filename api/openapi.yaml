@@ -24,6 +24,65 @@ tags:
   - name: photos
     description: Reserved for the photos area (stage S04).
 paths:
+  /files/content:
+    put:
+      tags: [files]
+      operationId: uploadFile
+      summary: Upload a file (simple, streamed)
+      description: |
+        Writes the request body to the file at `path`. The body is the raw
+        file content; its Content-Type is not used. `Content-Length` is
+        required (411 without it): the size is checked against the upload
+        limit (413) and the free space (507) before anything is stored.
+        The bytes go to a hidden temporary file in the target folder,
+        which is synced and then renamed in one step, so the file never
+        appears partly written. When the name is taken, `on_conflict`
+        decides: `fail` (409, before the body is read), `rename`
+        (`name (1).ext`, ...), or `overwrite`, which replaces a file
+        atomically (200) and never a folder (409). For large files, prefer
+        the resumable tus upload.
+      parameters:
+        - $ref: "#/components/parameters/Path"
+        - name: on_conflict
+          in: query
+          schema:
+            $ref: "#/components/schemas/OnConflict"
+      requestBody:
+        required: true
+        content:
+          application/octet-stream:
+            schema:
+              type: string
+              format: binary
+      responses:
+        "201":
+          description: A new file was created (also with `on_conflict=rename`; the item shows the name used).
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FileItem"
+        "200":
+          description: An existing file was replaced (`on_conflict=overwrite`).
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FileItem"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "405":
+          $ref: "#/components/responses/MethodNotAllowed"
+        "409":
+          $ref: "#/components/responses/Conflict"
+        "411":
+          $ref: "#/components/responses/LengthRequired"
+        "413":
+          $ref: "#/components/responses/TooLarge"
+        "500":
+          $ref: "#/components/responses/InternalError"
+        "507":
+          $ref: "#/components/responses/InsufficientStorage"
   /files/folders:
     post:
       tags: [files]
@@ -277,6 +336,7 @@ components:
             - insufficient_storage
             - not_available
             - method_not_allowed
+            - length_required
         rule:
           type: string
           description: The exact rule that was broken, for some codes (for example `reserved_name` for `invalid_name`).
@@ -342,6 +402,12 @@ components:
         application/problem+json:
           schema:
             $ref: "#/components/schemas/Problem"
+    LengthRequired:
+      description: The upload has no `Content-Length` header (`length_required`).
+      content:
+        application/problem+json:
+          schema:
+            $ref: "#/components/schemas/Problem"
     TooLarge:
       description: The request is over a size limit (`too_large`).
       content:
@@ -350,6 +416,12 @@ components:
             $ref: "#/components/schemas/Problem"
     NotAvailable:
       description: The feature is part of the API but not available yet (`not_available`).
+      content:
+        application/problem+json:
+          schema:
+            $ref: "#/components/schemas/Problem"
+    InsufficientStorage:
+      description: The write would use the free space kept in reserve (`insufficient_storage`).
       content:
         application/problem+json:
           schema:

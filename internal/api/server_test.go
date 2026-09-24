@@ -107,3 +107,7 @@ func (f *failingServer) GetItems(context.Context, gen.GetItemsRequestObject) (ge
 func (f *failingServer) CreateFolder(context.Context, gen.CreateFolderRequestObject) (gen.CreateFolderResponseObject, error) {
 	return nil, f.err
 }
+
+func (f *failingServer) UploadFile(context.Context, gen.UploadFileRequestObject) (gen.UploadFileResponseObject, error) {
+	return nil, f.err
+}

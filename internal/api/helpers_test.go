@@ -20,12 +20,21 @@ var fixtureFiles = map[string]string{
 // fixtureFiles in the default namespace.
 func testFiles(t testing.TB) files.Service {
 	t.Helper()
+	svc, _ := testFilesDir(t)
+	return svc
+}
+
+// testFilesDir is testFiles that also returns the namespace's directory,
+// so a test can check the disk.
+func testFilesDir(t testing.TB) (files.Service, string) {
+	t.Helper()
 	l := storage.NewLayout(testutil.StorageRoot(t), storage.Options{})
 	if _, err := l.Init(); err != nil {
 		t.Fatal(err)
 	}
-	if err := testutil.WriteFiles(l.Area(storage.FilesArea, storage.DefaultNamespace), fixtureFiles); err != nil {
+	dir := l.Area(storage.FilesArea, storage.DefaultNamespace)
+	if err := testutil.WriteFiles(dir, fixtureFiles); err != nil {
 		t.Fatal(err)
 	}
-	return files.NewLocal(storage.NewResolver(l), nil)
+	return files.NewLocal(storage.NewResolver(l), files.Options{}), dir
 }

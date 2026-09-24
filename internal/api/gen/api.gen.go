@@ -11,6 +11,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"net/http"
 	"time"
 
@@ -132,6 +133,7 @@ const (
 	ProblemCodeInternal            ProblemCode = "internal"
 	ProblemCodeInvalidName         ProblemCode = "invalid_name"
 	ProblemCodeInvalidRequest      ProblemCode = "invalid_request"
+	ProblemCodeLengthRequired      ProblemCode = "length_required"
 	ProblemCodeMethodNotAllowed    ProblemCode = "method_not_allowed"
 	ProblemCodeNotAvailable        ProblemCode = "not_available"
 	ProblemCodeNotFound            ProblemCode = "not_found"
@@ -151,6 +153,8 @@ func (e ProblemCode) Valid() bool {
 	case ProblemCodeInvalidName:
 		return true
 	case ProblemCodeInvalidRequest:
+		return true
+	case ProblemCodeLengthRequired:
 		return true
 	case ProblemCodeMethodNotAllowed:
 		return true
@@ -303,8 +307,14 @@ type BadRequest = Problem
 // Conflict An RFC 9457 problem details object (docs/api/errors.md).
 type Conflict = Problem
 
+// InsufficientStorage An RFC 9457 problem details object (docs/api/errors.md).
+type InsufficientStorage = Problem
+
 // InternalError An RFC 9457 problem details object (docs/api/errors.md).
 type InternalError = Problem
+
+// LengthRequired An RFC 9457 problem details object (docs/api/errors.md).
+type LengthRequired = Problem
 
 // MethodNotAllowed An RFC 9457 problem details object (docs/api/errors.md).
 type MethodNotAllowed = Problem
@@ -314,6 +324,13 @@ type NotFound = Problem
 
 // TooLarge An RFC 9457 problem details object (docs/api/errors.md).
 type TooLarge = Problem
+
+// UploadFileParams defines parameters for UploadFile.
+type UploadFileParams struct {
+	// Path A path in the caller's files area, starting with `/` (the root of the area). See docs/api/conventions.md.
+	Path       Path        `form:"path" json:"path"`
+	OnConflict *OnConflict `form:"on_conflict,omitempty" json:"on_conflict,omitempty"`
+}
 
 // GetItemsParams defines parameters for GetItems.
 type GetItemsParams struct {
@@ -334,6 +351,9 @@ type CreateFolderJSONRequestBody = CreateFolderRequest
 
 // ServerInterface represents all server handlers.
 type ServerInterface interface {
+	// UploadFile Upload a file (simple, streamed)
+	// (PUT /files/content)
+	UploadFile(w http.ResponseWriter, r *http.Request, params UploadFileParams)
 	// CreateFolder Create a folder
 	// (POST /files/folders)
 	CreateFolder(w http.ResponseWriter, r *http.Request)
@@ -353,6 +373,52 @@ type ServerInterfaceWrapper struct {
 }
 
 type MiddlewareFunc func(http.Handler) http.Handler
+
+// UploadFile operation middleware
+func (siw *ServerInterfaceWrapper) UploadFile(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params UploadFileParams
+
+	// ------------- Required query parameter "path" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, true, "path", r.URL.Query(), &params.Path, runtime.BindQueryParameterOptions{Type: "string", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "path"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "path", Err: err})
+		}
+		return
+	}
+
+	// ------------- Optional query parameter "on_conflict" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "on_conflict", r.URL.Query(), &params.OnConflict, runtime.BindQueryParameterOptions{Type: "string", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "on_conflict"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "on_conflict", Err: err})
+		}
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.UploadFile(w, r, params)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
 
 // CreateFolder operation middleware
 func (siw *ServerInterfaceWrapper) CreateFolder(w http.ResponseWriter, r *http.Request) {
@@ -587,6 +653,7 @@ func HandlerWithOptions(si ServerInterface, options StdHTTPServerOptions) http.H
 		ErrorHandlerFunc:   options.ErrorHandlerFunc,
 	}
 
+	m.HandleFunc(http.MethodPut+" "+options.BaseURL+"/files/content", wrapper.UploadFile)
 	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/files/folders", wrapper.CreateFolder)
 	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/files/items", wrapper.GetItems)
 	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/system/health", wrapper.GetHealth)
@@ -598,7 +665,11 @@ type BadRequestApplicationProblemPlusJSONResponse Problem
 
 type ConflictApplicationProblemPlusJSONResponse Problem
 
+type InsufficientStorageApplicationProblemPlusJSONResponse Problem
+
 type InternalErrorApplicationProblemPlusJSONResponse Problem
+
+type LengthRequiredApplicationProblemPlusJSONResponse Problem
 
 type MethodNotAllowedResponseHeaders struct {
 	Allow *string
@@ -612,6 +683,174 @@ type MethodNotAllowedApplicationProblemPlusJSONResponse struct {
 type NotFoundApplicationProblemPlusJSONResponse Problem
 
 type TooLargeApplicationProblemPlusJSONResponse Problem
+
+type UploadFileRequestObject struct {
+	Params UploadFileParams
+	Body   io.Reader
+}
+
+type UploadFileResponseObject interface {
+	VisitUploadFileResponse(w http.ResponseWriter) error
+}
+
+type UploadFile200JSONResponse FileItem
+
+func (response UploadFile200JSONResponse) VisitUploadFileResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type UploadFile201JSONResponse FileItem
+
+func (response UploadFile201JSONResponse) VisitUploadFileResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(201)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type UploadFile400ApplicationProblemPlusJSONResponse struct {
+	BadRequestApplicationProblemPlusJSONResponse
+}
+
+func (response UploadFile400ApplicationProblemPlusJSONResponse) VisitUploadFileResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(400)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type UploadFile404ApplicationProblemPlusJSONResponse struct {
+	NotFoundApplicationProblemPlusJSONResponse
+}
+
+func (response UploadFile404ApplicationProblemPlusJSONResponse) VisitUploadFileResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(404)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type UploadFile405ApplicationProblemPlusJSONResponse struct {
+	MethodNotAllowedApplicationProblemPlusJSONResponse
+}
+
+func (response UploadFile405ApplicationProblemPlusJSONResponse) VisitUploadFileResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/problem+json")
+	if response.Headers.Allow != nil {
+		w.Header().Set("Allow", fmt.Sprint(*response.Headers.Allow))
+	}
+	w.WriteHeader(405)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type UploadFile409ApplicationProblemPlusJSONResponse struct {
+	ConflictApplicationProblemPlusJSONResponse
+}
+
+func (response UploadFile409ApplicationProblemPlusJSONResponse) VisitUploadFileResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(409)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type UploadFile411ApplicationProblemPlusJSONResponse struct {
+	LengthRequiredApplicationProblemPlusJSONResponse
+}
+
+func (response UploadFile411ApplicationProblemPlusJSONResponse) VisitUploadFileResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(411)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type UploadFile413ApplicationProblemPlusJSONResponse struct {
+	TooLargeApplicationProblemPlusJSONResponse
+}
+
+func (response UploadFile413ApplicationProblemPlusJSONResponse) VisitUploadFileResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(413)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type UploadFile500ApplicationProblemPlusJSONResponse struct {
+	InternalErrorApplicationProblemPlusJSONResponse
+}
+
+func (response UploadFile500ApplicationProblemPlusJSONResponse) VisitUploadFileResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(500)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type UploadFile507ApplicationProblemPlusJSONResponse struct {
+	InsufficientStorageApplicationProblemPlusJSONResponse
+}
+
+func (response UploadFile507ApplicationProblemPlusJSONResponse) VisitUploadFileResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(507)
+	_, err := buf.WriteTo(w)
+	return err
+}
 
 type CreateFolderRequestObject struct {
 	Body *CreateFolderJSONRequestBody
@@ -909,6 +1148,9 @@ func (response GetHealth503JSONResponse) VisitGetHealthResponse(w http.ResponseW
 
 // StrictServerInterface represents all server handlers.
 type StrictServerInterface interface {
+	// UploadFile Upload a file (simple, streamed)
+	// (PUT /files/content)
+	UploadFile(ctx context.Context, request UploadFileRequestObject) (UploadFileResponseObject, error)
 	// CreateFolder Create a folder
 	// (POST /files/folders)
 	CreateFolder(ctx context.Context, request CreateFolderRequestObject) (CreateFolderResponseObject, error)
@@ -957,6 +1199,34 @@ type strictHandler struct {
 	ssi         StrictServerInterface
 	middlewares []StrictMiddlewareFunc
 	options     StrictHTTPServerOptions
+}
+
+// UploadFile operation middleware
+func (sh *strictHandler) UploadFile(w http.ResponseWriter, r *http.Request, params UploadFileParams) {
+	var request UploadFileRequestObject
+
+	request.Params = params
+
+	request.Body = r.Body
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.UploadFile(ctx, request.(UploadFileRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "UploadFile")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(UploadFileResponseObject); ok {
+		if err := validResponse.VisitUploadFileResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
 }
 
 // CreateFolder operation middleware

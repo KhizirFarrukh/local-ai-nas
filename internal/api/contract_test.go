@@ -78,8 +78,10 @@ var errorCases = []struct {
 	{http.MethodGet, "/api/v1/files/items?path=/docs%5Ca.txt", http.StatusBadRequest, "invalid_name"},
 	{http.MethodGet, "/api/v1/files/items?path=/missing", http.StatusNotFound, "not_found"},
 	{http.MethodPost, "/api/v1/files/items?path=/", http.StatusMethodNotAllowed, "method_not_allowed"},
-	// POST /api/v1/files/folders: other methods (the JSON cases are below).
+	// POST /api/v1/files/folders: other methods (the body cases are below).
 	{http.MethodGet, "/api/v1/files/folders", http.StatusMethodNotAllowed, "method_not_allowed"},
+	// PUT /api/v1/files/content: other methods (the body cases are below).
+	{http.MethodPost, "/api/v1/files/content", http.StatusMethodNotAllowed, "method_not_allowed"},
 	// The reserved photos routes, with any method.
 	{http.MethodGet, "/api/v1/photos", http.StatusNotImplemented, "not_available"},
 	{http.MethodPost, "/api/v1/photos", http.StatusNotImplemented, "not_available"},
@@ -88,25 +90,47 @@ var errorCases = []struct {
 	{http.MethodDelete, "/api/v1/photos/items/1", http.StatusNotImplemented, "not_available"},
 }
 
-// jsonErrorCases are POST requests with a JSON body (the empty string sends
-// no body and no Content-Type) that must produce an error. They count for
-// route coverage like errorCases.
-var jsonErrorCases = []struct {
-	path, body string
-	status     int
-	code       string
+// bodyErrorCases are requests with a body that must produce an error. An
+// empty contentType sends no Content-Type; a non-zero length replaces the
+// declared Content-Length (-1: unknown, as with chunked encoding). They
+// count for route coverage like errorCases.
+var bodyErrorCases = []struct {
+	method, path, contentType, body string
+	length                          int64
+	status                          int
+	code                            string
 }{
 	// POST /api/v1/files/folders.
-	{"/api/v1/files/folders", "", http.StatusBadRequest, "invalid_request"},
-	{"/api/v1/files/folders", `{"path":"/new","extra":1}`, http.StatusBadRequest, "invalid_request"},
-	{"/api/v1/files/folders", `{"path":"/new"}{}`, http.StatusBadRequest, "invalid_request"},
-	{"/api/v1/files/folders", `{"path":"/new","on_conflict":"merge"}`, http.StatusBadRequest, "invalid_request"},
-	{"/api/v1/files/folders", `{"path":"/con"}`, http.StatusBadRequest, "invalid_name"},
-	{"/api/v1/files/folders", `{"path":"/../x"}`, http.StatusBadRequest, "outside_root"},
-	{"/api/v1/files/folders", `{"path":"/x/y/z"}`, http.StatusNotFound, "not_found"},
-	{"/api/v1/files/folders", `{"path":"/docs"}`, http.StatusConflict, "conflict"},
-	{"/api/v1/files/folders", `{"path":"/` + strings.Repeat("a", 2<<20) + `"}`, http.StatusRequestEntityTooLarge, "too_large"},
+	{http.MethodPost, "/api/v1/files/folders", "", "", 0, http.StatusBadRequest, "invalid_request"},
+	{http.MethodPost, "/api/v1/files/folders", jsonType, `{"path":"/new","extra":1}`, 0, http.StatusBadRequest, "invalid_request"},
+	{http.MethodPost, "/api/v1/files/folders", jsonType, `{"path":"/new"}{}`, 0, http.StatusBadRequest, "invalid_request"},
+	{http.MethodPost, "/api/v1/files/folders", jsonType, `{"path":"/new","on_conflict":"merge"}`, 0, http.StatusBadRequest, "invalid_request"},
+	{http.MethodPost, "/api/v1/files/folders", jsonType, `{"path":"/con"}`, 0, http.StatusBadRequest, "invalid_name"},
+	{http.MethodPost, "/api/v1/files/folders", jsonType, `{"path":"/../x"}`, 0, http.StatusBadRequest, "outside_root"},
+	{http.MethodPost, "/api/v1/files/folders", jsonType, `{"path":"/x/y/z"}`, 0, http.StatusNotFound, "not_found"},
+	{http.MethodPost, "/api/v1/files/folders", jsonType, `{"path":"/docs"}`, 0, http.StatusConflict, "conflict"},
+	{http.MethodPost, "/api/v1/files/folders", jsonType, `{"path":"/` + strings.Repeat("a", 2<<20) + `"}`, 0, http.StatusRequestEntityTooLarge, "too_large"},
+	// PUT /api/v1/files/content.
+	{http.MethodPut, "/api/v1/files/content", octetType, "abc", 0, http.StatusBadRequest, "invalid_request"},
+	{http.MethodPut, "/api/v1/files/content?path=/n.txt&on_conflict=merge", octetType, "abc", 0, http.StatusBadRequest, "invalid_request"},
+	{http.MethodPut, "/api/v1/files/content?path=/n.txt", octetType, "abc", 10, http.StatusBadRequest, "invalid_request"}, // shorter than declared
+	{http.MethodPut, "/api/v1/files/content?path=/n.txt", octetType, "abc", 1, http.StatusBadRequest, "invalid_request"},  // longer than declared
+	{http.MethodPut, "/api/v1/files/content?path=/", octetType, "abc", 0, http.StatusBadRequest, "invalid_name"},
+	{http.MethodPut, "/api/v1/files/content?path=/aux.txt", octetType, "abc", 0, http.StatusBadRequest, "invalid_name"},
+	{http.MethodPut, "/api/v1/files/content?path=/.local-ai-nas-tmp-x.part", octetType, "abc", 0, http.StatusBadRequest, "invalid_name"},
+	{http.MethodPut, "/api/v1/files/content?path=/docs/../../x", octetType, "abc", 0, http.StatusBadRequest, "outside_root"},
+	{http.MethodPut, "/api/v1/files/content?path=/missing/n.txt", octetType, "abc", 0, http.StatusNotFound, "not_found"},
+	{http.MethodPut, "/api/v1/files/content?path=/docs/a.txt", octetType, "abc", 0, http.StatusConflict, "conflict"},
+	{http.MethodPut, "/api/v1/files/content?path=/docs&on_conflict=overwrite", octetType, "abc", 0, http.StatusConflict, "conflict"},
+	{http.MethodPut, "/api/v1/files/content?path=/readme.md/n.txt", octetType, "abc", 0, http.StatusConflict, "conflict"},
+	{http.MethodPut, "/api/v1/files/content?path=/n.txt", "", "abc", -1, http.StatusLengthRequired, "length_required"},
+	{http.MethodPut, "/api/v1/files/content?path=/n.txt", octetType, "abc", DefaultMaxUploadBytes + 1, http.StatusRequestEntityTooLarge, "too_large"},
 }
+
+const (
+	jsonType  = "application/json"
+	octetType = "application/octet-stream"
+)
 
 // TestErrorResponsesMatchSchema is the S01.5-T03 contract test: every
 // error response the API produces, across all endpoints, validates against
@@ -148,14 +172,17 @@ func TestErrorResponsesMatchSchema(t *testing.T) {
 		}
 	}
 
-	for _, c := range jsonErrorCases {
-		label := "POST " + c.path + " " + c.body
+	for _, c := range bodyErrorCases {
+		label := c.method + " " + c.path + " " + c.body
 		if len(label) > 120 {
 			label = label[:120] + "…"
 		}
-		req := httptest.NewRequest(http.MethodPost, c.path, strings.NewReader(c.body))
-		if c.body != "" {
-			req.Header.Set("Content-Type", "application/json")
+		req := httptest.NewRequest(c.method, c.path, strings.NewReader(c.body))
+		if c.contentType != "" {
+			req.Header.Set("Content-Type", c.contentType)
+		}
+		if c.length != 0 {
+			req.ContentLength = c.length
 		}
 		if _, pattern := routeOf.Handler(req); pattern != "" {
 			covered[pattern] = true
@@ -176,7 +203,7 @@ func TestErrorResponsesMatchSchema(t *testing.T) {
 
 	for _, r := range Routes(Options{}) {
 		if !covered[r.Pattern] {
-			t.Errorf("route %q has no error case in errorCases or jsonErrorCases", r.Pattern)
+			t.Errorf("route %q has no error case in errorCases or bodyErrorCases", r.Pattern)
 		}
 	}
 }

@@ -2,6 +2,7 @@ package api
 
 import (
 	"context"
+	"io"
 
 	"github.com/KhizirFarrukh/local-ai-nas/internal/api/gen"
 	"github.com/KhizirFarrukh/local-ai-nas/internal/apperr"
@@ -105,5 +106,9 @@ func (noFiles) List(context.Context, string, string, files.ListOptions) (files.L
 }
 
 func (noFiles) CreateFolder(context.Context, string, string, files.FolderOptions) (files.Item, bool, error) {
+	return files.Item{}, false, errNoFiles
+}
+
+func (noFiles) Upload(context.Context, string, string, io.Reader, int64, files.UploadOptions) (files.Item, bool, error) {
 	return files.Item{}, false, errNoFiles
 }

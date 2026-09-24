@@ -96,7 +96,7 @@ func (s *Local) List(ctx context.Context, owner, path string, opts ListOptions) 
 			return ListPage{}, err
 		}
 	}
-	rel, err := s.resolver.Resolve(storage.FilesArea, owner, path)
+	rel, err := s.resolveVisible(owner, path)
 	if err != nil {
 		return ListPage{}, err
 	}
@@ -152,6 +152,9 @@ func readFolder(root *os.Root, owner, rel, apiPath string) ([]Item, Item, error)
 	}
 	items := make([]Item, 0, len(entries))
 	for _, e := range entries {
+		if storage.IsTempName(e.Name()) {
+			continue // a write in progress, or left by a crash: never an item
+		}
 		info, err := e.Info() // Lstat: links are listed, never followed
 		if storage.IsNotFound(err) {
 			continue // removed since ReadDir

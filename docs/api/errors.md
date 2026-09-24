@@ -39,6 +39,7 @@ Unexpected server errors (`internal`) always have the same generic `detail`. The
 | `not_found` | 404 | The file, folder, or upload does not exist, or there is no endpoint at this path. |
 | `conflict` | 409 | The request clashes with the current state, for example the target already exists. |
 | `method_not_allowed` | 405 | The endpoint exists, but not with this method. The `Allow` header lists the methods it accepts. |
+| `length_required` | 411 | An upload without a `Content-Length` header. The server needs the size first, to check the limits and the free space before storing anything. |
 | `too_large` | 413 | The upload or request is over a size limit. |
 | `internal` | 500 | An unexpected server error. See the server log under the `correlation_id`. |
 | `not_available` | 501 | The feature is part of the API but not available yet (for example the photos API in stage 1). |
@@ -54,7 +55,7 @@ A name the API is asked to create (an upload, a new folder, the target of a rena
 |---|---|
 | `empty_name` | it is empty |
 | `dot_name` | it is `.` or `..` |
-| `reserved_name` | it is a Windows device name, with any extension and in any case: `CON`, `PRN`, `AUX`, `NUL`, `CONIN$`, `CONOUT$`, `COM0`–`COM9`, `LPT0`–`LPT9`, `COM¹`–`COM³`, `LPT¹`–`LPT³` (for example `aux.txt`) |
+| `reserved_name` | it is a Windows device name, with any extension and in any case: `CON`, `PRN`, `AUX`, `NUL`, `CONIN$`, `CONOUT$`, `COM0`–`COM9`, `LPT0`–`LPT9`, `COM¹`–`COM³`, `LPT¹`–`LPT³` (for example `aux.txt`), or it starts with `.local-ai-nas-tmp-`, the prefix of the server's temporary files |
 | `forbidden_character` | it contains any of `<` `>` `:` `"` `/` `\` `\|` `?` `*` |
 | `control_character` | it contains a control character (U+0000 to U+001F, or U+007F) |
 | `trailing_dot_or_space` | it ends with a dot or a space |
