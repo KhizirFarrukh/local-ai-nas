@@ -25,6 +25,14 @@ root = "/srv/local-ai-nas"
 # Free space that uploads never use.
 free_space_reserve = "1GiB"
 
+# Optional: keep the database or the logs somewhere else, for example on a
+# faster disk. An absolute path outside the files and photos areas; inside
+# the storage root only under .local-ai-nas. Empty: the default location
+# .local-ai-nas/db or .local-ai-nas/logs. Uploads in progress always stay
+# under the storage root.
+db_dir = ""
+logs_dir = ""
+
 [server]
 # host:port to listen on. In S01 only loopback addresses are safe to use;
 # the server has no login yet (S03).

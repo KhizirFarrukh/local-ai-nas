@@ -37,6 +37,11 @@ type Storage struct {
 	Root string
 	// FreeSpaceReserve is the free space that writes never use (S01.2-T04).
 	FreeSpaceReserve ByteSize
+	// DBDir and LogsDir optionally move the database and the logs out of
+	// <root>/.local-ai-nas, for example to a faster disk. Empty keeps the
+	// default. The storage package checks that they stay out of the areas.
+	DBDir   string
+	LogsDir string
 }
 
 // Server configures the HTTP server.
@@ -146,6 +151,8 @@ func intSetting(key string, field func(*Config) *int) setting {
 var settings = []setting{
 	stringSetting("storage.root", func(c *Config) *string { return &c.Storage.Root }),
 	sizeSetting("storage.free_space_reserve", func(c *Config) *ByteSize { return &c.Storage.FreeSpaceReserve }),
+	stringSetting("storage.db_dir", func(c *Config) *string { return &c.Storage.DBDir }),
+	stringSetting("storage.logs_dir", func(c *Config) *string { return &c.Storage.LogsDir }),
 	stringSetting("server.bind", func(c *Config) *string { return &c.Server.Bind }),
 	durationSetting("server.read_header_timeout", func(c *Config) *Duration { return &c.Server.ReadHeaderTimeout }),
 	durationSetting("server.idle_timeout", func(c *Config) *Duration { return &c.Server.IdleTimeout }),
@@ -391,6 +398,21 @@ func (l *Loaded) validate() error {
 		fail("storage.root", "must be an absolute path, got %q", c.Storage.Root)
 	default:
 		c.Storage.Root = filepath.Clean(c.Storage.Root)
+	}
+	for _, d := range []struct {
+		key string
+		dir *string
+	}{
+		{"storage.db_dir", &c.Storage.DBDir},
+		{"storage.logs_dir", &c.Storage.LogsDir},
+	} {
+		switch {
+		case *d.dir == "":
+		case !filepath.IsAbs(*d.dir):
+			fail(d.key, "must be an absolute path or empty, got %q", *d.dir)
+		default:
+			*d.dir = filepath.Clean(*d.dir)
+		}
 	}
 
 	if host, port, err := net.SplitHostPort(c.Server.Bind); err != nil || host == "" {

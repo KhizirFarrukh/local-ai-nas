@@ -194,6 +194,8 @@ func TestLoadValidation(t *testing.T) {
 	}{
 		{"root missing", map[string]string{}, nil, "storage.root", "required"},
 		{"root relative", map[string]string{"storage.root": "data/nas"}, nil, "storage.root", "absolute"},
+		{"db dir relative", map[string]string{"storage.db_dir": "db"}, nil, "storage.db_dir", "absolute path or empty"},
+		{"logs dir relative", map[string]string{"storage.logs_dir": "logs"}, nil, "storage.logs_dir", "absolute path or empty"},
 		{"bind without port", map[string]string{"server.bind": "127.0.0.1"}, nil, "server.bind", "host:port"},
 		{"bind without host", map[string]string{"server.bind": ":8080"}, nil, "server.bind", "host:port"},
 		{"bind port zero", map[string]string{"server.bind": "127.0.0.1:0"}, nil, "server.bind", "1 to 65535"},
@@ -279,6 +281,15 @@ func TestLoadNormalizes(t *testing.T) {
 	}
 	if l.Log.Level != "warn" {
 		t.Errorf("Log.Level = %q, want %q", l.Log.Level, "warn")
+	}
+
+	db := filepath.Join(root, ".local-ai-nas", "db")
+	l, err = Load(Sources{Flags: map[string]string{"storage.root": root, "storage.db_dir": db + string(filepath.Separator)}})
+	if err != nil {
+		t.Fatalf("Load: %v", err)
+	}
+	if l.Storage.DBDir != db || l.Storage.LogsDir != "" {
+		t.Errorf("DBDir = %q, LogsDir = %q; want the cleaned %q and empty", l.Storage.DBDir, l.Storage.LogsDir, db)
 	}
 }
 
