@@ -15,7 +15,12 @@ go test -covermode=atomic -coverprofile=coverage.out "$@" ./internal/...
 go tool cover -func=coverage.out
 
 total=$(go tool cover -func=coverage.out | awk '/^total:/ { sub(/%/, "", $NF); print $NF }')
-echo "Total coverage of internal/...: ${total}% (minimum ${min}%)"
+summary="Total coverage of internal/...: ${total}% (minimum ${min}%)"
+echo "$summary"
+# In GitHub Actions, publish the figure on the run's summary page.
+if [ -n "${GITHUB_STEP_SUMMARY:-}" ]; then
+	echo "$summary" >>"$GITHUB_STEP_SUMMARY"
+fi
 if awk -v t="$total" -v m="$min" 'BEGIN { exit !(t + 0 < m + 0) }'; then
 	echo "FAIL: coverage ${total}% is below ${min}%" >&2
 	exit 1

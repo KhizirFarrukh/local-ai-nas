@@ -6,15 +6,15 @@
 
 ## Active stage and task
 - **Active stage:** S01 (Basic NAS implementation), **In Progress** (`stages/S01-basic-nas.md`); substage S01.1 In Progress.
-- **Active task:** none (S01.1-T04 done; S01.1-T05 next)
+- **Active task:** **S01.1-T05** CI pipeline (branch `feat/S01.1-T05-ci`)
 
 ## In progress (write-ahead)
-- S01.1-T04: commit, push, and merge `feat/S01.1-T04-testing` into `develop`.
+- S01.1-T05: `.github/workflows/ci.yml` (lint + fmt; tests ubuntu `-race` + windows; coverage gate; govulncheck; licenses; generate drift; cross-builds + artifacts) and `.github/dependabot.yml` (gomod, github-actions); push and watch the run through the public GitHub API; a deliberate failing test turns it red (commit + revert on the branch); then merge into `develop`. The image + Trivy job moves to T06 (T06 runs after T11).
 
 ## Last completed
 - `develop` verified complete (S005): merge `c535cda` brought `cf60f72` (plan 0.4.0, which PR #3 had put on `main` only) and the user's `bda8321` (prompts 3 and 4).
 - Approval-stage decisions D-01–D-14 applied (S005 E007–E010). **Plan 1.0.0 baseline and S01 approved** (S005 E012).
-- **S01.1-T04 done** (S005 E025): `internal/testutil` + tests (unit, integration, fuzz seeds), `scripts/coverage.sh` (83.0%, gate works), `docs/testing.md`; 45 s of fuzzing found nothing.
+- **S01.1-T04 done and merged** (`develop` dc9c0a0; S005 E025): `internal/testutil` + tests (unit, integration, fuzz seeds), `scripts/coverage.sh` (83.0%, gate works), `docs/testing.md`; 45 s of fuzzing found nothing.
 - **S01.1-T03 done and merged** (`develop` f0cc48c; S005 E023): `.golangci.yml` (v2) + `scripts/install-golangci-lint.sh`; clean on the skeleton; depguard, errcheck, and gofmt violations fail (then removed).
 - **S01.1-T02 done and merged** (`develop` b0cc2ec; S005 E021): `LICENSE` (AGPL v3), README License section, `docs/licensing.md`, `scripts/allowed-licenses.txt`, `scripts/check-licenses.sh`; the check passes, and a fixture with an Unlicense license fails it (then reverted).
 - **S01.1-T01 done and merged** (`develop` 0100920; S005 E019): `go.mod` (go 1.27, toolchain go1.27.1; oapi-codegen, govulncheck, go-licenses as `tool` directives), skeleton packages, `api/openapi.yaml` stub, `.gitattributes`/`.editorconfig`/`.gitignore`. Build, vet, and test pass on Windows; Linux amd64/arm64 cross-build + vet pass; renormalize makes no changes.

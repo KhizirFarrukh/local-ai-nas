@@ -2,7 +2,7 @@
 
 **Purpose:** every dependency, external tool, dataset, and AI model the project uses or has evaluated, with its version, license, and verification status. This is required by P003 and by RULES.md **R6**: every new dependency is added here **in the same commit that introduces it**. **Section 12** lists what each platform needs at runtime; the per-platform setup scripts (S11.2, FR-149) install exactly that list (NFR-032).
 
-**Last updated:** 2026-09-24 (session S005: section 12 added; S01.1-T01 created `go.mod`; S01.1-T02 license policy). Verification method and raw results: `logs/sessions/2026-09-24_S003.md` entries E005 and E007, and audit A001 group F (`audits/A001-2026-09-24-documentation-audit.md`).
+**Last updated:** 2026-09-24 (session S005: section 12 added; S01.1-T01 created `go.mod`; S01.1-T02 license policy; S01.1-T05 CI actions). Verification method and raw results: `logs/sessions/2026-09-24_S003.md` entries E005 and E007, and audit A001 group F (`audits/A001-2026-09-24-documentation-audit.md`).
 
 **Licensing policy (P003, NFR-029):** every dependency and model must have a license that allows anyone to deploy and use this project. Nothing may be restricted to non-commercial or research-only use. The project's own license is **AGPL-3.0-or-later** (Q22, decided in S005; policy and allow-list in `docs/licensing.md` and `scripts/allowed-licenses.txt`). Items that need attention under it are marked ⚠.
 
@@ -132,11 +132,12 @@ Versions are the **latest stable at verification**. Only **direct** dependencies
 |---|---|---|---|---|---|---|
 | GitHub Actions | n/a | Service (GitHub terms) | CI (Linux + Windows; macOS for S09 client tests) | S01.1+ | [ADR-0005](decisions/ADR-0005-testing-linting-ci.md) | Repository hosted on GitHub (origin verified in S001) |
 | Dependabot | n/a | Service (GitHub terms) | Automated dependency update PRs | S01.1+ | [ADR-0005](decisions/ADR-0005-testing-linting-ci.md) | Agent choice (vs. Renovate) |
-| GitHub Action actions/checkout | v7.0.1 | Not fetched | CI checkout | S01.1-T05 | [ADR-0005](decisions/ADR-0005-testing-linting-ci.md) | Version verified 2026-09-24 (GitHub releases) in A001. **Candidate** (added at S01.1-T05) |
-| GitHub Action actions/setup-go | v7.0.0 | Not fetched | CI Go toolchain | S01.1-T05 | [ADR-0005](decisions/ADR-0005-testing-linting-ci.md) | Version verified 2026-09-24 in A001. **Candidate** |
-| GitHub Action golangci/golangci-lint-action | v9.3.0 | Not fetched | CI lint (runs golangci-lint v2.13.2 binary) | S01.1-T05 | [ADR-0005](decisions/ADR-0005-testing-linting-ci.md) | Version verified 2026-09-24 in A001. **Candidate** |
-| GitHub Action docker/setup-buildx-action | v4.4.1 | Not fetched | CI multi-arch image builds | S01.1-T05 | [ADR-0006](decisions/ADR-0006-dev-environment-and-packaging.md) | Version verified 2026-09-24 in A001. **Candidate** |
-| GitHub Action aquasecurity/trivy-action | v0.36.0 | Not fetched | CI image scan (Trivy) | S01.1-T05 | [ADR-0005](decisions/ADR-0005-testing-linting-ci.md) | Version verified 2026-09-24 in A001. **Candidate** |
+| GitHub Action actions/checkout | v7.0.1 | MIT | CI checkout | S01.1-T05 | [ADR-0005](decisions/ADR-0005-testing-linting-ci.md) | Version verified 2026-09-24 (GitHub releases) in A001; license verified 2026-09-24 (GitHub license API) in S005. **In use** in `.github/workflows/ci.yml` (S01.1-T05) |
+| GitHub Action actions/setup-go | v7.0.0 | MIT | CI Go toolchain (`go-version-file: go.mod`) | S01.1-T05 | [ADR-0005](decisions/ADR-0005-testing-linting-ci.md) | Version verified 2026-09-24 in A001; license verified 2026-09-24 (GitHub license API) in S005. **In use** (S01.1-T05) |
+| GitHub Action golangci/golangci-lint-action | v9.3.0 | MIT | CI lint (runs golangci-lint v2.13.2 binary) | S01.1-T05 | [ADR-0005](decisions/ADR-0005-testing-linting-ci.md) | Version verified 2026-09-24 in A001; license verified 2026-09-24 (GitHub license API) in S005. **In use** (S01.1-T05) |
+| GitHub Action docker/setup-buildx-action | v4.4.1 | Not fetched | CI multi-arch image builds | S01.1-T06 (moved from T05) | [ADR-0006](decisions/ADR-0006-dev-environment-and-packaging.md) | Version verified 2026-09-24 in A001; release re-checked 2026-09-24 (S005). **Candidate** (added with the dev image job in T06) |
+| GitHub Action aquasecurity/trivy-action | v0.36.0 | Not fetched | CI image scan (Trivy) | S01.1-T06 (moved from T05) | [ADR-0005](decisions/ADR-0005-testing-linting-ci.md) | Version verified 2026-09-24 in A001; release re-checked 2026-09-24 (S005). **Candidate** (added with the dev image job in T06) |
+| GitHub Action actions/upload-artifact | v7.0.1 | MIT | Keep the cross-built binaries of each CI run (7 days) | S01.1-T05 | [ADR-0005](decisions/ADR-0005-testing-linting-ci.md) | **New in S01.1-T05.** Latest release v7.0.1 (2026-04-10) and license MIT verified 2026-09-24 (GitHub API) in S005. **In use** |
 
 ## 10. Evaluated, not adopted, or rejected
 

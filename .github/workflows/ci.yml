@@ -1,0 +1,112 @@
+# Continuous integration (ADR-0005, S01.1-T05). Runs on pull requests into
+# develop and main, and on pushes to working branches, because finished
+# branches are merged into develop by the agent without always opening a PR.
+name: CI
+
+on:
+  push:
+    branches: [develop, main, "feat/**", "fix/**", "docs/**", "chore/**"]
+  pull_request:
+    branches: [develop, main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  lint:
+    name: Lint and format
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - uses: actions/setup-go@v7.0.0
+        with:
+          go-version-file: go.mod
+      - name: golangci-lint run
+        uses: golangci/golangci-lint-action@v9.3.0
+        with:
+          version: v2.13.2
+      - name: golangci-lint fmt
+        run: golangci-lint fmt --diff
+
+  test:
+    name: Test (${{ matrix.os }})
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - uses: actions/setup-go@v7.0.0
+        with:
+          go-version-file: go.mod
+      - name: go vet
+        run: go vet ./...
+      - name: go test (race detector)
+        if: runner.os == 'Linux'
+        run: go test -race ./...
+      - name: go test
+        if: runner.os != 'Linux'
+        run: go test ./...
+      - name: Coverage gate (internal/..., minimum 80%)
+        if: runner.os == 'Linux'
+        run: bash scripts/coverage.sh
+
+  checks:
+    name: Vulnerabilities, licenses, generated code
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - uses: actions/setup-go@v7.0.0
+        with:
+          go-version-file: go.mod
+      - name: govulncheck
+        run: go tool govulncheck ./...
+      - name: Dependency licenses
+        run: bash scripts/check-licenses.sh
+      - name: Generated code is up to date
+        run: |
+          go generate ./...
+          git status --porcelain
+          test -z "$(git status --porcelain)"
+
+  build:
+    name: Build ${{ matrix.goos }}/${{ matrix.goarch }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { goos: linux, goarch: amd64 }
+          - { goos: linux, goarch: arm64 }
+          - { goos: windows, goarch: amd64 }
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - uses: actions/setup-go@v7.0.0
+        with:
+          go-version-file: go.mod
+      - name: go build
+        env:
+          CGO_ENABLED: "0"
+          GOOS: ${{ matrix.goos }}
+          GOARCH: ${{ matrix.goarch }}
+        run: |
+          ext=""
+          if [ "$GOOS" = windows ]; then ext=".exe"; fi
+          go build -trimpath -ldflags "-X main.version=${GITHUB_SHA::12}" \
+            -o "dist/local-ai-nas-${GOOS}-${GOARCH}${ext}" ./cmd/local-ai-nas
+          ls -l dist
+      - uses: actions/upload-artifact@v7.0.1
+        with:
+          name: local-ai-nas-${{ matrix.goos }}-${{ matrix.goarch }}
+          path: dist/
+          retention-days: 7
+          if-no-files-found: error
