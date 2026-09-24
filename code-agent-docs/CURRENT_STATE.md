@@ -1,20 +1,21 @@
 # CURRENT_STATE
 
-**Last updated:** 2026-09-24 16:50 +0500 (session S005)
+**Last updated:** 2026-09-24 16:55 +0500 (session S005)
 **Plan version:** 1.1.1 (`code-agent-docs/plan.md`), **Approved baseline** 1.0.0 (S005) + the setup-script requirement (1.1.0, S005 E015)
 **Current phase:** Implementation: S01 (Basic NAS implementation) in progress; S01.1, S01.2, and S01.3 done; S01.5 and S01.6 in progress
 
 ## Active stage and task
 - **Active stage:** S01 (Basic NAS implementation), **In Progress** (`stages/S01-basic-nas.md`); S01.1, S01.2, and S01.3 **Done**; S01.6 **In Progress** (T01, T02 done; T03–T06 next); S01.5 **In Progress** (T01–T04 done; T05/T06 later).
-- **Active task:** **S01.6-T04** Conflict handling (branch `feat/S01.6-T04-conflicts`): done, waiting for CI and the merge; next **S01.6-T05** concurrency (drafted in the working tree, E089)
+- **Active task:** **S01.6-T05** Concurrency safety (branch `feat/S01.6-T05-locks`): done, waiting for CI and the merge; next **S01.6-T06** bind guard
 
 ## In progress (write-ahead)
-- S01.6-T04: committed (only `conflict_test.go` and docs; the T05 draft stays uncommitted); push, CI, merge into `develop`. **When S01.4-T03 is built, add tus finalize to `TestConflictMatrix`.**
+- S01.6-T05: committed; push, CI (the Linux job runs the stress test with `-race`), merge into `develop`. **When S01.4-T03 is built, add tus finalize to `TestConflictMatrix`.**
 
 ## Last completed
 - `develop` verified complete (S005): merge `c535cda` brought `cf60f72` (plan 0.4.0, which PR #3 had put on `main` only) and the user's `bda8321` (prompts 3 and 4).
 - Approval-stage decisions D-01–D-14 applied (S005 E007–E010). **Plan 1.0.0 baseline and S01 approved** (S005 E012).
-- **S01.6-T04 done** (S005 E090): `TestConflictMatrix` (72 cases) and `TestConcurrentRenameCollisions` (every operation); tus finalize joins with S01.4-T03.
+- **S01.6-T05 done** (S005 E091): `storage.Locks`; the files service locks the target folder during commits only; downloads retry a replaced file; `TestStressConcurrentWriters` (50 writers × 3 policies with readers: one consistent result, no partial or temporary files).
+- **S01.6-T04 done and merged** (S005 E090): `TestConflictMatrix` (72 cases) and `TestConcurrentRenameCollisions` (every operation); tus finalize joins with S01.4-T03.
 - **S01.6-T03 done and merged** (CI run 35994898119 green; S005 E088): links are never followed by any operation (a path through a link → 400, inside or outside the area), listed without a target, never created by the API (architecture test); link tests run wherever the OS allows links.
 - **S01.3 closed and merged** (CI run 35994100122 green; S005 E085): T09 delete (`DELETE /api/v1/files/items`, `recursive`); closure tests over a real server (every operation) and for confinement (10 operations × escape paths and links; sentinels unchanged); `storage.IsEscape` maps os.Root escape refusals to `outside_root` (they were 500). All 5 substage criteria checked (S01 change log).
 - **S01.3-T08 done and merged** (CI run 35993223778 green; S005 E083): `POST /api/v1/files/operations/copy`: a scan first (limits → 422 `too_large_for_sync`, name rules, links refused, free space), a hidden temp file or temp tree committed in one step, times kept; settings `copy.sync_max_items`/`sync_max_bytes`; `renameIfFree` fixes a Windows race in folder renames (also for T07 moves).

@@ -98,12 +98,13 @@ func (s *Local) Copy(ctx context.Context, owner, fromAPI, toAPI string, o CopyOp
 					return err
 				}
 			}
+			lock := func() func() { return s.lockFolder(owner, path.Dir(to)) }
 			var final string
 			if src.IsDir() {
-				final, err = copyFolder(ctx, root, from, to, entries, policy, toAPI)
+				final, err = copyFolder(ctx, root, from, to, entries, policy, toAPI, lock)
 				r.created = true
 			} else {
-				final, r.created, err = copyOneFile(ctx, root, from, to, src, policy, toAPI)
+				final, r.created, err = copyOneFile(ctx, root, from, to, src, policy, toAPI, lock)
 			}
 			if err != nil {
 				return err
@@ -209,8 +210,8 @@ func checkCopiedName(dst, srcPath string) error {
 }
 
 // copyOneFile copies the regular file from to a temporary file next to
-// to, and commits it like an upload.
-func copyOneFile(ctx context.Context, root *os.Root, from, to string, src fs.FileInfo, policy OnConflict, toAPI string) (string, bool, error) {
+// to, and commits it like an upload, holding lock during the commit.
+func copyOneFile(ctx context.Context, root *os.Root, from, to string, src fs.FileInfo, policy OnConflict, toAPI string, lock func() func()) (string, bool, error) {
 	if err := checkTarget(root, to, policy, toAPI); err != nil {
 		return "", false, err
 	}
@@ -219,7 +220,9 @@ func copyOneFile(ctx context.Context, root *os.Root, from, to string, src fs.Fil
 		_ = root.Remove(filepath.FromSlash(tmp))
 		return "", false, err
 	}
+	unlock := lock()
 	final, created, err := commitFile(root, tmp, to, policy, toAPI)
+	unlock()
 	if err != nil {
 		_ = root.Remove(filepath.FromSlash(tmp))
 		return "", false, err
@@ -229,8 +232,9 @@ func copyOneFile(ctx context.Context, root *os.Root, from, to string, src fs.Fil
 }
 
 // copyFolder builds the copy of the tree under a temporary name next to
-// to, then gives it its name. On any error the temporary tree is removed.
-func copyFolder(ctx context.Context, root *os.Root, from, to string, entries []copyEntry, policy OnConflict, toAPI string) (string, error) {
+// to, then gives it its name, holding lock during the commit. On any error
+// the temporary tree is removed.
+func copyFolder(ctx context.Context, root *os.Root, from, to string, entries []copyEntry, policy OnConflict, toAPI string, lock func() func()) (string, error) {
 	switch _, err := root.Lstat(filepath.FromSlash(to)); {
 	case err == nil && policy != ConflictRename:
 		return "", apperr.Newf(apperr.Conflict, "an item already exists at %s; folders are never replaced or merged", toAPI)
@@ -242,7 +246,9 @@ func copyFolder(ctx context.Context, root *os.Root, from, to string, entries []c
 		_ = root.RemoveAll(filepath.FromSlash(tmp))
 		return "", err
 	}
+	unlock := lock()
 	final, err := commitFolder(root, tmp, to, entries[0].info, policy, toAPI)
+	unlock()
 	if err != nil {
 		_ = root.RemoveAll(filepath.FromSlash(tmp))
 		return "", err

@@ -112,6 +112,7 @@ type Local struct {
 	hooks      Hooks
 	space      *storage.SpaceGuard
 	copyLimits CopyLimits
+	locks      *storage.Locks
 }
 
 var _ Service = (*Local)(nil)
@@ -121,7 +122,15 @@ func NewLocal(r *storage.Resolver, o Options) *Local {
 	if o.Hooks == nil {
 		o.Hooks = NopHooks{}
 	}
-	return &Local{resolver: r, hooks: o.Hooks, space: o.Space, copyLimits: o.CopyLimits}
+	return &Local{resolver: r, hooks: o.Hooks, space: o.Space, copyLimits: o.CopyLimits, locks: storage.NewLocks()}
+}
+
+// lockFolder serializes the steps that give a new name to an item in the
+// folder dir of owner's namespace (S01.6-T05): the conflict checks and the
+// rename or link that follows them. Writing the content happens before,
+// without the lock. The returned function unlocks the folder.
+func (s *Local) lockFolder(owner, dir string) (unlock func()) {
+	return s.locks.Lock(owner + ":" + dir)
 }
 
 // run calls the hooks around op.

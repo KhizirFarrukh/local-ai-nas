@@ -2,6 +2,7 @@ package files
 
 import (
 	"context"
+	"errors"
 	"io"
 	"os"
 	"path/filepath"
@@ -40,10 +41,33 @@ func (s *Local) Download(ctx context.Context, owner, apiPath string) (Item, io.R
 	return res.item, res.f, nil
 }
 
+// openAttempts bounds how often openFile tries again when the file is
+// replaced while it is being opened (an overwrite in progress).
+const openAttempts = 5
+
 // openFile opens the regular file rel. It checks the item without
 // following links first, and then that the opened file is that same item,
-// so a link or another file swapped in between is refused.
+// so a link or another file swapped in between is never read. A file
+// replaced in between (an atomic overwrite) is looked up again, a few
+// times, before the request fails with a conflict.
 func openFile(root *os.Root, owner, rel, apiPath string) (*os.File, Item, error) {
+	for range openAttempts - 1 {
+		f, it, err := openFileOnce(root, owner, rel, apiPath)
+		if !errors.Is(err, errReplaced) {
+			return f, it, err
+		}
+	}
+	f, it, err := openFileOnce(root, owner, rel, apiPath)
+	if errors.Is(err, errReplaced) {
+		err = apperr.Newf(apperr.Conflict, "%s kept changing while it was opened; try again", apiPath)
+	}
+	return f, it, err
+}
+
+// errReplaced means the file was replaced between the check and the open.
+var errReplaced = errors.New("replaced while opening")
+
+func openFileOnce(root *os.Root, owner, rel, apiPath string) (*os.File, Item, error) {
 	name := filepath.FromSlash(rel)
 	info, err := root.Lstat(name)
 	if err != nil {
@@ -61,7 +85,7 @@ func openFile(root *os.Root, owner, rel, apiPath string) (*os.File, Item, error)
 	case err != nil:
 		err = fsError(err, apiPath)
 	case !os.SameFile(info, opened):
-		err = apperr.Newf(apperr.Conflict, "%s changed while it was opened; try again", apiPath)
+		err = errReplaced
 	}
 	var it Item
 	if err == nil {
