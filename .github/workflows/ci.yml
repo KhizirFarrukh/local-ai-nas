@@ -70,6 +70,33 @@ jobs:
           cat quickstart.log
           exit 1
 
+  memory:
+    # S01.4-T04: the heap stays under 256 MiB while large files are
+    # uploaded (simple and tus), copied, and downloaded. The uploads and
+    # the copy write real bytes, so the job prints the free disk first.
+    name: Memory bound (${{ matrix.os }}, ${{ matrix.size }})
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { os: ubuntu-latest, size: 10GiB }
+          - { os: windows-latest, size: 1GiB } # sparse files differ on Windows
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - uses: actions/setup-go@v7.0.0
+        with:
+          go-version-file: go.mod
+      - name: Free disk
+        shell: bash
+        run: df -h . "${RUNNER_TEMP}" || true
+      - name: go test -run TestMemoryBound
+        shell: bash
+        env:
+          LOCALAINAS_MEMTEST_SIZE: ${{ matrix.size }}
+        run: go test -count=1 -timeout 25m -run TestMemoryBound -v ./internal/api
+
   checks:
     name: Vulnerabilities, licenses, generated code
     runs-on: ubuntu-latest
