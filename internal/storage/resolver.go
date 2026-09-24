@@ -2,10 +2,7 @@ package storage
 
 import (
 	"os"
-	"path"
-	"path/filepath"
 	"regexp"
-	"strings"
 
 	"github.com/KhizirFarrukh/local-ai-nas/internal/apperr"
 )
@@ -39,29 +36,7 @@ func (r *Resolver) Resolve(area, namespace, userPath string) (string, error) {
 	if err := checkNamespace(area, namespace); err != nil {
 		return "", err
 	}
-	switch {
-	case !strings.HasPrefix(userPath, "/"):
-		return "", apperr.Newf(apperr.InvalidRequest, "a path must start with /, got %q", userPath)
-	case strings.ContainsRune(userPath, 0):
-		return "", apperr.New(apperr.InvalidName, "a path must not contain a NUL character")
-	case strings.Contains(userPath, `\`):
-		return "", apperr.New(apperr.InvalidName, `a path must use / as the separator, not \`)
-	}
-	for _, seg := range strings.Split(userPath[1:], "/") {
-		if seg == ".." {
-			return "", apperr.New(apperr.OutsideRoot, "a path must not contain \"..\"")
-		}
-	}
-	rel := strings.TrimPrefix(path.Clean(userPath), "/")
-	if rel == "" {
-		return ".", nil
-	}
-	// filepath.IsLocal also refuses names that are not plain local names
-	// on this OS, such as NUL or COM1 on Windows.
-	if !filepath.IsLocal(filepath.FromSlash(rel)) {
-		return "", apperr.Newf(apperr.InvalidName, "%q is not a valid path on this server", userPath)
-	}
-	return rel, nil
+	return cleanUserPath(userPath)
 }
 
 // OpenRoot opens the namespace directory of an area as an os.Root. Every

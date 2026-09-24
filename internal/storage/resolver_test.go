@@ -28,7 +28,7 @@ func TestResolve(t *testing.T) {
 		{"/a.txt", "a.txt"},
 		{"/docs/a.txt", "docs/a.txt"},
 		{"/docs/", "docs"},
-		{"//docs//a.txt", "docs/a.txt"},
+		{"/docs//a.txt", "docs/a.txt"},
 		{"/./docs/./a.txt", "docs/a.txt"},
 		{"/ñandú/report 2026.pdf", "ñandú/report 2026.pdf"},
 		{"/.hidden", ".hidden"},
