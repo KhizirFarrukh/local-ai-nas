@@ -3,9 +3,9 @@
 | Field | Value |
 |---|---|
 | Stage ID | S01 |
-| Status | Planned |
+| Status | **Approved** (2026-09-24, S005) |
 | Blocked reason | |
-| Plan version this stage is based on | 0.5.0 |
+| Plan version this stage is based on | 1.0.0 |
 | Origin | User-defined |
 | Created | 2026-09-24 (session S002) |
 | Last updated | 2026-09-24 (session S005) |
@@ -372,7 +372,8 @@ go tool go-licenses check ./...         # allow-list from S01.1-T02
 
 ## 11. Approval record
 
-> _Not yet approved. The user must approve this stage document before any S01 code is written. ADR-0003 was Accepted and Q22 answered (AGPL-3.0) in S005. ADRs 0001, 0002, and 0004–0008 were Accepted through P003._
+> "Approve S01 (Recommended)" (option text: "S01 becomes Approved, your approval is quoted in the document, and I start S01.1-T01 (Go module + repository skeleton) on feat/S01.1-T01-go-module.")
+> (2026-09-24, session S005, log E012). Given together with the plan baseline approval "Approve as 1.0.0 (Recommended)".
 
 ## 12. Change log for this stage document
 
@@ -383,6 +384,7 @@ go tool go-licenses check ./...         # allow-list from S01.1-T02
 | 2026-09-24 | S004 | Audit A001: added the ADR column to the dependency table; pinned `golang.org/x/text` v0.42.0 as a conditional dependency (F-025); listed the CI actions; added task S01.7-T07 (R12 documentation audit) and renumbered completion and sign-off to S01.7-T08 (F-026); based on plan 0.3.1. Status stays **Planned** | Audit A001 (P004); R12 | Needed: user approval (the document is not yet approved) |
 | 2026-09-24 | S004 | Re-based on plan 0.4.0 (video streaming change). **No S01 content affected** (the change lives in S04.8). Status stays Planned | Plan change 0.4.0 | None (no S01 change) |
 | 2026-09-24 | S005 | Applied the approval-stage decisions: ADR-0003 Accepted (gates removed); S01.1-T02 concrete for AGPL-3.0; S01.1-T08 and 4.2 add the size-rotated log file (D-07); S01.7-T04 reference hardware (Q1); based on plan 0.5.0. Status stays **Planned** until the user approves this document | S005 decisions (E007) | Needed: user approval |
+| 2026-09-24 | S005 | **Approved by the user**; status Planned → Approved; based on plan 1.0.0 | User approval (S005 E012) | Given |
 
 ## 13. Completion record
 

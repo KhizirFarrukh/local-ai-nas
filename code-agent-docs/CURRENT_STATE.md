@@ -1,32 +1,26 @@
 # CURRENT_STATE
 
 **Last updated:** 2026-09-24 06:29 +0500 (session S005)
-**Plan version:** 0.5.0 (`code-agent-docs/plan.md`), Draft; all approval-stage decisions applied
-**Current phase:** Approval stage: waiting for the user's explicit approval of plan 1.0.0 (baseline) and of the S01 stage document
+**Plan version:** 1.0.0 (`code-agent-docs/plan.md`), **Approved baseline** (S005)
+**Current phase:** Implementation: S01 (Basic NAS implementation) approved; starting S01.1
 
 ## Active stage and task
-- **Active stage:** none. S01 (Basic NAS implementation) is **Planned** (`stages/S01-basic-nas.md`), awaiting approval.
+- **Active stage:** S01 (Basic NAS implementation), **Approved** (`stages/S01-basic-nas.md`); substage S01.1 next.
 - **Active task:** none
 
 ## In progress (write-ahead)
-- **S005 approval stage** on branch `docs/S005-approval-baseline`. The decisions D-01–D-14 have been received and applied (plan 0.5.0, RULES 1.4.0, ADR-0003 Accepted, README updated). Waiting for the two explicit approvals below. When they arrive:
-  1. archive plan 0.5.0 and set plan 1.0.0 (R4);
-  2. set S01 to Approved with the approval quoted (R3);
-  3. commit, then merge this branch into `develop` (User Preferences) and push;
-  4. start S01.1-T01 on `feat/S01.1-T01-go-module`.
+- S005: merge `docs/S005-approval-baseline` into `develop` (User Preferences), install Go via winget (the user approved), then start **S01.1-T01** on `feat/S01.1-T01-go-module`.
 
 ## Last completed
 - `develop` verified complete (S005): merge `c535cda` brought `cf60f72` (plan 0.4.0, which PR #3 had put on `main` only) and the user's `bda8321` (prompts 3 and 4).
-- Approval-stage decisions D-01–D-14 applied (S005 E007–E010).
+- Approval-stage decisions D-01–D-14 applied (S005 E007–E010). **Plan 1.0.0 baseline and S01 approved** (S005 E012).
 
 ## Next steps
-1. **Agent:** ask the user to explicitly approve (a) plan.md as the **1.0.0 baseline** (R4) and (b) `stages/S01-basic-nas.md` (R3). No S01 code before both.
-2. After approval: follow the four steps listed under "In progress".
-3. S01.1-T01: `go mod init github.com/KhizirFarrukh/local-ai-nas`, the repository skeleton per ADR-0004, `.gitattributes` (LF), `.editorconfig`, `.gitignore`. Check first that the Go toolchain (go1.27.x) is installed on this Windows 11 PC. **Installing it needs the user's permission.**
-4. Every finished branch: merge it into `develop` myself (RULES User Preferences, S005).
+1. **S01.1-T01** (Go module and repository skeleton) on `feat/S01.1-T01-go-module`: mark it In Progress in the stage document and here first. Acceptance: `go build ./...` and `go vet ./...` pass on Windows and Linux; `git add --renormalize .` produces no changes; `dependencies.md` matches `go.mod`.
+2. Continue with S01.1-T02 (AGPL-3.0 LICENSE + license policy), then T03–T11, in the execution order of the S01 document.
+3. Every finished branch: merge it into `develop` myself and push (RULES User Preferences, S005).
 
 ## Blocked or waiting on user
-- Explicit approval of plan 1.0.0 and of the S01 stage document.
 - Q18 (library size) is needed before S01.7 only.
 
 ## Open questions (short list; full text in plan.md section 5)
