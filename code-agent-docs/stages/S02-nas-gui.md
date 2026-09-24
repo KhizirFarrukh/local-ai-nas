@@ -3,9 +3,9 @@
 | Field | Value |
 |---|---|
 | Stage ID | S02 |
-| Status | **Planned** (waiting for the user's approval; no S02 code before it) |
+| Status | **Approved** (2026-09-25, session S006 E009) |
 | Blocked reason | |
-| Plan version this stage is based on | 1.2.0 |
+| Plan version this stage is based on | 1.3.0 |
 | Origin | User-defined |
 | Created | 2026-09-25 (session S006) |
 | Last updated | 2026-09-25 (session S006) |
@@ -42,7 +42,7 @@ A web interface, served by the NAS from the same binary, with which a non-techni
 | NFR-014 | Tests, lint, format, type checks, CI | Fully for S02 | S02.1, S02.8 |
 | NFR-015 | Phone and tablet layouts, keyboard, screen readers, WCAG 2.1 AA contrast | Fully | S02.7 |
 | NFR-022 | Hardening: safe previews and security headers from S02 | Partially (CSRF, CORS policy, full CSP, and rate limiting come in S03) | S02.1, S02.6 |
-| NFR-027 | Current Chrome, Edge, Firefox, Safari (desktop and mobile) | Partially: see decision 2 in section 11 about real Safari and phones | S02.8 |
+| NFR-027 | Current Chrome, Edge, Firefox, Safari (desktop and mobile) | Partially: Chrome, Edge, and Firefox on desktop, and phone layouts by device emulation. **Safari is not checked in S02** (the user's decision, S006 E009) | S02.8 |
 
 ## 3. Scope
 
@@ -353,15 +353,15 @@ Its tests are written in S02.8.
 - **Goal:** Prove that a non-technical user can do everything from S01 through the GUI, then close the stage.
 - **Substage acceptance criteria (plan, with R6 of S006):**
   1. End-to-end tests cover browse, upload (with resume), download, rename, move, copy, delete, and preview, and pass in CI.
-  2. Cross-browser check done on current Chrome, Edge, Firefox, and Safari (see decision 2 in section 11).
+  2. Cross-browser check done on current Chrome, Edge, and Firefox. Safari is not checked in S02 (the user's decision, S006 E009; plan 1.3.0).
   3. The GUI user guide section is written.
   4. The completion record is written and the user's sign-off is recorded.
 
 | Task ID | Description | Status | Acceptance criteria |
 |---|---|---|---|
 | S02.8-T01 | **Unit and component tests:** <br>• Vitest for the modules in `src/lib/` (API errors, paths and URLs, formatting, type detection, the selection model, the conflict planner, the upload folder planner, the keyboard map); <br>• Vitest browser mode (Playwright provider) for the components and main views; <br>• Go unit tests for the server additions (`total`/`offset`, archives, the app handler and headers); <br>• the regression tests for every bug recorded in section 12. | Not started | All pass in CI. Coverage is at least 80% for Go `internal/...` and for `web/src/lib`. Every recorded bug has a test. |
-| S02.8-T02 | **Integration and system tests:** <br>• **Go integration:** archives over HTTP (large trees, ZIP64, memory bound in the `memory` job), the app handler, and the listing additions over the real server. <br>• **Playwright system tests** against the real binary with the embedded UI, in Chromium, Firefox, and WebKit, in CI on Linux and Windows: <br>&nbsp;&nbsp;– browse (a 50,000-item folder), upload (large, with pause, offline, reload and re-add), folder upload, single and ZIP downloads; <br>&nbsp;&nbsp;– rename, move, copy, and delete with each conflict choice; <br>&nbsp;&nbsp;– previews (image, text truncation, PDF, audio and video seeking by `206`) and the active-content cases; <br>&nbsp;&nbsp;– keyboard-only flows, phone and tablet viewports, and axe checks in both themes. | Not started | All pass in CI on Linux and Windows. Axe reports no serious violation on the main screens. |
-| S02.8-T03 | **Cross-browser and user guide:** the cross-browser report (Chrome, Edge through Playwright's `msedge` channel on Windows, Firefox, WebKit as Safari's engine, and real Safari as decided); `docs/guide/web-interface.md` (the GUI user guide section); the README Development section brought up to date; plan status; CURRENT_STATE; the register. | Not started | The report is in `docs/`. The guide covers every S02 flow. The documents match what was built. |
+| S02.8-T02 | **Integration and system tests:** <br>• **Go integration:** archives over HTTP (large trees, ZIP64, memory bound in the `memory` job), the app handler, and the listing additions over the real server. <br>• **Playwright system tests** against the real binary with the embedded UI, in Chromium and Firefox, in CI on Linux and Windows, plus Edge (the `msedge` channel) on Windows: <br>&nbsp;&nbsp;– browse (a 50,000-item folder), upload (large, with pause, offline, reload and re-add), folder upload, single and ZIP downloads; <br>&nbsp;&nbsp;– rename, move, copy, and delete with each conflict choice; <br>&nbsp;&nbsp;– previews (image, text truncation, PDF, audio and video seeking by `206`) and the active-content cases; <br>&nbsp;&nbsp;– keyboard-only flows, phone and tablet viewports, and axe checks in both themes. | Not started | All pass in CI on Linux and Windows. Axe reports no serious violation on the main screens. |
+| S02.8-T03 | **Cross-browser and user guide:** the cross-browser report (Chrome, Edge through Playwright's `msedge` channel on Windows, and Firefox; Safari not checked, E009); `docs/guide/web-interface.md` (the GUI user guide section); the README Development section brought up to date; plan status; CURRENT_STATE; the register. | Not started | The report is in `docs/`. The guide covers every S02 flow. The documents match what was built. |
 | S02.8-T04 | **Documentation audit A003 (R12)** using `templates/audit-checklist.md`. | Not started | Audit complete; no Critical finding open. |
 | S02.8-T05 | **Completion record and user sign-off**, including a hands-on walkthrough by the user on this PC. | Not started | Section 13 is filled in. The user's sign-off is quoted in the session log. |
 
@@ -421,7 +421,7 @@ All rows are written in S02.8 (R6, S006). The code they test comes from S02.1–
 | Design-system components and main views (Dialog focus trap, Menu keys, list and grid rendering, theme switch) | Unit (component) | Vitest browser mode with Playwright | S02.8-T01 |
 | Listing `total` and `offset`; archive tickets and ZIP writing; app handler (fallback, caching, headers, the no-UI notice) | Unit | Go `testing` | S02.8-T01 |
 | Archives over HTTP (large trees, ZIP64, links refused, expiry); listing additions; memory bound for a large ZIP | Integration | Go tests over `httptest` and the `memory` CI job | S02.8-T02 |
-| Every user flow of 5 against the real binary: browse, upload and resume, folder upload, downloads, operations and conflicts, previews, active content, keyboard, viewports | System | Playwright: Chromium, Firefox, WebKit; CI on Linux and Windows | S02.8-T02 |
+| Every user flow of 5 against the real binary: browse, upload and resume, folder upload, downloads, operations and conflicts, previews, active content, keyboard, viewports | System | Playwright: Chromium and Firefox on Linux and Windows, Edge on Windows (CI) | S02.8-T02 |
 | Accessibility of the main screens in both themes | System | @axe-core/playwright | S02.8-T02 |
 | 50,000-item folder: first page time and smooth scrolling | Perf (system) | Playwright with a generated folder; long-task timing | S02.8-T02 |
 | Regression tests for the bugs recorded in section 12 | Unit / integration / system | As fits each bug | S02.8-T01, T02 |
@@ -439,7 +439,7 @@ cd web && pnpm install --frozen-lockfile && pnpm lint && pnpm check && pnpm buil
 - [ ] A non-technical user can do everything from S01 through the GUI on this PC (the user's walkthrough, S02.8-T05).
 - [ ] The GUI loads nothing from other hosts, and active content never runs in the app's origin.
 - [ ] The stage's unit, integration, and system tests are written and pass in CI on Linux and Windows; coverage ≥ 80% (Go `internal/...`, `web/src/lib`). Linter, formatter, and type checks are clean.
-- [ ] Cross-browser report done (decision 2 in section 11).
+- [ ] Cross-browser report done for Chrome, Edge, and Firefox (Safari not checked in S02, E009).
 - [ ] Documentation and `dependencies.md` updated: the GUI guide, README Development section, API docs, plan and CURRENT_STATE status.
 - [ ] Documentation audit (R12, S02.8-T04) done; no Critical finding open.
 
@@ -453,24 +453,24 @@ cd web && pnpm install --frozen-lockfile && pnpm lint && pnpm check && pnpm buil
 | pdf.js size or its needs under the S03 CSP (worker, WebAssembly) | Larger bundle; CSP exceptions | Loaded lazily, only when a PDF is opened; the CSP needs are recorded for S03.5 | The browser's viewer in a new tab, as a download |
 | A 50,000-item folder is read and sorted in full for every page | Slow pages in huge folders | Measured in S02.3-T03 and S02.8; S01 listed 10,000 items with a p95 of 44 ms | A short-lived server-side cache of the sorted listing (a later task) |
 | Permanent delete (RK-19) | Data loss by mistake | The confirmation dialog states it plainly, every time | None (the trash is S08) |
-| No LAN access until S03 | Phones cannot be tried for real | Device emulation; real devices after S03 (decision 2) | None needed |
+| No LAN access until S03 | Phones cannot be tried for real | Device emulation for phone and tablet layouts. Safari is not checked in S02 (E009) | None needed |
 | Node.js toolchain on Windows | Build problems on the development PC | pnpm and Node LTS pinned; CI builds on Linux and Windows | None needed |
 
 Every task is on its own branch and merged only with CI green. The GUI is additive: removing the app handler and `web/` returns the server to API-only without touching the S01 API.
 
 ## 11. Approval record
 
-<!-- Filled in when the user approves this document (R3). -->
+> "Approve S02 (Recommended)" (option text: "S02 becomes Approved, your approval is quoted in the document, and I start S02.1-T01 on its own branch.")
+> (2026-09-25, session S006, log E009)
 
-**Decisions asked with the approval:**
-1. Approve this stage document (S02 becomes Approved, and S02.1-T01 starts).
-2. **Real Safari and phones:** the server stays on this computer until S03, so a phone or a Mac cannot reach it in S02. The recommendation: in S02, test Safari's engine with Playwright WebKit (Linux and Windows CI), and check real Safari (iOS and macOS) and real phones in S03, once LAN access exists.
+**Decision given with the approval:** the question was "Until stage 3, a phone or a Mac can't reach the server. How should Safari and real phones be checked?" The user answered **"Skip Safari"** (option text: "Chrome, Edge, and Firefox only. Safari is not checked."). S02 checks Chrome, Edge, and Firefox, with phone layouts by device emulation (plan 1.3.0).
 
 ## 12. Change log for this stage document
 
 | Date | Session | Change | Reason | Needs re-approval? |
 |---|---|---|---|---|
 | 2026-09-25 | S006 | Created from `templates/stage-template.md` (plan 1.2.0, section 10.3). Code first, tests in S02.8 (R6, S006). Package versions checked on the npm registry. | R3: the stage is about to start | Approval pending |
+| 2026-09-25 | S006 | **Approved** by the user. The user decided "Skip Safari": cross-browser checks, the Playwright projects, the NFR-027 row, section 9, and section 10 now cover Chrome, Edge, and Firefox. Based on plan 1.3.0 | The user's approval and decision (S006 E009) | No (this is the approval) |
 
 ## 13. Completion record
 

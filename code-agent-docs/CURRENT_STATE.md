@@ -1,17 +1,18 @@
 # CURRENT_STATE
 
-**Last updated:** 2026-09-25 01:38 +0500 (session S006)
-**Plan version:** 1.2.0 (`code-agent-docs/plan.md`), **Approved baseline** 1.0.0 (S005) + the setup-script requirement (1.1.0, S005 E015)
-**Current phase:** **S01 (Basic NAS) Done**, signed off by the user (S005 E126). **S02 (NAS GUI) Planned**: its stage document waits for the user's approval (R3)
+**Last updated:** 2026-09-25 01:44 +0500 (session S006)
+**Plan version:** 1.3.0 (`code-agent-docs/plan.md`), **Approved baseline** 1.0.0 (S005) + the setup-script requirement (1.1.0, S005 E015)
+**Current phase:** **S01 (Basic NAS) Done**, signed off by the user (S005 E126). **S02 (NAS GUI) Approved** (S006 E009); implementation starts with S02.1-T01
 
 ## Active stage and task
-- **Active stage:** **S02: NAS GUI**, **Planned** (`stages/S02-nas-gui.md`, written in S006 E007; not approved yet). S01 is **Done** (`stages/S01-basic-nas.md`, completion record in section 13).
-- **Active task:** the S02 stage document (branch `docs/S02-stage-plan`): written; the user's approval is asked
+- **Active stage:** **S02: NAS GUI**, **Approved** (`stages/S02-nas-gui.md`; approved in S006 E009, with "Skip Safari": S02 checks Chrome, Edge, and Firefox). S01 is **Done** (`stages/S01-basic-nas.md`, completion record in section 13).
+- **Active task:** the S02 stage document (branch `docs/S02-stage-plan`): approved; waiting for CI and the merge. Then **S02.1-T01**
 
 ## In progress (write-ahead)
-- `docs/S02-stage-plan`: the S02 stage document, committed and pushed. After the user's answer: record the approval (section 11 and the log), then CI, and merge into `develop`.
+- `docs/S02-stage-plan`: approval recorded; push, CI, merge into `develop`.
 
 ## Last completed
+- **S02 approved** (S006 E009): "Approve S02 (Recommended)", and "Skip Safari" for the cross-browser checks. Plan 1.3.0.
 - **Testing approach change merged** (CI run 36054572413 green; `develop` bdc9832).
 - **Testing approach changed** (S006 E001–E004), at the user's instruction:
   - Code first, written to be testable. Each stage's final testing substage writes its unit, integration, and system/application tests.
@@ -77,18 +78,18 @@
 - Plan 1.1.0: the user's requirement to record every dependency and build a setup script per platform (FR-149, NFR-032, S11.2, Q41; `dependencies.md` section 12; RULES 1.5.0) (S005 E015–E016).
 
 ## Next steps
-1. **Get the S02 stage document approved:** `stages/S02-nas-gui.md`, with decision 2 (real Safari and phones in S02, or with S03's LAN access). After approval:
-   - set S02 to Approved (the stage document and the plan status);
-   - merge `docs/S02-stage-plan`;
-   - start **S02.1-T01** (install pnpm, create `web/`) on `feat/S02.1-T01-toolchain`.
-   - **Testing approach (R6, S006):** tasks in S02.1–S02.7 deliver testable code only. S02.8 writes the unit (Vitest), integration, and system (Playwright in real browsers) tests, and the regression tests for bugs recorded during the stage.
+1. **S02 in order** (`stages/S02-nas-gui.md`, section 5):
+   - S02.1-T01 toolchain and project (install pnpm 12.6.0; Node.js 24 LTS; create `web/`; register every package), on `feat/S02.1-T01-toolchain`;
+   - then T02 embedding and serving, T03 API client, T04 design system, T05 CI;
+   - then S02.2 to S02.7, and S02.8 (tests, report, guide, audit A003, sign-off).
+   - **Testing approach (R6, S006):** tasks in S02.1–S02.7 deliver testable code only, checked by running them. S02.8 writes the unit (Vitest), integration, and system (Playwright: Chromium, Firefox, Edge) tests, and the regression tests for bugs recorded during the stage (section 12).
 2. Follow-up from S01 (the user's decision): run `scripts/perf-baseline.sh` on the Raspberry Pi and the mini-PC, over gigabit Ethernet as well, when they are available (`docs/perf/S01-baseline.md`).
 3. **Endpoint workflow (spec-first), for later API work:** spec → `go generate ./internal/api` → strict operation; an error case in `errorCases`/`bodyErrorCases`; a review row in `docs/api/conventions.md`; a fake-service test that invalid input never reaches the service.
 4. CI: every push runs `.github/workflows/ci.yml`. `gh` is not installed; the repository is public. Watch a commit's run through the public REST API (`/repos/KhizirFarrukh/local-ai-nas/actions/runs?head_sha=<sha>`, then `/jobs`; 60 anonymous requests per hour) or the run's web page (its "Status" field). Step logs need sign-in: reproduce Linux failures with `GOOS=linux go test -c` binaries in the WSL Ubuntu distro, run from the package directory under /mnt/c when a test reads repo files.
 5. Every finished branch: merge it into `develop` myself and push (RULES User Preferences, S005).
 
 ## Blocked or waiting on user
-- **The user's approval of `stages/S02-nas-gui.md`** (R3), with decision 2 (real Safari and phones in S02 or S03). No S02 code before it.
+- Nothing.
 
 ## Open questions (short list; full text in plan.md section 5)
 - ★ **For S01:** none (Q18 answered in S005: 100k photos + 100k files)
@@ -98,7 +99,7 @@
 
 ## Pointers
 - Latest session log: `code-agent-docs/logs/sessions/2026-09-25_S006.md` (current); S005 is closed
-- Stage documents: `code-agent-docs/stages/S02-nas-gui.md` (**Planned**, waiting for approval); `code-agent-docs/stages/S01-basic-nas.md` (**Done**; completion record in section 13)
+- Stage documents: `code-agent-docs/stages/S02-nas-gui.md` (**Approved**); `code-agent-docs/stages/S01-basic-nas.md` (**Done**; completion record in section 13)
 - Audit reports: `code-agent-docs/audits/A002-2026-09-24-documentation-audit.md` (the S01 final review) and `A002-readme-proposal.md`; `A001-2026-09-24-documentation-audit.md` (decisions received in section 9)
 - ADRs: `code-agent-docs/decisions/ADR-0001` … `ADR-0020` (0019 Proposed; 0012 superseded in part by 0020; the rest Accepted, including 0003 since S005)
 - Dependency register: `code-agent-docs/dependencies.md` (section 12: deployment prerequisites per platform, the input for the S11.2 setup scripts)
