@@ -19,16 +19,34 @@ import (
 
 	"github.com/KhizirFarrukh/local-ai-nas/internal/apperr"
 	"github.com/KhizirFarrukh/local-ai-nas/internal/db"
+	"github.com/KhizirFarrukh/local-ai-nas/internal/files"
+	"github.com/KhizirFarrukh/local-ai-nas/internal/storage"
 	"github.com/KhizirFarrukh/local-ai-nas/internal/testutil"
 )
 
 const basePath = "/api/v1/files/uploads/"
 
-// testServer starts the tus server on a real HTTP server and returns its
-// URL, the upload directory, and the index.
-func testServer(t *testing.T) (string, string, Index) {
+// fixture is the files area behind the test servers.
+var fixture = map[string]string{"docs/.keep": "", "taken.txt": "x", "f.txt": "f", "folder/.keep": ""}
+
+// testServer starts the tus server on a real HTTP server, finishing
+// uploads into a real files area holding fixture, and returns its URL,
+// the upload directory, the index, and the files area's directory. opts
+// adjust the files service.
+func testServer(t *testing.T, opts ...func(*files.Options)) (string, string, Index, string) {
 	t.Helper()
-	dir := t.TempDir()
+	l := storage.NewLayout(testutil.StorageRoot(t), storage.Options{})
+	if _, err := l.Init(); err != nil {
+		t.Fatal(err)
+	}
+	area := l.Area(storage.FilesArea, storage.DefaultNamespace)
+	if err := testutil.WriteFiles(area, fixture); err != nil {
+		t.Fatal(err)
+	}
+	fo := files.Options{}
+	for _, o := range opts {
+		o(&fo)
+	}
 	d, err := db.Open(t.Context(), filepath.Join(t.TempDir(), db.FileName))
 	if err != nil {
 		t.Fatal(err)
@@ -37,14 +55,17 @@ func testServer(t *testing.T) (string, string, Index) {
 	if _, err := d.Migrate(t.Context()); err != nil {
 		t.Fatal(err)
 	}
-	s, err := New(Options{Dir: dir, DB: d, Namespace: "u0001", BasePath: basePath})
+	s, err := New(Options{
+		Dir: l.TmpUploads, DB: d, Files: files.NewLocal(storage.NewResolver(l), fo),
+		Namespace: storage.DefaultNamespace, BasePath: basePath, MaxSize: 1 << 30,
+	})
 	if err != nil {
 		t.Fatal(err)
 	}
 	mux := http.NewServeMux()
 	mux.Handle(basePath, s)
 	mux.Handle(strings.TrimSuffix(basePath, "/"), s)
-	return testutil.NewServer(t, mux).URL, dir, s.index
+	return testutil.NewServer(t, mux).URL, l.TmpUploads, s.index, area
 }
 
 // metadata encodes Upload-Metadata as tus defines it.
@@ -77,7 +98,7 @@ func tusRequest(t *testing.T, ctx context.Context, method, url string, headers m
 // creates an upload, is cut off part-way, asks for the offset, resumes
 // from there, and the stored data equals the source.
 func TestResumeInterruptedUpload(t *testing.T) {
-	url, dir, index := testServer(t)
+	url, dir, index, _ := testServer(t)
 	data := make([]byte, 3<<20+123)
 	rng := rand.New(rand.NewPCG(5, 6))
 	for i := range data {
@@ -172,7 +193,7 @@ func TestResumeInterruptedUpload(t *testing.T) {
 // TestCreateRefusals: bad metadata is refused with a problem body before
 // anything is stored.
 func TestCreateRefusals(t *testing.T) {
-	url, dir, _ := testServer(t)
+	url, dir, _, _ := testServer(t)
 	tests := []struct {
 		name    string
 		headers map[string]string
@@ -204,7 +225,7 @@ func TestCreateRefusals(t *testing.T) {
 
 // TestTerminate: a cancelled upload loses its data and its session.
 func TestTerminate(t *testing.T) {
-	url, dir, index := testServer(t)
+	url, dir, index, _ := testServer(t)
 	resp, err := tusRequest(t, t.Context(), http.MethodPost, url+basePath, map[string]string{
 		"Upload-Length": "10", "Upload-Metadata": metadata(MetaTargetPath, "/x.bin"),
 	}, nil, 0)
@@ -233,7 +254,7 @@ func TestTerminate(t *testing.T) {
 // TestProtocolErrorsAreProblems: errors of the tus protocol itself keep
 // tusd's status (tus clients act on it) and get a problem body.
 func TestProtocolErrorsAreProblems(t *testing.T) {
-	url, _, _ := testServer(t)
+	url, _, _, _ := testServer(t)
 	resp, err := tusRequest(t, t.Context(), http.MethodPost, url+basePath, map[string]string{
 		"Upload-Length": "4", "Upload-Metadata": metadata(MetaTargetPath, "/p.bin"),
 	}, nil, 0)
@@ -272,6 +293,77 @@ func TestProtocolErrorsAreProblems(t *testing.T) {
 		if err != nil || resp.StatusCode != tt.status || p.Code != tt.code || p.Status != tt.status ||
 			resp.Header.Get("Content-Type") != apperr.ContentType || resp.Header.Get("Tus-Resumable") == "" && tt.status != 405 && tt.status != 412 {
 			t.Errorf("%s: %d %+v (%v), headers %v; want %d %s as a problem", tt.name, resp.StatusCode, p, err, resp.Header, tt.status, tt.code)
+		}
+	}
+}
+
+// TestCreateChecksTarget is the S01.4-T02 acceptance test: an upload whose
+// target the files service would refuse is refused when it is created,
+// with a problem, and leaves no data and no session behind.
+func TestCreateChecksTarget(t *testing.T) {
+	lowSpace := func(string) (uint64, error) { return 1 << 20, nil }
+	tests := []struct {
+		name   string
+		meta   []string
+		length string
+		space  storage.FreeFunc
+		status int
+		code   string
+	}{
+		{"outside the root", []string{MetaTargetPath, "/../u0002/x"}, "5", nil, 400, "outside_root"},
+		{"encoded separator", []string{MetaTargetPath, "/a%2Fb"}, "5", nil, 400, "invalid_name"},
+		{"reserved name", []string{MetaTargetPath, "/docs/aux.txt"}, "5", nil, 400, "invalid_name"},
+		{"temporary prefix", []string{MetaTargetPath, "/" + storage.TempPrefix + "x"}, "5", nil, 400, "invalid_name"},
+		{"the root", []string{MetaTargetPath, "/"}, "5", nil, 400, "invalid_name"},
+		{"missing parent", []string{MetaTargetPath, "/nope/x.bin"}, "5", nil, 404, "not_found"},
+		{"file as parent", []string{MetaTargetPath, "/f.txt/x.bin"}, "5", nil, 409, "conflict"},
+		{"target exists", []string{MetaTargetPath, "/taken.txt"}, "5", nil, 409, "conflict"},
+		{"overwrite a folder", []string{MetaTargetPath, "/folder", MetaOnConflict, "overwrite"}, "5", nil, 409, "conflict"},
+		{"over the size limit", []string{MetaTargetPath, "/big.bin"}, strconv.Itoa(1<<30 + 1), nil, 413, "too_large"},
+		{"no free space", []string{MetaTargetPath, "/x.bin"}, "5", lowSpace, 507, "insufficient_storage"},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			var opts []func(*files.Options)
+			if tt.space != nil {
+				opts = append(opts, func(o *files.Options) {
+					o.Space = storage.NewSpaceGuard(t.TempDir(), 1<<30, tt.space)
+				})
+			}
+			url, dir, index, _ := testServer(t, opts...)
+			resp, err := tusRequest(t, t.Context(), http.MethodPost, url+basePath, map[string]string{
+				"Upload-Length": tt.length, "Upload-Metadata": metadata(tt.meta...),
+			}, nil, 0)
+			if err != nil {
+				t.Fatal(err)
+			}
+			var p apperr.Problem
+			err = json.NewDecoder(resp.Body).Decode(&p)
+			_ = resp.Body.Close()
+			if err != nil || resp.StatusCode != tt.status || p.Code != tt.code {
+				t.Errorf("%d %+v (%v), want %d %s", resp.StatusCode, p, err, tt.status, tt.code)
+			}
+			if entries, _ := os.ReadDir(dir); len(entries) != 0 {
+				t.Errorf("a refused upload left %d entries in the upload directory", len(entries))
+			}
+			var n int
+			if err := index.db.Read.QueryRowContext(t.Context(), `SELECT count(*) FROM uploads`).Scan(&n); err != nil || n != 0 {
+				t.Errorf("%d session rows (%v), want none", n, err)
+			}
+		})
+	}
+	// Links among the parents are refused too (where links can be made).
+	url, _, _, area := testServer(t)
+	if testutil.TrySymlink(t, filepath.Join(area, "docs"), filepath.Join(area, "link")) {
+		resp, err := tusRequest(t, t.Context(), http.MethodPost, url+basePath, map[string]string{
+			"Upload-Length": "5", "Upload-Metadata": metadata(MetaTargetPath, "/link/x.bin"),
+		}, nil, 0)
+		if err != nil {
+			t.Fatal(err)
+		}
+		_ = resp.Body.Close()
+		if resp.StatusCode != http.StatusBadRequest {
+			t.Errorf("an upload through a link: %d, want 400", resp.StatusCode)
 		}
 	}
 }

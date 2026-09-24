@@ -44,7 +44,8 @@ func FuzzAPI(f *testing.F) {
 	}
 
 	ok := health.Check{Name: "config", Run: func(context.Context) (string, error) { return "valid", nil }}
-	h := New(Options{Version: "fuzz", Checks: []health.Check{ok}, Files: testFiles(f), Uploads: testUploads(f)})
+	svc, _ := testFilesDir(f)
+	h := New(Options{Version: "fuzz", Checks: []health.Check{ok}, Files: svc, Uploads: testUploads(f, svc)})
 
 	f.Fuzz(func(t *testing.T, method, target, body string) {
 		if method == "" || strings.ContainsAny(method, " \t\r\n/") || !strings.HasPrefix(target, "/") {
