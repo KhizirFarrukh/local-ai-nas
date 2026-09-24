@@ -73,19 +73,21 @@
 
 ## 2. Summary
 
-**10 findings** (F-001 to F-010).
+**11 findings** (F-001 to F-011).
 
 | Severity | Fixed | Needs user decision | Deferred | Accepted as-is | Total |
 |---|---|---|---|---|---|
 | Critical | 1 (F-010) | 0 | 0 | 0 | **1** |
-| Major | 1 (F-005*) | 1 (F-005*) | 0 | 0 | **1** |
+| Major | 2 (F-005*, F-011) | 1 (F-005*) | 0 | 0 | **2** |
 | Minor | 7 (F-001, F-003, F-004, F-006, F-007, F-008, F-009) | 0 | 0 | 1 (F-002) | **8** |
-| **Total** | **9** | **1** | **0** | **1** | **10** |
+| **Total** | **10** | **1** | **0** | **1** | **11** |
 
 \* F-005 is fixed (the README text was restored). The new wording it replaced is now a proposal for the user (R-11).
 
 - **The one Critical finding:** CURRENT_STATE's first next step still listed all of S01.7 "in order: T01 … T08", although T01–T06 were done. A fresh agent could have started S01.7 again from T01. Fixed.
-- **The one Major finding:** in S01.7-T05 the agent changed the README status line, the user's original text, outside the sections its stage document allows. It is restored, and the new wording is proposed in `A002-readme-proposal.md`.
+- **The two Major findings:**
+  - In S01.7-T05 the agent changed the README status line, the user's original text, outside the sections its stage document allows. It is restored, and the new wording is proposed in `A002-readme-proposal.md`.
+  - The dependency register did not list the system tools that the scripts, the guide, and the README need: Git, optional Docker, Bash and the POSIX utilities, curl, PowerShell, and a headless browser. They are added (F-011).
 - The rest is small: a stale path, two stale "pending Q1" notes in the plan (plan 1.1.3), a pointer-file sentence, a files-table row, CURRENT_STATE ordering, and new checklist lines for product documentation.
 
 ## 3. Check results
@@ -98,7 +100,7 @@
 | **D. Plan** | F-003, F-004 | See below. |
 | **E. README alignment** | F-005 | A001's approved items R-01–R-08 and R-10 are in place. S01 changed the License section (S01.1-T02) and the Development section (S01.1-T06, S01.6-T06, S01.7-T05/T06). The status line changed in S01.7-T05 is outside those sections (F-005). The feature list is unchanged since A001. |
 | **F. ADRs** | Pass | ADR-0001–0020 are numbered without gaps, and each has the six template sections. ADR-0019 is Proposed; ADR-0012 and ADR-0020 link to each other both ways (partial supersession); the rest are Accepted with approval records. The Unverified items are deferred to their stages (A001: S06.5, S09.1, S12.x). |
-| **G. Dependency register** | Pass | Every direct module and `tool` in `go.mod` is listed at its `go.mod` version, as is every GitHub Action in `ci.yml` (6, at their pinned versions). Vendored Redoc is listed with its checksum. The versions in section 7 of the stage document match. Section 12 (per-platform prerequisites) is present. |
+| **G. Dependency register** | F-011 | Every direct module and `tool` in `go.mod` is listed at its `go.mod` version, as is every GitHub Action in `ci.yml` (6, at their pinned versions). Vendored Redoc is listed with its checksum. The versions in section 7 of the stage document match. Section 12 (per-platform prerequisites) is present. The system tools used by the scripts and guides were missing (F-011), found while preparing S01.7-T08 and before this audit's merge. |
 | **H. Stage documents** | F-007 | Only S01 has a document (just-in-time). It has sections 1–13, every task has acceptance criteria, and the approval record is quoted (S005 E012). There are no placeholders, and its status (In Progress) matches CURRENT_STATE. The files-table row for README lacked S01.1-T02 (F-007). |
 | **I. CURRENT_STATE** | F-001, F-009, F-010 | 91 lines, under 150. It had a stale path (F-001), a stale phase line, ordering, and pointers (F-009), and wrong next steps (F-010). |
 | **J. Session logs and git** | Pass | See below. |
@@ -153,6 +155,7 @@
 | F-008 | Minor | A, E, K | `templates/audit-checklist.md` | The checklist had no checks for product documentation. It needs three: scripts executable in git, README edits within their stage's sections, and doc commands actually run. | **Fixed**: three checks added, with a note in the template header. |
 | F-009 | Minor | I | `CURRENT_STATE.md` | The phase line still said "S01.7 … next". A note left over from S01.4-T03 sat under "In progress". The two oldest "Last completed" items were listed first. The pointers did not list A002. | **Fixed** |
 | F-010 | **Critical** | I, L | `CURRENT_STATE.md` "Next steps" | Step 1 listed all of S01.7 "in order: T01 integration suite, … T08". T01–T06 were already done, so a fresh agent could have started the stage over. | **Fixed**: step 1 is finishing A002, and step 2 is T08, with the exact questions for the user's sign-off. |
+| F-011 | **Major** | G | `dependencies.md` section 3 | The register listed no system tools, although the README requires Git (and optional Docker), `scripts/*.sh` need Bash and the POSIX utilities, the guide and the demos need curl (7.87+ for `--url-query`) and PowerShell, and `check-api-docs-offline.sh` needs a headless Edge or Chrome. R6 and the user's rule ("keep record of all dependencies needed", S005 E015) cover such tools. The first pass of group G checked only `go.mod` and CI. | **Fixed**: a sub-table in section 3 with versions, licenses, purpose, and verification. None of them is needed on a release install (section 12). |
 
 ## 5. Prompt fulfillment matrix
 
@@ -193,7 +196,8 @@ The stage's other open review item, the throughput deviation in `docs/perf/S01-b
 ## 8. Closing: what the next audit should watch
 
 1. **Examples after login (S03):** stage 3 adds login and HTTPS, which changes every command in `docs/api/usage.md` and in the demo scripts. Re-run the guide's code blocks and the demos whenever the API changes. The new checklist line in K covers this.
-2. **README:** apply R-11/R-12 only if approved. Keep task edits inside the sections the stage document names (new checklist line in E).
-3. **Plan status at the stage end:** S01 → Done in the plan (a PATCH) and in the stage document at the sign-off.
-4. **Session length:** S005 is one very long session (over 1,000 log lines). R9 counts log files, not lines. Closing sessions at natural breaks keeps each log readable.
-5. **From A001, still open:** the Unverified register items at their stages; whether to commit the audit scripts (the checklist keeps them out of the repository unless the user asks).
+2. **Register scope:** group G should compare the register with every tool the scripts, docs, and CI call, not only with `go.mod` (F-011).
+3. **README:** apply R-11/R-12 only if approved. Keep task edits inside the sections the stage document names (new checklist line in E).
+4. **Plan status at the stage end:** S01 → Done in the plan (a PATCH) and in the stage document at the sign-off.
+5. **Session length:** S005 is one very long session (over 1,000 log lines). R9 counts log files, not lines. Closing sessions at natural breaks keeps each log readable.
+6. **From A001, still open:** the Unverified register items at their stages; whether to commit the audit scripts (the checklist keeps them out of the repository unless the user asks).

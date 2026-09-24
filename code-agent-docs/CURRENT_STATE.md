@@ -1,6 +1,6 @@
 # CURRENT_STATE
 
-**Last updated:** 2026-09-24 23:31 +0500 (session S005)
+**Last updated:** 2026-09-24 23:33 +0500 (session S005)
 **Plan version:** 1.1.3 (`code-agent-docs/plan.md`), **Approved baseline** 1.0.0 (S005) + the setup-script requirement (1.1.0, S005 E015)
 **Current phase:** Implementation: S01 (Basic NAS implementation) in progress; S01.1 to S01.6 done; S01.7 (integration and stage review) in progress: T01–T06 done, T07 (audit A002) done, T08 (completion record and the user's sign-off) next
 
@@ -12,7 +12,7 @@
 - S01.7-T07: committed; push, CI, merge into `develop`.
 
 ## Last completed
-- **S01.7-T07 done** (S005 E123): audit A002, 10 findings (1 Critical and 1 Major fixed; 7 Minor fixed; 1 accepted); plan 1.1.3; README proposal R-11/R-12 for the sign-off.
+- **S01.7-T07 done** (S005 E123): audit A002, 11 findings (1 Critical and 2 Major fixed; 7 Minor fixed; 1 accepted; the register now lists the system tools); plan 1.1.3; README proposal R-11/R-12 for the sign-off.
 - **S01.7-T06 done and merged** (CI run 36040515533 green, both `demo` jobs included; S005 E121): `scripts/demo.sh` and `scripts/demo.ps1` are green on Windows (PowerShell 5.1, recorded) and on Linux, and CI job `demo` runs both. tusd's `BodyReadError` is now logged as WARN, and scripts that were not executable are fixed.
 - **S01.7-T05 done and merged** (CI run 36039328692 green; S005 E119): `docs/api/usage.md`, every operation with curl for Linux/macOS and Windows PowerShell, each block run as written on Linux (WSL) and in Windows PowerShell 5.1; README "Use the API"; docs and scripts indexes.
 - **S01.7-T04 done and merged** (CI run 36037945955 green; S005 E117): `docs/perf/S01-baseline.md`: listing and memory targets met; throughput over loopback on NVMe below 80% (a deviation for the user's review at sign-off); downloads now keep sendfile.
