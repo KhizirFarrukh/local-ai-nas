@@ -19,19 +19,19 @@ import (
 
 // Defines values for HealthStatus.
 const (
-	Fail HealthStatus = "fail"
-	Ok   HealthStatus = "ok"
-	Warn HealthStatus = "warn"
+	HealthStatusFail HealthStatus = "fail"
+	HealthStatusOk   HealthStatus = "ok"
+	HealthStatusWarn HealthStatus = "warn"
 )
 
 // Valid indicates whether the value is a known member of the HealthStatus enum.
 func (e HealthStatus) Valid() bool {
 	switch e {
-	case Fail:
+	case HealthStatusFail:
 		return true
-	case Ok:
+	case HealthStatusOk:
 		return true
-	case Warn:
+	case HealthStatusWarn:
 		return true
 	default:
 		return false
@@ -104,6 +104,27 @@ func (e ListSort) Valid() bool {
 	}
 }
 
+// Defines values for OnConflict.
+const (
+	OnConflictFail      OnConflict = "fail"
+	OnConflictOverwrite OnConflict = "overwrite"
+	OnConflictRename    OnConflict = "rename"
+)
+
+// Valid indicates whether the value is a known member of the OnConflict enum.
+func (e OnConflict) Valid() bool {
+	switch e {
+	case OnConflictFail:
+		return true
+	case OnConflictOverwrite:
+		return true
+	case OnConflictRename:
+		return true
+	default:
+		return false
+	}
+}
+
 // Defines values for ProblemCode.
 const (
 	ProblemCodeConflict            ProblemCode = "conflict"
@@ -159,6 +180,17 @@ func (e ProblemType) Valid() bool {
 	default:
 		return false
 	}
+}
+
+// CreateFolderRequest defines model for CreateFolderRequest.
+type CreateFolderRequest struct {
+	OnConflict *OnConflict `json:"on_conflict,omitempty"`
+
+	// Parents Also create missing parent folders.
+	Parents *bool `json:"parents,omitempty"`
+
+	// Path The folder to create, starting with `/`.
+	Path string `json:"path"`
 }
 
 // FileItem defines model for FileItem.
@@ -229,6 +261,9 @@ type ListOrder string
 // ListSort defines model for ListSort.
 type ListSort string
 
+// OnConflict defines model for OnConflict.
+type OnConflict string
+
 // Problem An RFC 9457 problem details object (docs/api/errors.md).
 type Problem struct {
 	// Code A stable, machine-readable error code.
@@ -265,6 +300,9 @@ type Path = string
 // BadRequest An RFC 9457 problem details object (docs/api/errors.md).
 type BadRequest = Problem
 
+// Conflict An RFC 9457 problem details object (docs/api/errors.md).
+type Conflict = Problem
+
 // InternalError An RFC 9457 problem details object (docs/api/errors.md).
 type InternalError = Problem
 
@@ -273,6 +311,9 @@ type MethodNotAllowed = Problem
 
 // NotFound An RFC 9457 problem details object (docs/api/errors.md).
 type NotFound = Problem
+
+// TooLarge An RFC 9457 problem details object (docs/api/errors.md).
+type TooLarge = Problem
 
 // GetItemsParams defines parameters for GetItems.
 type GetItemsParams struct {
@@ -288,8 +329,14 @@ type GetItemsParams struct {
 	Order *ListOrder `form:"order,omitempty" json:"order,omitempty"`
 }
 
+// CreateFolderJSONRequestBody defines body for CreateFolder for application/json ContentType.
+type CreateFolderJSONRequestBody = CreateFolderRequest
+
 // ServerInterface represents all server handlers.
 type ServerInterface interface {
+	// CreateFolder Create a folder
+	// (POST /files/folders)
+	CreateFolder(w http.ResponseWriter, r *http.Request)
 	// GetItems List a folder, or get the details of a file
 	// (GET /files/items)
 	GetItems(w http.ResponseWriter, r *http.Request, params GetItemsParams)
@@ -306,6 +353,20 @@ type ServerInterfaceWrapper struct {
 }
 
 type MiddlewareFunc func(http.Handler) http.Handler
+
+// CreateFolder operation middleware
+func (siw *ServerInterfaceWrapper) CreateFolder(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.CreateFolder(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
 
 // GetItems operation middleware
 func (siw *ServerInterfaceWrapper) GetItems(w http.ResponseWriter, r *http.Request) {
@@ -526,6 +587,7 @@ func HandlerWithOptions(si ServerInterface, options StdHTTPServerOptions) http.H
 		ErrorHandlerFunc:   options.ErrorHandlerFunc,
 	}
 
+	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/files/folders", wrapper.CreateFolder)
 	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/files/items", wrapper.GetItems)
 	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/system/health", wrapper.GetHealth)
 
@@ -533,6 +595,8 @@ func HandlerWithOptions(si ServerInterface, options StdHTTPServerOptions) http.H
 }
 
 type BadRequestApplicationProblemPlusJSONResponse Problem
+
+type ConflictApplicationProblemPlusJSONResponse Problem
 
 type InternalErrorApplicationProblemPlusJSONResponse Problem
 
@@ -546,6 +610,143 @@ type MethodNotAllowedApplicationProblemPlusJSONResponse struct {
 }
 
 type NotFoundApplicationProblemPlusJSONResponse Problem
+
+type TooLargeApplicationProblemPlusJSONResponse Problem
+
+type CreateFolderRequestObject struct {
+	Body *CreateFolderJSONRequestBody
+}
+
+type CreateFolderResponseObject interface {
+	VisitCreateFolderResponse(w http.ResponseWriter) error
+}
+
+type CreateFolder200JSONResponse FileItem
+
+func (response CreateFolder200JSONResponse) VisitCreateFolderResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type CreateFolder201JSONResponse FileItem
+
+func (response CreateFolder201JSONResponse) VisitCreateFolderResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(201)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type CreateFolder400ApplicationProblemPlusJSONResponse struct {
+	BadRequestApplicationProblemPlusJSONResponse
+}
+
+func (response CreateFolder400ApplicationProblemPlusJSONResponse) VisitCreateFolderResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(400)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type CreateFolder404ApplicationProblemPlusJSONResponse struct {
+	NotFoundApplicationProblemPlusJSONResponse
+}
+
+func (response CreateFolder404ApplicationProblemPlusJSONResponse) VisitCreateFolderResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(404)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type CreateFolder405ApplicationProblemPlusJSONResponse struct {
+	MethodNotAllowedApplicationProblemPlusJSONResponse
+}
+
+func (response CreateFolder405ApplicationProblemPlusJSONResponse) VisitCreateFolderResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/problem+json")
+	if response.Headers.Allow != nil {
+		w.Header().Set("Allow", fmt.Sprint(*response.Headers.Allow))
+	}
+	w.WriteHeader(405)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type CreateFolder409ApplicationProblemPlusJSONResponse struct {
+	ConflictApplicationProblemPlusJSONResponse
+}
+
+func (response CreateFolder409ApplicationProblemPlusJSONResponse) VisitCreateFolderResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(409)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type CreateFolder413ApplicationProblemPlusJSONResponse struct {
+	TooLargeApplicationProblemPlusJSONResponse
+}
+
+func (response CreateFolder413ApplicationProblemPlusJSONResponse) VisitCreateFolderResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(413)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type CreateFolder500ApplicationProblemPlusJSONResponse struct {
+	InternalErrorApplicationProblemPlusJSONResponse
+}
+
+func (response CreateFolder500ApplicationProblemPlusJSONResponse) VisitCreateFolderResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(500)
+	_, err := buf.WriteTo(w)
+	return err
+}
 
 type GetItemsRequestObject struct {
 	Params GetItemsParams
@@ -708,6 +909,9 @@ func (response GetHealth503JSONResponse) VisitGetHealthResponse(w http.ResponseW
 
 // StrictServerInterface represents all server handlers.
 type StrictServerInterface interface {
+	// CreateFolder Create a folder
+	// (POST /files/folders)
+	CreateFolder(ctx context.Context, request CreateFolderRequestObject) (CreateFolderResponseObject, error)
 	// GetItems List a folder, or get the details of a file
 	// (GET /files/items)
 	GetItems(ctx context.Context, request GetItemsRequestObject) (GetItemsResponseObject, error)
@@ -753,6 +957,37 @@ type strictHandler struct {
 	ssi         StrictServerInterface
 	middlewares []StrictMiddlewareFunc
 	options     StrictHTTPServerOptions
+}
+
+// CreateFolder operation middleware
+func (sh *strictHandler) CreateFolder(w http.ResponseWriter, r *http.Request) {
+	var request CreateFolderRequestObject
+
+	var body CreateFolderJSONRequestBody
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		sh.options.RequestErrorHandlerFunc(w, r, fmt.Errorf("can't decode JSON body: %w", err))
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.CreateFolder(ctx, request.(CreateFolderRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "CreateFolder")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(CreateFolderResponseObject); ok {
+		if err := validResponse.VisitCreateFolderResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
 }
 
 // GetItems operation middleware

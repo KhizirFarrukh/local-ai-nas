@@ -69,11 +69,17 @@ func ValidateName(name string) error {
 	if strings.HasSuffix(name, ".") || strings.HasSuffix(name, " ") {
 		return nameErr(RuleTrailingChar, "a name must not end with a dot or a space")
 	}
-	base, _, _ := strings.Cut(name, ".")
-	if reservedNames[strings.ToUpper(strings.TrimRight(base, " "))] {
+	if isReservedName(name) {
 		return nameErr(RuleReservedName, fmt.Sprintf("%q is a reserved device name on Windows", name))
 	}
 	return nil
+}
+
+// isReservedName reports a Windows device name, with any extension, in
+// any case, with spaces before the extension ("nul .txt").
+func isReservedName(name string) bool {
+	base, _, _ := strings.Cut(name, ".")
+	return reservedNames[strings.ToUpper(strings.TrimRight(base, " "))]
 }
 
 // ValidateNewPath checks a slash-separated path relative to a namespace

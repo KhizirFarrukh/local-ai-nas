@@ -1,6 +1,7 @@
 package storage
 
 import (
+	"fmt"
 	"path"
 	"path/filepath"
 	"strings"
@@ -61,6 +62,13 @@ func cleanUserPath(userPath string) (string, error) {
 		return ".", nil
 	}
 	if !filepath.IsLocal(filepath.FromSlash(rel)) {
+		// On Windows, IsLocal refuses device names such as NUL. Report them
+		// with the same rule the name check uses on every OS.
+		for _, seg := range strings.Split(rel, "/") {
+			if isReservedName(seg) {
+				return "", apperr.NewRule(apperr.InvalidName, RuleReservedName, fmt.Sprintf("%q is a reserved device name on Windows", seg))
+			}
+		}
 		return "", apperr.Newf(apperr.InvalidName, "%q is not a valid path on this server", userPath)
 	}
 	return rel, nil

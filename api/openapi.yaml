@@ -24,6 +24,48 @@ tags:
   - name: photos
     description: Reserved for the photos area (stage S04).
 paths:
+  /files/folders:
+    post:
+      tags: [files]
+      operationId: createFolder
+      summary: Create a folder
+      description: |
+        Creates the folder at `path`. With `parents`, missing parent folders
+        are created too. When the name is taken, `on_conflict` decides:
+        `fail` (409), `rename` (`name (1)`, `name (2)`, ...), or `overwrite`,
+        which returns an existing folder unchanged (200) and never replaces
+        a file (409). Every new name must follow the name rules.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateFolderRequest"
+      responses:
+        "201":
+          description: The folder was created.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FileItem"
+        "200":
+          description: The folder already existed (`on_conflict=overwrite`).
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FileItem"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "405":
+          $ref: "#/components/responses/MethodNotAllowed"
+        "409":
+          $ref: "#/components/responses/Conflict"
+        "413":
+          $ref: "#/components/responses/TooLarge"
+        "500":
+          $ref: "#/components/responses/InternalError"
   /files/items:
     get:
       tags: [files]
@@ -174,6 +216,24 @@ components:
         next_cursor:
           type: string
           description: Present when more items follow; pass it as `cursor` to get the next page.
+    CreateFolderRequest:
+      type: object
+      additionalProperties: false
+      required: [path]
+      properties:
+        path:
+          type: string
+          description: The folder to create, starting with `/`.
+        parents:
+          type: boolean
+          default: false
+          description: Also create missing parent folders.
+        on_conflict:
+          $ref: "#/components/schemas/OnConflict"
+    OnConflict:
+      type: string
+      enum: [fail, rename, overwrite]
+      default: fail
     ListSort:
       type: string
       enum: [name, size, mod_time, kind]
@@ -272,6 +332,18 @@ components:
         Allow:
           schema:
             type: string
+      content:
+        application/problem+json:
+          schema:
+            $ref: "#/components/schemas/Problem"
+    Conflict:
+      description: The target already exists, or a parent is not a folder (`conflict`).
+      content:
+        application/problem+json:
+          schema:
+            $ref: "#/components/schemas/Problem"
+    TooLarge:
+      description: The request is over a size limit (`too_large`).
       content:
         application/problem+json:
           schema:

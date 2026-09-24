@@ -21,6 +21,9 @@ type Service interface {
 	Stat(ctx context.Context, owner, path string) (Item, error)
 	// List returns one page of the folder at path (S01.3-T02).
 	List(ctx context.Context, owner, path string, opts ListOptions) (ListPage, error)
+	// CreateFolder creates the folder at path and reports whether it
+	// created it (S01.3-T04).
+	CreateFolder(ctx context.Context, owner, path string, opts FolderOptions) (Item, bool, error)
 }
 
 // Op names a file operation, for hooks and logs.

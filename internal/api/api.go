@@ -8,6 +8,7 @@ import (
 	"log/slog"
 	"net/http"
 
+	"github.com/KhizirFarrukh/local-ai-nas/internal/api/gen"
 	"github.com/KhizirFarrukh/local-ai-nas/internal/apperr"
 	"github.com/KhizirFarrukh/local-ai-nas/internal/files"
 	"github.com/KhizirFarrukh/local-ai-nas/internal/health"
@@ -61,6 +62,7 @@ func Routes(o Options) []Route {
 	return []Route{
 		{"GET /api/v1/system/health", http.HandlerFunc(g.GetHealth)},
 		{"GET /api/v1/files/items", http.HandlerFunc(g.GetItems)},
+		{"POST /api/v1/files/folders", strictJSON[gen.CreateFolderRequest](o.Logger, g.CreateFolder)},
 		{"/api/v1/photos", photos},
 		{"/api/v1/photos/", photos},
 	}
