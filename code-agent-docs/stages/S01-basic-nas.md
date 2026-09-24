@@ -3,14 +3,14 @@
 | Field | Value |
 |---|---|
 | Stage ID | S01 |
-| Status | Planned |
+| Status | **Approved** (2026-09-24, S005) |
 | Blocked reason | |
-| Plan version this stage is based on | 0.4.0 |
+| Plan version this stage is based on | 1.0.0 |
 | Origin | User-defined |
 | Created | 2026-09-24 (session S002) |
-| Last updated | 2026-09-24 (session S004) |
+| Last updated | 2026-09-24 (session S005) |
 | Depends on stages | none (requires plan baseline approval) |
-| Related ADRs | ADR-0001 Go (Accepted) · ADR-0002 REST/OpenAPI (Accepted) · **ADR-0003 storage layout (Proposed, gates S01.2)** · ADR-0004 repository layout (Accepted) · ADR-0005 testing/CI (Accepted) · ADR-0006 dev environment (Accepted) · ADR-0007 SQLite (Accepted) · ADR-0008 tus (Accepted) |
+| Related ADRs | ADR-0001 Go (Accepted) · ADR-0002 REST/OpenAPI (Accepted) · ADR-0003 storage layout (Accepted, S005) · ADR-0004 repository layout (Accepted) · ADR-0005 testing/CI (Accepted) · ADR-0006 dev environment (Accepted) · ADR-0007 SQLite (Accepted) · ADR-0008 tus (Accepted) |
 
 ## 1. Goal
 
@@ -56,7 +56,7 @@ A reliable storage service, written in **Go**, that manages the **files area thr
 
 ### In scope
 - Project foundation on the Accepted stack: Go module, repository layout, lint, tests, CI, Docker dev environment, configuration, logging, error conventions, and **SQLite with migrations** (ADR-0007).
-- Storage root with `files/`, `photos/`, and internal data; namespace layout (ADR-0003, once Accepted); health checks.
+- Storage root with `files/`, `photos/`, and internal data; namespace layout (ADR-0003); health checks.
 - Files-area API: list, details, create folder, upload (simple and resumable via tus), download (range), rename, move, copy, delete.
 - API conventions: `/api/v1`, `api/openapi.yaml` (spec-first), RFC 9457 errors, validation, offline docs.
 - Safety baseline: path traversal prevention (resolver + `os.Root`), name validation, symlink policy, conflict policy, concurrency, localhost binding.
@@ -94,7 +94,7 @@ flowchart LR
 
 ### 4.2 Key design points
 - **Go module** `github.com/KhizirFarrukh/local-ai-nas`, with `go 1.27` / `toolchain go1.27.1`. Release builds use `CGO_ENABLED=0` (ADR-0001).
-- **Namespace resolver (ADR-0003, pending acceptance):** every request maps to `(area=files, namespace=u0001, relPath)`. The resolver normalizes the path and rejects anything invalid **before** any filesystem call. The actual I/O then goes through an **`os.Root`** opened on the namespace directory (Go 1.24+). Its methods (OpenFile, Mkdir/MkdirAll, Rename, Remove/RemoveAll, Stat/Lstat) refuse to escape the root through `..` or symlinks. This is defense in depth.
+- **Namespace resolver (ADR-0003, Accepted):** every request maps to `(area=files, namespace=u0001, relPath)`. The resolver normalizes the path and rejects anything invalid **before** any filesystem call. The actual I/O then goes through an **`os.Root`** opened on the namespace directory (Go 1.24+). Its methods (OpenFile, Mkdir/MkdirAll, Rename, Remove/RemoveAll, Stat/Lstat) refuse to escape the root through `..` or symlinks. This is defense in depth.
 - **FilesService interface** (`internal/files`): the only way handlers touch storage. Operations emit before and after hooks (no-ops in S01). These are the attachment points for S03 policy checks, S04.6 transfer, S06 indexing, S08 trash, and S10 quotas.
 - **Owner model:** every `Item` carries `OwnerID` (= namespace), `Area`, `RelPath`, `Kind`, `Size`, `ModTime`, `MIME`, and `ETag`.
 - **SQLite (ADR-0007):** `modernc.org/sqlite` with pragmas `journal_mode=WAL`, `foreign_keys=ON`, `busy_timeout=5000`, and `synchronous=NORMAL`. There is one writer connection and a read pool. goose applies embedded migrations at startup. The S01 tables are `settings` and `uploads` (the upload-session index: id, target path, conflict policy, declared size, optional SHA-256, created and expiry times).
@@ -105,7 +105,7 @@ flowchart LR
 - **Conflict policy:** `on_conflict = fail | rename | overwrite`, default `fail`. `rename` produces `name (1).ext`.
 - **Concurrency:** in-process, per-path, reference-counted locks for all mutating operations. Overwrites go through temp file + atomic rename.
 - **Binding guard:** config validation refuses any non-loopback bind address in S01 (NFR-020).
-- **Logging:** `log/slog` JSON to stderr, with one access-log line per request carrying the request ID. Rotation is handled by Docker, journald, or the service manager (NFR-016). There is no file-logging dependency.
+- **Logging:** `log/slog` JSON to stderr **and** to a size-rotated file `.local-ai-nas/logs/nas.log` (small in-house rotator, no dependency; decision D-07, S005), with one access-log line per request carrying the request ID. The S10.5 log viewer reads these files (NFR-016).
 - **Configuration:** TOML via `pelletier/go-toml/v2` in strict mode. Precedence: defaults < file < `LOCALAINAS_*` environment variables < flags. The file is located via `--config`, then `LOCALAINAS_CONFIG`, then the OS default: `/etc/local-ai-nas/config.toml` on Linux, `%ProgramData%\local-ai-nas\config.toml` on Windows.
 
 ### 4.3 Endpoint set (defined in `api/openapi.yaml`, ADR-0002)
@@ -131,7 +131,7 @@ flowchart LR
 
 | Substage | Name | Status | Depends on | Requirements |
 |---|---|---|---|---|
-| S01.1 | Project foundation | Not started | plan 1.0.0; S01 approved; Q22 (for S01.1-T02) | NFR-008, NFR-009, NFR-013, NFR-014, NFR-016, NFR-025, NFR-029, NFR-030 |
+| S01.1 | Project foundation | Not started | plan 1.0.0; S01 approved (Q22 answered: AGPL-3.0) | NFR-008, NFR-009, NFR-013, NFR-014, NFR-016, NFR-025, NFR-029, NFR-030 |
 | S01.2 | Storage layout and configuration | Not started | S01.1; **ADR-0003 Accepted** | FR-069–FR-072, NFR-026 |
 | S01.3 | Core file operations | Not started | S01.2, S01.5 (conventions), S01.6 (resolver) | FR-003, FR-005, FR-007, FR-073 |
 | S01.4 | Large file handling | Not started | S01.2, S01.3, S01.5 | FR-004, FR-074, NFR-006, NFR-021 |
@@ -155,18 +155,18 @@ flowchart LR
 
 - **Goal:** Set up the Accepted Go stack (ADR-0001, 0002, 0004–0007) so every later change is built, checked, and tested the same way.
 - **Substage acceptance criteria:** as in plan.md S01.1 (CI on Linux + Windows; fresh-clone setup; config validation; structured logs without secrets; one error format).
-- **Gate:** plan approved as baseline 1.0.0 and this document approved. S01.1-T02 needs Q22 (license). S01.2 needs ADR-0003 Accepted.
+- **Gate:** plan approved as baseline 1.0.0 and this document approved. (Q22 answered: AGPL-3.0; ADR-0003 Accepted; both in S005.)
 
 | Task ID | Description | Status | Acceptance criteria |
 |---|---|---|---|
 | S01.1-T01 | **Go module and repository skeleton** (ADR-0001, ADR-0004): `go mod init github.com/KhizirFarrukh/local-ai-nas`; `go 1.27` + `toolchain go1.27.1`; `tool` directives for oapi-codegen v2.8.0, govulncheck v1.8.0, go-licenses v2.0.1; folders `cmd/local-ai-nas/`, `internal/{config,logging,apperr,db,health,api}`, `api/`, `deploy/`, `testdata/SOURCES.md`, `docs/`, `scripts/`. `.gitattributes` (`* text=auto eol=lf`, binary patterns), `.editorconfig`, `.gitignore`. Record every added module in `dependencies.md` in the same commit (R6). | Not started | `go build ./...` and `go vet ./...` pass on Windows and Linux. `git add --renormalize .` produces no changes. `dependencies.md` matches `go.mod`. |
-| S01.1-T02 | **License and license policy** (Q22, NFR-029): add `LICENSE`; document the allowed licenses for linked dependencies (e.g. MIT, BSD-2/3-Clause, Apache-2.0, ISC, MPL-2.0 per the chosen project license) in `docs/licensing.md`; configure the `go-licenses check` allow-list. | Not started | `go tool go-licenses check ./...` passes. A deliberately disallowed test dependency fails it (verified once, then reverted). |
+| S01.1-T02 | **License and license policy** (Q22 = **AGPL-3.0**, NFR-029): add `LICENSE` with the full GNU AGPL v3.0 text and update the README "License" section; document the licenses allowed for linked dependencies (AGPL-3.0-compatible: MIT, BSD-2/3-Clause, Apache-2.0, ISC, MPL-2.0, LGPL, GPL-3.0/AGPL-3.0) in `docs/licensing.md`; configure the `go-licenses check` allow-list. | Not started | `go tool go-licenses check ./...` passes. A deliberately disallowed test dependency fails it (verified once, then reverted). |
 | S01.1-T03 | **Lint and format** (ADR-0005): `.golangci.yml` (v2 format) enabling govet, staticcheck, errcheck, gosec, ineffassign, unused, and **depguard** rules (prepared: `internal/files` and `internal/photos` may not import each other; only `internal/transfer` may import both), plus the gofmt/goimports formatters. golangci-lint **v2.13.2 pinned as a binary**: a documented local install (upstream install script) and the official GitHub Action in CI. | Not started | `golangci-lint run` and `golangci-lint fmt --diff` are clean on the skeleton. A deliberate violation fails locally and in CI. |
 | S01.1-T04 | **Test setup**: standard `testing` + `github.com/google/go-cmp` v0.7.0; `internal/testutil` with a temp storage-root helper (`t.TempDir()`) and a server-on-`127.0.0.1:0` helper; a fuzz-test scaffold (`go test -fuzz`); a coverage profile with a threshold (80% on `internal/...`, enforced in CI). | Not started | A sample unit test, an integration test using the temp root, and a fuzz seed corpus run green. CI publishes the coverage figure and fails below the threshold. |
 | S01.1-T05 | **CI pipeline** (`.github/workflows/ci.yml`, GitHub Actions), on PRs into `develop`: jobs for lint (ubuntu); tests on `ubuntu-latest` (with `-race`) and `windows-latest`; `govulncheck ./...`; `go-licenses check`; spec drift (`go generate ./... && git diff --exit-code`); cross-builds with `CGO_ENABLED=0` for linux/amd64, linux/arm64, and windows/amd64; the dev image build + **Trivy v0.74.0** scan. Plus `.github/dependabot.yml` (gomod, github-actions, docker). | Not started | CI is green on the PR. A deliberately failing test turns it red (verified once). The arm64 build artifact is produced. |
 | S01.1-T06 | **Development environment** (ADR-0006): native run on Windows and Linux (`go run ./cmd/local-ai-nas serve --config dev/config.toml`), plus `deploy/Dockerfile.dev` (golang build stage, then `debian:trixie-slim` runtime) and `deploy/compose.dev.yaml` (source bind mount, named volume for the storage root, port published as `127.0.0.1:8080:8080`). An example config at `deploy/config.example.toml`. The README "Development" section. | Not started | A new developer starts the server natively and via `docker compose -f deploy/compose.dev.yaml up --build`, using only the README. |
 | S01.1-T07 | **Configuration** (`internal/config`): TOML via `github.com/pelletier/go-toml/v2` v2.4.3 (strict; unknown keys rejected); `LOCALAINAS_*` environment variable overrides; flags; the precedence defaults < file < env < flags; config path resolution (flag, then env, then OS default); validation (absolute storage root, size limits, bind address delegated to S01.6-T06). Secrets are never logged. | Not started | Table-driven tests cover precedence and every validation rule. An invalid config exits non-zero with a clear message naming the key. |
-| S01.1-T08 | **Logging** (`internal/logging`): `log/slog` JSON handler to stderr; levels from config; request-ID middleware (accepts a valid incoming `X-Request-ID`, otherwise generates 128-bit random hex); one access line per request (method, route pattern, status, bytes, duration, request ID); redaction of `Authorization`/`Cookie` headers and sensitive query values. | Not started | A test captures logs and asserts the fields. A redaction test asserts that no header secrets appear. |
+| S01.1-T08 | **Logging** (`internal/logging`): `log/slog` JSON handler to stderr; plus a size-rotated JSON log file in `.local-ai-nas/logs/` (in-house rotator: max size and file count from config; D-07); levels from config; request-ID middleware (accepts a valid incoming `X-Request-ID`, otherwise generates 128-bit random hex); one access line per request (method, route pattern, status, bytes, duration, request ID); redaction of `Authorization`/`Cookie` headers and sensitive query values. | Not started | A test captures logs and asserts the fields. A redaction test asserts that no header secrets appear. |
 | S01.1-T09 | **Error conventions** (`internal/apperr`): typed domain errors (`NotFound`, `Conflict`, `InvalidName`, `OutsideRoot`, `TooLarge`, `InsufficientStorage`, `NotAvailable`, …) mapped to RFC 9457 `application/problem+json` with stable `code` values and `correlation_id` (= request ID). Panic-recovery middleware returns a generic 500. | Not started | Unit tests cover every mapping. A handler panic yields a generic body, and the details appear only in the logs. |
 | S01.1-T10 | **SQLite database** (`internal/db`, ADR-0007): open `modernc.org/sqlite` v1.59.0 at `<internal>/db/nas.db` with the pragmas; writer and reader pools; goose v3.28.0 with embedded SQL migrations (`internal/db/migrations/00001_init.sql`: `settings`, `uploads`); a `migrate status|up` CLI subcommand. | Not started | A driver test on Linux and Windows asserts `PRAGMA journal_mode` = `wal`, that a read succeeds during an open write transaction, and that migrations are idempotent (running twice is a no-op). |
 | S01.1-T11 | **App skeleton** (`cmd/local-ai-nas`): subcommands `serve`, `migrate`, `version`; `http.Server` with `ReadHeaderTimeout`, `IdleTimeout`, and body limits; graceful shutdown on SIGINT/SIGTERM (and Ctrl+C on Windows); default bind `127.0.0.1:8080`; a CI smoke test that starts the binary and calls `/api/v1/system/health`. | Not started | The smoke test passes in CI on Linux and Windows. Shutdown completes in-flight requests within the timeout. |
@@ -255,7 +255,7 @@ flowchart LR
 | S01.7-T01 | Integration suite: every endpoint over real HTTP (the server on `127.0.0.1:0`) against a real temporary storage root. | Not started | Every endpoint and status code path is covered and passes in CI (Linux + Windows). |
 | S01.7-T02 | Attack suite: traversal, malicious names, symlink escapes, header injection in filenames, oversized inputs, tus metadata abuse. | Not started | The suite passes. The S01.6 corpus is exercised end to end. |
 | S01.7-T03 | Edge-case suite: Unicode (NFC/NFD, emoji, right-to-left), empty files, sparse multi-GB files (Linux), deep nesting, folders with 10,000 entries. | Not started | The suite passes. Platform-specific skips are documented with reasons. |
-| S01.7-T04 | Basic performance check (`go test -bench` + a scripted run): listing latency (10k entries), upload and download throughput vs. raw disk (`dd`-style baseline), heap during a 10 GB transfer. Results recorded against NFR-003. | Not started | A report committed in `docs/perf/S01-baseline.md`. Targets met, or deviations recorded for user review (reference hardware pending Q1). |
+| S01.7-T04 | Basic performance check (`go test -bench` + a scripted run): listing latency (10k entries), upload and download throughput vs. raw disk (`dd`-style baseline), heap during a 10 GB transfer. Results recorded against NFR-003. | Not started | A report committed in `docs/perf/S01-baseline.md`. Targets met, or deviations recorded for user review (on the Windows 11 development PC, plus a Raspberry Pi and an x86-64 mini-PC when available; Q1). |
 | S01.7-T05 | Documentation: README development and API usage (curl examples for Linux/macOS and PowerShell), `docs/api/*`, plan status, CURRENT_STATE. | Not started | A reader can run the demo from the docs alone. |
 | S01.7-T06 | Demo scripts `scripts/demo.sh` and `scripts/demo.ps1` (curl) covering create folder, simple upload, tus upload with a forced interruption and resume, list, ranged download, rename, move, copy, delete. | Not started | Both scripts run green against a fresh instance (Linux in CI; Windows manually, recorded). |
 | S01.7-T07 | **Documentation audit (R12)** using `templates/audit-checklist.md`, reported as the next audit number in `audits/`. | Not started | Audit report complete; no Critical finding open (each fixed or escalated to the user) |
@@ -267,7 +267,7 @@ flowchart LR
 |---|---|---|---|
 | `go.mod`, `go.sum` | Create | Module, toolchain pin, tool directives | S01.1-T01 |
 | `.gitattributes`, `.editorconfig`, `.gitignore` | Create | Repository hygiene, LF line endings | S01.1-T01 |
-| `LICENSE`, `docs/licensing.md` | Create | Project license (Q22) and dependency license policy | S01.1-T02 |
+| `LICENSE`, `docs/licensing.md` | Create | Project license (AGPL-3.0, Q22) and dependency license policy | S01.1-T02 |
 | `.golangci.yml` | Create | Lint, format, depguard rules | S01.1-T03 |
 | `internal/testutil/` | Create | Temp root and test-server helpers | S01.1-T04 |
 | `.github/workflows/ci.yml`, `.github/dependabot.yml` | Create | CI and dependency updates | S01.1-T05 |
@@ -300,7 +300,7 @@ All are recorded in `code-agent-docs/dependencies.md` in the same commit that ad
 | modernc.org/sqlite | v1.59.0 | Pure-Go SQLite driver | BSD-3-Clause | Yes | ADR-0007 |
 | github.com/pressly/goose/v3 | v3.28.0 | Embedded SQL migrations | MIT | Yes | ADR-0007 |
 | github.com/tus/tusd/v2 | v2.10.1 | Resumable uploads | MIT | Yes | ADR-0008 |
-| github.com/oapi-codegen/runtime | v1.7.0 | Runtime for generated API code | Apache-2.0 | Yes (confirm against Q22; Apache-2.0 is incompatible only with GPL-2.0-only projects) | ADR-0002 |
+| github.com/oapi-codegen/runtime | v1.7.0 | Runtime for generated API code | Apache-2.0 | Yes (Apache-2.0 is compatible with AGPL-3.0) | ADR-0002 |
 | golang.org/x/sys | v0.48.0 | Free space and volume ID on Windows (S01.2-T04/T05) | BSD-3-Clause | Yes | ADR-0001 |
 | golang.org/x/text (unicode/norm), **only if** S01.6-T01 chooses to normalize | v0.42.0 | Unicode NFC normalization of names | BSD-3-Clause | Yes | ADR-0001 (stage-level candidate; register row) |
 | Redoc (vendored JS asset) | 2.5.4 | Offline API docs | MIT | Yes | ADR-0002 |
@@ -360,7 +360,7 @@ go tool go-licenses check ./...         # allow-list from S01.1-T02
 
 | Risk | Likelihood | Impact | Mitigation | Rollback |
 |---|---|---|---|---|
-| ADR-0003 (layout) is changed by the user | Medium | Medium | S01.2 is gated on it. The resolver isolates the layout details | Update S01.2 tasks before coding (R3) |
+| ADR-0003 (layout) is changed later | Low (Accepted in S005) | Medium | The resolver isolates the layout details | Supersede via a new ADR and update the S01.2 tasks (R3, R5) |
 | Windows filesystem behavior (locks, reserved names, symlink privilege, sparse files) breaks tests | Medium | Medium | Windows CI from the first commit; a documented skip policy | Fix, or mark platform-specific with a reason |
 | tusd hooks don't fit the atomic finalize (e.g. timing of `PreFinishResponseCallback` vs. file closing) | Low | Medium | Fault-injection tests in S01.4-T03 | Finalize from the `NotifyCompleteUploads` channel with client polling; recorded as a deviation |
 | oapi-codegen limits (OpenAPI 3.0.x only; binary bodies; ServeContent integration) | Low | Low | Custom response visitors; tus documented outside generated routes | Hand-written handlers for specific routes, still spec-checked by contract tests |
@@ -372,7 +372,8 @@ go tool go-licenses check ./...         # allow-list from S01.1-T02
 
 ## 11. Approval record
 
-> _Not yet approved. The user must approve this stage document before any S01 code is written. ADR-0003 must also be accepted before S01.2, and Q22 answered before S01.1-T02. ADRs 0001, 0002, and 0004–0008 were Accepted through P003._
+> "Approve S01 (Recommended)" (option text: "S01 becomes Approved, your approval is quoted in the document, and I start S01.1-T01 (Go module + repository skeleton) on feat/S01.1-T01-go-module.")
+> (2026-09-24, session S005, log E012). Given together with the plan baseline approval "Approve as 1.0.0 (Recommended)".
 
 ## 12. Change log for this stage document
 
@@ -382,6 +383,8 @@ go tool go-licenses check ./...         # allow-list from S01.1-T02
 | 2026-09-24 | S003 | Replaced every "to be confirmed after the S01.1 ADRs are accepted" placeholder with the concrete Go stack (packages, files, tools, commands). Rewrote the S01.1 tasks as Go setup tasks (11 tasks, previously 12; the old review gate is removed because the ADRs are Accepted). Added SQLite from S01 (S01.1-T10; `uploads` and `settings` tables). Added `os.Root` as the second traversal layer. Added x/sys for free space and volume ID. Concrete tusd hook design. Concrete endpoints, dependencies, and commands. Status stays **Planned** | P003 `stage_document_updates` | Needed: user approval (the stage was not approved before, so there is nothing to re-confirm) |
 | 2026-09-24 | S004 | Audit A001: added the ADR column to the dependency table; pinned `golang.org/x/text` v0.42.0 as a conditional dependency (F-025); listed the CI actions; added task S01.7-T07 (R12 documentation audit) and renumbered completion and sign-off to S01.7-T08 (F-026); based on plan 0.3.1. Status stays **Planned** | Audit A001 (P004); R12 | Needed: user approval (the document is not yet approved) |
 | 2026-09-24 | S004 | Re-based on plan 0.4.0 (video streaming change). **No S01 content affected** (the change lives in S04.8). Status stays Planned | Plan change 0.4.0 | None (no S01 change) |
+| 2026-09-24 | S005 | Applied the approval-stage decisions: ADR-0003 Accepted (gates removed); S01.1-T02 concrete for AGPL-3.0; S01.1-T08 and 4.2 add the size-rotated log file (D-07); S01.7-T04 reference hardware (Q1); based on plan 0.5.0. Status stays **Planned** until the user approves this document | S005 decisions (E007) | Needed: user approval |
+| 2026-09-24 | S005 | **Approved by the user**; status Planned → Approved; based on plan 1.0.0 | User approval (S005 E012) | Given |
 
 ## 13. Completion record
 

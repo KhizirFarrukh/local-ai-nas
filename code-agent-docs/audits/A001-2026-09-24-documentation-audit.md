@@ -355,3 +355,24 @@ After these decisions: **approve plan.md as the 1.0.0 baseline** (R4) and **appr
 6. **Unverified and deferred items:** synonym dictionary (S06.5), RapidOCR model weights (S12.10), Python license (S12.1), ADR-0015 details (S09.1). Re-check them at their stages.
 7. **Timestamps:** the agent twice typed a timestamp by hand (S001, S003) and caught it. Keep checking log and CURRENT_STATE times against git commit times.
 8. **Scripts:** the A001 check scripts lived in the agent's scratchpad, not the repository. If you want audits to be reproducible by others, decide whether to commit them (e.g. under `scripts/audit/`).
+
+## 9. Decisions received (S005, 2026-09-24)
+
+The user answered in session S005 (log E007): "Accept all (Recommended)" for D-01–D-07, D-09, D-11, D-14; "AGPL-3.0 (Recommended)" for D-12; "S01–S11, add none" for D-08; and for D-13: "mini pc/old pc/raspberry pi/also this windows 11 pc (this one for testing) so multi platform compatibility". D-10 was resolved by the user's own commit `bda8321` (prompts 3 and 4).
+
+| # | Outcome | Applied in |
+|---|---|---|
+| D-01 | ADR-0003 **Accepted** | ADR-0003; plan 0.5.0 section 7; S01 document |
+| D-02 | Plan 10.14 items 1–7 **approved** | plan 0.5.0 10.14 |
+| D-03 | Stacked branches allowed; plus the user's new rule: the agent merges finished branches into `develop` itself | RULES 1.4.0 User Preferences |
+| D-04 | Debian GPL FFmpeg accepted for now; revisit at S11.1 | `dependencies.md`; plan RK-30 |
+| D-05 | README R-01–R-08, R-10 **applied**; R-09 not applied | `README.md`; `A001-readme-proposal.md` status |
+| D-06 | Semantic search: precomputed forms only by default | plan FR-054, S12.10, 7.1 |
+| D-07 | stderr + size-rotated JSON log file from S01 | plan NFR-016, 6.3; S01.1-T08 |
+| D-08 | First usable release = **S01–S11**; Q37 none | plan section 11, Q37, Q38 |
+| D-09 | Targeted plan reading at startup | RULES 1.4.0 R1 step 3 |
+| D-10 | Resolved by the user's commit `bda8321` | git |
+| D-11 | Q16 closed | plan Q16 |
+| D-12 | **AGPL-3.0** | plan Q22; S01.1-T02; `dependencies.md` |
+| D-13 | Q1 answered: multi-platform (x86-64 mini-PC/old PC, Raspberry Pi, Windows 11 for testing). Q18 (library size) still open | plan Q1, NFR-003, NFR-009, A13; S01.7-T04 |
+| D-14 | ADR-0020 side effect confirmed | ADR-0020 approval record; plan S04.8 |

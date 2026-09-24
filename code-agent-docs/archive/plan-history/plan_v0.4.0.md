@@ -2,11 +2,11 @@
 
 | Field | Value |
 |---|---|
-| **Version** | 1.0.0 |
-| **Status** | **Approved baseline** (approved by the user in S005, 2026-09-24) |
-| **Last updated** | 2026-09-24 (session S005) |
+| **Version** | 0.4.0 |
+| **Status** | Draft, awaiting user review |
+| **Last updated** | 2026-09-24 (session S004) |
 | **Source of vision** | `README.md` (repository root), the user's staged roadmap (`code-agent-docs/prompts/P002-staged-development-roadmap.json`), and the user's technology stack (`code-agent-docs/prompts/P003-technology-stack.json`) |
-| **Previous version** | 0.5.0, archived at `code-agent-docs/archive/plan-history/plan_v0.5.0.md` (0.1.0–0.4.0 also archived there) |
+| **Previous version** | 0.3.1, archived at `code-agent-docs/archive/plan-history/plan_v0.3.1.md` (0.1.0–0.3.0 also archived there) |
 
 > **This is a living document.** It changes as the user gives feedback. Every change follows `code-agent-docs/RULES.md` **R4**: the old version is archived, the version is bumped, and a revision entry is added. While the plan is a pre-1.0 draft, restructurings bump the MINOR version. **When the user approves this plan as the baseline, it becomes version 1.0.0.**
 >
@@ -321,7 +321,7 @@ Priorities: **Must** (required for its stage to be Done), **Should** (important;
 | FR-044 | Split groups, remove a wrongly assigned face, "not this person", move a face between groups. | Must | Priority Should → Must in 0.2.0. |
 | FR-045 | Hide a face group. | Must | Priority Could → Must in 0.2.0. |
 | FR-046 | Opting out deletes all AI-derived data (sidecar `ai` sections and embeddings) on request. | Must | Reworded, priority Should → Must in 0.2.0. |
-| FR-054 | Local semantic search using embeddings. | Could | Pending Q36. Default (S005, D-06): **precomputed forms only** (no model at query time). A query-time text model would be an I4 exception and needs separate approval. |
+| FR-054 | Local semantic search using embeddings. | Could | Pending Q36. |
 | FR-136 | AI hardware detection (CPU, GPU), resource limits, and scheduling (throttling, run when idle). | Should | New. |
 | FR-137 | Face quality scores, with thresholds to ignore tiny or blurry faces. | Must | New. |
 | FR-138 | AI labels are mapped into the synonym dictionary so `receipts` also matches photos labelled `invoice` or `voucher`. | Must | New. |
@@ -336,20 +336,20 @@ Priorities: **Must** (required for its stage to be Done), **Should** (important;
 |---|---|---|---|
 | NFR-001 | **Local-only and private** (I6): no telemetry, no cloud dependencies, no runtime network calls unless the user explicitly enables a feature that needs one. The GUI and API docs load no remote assets. | Must | All stages. |
 | NFR-002 | **AI optional and isolated** (I7): AI runs as a separate optional process/container, and the NAS is fully functional without it. AI failures cannot affect the core. | Must | S12. |
-| NFR-003 | **Performance** (measured on the Q1 platforms, see Q1; library-size targets to confirm with Q18): S01, listing a 10,000-entry folder p95 ≤ 500 ms and transfer throughput ≥ 80% of raw disk/network. S04, timeline page p95 ≤ 500 ms at 50,000 photos. S06, search p95 ≤ 300 ms and full index rebuild ≤ 15 min at 100,000 photos + 100,000 files. S11, targets met under the target user count. | Must | Priority Should → Must and targets updated in 0.2.0. |
+| NFR-003 | **Performance** (targets to confirm with Q1/Q18): S01, listing a 10,000-entry folder p95 ≤ 500 ms and transfer throughput ≥ 80% of raw disk/network. S04, timeline page p95 ≤ 500 ms at 50,000 photos. S06, search p95 ≤ 300 ms and full index rebuild ≤ 15 min at 100,000 photos + 100,000 files. S11, targets met under the target user count. | Must | Priority Should → Must and targets updated in 0.2.0. |
 | NFR-004 | **Modest hardware**: the core runs on a 4-core CPU with 4 GB RAM. AI runs CPU-only by default with bounded memory. | Must | |
 | NFR-005 | Optional GPU acceleration for AI. | Could | |
 | NFR-006 | **Data integrity**: originals are never altered by background work. File and sidecar writes are atomic, so a crash never leaves partial files. | Must | |
 | NFR-007 | **Metadata portability**: UTF-8 JSON sidecars with a published schema, readable without the app. | Must | |
 | NFR-008 | **Ease of deployment**: one-command start (Docker Compose) with sensible defaults. A development environment exists from S01. | Must | |
-| NFR-009 | **Platforms**: Linux x86-64/ARM64 via containers (Must). Native platforms per Q5 (Should). CI runs on Linux and Windows from S01. Windows 11 is a required development and test platform, and the server runs natively there (Q1). | Must | Updated in 0.5.0 (Q1, S005). |
+| NFR-009 | **Platforms**: Linux x86-64/ARM64 via containers (Must). Native platforms per Q5 (Should). CI runs on Linux and Windows from S01. | Must | |
 | NFR-010 | **Security baseline and beyond**: path-traversal-proof file access, input validation on every endpoint, Argon2id password hashing, secure sessions, HTTPS. Details in S01.6 and S03. | Must | |
 | NFR-011 | **Face data privacy**: biometric data stays local, has its own opt-in, is fully deletable, and is never exported unless requested. | Must | |
 | NFR-012 | **Resilient background processing**: persistent, prioritized, throttled jobs with retries that survive restarts. | Must | |
 | NFR-013 | **Licensing**: every dependency and model weight has a license compatible with the project license (Q22), recorded where it is added. | Must | All stages. |
 | NFR-014 | **Maintainability**: tests, linting, formatting, type checks, and CI on every stage. | Must | All stages. |
 | NFR-015 | **Usable and accessible GUI**: phone and tablet layouts, full keyboard navigation, screen-reader labels, WCAG 2.1 AA contrast. | Must | Priority Should → Must in 0.2.0 (P002 S02.7). |
-| NFR-016 | **Observability**: structured local logs with rotation, request IDs, and no external reporting. Logs go to stderr **and** a size-rotated JSON file in `.local-ai-nas/logs/` from S01, so the S10.5 viewer can read them (D-07). | Should | Updated in 0.5.0 (D-07, S005). |
+| NFR-016 | **Observability**: structured local logs with rotation, request IDs, and no external reporting. | Should | |
 | NFR-017 | **Upgrade safety**: automatic, tested, idempotent migrations with backups and dry-run. | Must | |
 | NFR-018 | **Reproducible AI results**: model name@version recorded, deterministic preprocessing. | Should | |
 | NFR-019 | **Safe concurrency**: concurrent operations on the same item never corrupt data or expose partial files. | Must | New. |
@@ -384,13 +384,13 @@ Assumptions are numbered permanently. Ones overturned by the 0.2.0 design are ma
 - **A10:** English for the UI, the taxonomy, and the synonym dictionary in the first releases (Q15).
 - **A11:** AI model weights are either bundled in the optional AI image or downloaded once at opt-in with explicit consent, and are checksum-verified (FR-032, ADR-0017). They are never fetched at runtime otherwise.
 - **A12:** Performance planning targets 100,000 photos + 100,000 files per installation (Q18).
-- **A13:** The primary deployment target is containers on Linux (x86-64, ARM64). Native installs come in S11.2 (Q5). Windows 11 is a supported development and test platform, and the server must run natively there (Q1, S005).
+- **A13:** The primary deployment target is containers on Linux (x86-64, ARM64). Native installs come in S11.2 (Q5).
 - **A14:** The README sidecar draft is a starting point. The schema is finalized by ADR in S05.1.
 - **A15:** The project lives on GitHub (`origin`: `KhizirFarrukh/local-ai-nas`), with CI on GitHub Actions (Q24).
 - **A16:** Development happens on Windows 11, so all tooling must work on Windows and on Linux CI.
 - **A17:** Until S03 is Done, the NAS is used only on the machine it runs on (localhost, no authentication).
 - **A18:** The storage root, including internal temp uploads and trash, sits on a single filesystem, so atomic renames work between them. Multi-disk setups are pooled by the host OS (NG8). The startup health check verifies this.
-- **A19:** Internal app data defaults to `<storage root>/.local-ai-nas/`, with an optional separate location for the database, index, and caches (ADR-0003, Accepted in S005). The configuration file lives outside the storage root, because it is what tells the app where the root is.
+- **A19:** Internal app data defaults to `<storage root>/.local-ai-nas/`, with an optional separate location for the database, index, and caches (ADR-0003, Proposed). The configuration file lives outside the storage root, because it is what tells the app where the root is.
 - **A20:** Within a stage, the task execution order may differ from substage numbering when dependencies require it. The stage document records the order.
 - **A21:** The target browsers play HLS natively or through Media Source Extensions / ManagedMediaSource (hls.js). Where only native HLS is available, the quality menu offers Auto only (ADR-0020).
 
@@ -398,14 +398,7 @@ Assumptions are numbered permanently. Ones overturned by the 0.2.0 design are ma
 
 ## 5. Open questions for the user
 
-Questions keep their numbers permanently. **★ = needed for S01**: Q18 before the S01.7 performance baseline (Q1 and Q22 were answered in S005). Answered or superseded questions stay listed for traceability.
-
-**Answered by the user in S005 (approval stage, decisions D-01–D-14 of audit A001):**
-- Q1 (platforms: x86-64 mini-PC/old PC, Raspberry Pi, and Windows 11 for testing).
-- Q16 (closed).
-- Q22 (**AGPL-3.0**).
-- Q37 (no candidates added).
-- Q38 (first usable release = **S01–S11**).
+Questions keep their numbers permanently. **★ = needed for S01**: Q22 before S01.1-T02; Q1 and Q18 before the S01.7 performance baseline. S01 can start without Q1 and Q18. Answered or superseded questions stay listed for traceability.
 
 **Answered by P003 (0.3.0):**
 - Q25 (GUI): web UI (SvelteKit).
@@ -418,9 +411,14 @@ Questions keep their numbers permanently. **★ = needed for S01**: Q18 before t
 - Q24 (CI: GitHub Actions; the repository is on GitHub).
 - Q16 (face models must be permissively licensed; InsightFace excluded; NFR-029).
 
-**Remaining ★ for S01:** Q18 (library size, before S01.7). ADR-0003 was Accepted in S005 (D-01).
+**Remaining ★ for S01:** Q22 (before S01.1-T02); Q1 and Q18 (before S01.7). Also the approval of ADR-0003 (Proposed) before S01.2.
 
-**Needed for plan baseline approval (1.0.0)** (grouped by audit A001, F-016): all items were resolved in S005: Q38, Q37, the 10.14 flags (D-02), ADR-0003 (D-01), and the other A001 decisions. **What remains is the user's explicit approval of this plan as the 1.0.0 baseline** (R4).
+**Needed for plan baseline approval (1.0.0)** (grouped by audit A001, F-016, from the existing "Needed by" values):
+- Q38 (first usable release).
+- Q37 (not-scheduled candidates).
+- The planner changes flagged in 10.14.
+- ADR-0003 (storage layout; also gates S01.2).
+- The other open decisions listed in audit A001 section 7.
 
 ### New in 0.2.0
 
@@ -436,18 +434,18 @@ Questions keep their numbers permanently. **★ = needed for S01**: Q18 before t
 34. **File versioning.** Wanted? _Needed by: S08.5._
 35. **AI opt-in scope.** Per installation or per user? _Needed by: S12.1._
 36. **Optional AI extensions.** Which are wanted: OCR for receipts and documents, semantic search, duplicate/similar-photo detection? _Needed by: S12.10._
-37. _Answered (S005, D-08):_ **none added now**. Mobile auto-backup, public share links, and remote access stay unscheduled (11a). Any later addition goes before S12 (I8).
-38. _Answered (S005, D-08):_ the first usable release is **S01–S11** (milestone M3 in section 11).
+37. **Not-scheduled candidates.** Should any be added as stages: mobile app with auto-backup, public share links, secure remote access? _Needed by: before S11 (any addition goes before S12, per I8)._
+38. **First usable release.** Which stages should make it up? See section 11 for the proposal. _Needed by: roadmap baseline._
 39. _(Planner-added)_ **Importing an existing collection.** Besides browser upload, should the admin be able to import a folder already on the host into `photos/` or `files/` (server-side copy or move)? _Needed by: S04.2._
 40. _(Planner-added)_ **Organization inside `photos/`.** Store media by date taken (`photos/<user>/YYYY/MM/`), by import batch, or in user-created folders? _Needed by: S04.1 (layout ADR)._
 
 ### Carried over from 0.1.0
 
-1. _Answered (S005, D-13):_ **multi-platform**. The NAS runs on x86-64 mini-PCs or old PCs and on Raspberry Pi (ARM64), and **this Windows 11 PC is used for testing**. User's words: "mini pc/old pc/raspberry pi/also this windows 11 pc (this one for testing) so multi platform compatibility". Performance targets are measured on the Windows 11 development PC and, when available, on a Raspberry Pi and an x86-64 mini-PC (exact models are recorded when benchmarking in S01.7).
+1. ★ **Target host and hardware**: which machine, CPU architecture, RAM, disks? _Needed by: S01.7 (performance baseline), S11._
 2. _Resolved by P002:_ single admin account from S03; multi-user in S07.
 3. _Superseded by Q37_ (remote access is a not-scheduled candidate).
 4. _Answered by P003:_ Go for the core (ADR-0001), REST + OpenAPI (ADR-0002), SvelteKit + TypeScript for the UI (ADR-0009), Python for the AI worker only (ADR-0017).
-5. **Deployment method.** _Partly answered (P003, ADR-0006):_ Docker Compose primary (linux/amd64 + arm64); native Linux secondary (binary + systemd). _Informed by Q1 (S005):_ the server must run natively on Windows 11 for testing (already required by CI and S01.1). **Still open:** whether to ship native **Windows and macOS installers** (S11.2). _Needed by: S11.2._
+5. **Deployment method.** _Partly answered (P003, ADR-0006):_ Docker Compose primary (linux/amd64 + arm64); native Linux secondary (binary + systemd). **Still open:** native **Windows and macOS** installs, yes or no? _Needed by: S11.2._
 6. **AI hardware and speed expectations.** _Partly answered (P003):_ CPU by default, optional GPU. **Still open:** what minimum machine and processing speed are acceptable (e.g. "backfill 50,000 photos overnight")? _Needed by: S12.1._
 7. _Answered (P003, ADR-0017):_ CPU by default. Optional GPU acceleration through ONNX Runtime execution providers (e.g. CUDA, OpenVINO); which ones are supported is evaluated in S12.1.
 8. _Superseded by Q26._
@@ -458,13 +456,13 @@ Questions keep their numbers permanently. **★ = needed for S01**: Q18 before t
 13. **Albums and face-group storage.** Under I2 they cannot live inside `photos/`. Options: (a) the internal database, backed up by S08.3; (b) JSON documents in internal app data, easy to back up and export (**recommended**). Also: keep `groupName` in each sidecar (README draft) or only a `groupId`? _Needed by: S04.5, S12.5._
 14. **Date operator semantics.** Does `after:2025` mean "from 2026" (**recommended**) or include 2025? Compare on the photo's local capture time (**recommended**)? _Needed by: S06.3._
 15. **Languages** for search, synonyms, and taxonomy: English only, or Urdu too? _Needed by: S06.5, S12.3._
-16. _Closed (confirmed by the user in S005, D-11). Answered by implication of P003 (NFR-029, ADR-0018):_ only models whose licenses let anyone deploy and use the project. **InsightFace pretrained weights are excluded.** YuNet (MIT) + SFace (Apache-2.0) are chosen.
+16. _Answered by implication of P003 (NFR-029, ADR-0018):_ only models whose licenses let anyone deploy and use the project. **InsightFace pretrained weights are excluded.** YuNet (MIT) + SFace (Apache-2.0) are chosen.
 17. _Superseded by Q38._
 18. ★ **Library size**: current and expected number of photos, files, and GB? _Needed by: S01.7 baseline, S04.9, S06.8 targets._
 19. **Writing into originals / XMP export**: never write originals (**recommended**); XMP export later? _Needed by: S05._
 20. _Superseded by Q32._
 21. _Superseded by Q37._
-22. _Answered (S005, D-12):_ **AGPL-3.0** (GNU Affero General Public License v3.0). The LICENSE file is added in S01.1-T02.
+22. ★ **Project license** (MIT, Apache-2.0, GPL-3.0, AGPL-3.0)? It constrains which dependencies can be used. _Needed by: S01.1-T02._
     - Relevant facts from the dependency register:
       - Every linked Go library is MIT, BSD, or Apache-2.0.
       - External tools run as separate programs: ExifTool (Artistic/GPL), libvips (LGPL-2.1), libheif (LGPL), FFmpeg (LGPL, or GPL depending on the build).
@@ -476,7 +474,7 @@ Questions keep their numbers permanently. **★ = needed for S01**: Q18 before t
 
 ## 6. Proposed high-level architecture
 
-> Component boundaries are stable. Since 0.3.0 the concrete technologies are decided (section 7, ADRs 0001–0018). The storage layout (6.3) is **ADR-0003, Accepted in S005**. The "Stage" column shows where each component is built.
+> Component boundaries are stable. Since 0.3.0 the concrete technologies are decided (section 7, ADRs 0001–0018). The storage layout (6.3) is still **ADR-0003, Proposed**. The "Stage" column shows where each component is built.
 
 ### 6.1 Components
 
@@ -587,7 +585,7 @@ flowchart TB
     AIW -.->|"read-only mount"| PHOTOS
 ```
 
-### 6.3 Storage layout (ADR-0003, Accepted)
+### 6.3 Storage layout (proposal, ADR-0003)
 
 ```
 <storage root>/                       single filesystem (A18)
@@ -604,7 +602,7 @@ flowchart TB
     ├── transcode-cache/              HLS quality levels, created on demand, size-capped with LRU eviction (S04.8, ADR-0020)
     ├── metadata/                     albums, face-group registry, transferred-out sidecars (Q13, Q27)
     ├── ai/                           models, embeddings (S12)
-    └── logs/                         application log files (JSON, size-rotated; D-07, S005); the audit log lives in SQLite (ADR-0007)
+    └── logs/                         application log files, if file logging is enabled (open decision, audit A001 F-014); the audit log lives in SQLite (ADR-0007)
 Configuration file: outside the storage root (CLI flag / env var / OS default path).
 ```
 
@@ -638,7 +636,7 @@ Configuration file: outside the storage root (CLI flag / env var / OS default pa
 |---|---|---|---|
 | Core server language | Go (go1.27.1, pinned in `go.mod`); pure-Go builds (`CGO_ENABLED=0`) | [ADR-0001](decisions/ADR-0001-backend-language-framework.md) | Accepted |
 | API | REST under `/api/v1`; OpenAPI 3 contract at `api/openapi.yaml` (spec-first, oapi-codegen v2.8.0); stdlib `net/http` router; RFC 9457 errors; Redoc 2.5.4 offline docs | [ADR-0002](decisions/ADR-0002-api-style.md) | Accepted |
-| Storage layout | Per-user namespaces `files/<ns>/`, `photos/<ns>/` from S01; internal data at `<root>/.local-ai-nas/` | [ADR-0003](decisions/ADR-0003-storage-layout.md) | Accepted (S005, user: "Accept all (Recommended)") |
+| Storage layout | Per-user namespaces `files/<ns>/`, `photos/<ns>/` from S01; internal data at `<root>/.local-ai-nas/` | [ADR-0003](decisions/ADR-0003-storage-layout.md) | **Proposed** (gates S01.2) |
 | Repository layout | Single repository; Go module at root; `cmd/`, `internal/`, `api/`, `web/`, `ai-worker/`, `deploy/`, `testdata/`, `docs/`, `scripts/` | [ADR-0004](decisions/ADR-0004-repository-layout.md) | Accepted |
 | Testing, linting, CI | Go `testing` + go-cmp; golangci-lint v2.13.2; govulncheck v1.8.0; go-licenses v2.0.1; Vitest 5.0.1, Playwright 1.63.0, svelte-check, ESLint, Prettier; pytest, Ruff; Trivy v0.74.0; Dependabot; GitHub Actions (Linux + Windows) | [ADR-0005](decisions/ADR-0005-testing-linting-ci.md) | Accepted |
 | Dev environment and packaging | Docker Compose primary; linux/amd64 + linux/arm64 images on `debian:trixie-slim`; AI via `--profile ai`; native Linux (binary + systemd) secondary | [ADR-0006](decisions/ADR-0006-dev-environment-and-packaging.md) | Accepted (native Windows/macOS deferred) |
@@ -662,8 +660,8 @@ Configuration file: outside the storage root (CLI flag / env var / OS default pa
 - **SMB via Samba** (ADR-0019, Proposed). Design in S09.1.
 - **Full RAW conversion** (e.g. LibRaw) (ADR-0012). _Video transcoding for streaming quality levels is in scope since 0.4.0 (ADR-0020)._
 - **Exact AI model variants**, **GPU execution providers**, and **embedding storage** (ADR-0017/0018). Chosen in S12 by benchmark.
-- **Semantic search** needs a text model at query time. That is an **exception to I4** and needs explicit user approval before it is built (ADR-0018, FR-054). _Default decided in S005 (D-06): precomputed forms only; revisit with Q36._
-- ~~Storage layout (ADR-0003)~~: accepted in S005 (D-01), no longer pending.
+- **Semantic search** needs a text model at query time. That is an **exception to I4** and needs explicit user approval before it is built (ADR-0018, FR-054).
+- **Storage layout** (ADR-0003). Still Proposed; user approval needed before S01.2.
 - Implementation-time confirmations recorded as tasks:
   - Node.js LTS and TypeScript 7 / svelte-check compatibility (S02.1).
   - @tanstack/svelte-virtual on Svelte 5 (S02.3 prototype).
@@ -861,7 +859,7 @@ Work is **stage-gated** and governed by `code-agent-docs/RULES.md`.
 
 | ID | Name | Origin | Goal | Depends on | Status |
 |---|---|---|---|---|---|
-| S01 | Basic NAS implementation | User-defined | A reliable storage service that manages the files area through an API, with the two-area layout in place. | Plan baseline approval | Approved |
+| S01 | Basic NAS implementation | User-defined | A reliable storage service that manages the files area through an API, with the two-area layout in place. | Plan baseline approval | Not started |
 | S02 | NAS GUI | User-defined | A graphical application that lets people use the NAS without touching the API. | S01 | Not started |
 | S03 | Security | User-defined | Comprehensive security so the NAS can be safely reached from the local network (single admin). | S01, S02 | Not started |
 | S04 | Media management | User-defined | A separate photos area with Google Photos style management. | S03 | Not started |
@@ -897,7 +895,7 @@ flowchart LR
   > "Stage 1 is basic NAS implementation."
   > "The NAS has two folders at the root: files and photos."
 - **Scope note (from P002):** S01 creates both the `files/` and `photos/` roots but implements only the files area. The photos area is managed from S04. There is no GUI and no authentication yet, so the server must bind to localhost only.
-- **Status:** **Approved** (stage document `stages/S01-basic-nas.md` approved by the user in S005)
+- **Status:** Not started (stage document `stages/S01-basic-nas.md`: **Planned**)
 
 #### S01.1: Project foundation
 - **Goal:** Establish the approved stack, repository, tooling, and conventions, so every later change is built, checked, and tested the same way.
@@ -913,7 +911,7 @@ flowchart LR
   - SQLite database with migrations wired at startup (ADR-0007).
   - CI workflow; config, logging, and error modules.
   - Developer setup documentation.
-- **Depends on:** plan baseline approval (1.0.0); S01 stage document approved; Q22 answered in S005: AGPL-3.0. The stack ADRs (0001, 0002, 0004–0007) were Accepted via P003, and ADR-0003 in S005.
+- **Depends on:** plan baseline approval (1.0.0); S01 stage document approved; Q22 (project license, for LICENSE and the license allow-list). The stack ADRs (0001, 0002, 0004–0007) were Accepted via P003.
 - **Requirements:** NFR-008, NFR-009, NFR-013, NFR-014, NFR-016, NFR-025, NFR-029, NFR-030.
 - **Acceptance criteria:**
   1. CI runs lint, format check, type check, tests, and a dependency-license check on every PR, on Linux and Windows, and a deliberately failing test turns it red.
@@ -921,7 +919,7 @@ flowchart LR
   3. Invalid configuration stops startup with a clear message, and environment variables override file values.
   4. Logs are structured, carry a request ID, and never contain secrets (tested).
   5. All errors use one documented format. Unexpected exceptions return a generic body with a correlation ID.
-- **Risks/notes:** The stack ADRs were accepted in 0.3.0 (P003), and ADR-0003 and Q22 (AGPL-3.0) in S005. The remaining gate is the approval of the S01 stage document.
+- **Risks/notes:** The stack ADRs were accepted in 0.3.0 (P003). The remaining gates are S01 approval and Q22. ADR-0003 gates S01.2.
 - **Status:** Not started
 
 #### S01.2: Storage layout and configuration
@@ -1029,7 +1027,7 @@ flowchart LR
   3. The performance baseline (listing, throughput, memory during a 10 GB transfer) is recorded against NFR-003.
   4. A scripted API demo manages files and folders end to end, including a resumed upload.
   5. The completion record is written and the user's sign-off is recorded.
-- **Risks/notes:** Reference hardware (Q1, S005): the Windows 11 development PC, plus a Raspberry Pi and an x86-64 mini-PC when available. Library-size targets are pending Q18.
+- **Risks/notes:** Reference hardware is pending Q1. Until then the baseline runs on the development machine.
 - **Status:** Not started
 
 **Design notes (S01):**
@@ -1471,7 +1469,7 @@ flowchart LR
   5. Playlist and segment requests without authorization are refused (tested), and cache contents are never listed.
 - **Risks/notes:**
   - Weak CPUs (RK-29). H.264 encoder licensing (libx264 is GPL; RK-30, audit A001 D-04). Manual quality selection on iOS depends on hls.js support there (RK-31).
-  - Side effect **confirmed by the user in S005 (D-14)**: originals in codecs a browser cannot play become playable through the transcoded levels (ADR-0020).
+  - Side effect for the user's confirmation: originals in codecs a browser cannot play become playable through the transcoded levels (ADR-0020).
 - **Status:** Not started
 
 #### S04.9: Testing and stage review
@@ -2422,7 +2420,7 @@ flowchart LR
 
 #### S12.10: Optional AI extensions
 - **Goal:** Extra AI capabilities, if the user wants them.
-- **Scope:** priority "Could", pending the user's decision (Q36): OCR so the text of receipts and documents is searchable; local semantic search using embeddings; duplicate and similar-photo detection. _Semantic search (S005, D-06): precomputed forms only by default (e.g. tag-vocabulary embeddings computed offline). A query-time text model is an I4 exception that needs separate approval._
+- **Scope:** priority "Could", pending the user's decision (Q36): OCR so the text of receipts and documents is searchable; local semantic search using embeddings; duplicate and similar-photo detection.
 - **Deliverables:** only the approved extensions.
 - **Depends on:** S12.2, S12.7.
 - **Requirements:** FR-054, FR-141, FR-142.
@@ -2459,8 +2457,6 @@ flowchart LR
 
 ### 10.14 Changes to the listed substages (flagged for user approval)
 
-**Approved by the user in S005 (decision D-02, "Accept all (Recommended)"): items 1–7 below.**
-
 No listed substage was removed, merged away, or renumbered. The planner made these additions and flags:
 
 1. **Execution order in S01:** S01.6 (path resolver, name validation) and S01.5 (API conventions) are built **before** S01.3 in the task order, because S01.3 uses them. The substage numbering is unchanged. The order is recorded in `stages/S01-basic-nas.md`.
@@ -2475,13 +2471,13 @@ No listed substage was removed, merged away, or renumbered. The planner made the
 
 ## 11. MVP definition
 
-**Decided by the user in S005 (Q38, D-08): the first usable release is milestone M3, stages S01–S11. No not-scheduled candidates were added (Q37).**
+**Proposal. The user decides (Q38).**
 
 | Milestone | Stages | What the user gets | Reasoning |
 |---|---|---|---|
 | **M1: Secure single-admin NAS** | S01–S03 | Files area over a GUI, secure on the LAN | First point where the NAS may leave localhost (NFR-020). Useful, but it is only a file store. |
 | **M2: First usable release (recommended MVP)** | S01–S06 | Files + photos library (timeline, albums, viewer, sidecar metadata, places) + forgiving search with operators; single admin | Delivers the README's core non-AI value, the user's first six stages, and a complete single-user experience. Deployable with the S01.1 Docker setup and documentation. |
-| **M3: Stable pre-AI release (chosen as the first usable release, S005)** | S01–S11 | Multi-user, sharing, trash and backups, network drives, admin, packaging | The release the user's roadmap defines (S11.7). |
+| **M3: Stable pre-AI release** | S01–S11 | Multi-user, sharing, trash and backups, network drives, admin, packaging | The release the user's roadmap defines (S11.7). |
 | **M4: AI release** | S01–S12 | Auto-classification and face grouping | Always last (I8). |
 
 **Caveat on M2:** there is **no trash until S08**, so deletes in M2 are permanent (the GUI warns about this). If M2 will hold real data, options are: (a) keep external backups (documented), or (b) move S08.1 (trash) before S07. Option (b) is a reorder that needs approval, and the trash would first be single-user and then extended in S07.
@@ -2564,7 +2560,7 @@ CI runs on Linux and Windows from S01.1.
 | RK-05 | ~~Python performance is insufficient at 100k+100k items.~~ | Performance | **Retired in 0.3.0:** the core is Go (ADR-0001). General performance is covered by the benchmarks in S01.7, S04.9, S06.8, and S11.5, and by RK-25. |
 | RK-06 | **AI speed on CPU-only hardware** is too slow for backfilling large libraries. | Performance | _Updated in 0.3.0 (P003):_ AI runs as an **idle-time, low-priority background job** (ADR-0011/0017) with pause and resume. Small ONNX models (ADR-0018), batching, and optional GPU execution providers (S12.1). Throughput is measured on CPU-only reference hardware (S12.11). |
 | RK-07 | Classification quality is poor. | Technical | Evaluation set, thresholds, user corrections, reprocessing on model change. |
-| RK-08 | Incompatible dependency or model licenses. | Legal | Project license **AGPL-3.0** (Q22, decided in S005). License policy NFR-029. `dependencies.md` register. go-licenses and `pnpm licenses` checks in CI (ADR-0005). Audit in S11.6. GPL/LGPL external tools (FFmpeg build flags, ExifTool, libvips, libheif) run as separate programs and are recorded for the user's attention. The GPL-3.0 go-exiftool wrapper was rejected. |
+| RK-08 | Incompatible dependency or model licenses. | Legal | Project license decided in S01.1 (Q22). License policy NFR-029. `dependencies.md` register. go-licenses and `pnpm licenses` checks in CI (ADR-0005). Audit in S11.6. GPL/LGPL external tools (FFmpeg build flags, ExifTool, libvips, libheif) run as separate programs and are recorded for the user's attention. The GPL-3.0 go-exiftool wrapper was rejected. |
 | RK-09 | Face data privacy (biometrics). | Privacy | Separate opt-in, embeddings only in internal data, per-user, full deletion (S12.9). |
 | RK-10 | Synonym over-expansion adds noise. | UX | Lower weights, curated and editable dictionary, golden query set. |
 | RK-11 | Cross-platform filesystem differences. | Technical | One resolver per area, Windows CI from S01, name validation for all OSes. |
@@ -2585,7 +2581,7 @@ CI runs on Linux and Windows from S01.1.
 | RK-26 | **External tool availability on native installs** (ExifTool + Perl, libvips + libheif, FFmpeg missing or too old). | Platform | Bundled in the Docker image (ADR-0006). Startup tool detection with versions in health. Affected features are disabled with a clear message. The install guide lists the packages (S11.2, S11.4, plan 8.20). |
 | RK-27 | **Model license changes**: an upstream model (SigLIP, YuNet, SFace, OCR models) is relicensed or withdrawn. | Legal | Pin exact model files by checksum. Record the license at the time of adoption in `dependencies.md` and ADR-0018. Re-verify licenses when upgrading models. Keep the model choice swappable through the ONNX contract (ADR-0017). |
 | RK-29 | **Transcoding load on weak hardware**: live transcoding saturates a CPU-only board, so playback stutters and the NAS slows down. | Performance | Hardware encoder when present; concurrency cap (default 1 on CPU); a maximum-level setting (e.g. 720p on weak CPUs); cache reuse; background jobs yield (ADR-0020, NFR-031). |
-| RK-30 | **H.264 encoding licensing**: libx264 is GPL-2.0-or-later (part of Debian's GPL FFmpeg build), plus possible codec-patent questions depending on the jurisdiction. | Legal | Run as a separate program; recorded in `dependencies.md`. D-04 decided in S005: Debian's GPL FFmpeg is accepted as a separate program for now (source offer in third-party notices), revisited at S11.1. Hardware encoders are an alternative. |
+| RK-30 | **H.264 encoding licensing**: libx264 is GPL-2.0-or-later (part of Debian's GPL FFmpeg build), plus possible codec-patent questions depending on the jurisdiction. | Legal | Run as a separate program; recorded in `dependencies.md`; decided together with audit A001 D-04 and Q22. Hardware encoders are an alternative. |
 | RK-31 | **HLS player compatibility**: manual quality selection needs hls.js (MSE/ManagedMediaSource). Where only native HLS works, Auto only. | UX | Cross-browser tests in S04.9, including iOS; the documented limitation in A21. |
 | RK-28 | Distribution package versions lag upstream (e.g. Debian trixie ExifTool 13.25 vs 13.59, FFmpeg 7.1.5 vs 9.0.2), missing format support. | Platform | Fixture tests catch gaps. Upgrade the base image or build specific tools from source via a new ADR if a needed feature is missing (ADR-0006, ADR-0012). |
 
@@ -2600,5 +2596,3 @@ CI runs on Linux and Windows from S01.1.
 | 0.3.0 | 2026-09-24 | **Technology stack recorded.** Section 7 replaced by the chosen-stack table: Go core; REST/OpenAPI; SQLite WAL (from S01); tus; SvelteKit; Argon2id and sessions; SQLite job queue; ExifTool, libvips, FFmpeg; GeoNames; Bleve; WebDAV; fsnotify; Python/ONNX AI worker; model direction. ADR-0001/0002 updated and Accepted; ADR-0004–0018 Accepted; ADR-0019 (SMB) Proposed; ADR-0003 still Proposed. Invariant I9 added (2a). NFR-029 (license policy) and NFR-030 (multi-arch) added. Q25, Q7, Q4, Q24, Q16 answered; Q5, Q6, Q32 partly answered. Architecture diagram made concrete. Concerns 8.17–8.20 added (single writer, same-filesystem uploads, inotify limits, external tools on native installs), and 8.4/8.11/8.12 aligned to Go and Bleve. Stage texts updated where decisions were pending (S01.1, S01.4, S01.5, S01 design notes, S02.1, S02.3, S03.2, S04.3, S05.3, S05.4, S06.1, S09.1, S11.1, S11.6, S12.1, S12.5, 10.14). Risks RK-25–RK-28 added; RK-05 retired; RK-06 and RK-08 updated. Dependency register `dependencies.md` created. | Plan change request #3 (`code-agent-docs/prompts/P003-technology-stack.json`) | `logs/sessions/2026-09-24_S003.md` |
 | 0.3.1 | 2026-09-24 | **Documentation audit A001 fixes (PATCH, no scope or decision change).** Stale text corrected (6.1 GUI row, F-010; S12 design note contradicting ADR-0018, F-011; 6.3 audit-log location aligned with ADR-0007, F-013; S01.1 self-reference, F-008). Section 5: ★ legend clarified (F-017) and a "Needed for plan baseline approval" list added (F-016). Sections 9 and 12.1 mention the R12 documentation audits. | Documentation audit A001 (`code-agent-docs/prompts/P004-documentation-audit.json`; report `audits/A001-2026-09-24-documentation-audit.md`) | `logs/sessions/2026-09-24_S004.md` |
 | 0.4.0 | 2026-09-24 | **Video streaming with live quality switching** (MINOR, R4). New substage **S04.8** (video streaming and quality levels); the testing substage was renumbered S04.8 → S04.9 and extended with streaming tests (flag 10.14 item 7). FR-144–FR-148 and NFR-031 added; FR-019 raised Should → Must; NG4 changed (transcoding for streaming levels in scope; originals never re-encoded); Q26 partly answered (videos included); A21 added. Architecture: video streaming service, diagram node, `transcode-cache/`. Concern 8.21. Stack table: ADR-0020 added; ADR-0012 marked superseded in part. Risks RK-29–RK-31. Overview and G3 mention video streaming. | The user's request (S004 E005: "add a photo viewer and video playback (streaming with quality adjustment option live in video playback) in the gui part") and design answers (S004 E008) | `logs/sessions/2026-09-24_S004.md` |
-| 0.5.0 | 2026-09-24 | **Approval-stage decisions applied** (MINOR, pre-1.0 per R4). Q1 (multi-platform: x86-64 mini-PC/old PC, Raspberry Pi, Windows 11 for testing), Q16 closed, Q22 (AGPL-3.0), Q37 (none), Q38 (first usable release S01–S11) answered. ADR-0003 Accepted. 10.14 flags approved. Section 11: M3 chosen. FR-054/S12.10: semantic search precomputed-only by default (D-06). NFR-016: rotated log file from S01 (D-07). NFR-003/NFR-009, A13, A19 updated. S04.8 side effect confirmed (D-14). RK-08/RK-30 updated (D-04, license). Baseline-approval list resolved; explicit 1.0.0 approval pending. | The user's answers in S005 (E007): "Accept all (Recommended)", "AGPL-3.0 (Recommended)", "S01–S11, add none", and the hardware answer | `logs/sessions/2026-09-24_S005.md` |
-| 1.0.0 | 2026-09-24 | **Approved as the baseline.** No content change from 0.5.0 except the version, status, and S01 status (Approved). From now on, plan changes follow the normal R4 versioning (PATCH/MINOR/MAJOR). | The user's approval in S005 (E012): "Approve as 1.0.0 (Recommended)"; S01 stage document: "Approve S01 (Recommended)" | `logs/sessions/2026-09-24_S005.md` |
