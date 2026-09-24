@@ -2,7 +2,7 @@
 
 **Purpose:** every dependency, external tool, dataset, and AI model the project uses or has evaluated, with its version, license, and verification status. This is required by P003 and by RULES.md **R6**: every new dependency is added here **in the same commit that introduces it**. **Section 12** lists what each platform needs at runtime; the per-platform setup scripts (S11.2, FR-149) install exactly that list (NFR-032).
 
-**Last updated:** 2026-09-24 (session S005: section 12 added; S01.1-T01 created `go.mod`; S01.1-T02 license policy; S01.1-T05 CI actions; S01.1-T07 go-toml). Verification method and raw results: `logs/sessions/2026-09-24_S003.md` entries E005 and E007, and audit A001 group F (`audits/A001-2026-09-24-documentation-audit.md`).
+**Last updated:** 2026-09-24 (session S005: section 12 added; S01.1-T01 created `go.mod`; S01.1-T02 license policy; S01.1-T05 CI actions; S01.1-T07 go-toml; S01.1-T10 SQLite and goose). Verification method and raw results: `logs/sessions/2026-09-24_S003.md` entries E005 and E007, and audit A001 group F (`audits/A001-2026-09-24-documentation-audit.md`).
 
 **Licensing policy (P003, NFR-029):** every dependency and model must have a license that allows anyone to deploy and use this project. Nothing may be restricted to non-commercial or research-only use. The project's own license is **AGPL-3.0-or-later** (Q22, decided in S005; policy and allow-list in `docs/licensing.md` and `scripts/allowed-licenses.txt`). Items that need attention under it are marked ⚠.
 
@@ -30,8 +30,8 @@ Versions are the **latest stable at verification**. Only **direct** dependencies
 | Name | Version | License | Purpose | Stage | ADR | Verification status |
 |---|---|---|---|---|---|---|
 | github.com/pelletier/go-toml/v2 | v2.4.3 | MIT | Config file (TOML) parsing | S01.1 | [ADR-0001](decisions/ADR-0001-backend-language-framework.md) | Verified 2026-09-24 (proxy.golang.org, deps.dev). **In `go.mod`** and linked (S01.1-T07); `go-licenses report` = MIT |
-| modernc.org/sqlite | v1.59.0 | BSD-3-Clause | Pure-Go SQLite driver (WAL) | S01+ | [ADR-0007](decisions/ADR-0007-database-sqlite.md) | Verified 2026-09-24 (proxy, deps.dev, pkg.go.dev WAL docs) |
-| github.com/pressly/goose/v3 | v3.28.0 | MIT | SQL schema migrations (embedded) | S01+ | [ADR-0007](decisions/ADR-0007-database-sqlite.md) | Verified 2026-09-24 (proxy, LICENSE file) |
+| modernc.org/sqlite | v1.59.0 | BSD-3-Clause | Pure-Go SQLite driver (WAL) | S01+ | [ADR-0007](decisions/ADR-0007-database-sqlite.md) | Verified 2026-09-24 (proxy, deps.dev, pkg.go.dev WAL docs). **In `go.mod`** and linked (S01.1-T10). It links modernc.org/libc v1.75.7, mathutil v1.7.1, memory v1.12.1 (BSD-3-Clause), github.com/dustin/go-humanize v1.0.1, mattn/go-isatty v0.0.24, ncruces/go-strftime v1.0.0 (MIT), remyoudompheng/bigfft (BSD-3-Clause), golang.org/x/sys (BSD-3-Clause), per `go-licenses report` 2026-09-24 |
+| github.com/pressly/goose/v3 | v3.28.0 | MIT | SQL schema migrations (embedded) | S01+ | [ADR-0007](decisions/ADR-0007-database-sqlite.md) | Verified 2026-09-24 (proxy, LICENSE file). **In `go.mod`** and linked (S01.1-T10). It links mfridman/interpolate v0.0.2 (MIT), sethvargo/go-retry v0.4.0 (Apache-2.0), go.uber.org/multierr v1.11.0 (MIT), golang.org/x/sync (BSD-3-Clause), per `go-licenses report` 2026-09-24 |
 | github.com/tus/tusd/v2 | v2.10.1 | MIT | Embedded tus server (resumable uploads) | S01.4, S04.2 | [ADR-0008](decisions/ADR-0008-resumable-uploads-tus.md) | Verified 2026-09-24 (proxy, GitHub, handler/config.go) |
 | github.com/oapi-codegen/runtime | v1.7.0 | Apache-2.0 | Runtime helpers for generated API code | S01.5 | [ADR-0002](decisions/ADR-0002-api-style.md) | Verified 2026-09-24 (proxy, deps.dev) |
 | golang.org/x/crypto | v0.57.0 | BSD-3-Clause | Argon2id | S03 | [ADR-0010](decisions/ADR-0010-security-building-blocks.md) | Verified 2026-09-24 |
