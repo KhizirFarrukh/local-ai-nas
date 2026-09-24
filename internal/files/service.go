@@ -3,9 +3,11 @@ package files
 import (
 	"context"
 	"errors"
+	"io"
 	"io/fs"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/KhizirFarrukh/local-ai-nas/internal/apperr"
 	"github.com/KhizirFarrukh/local-ai-nas/internal/storage"
@@ -24,6 +26,10 @@ type Service interface {
 	// CreateFolder creates the folder at path and reports whether it
 	// created it (S01.3-T04).
 	CreateFolder(ctx context.Context, owner, path string, opts FolderOptions) (Item, bool, error)
+	// Upload writes exactly size bytes from body to the file at path, all
+	// or nothing, and reports whether it created a new file (false: it
+	// replaced one) (S01.3-T05).
+	Upload(ctx context.Context, owner, path string, body io.Reader, size int64, opts UploadOptions) (Item, bool, error)
 }
 
 // Op names a file operation, for hooks and logs.
@@ -73,22 +79,32 @@ func (NopHooks) Before(context.Context, Event) error { return nil }
 // After implements Hooks.
 func (NopHooks) After(context.Context, Event, error) {}
 
+// Options configures the local files service.
+type Options struct {
+	// Hooks are called around every operation; nil means NopHooks.
+	Hooks Hooks
+	// Space refuses writes that would use the free-space reserve. Nil
+	// means no check (tests).
+	Space *storage.SpaceGuard
+}
+
 // Local implements Service on the local disk. Every path goes through the
 // storage resolver, and every file-system call through the namespace's
 // os.Root.
 type Local struct {
 	resolver *storage.Resolver
 	hooks    Hooks
+	space    *storage.SpaceGuard
 }
 
 var _ Service = (*Local)(nil)
 
-// NewLocal returns the local files service. A nil hooks means NopHooks.
-func NewLocal(r *storage.Resolver, hooks Hooks) *Local {
-	if hooks == nil {
-		hooks = NopHooks{}
+// NewLocal returns the local files service.
+func NewLocal(r *storage.Resolver, o Options) *Local {
+	if o.Hooks == nil {
+		o.Hooks = NopHooks{}
 	}
-	return &Local{resolver: r, hooks: hooks}
+	return &Local{resolver: r, hooks: o.Hooks, space: o.Space}
 }
 
 // run calls the hooks around op.
@@ -100,6 +116,22 @@ func run[T any](ctx context.Context, h Hooks, e Event, op func() (T, error)) (T,
 	res, err := op()
 	h.After(ctx, e, err)
 	return res, err
+}
+
+// resolveVisible resolves path for an operation on an existing item. The
+// server's temporary files (storage.TempPrefix) are not items: a path
+// through one is not found, so a partial upload can never be read.
+func (s *Local) resolveVisible(owner, path string) (string, error) {
+	rel, err := s.resolver.Resolve(storage.FilesArea, owner, path)
+	if err != nil {
+		return "", err
+	}
+	for _, name := range strings.Split(rel, "/") {
+		if storage.IsTempName(name) {
+			return "", apperr.New(apperr.NotFound, "no item at "+path)
+		}
+	}
+	return rel, nil
 }
 
 // withRoot opens the owner's namespace root for the duration of fn.
@@ -118,7 +150,7 @@ func (s *Local) withRoot(owner string, fn func(root *os.Root) error) (err error)
 
 // Stat implements Service.
 func (s *Local) Stat(ctx context.Context, owner, path string) (Item, error) {
-	rel, err := s.resolver.Resolve(storage.FilesArea, owner, path)
+	rel, err := s.resolveVisible(owner, path)
 	if err != nil {
 		return Item{}, err
 	}

@@ -31,6 +31,17 @@ const (
 	RuleInvalidUTF8   = "invalid_utf8"
 )
 
+// TempPrefix starts the names of the server's temporary files, such as
+// an upload that is still being written next to its target. Listings hide
+// such names, and the API refuses to create them (reserved_name), so a
+// partial file is never visible or addressable.
+const TempPrefix = ".local-ai-nas-tmp-"
+
+// IsTempName reports whether name is one of the server's temporary files.
+func IsTempName(name string) bool {
+	return strings.HasPrefix(name, TempPrefix)
+}
+
 // reservedNames are the device names Windows reserves, with or without an
 // extension, in any case. They are refused on every OS, so the storage
 // stays portable (a disk moved to Windows, or a Windows client over SMB).
@@ -71,6 +82,9 @@ func ValidateName(name string) error {
 	}
 	if isReservedName(name) {
 		return nameErr(RuleReservedName, fmt.Sprintf("%q is a reserved device name on Windows", name))
+	}
+	if IsTempName(name) {
+		return nameErr(RuleReservedName, fmt.Sprintf("names starting with %q are reserved for the server's temporary files", TempPrefix))
 	}
 	return nil
 }

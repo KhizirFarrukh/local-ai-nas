@@ -20,6 +20,10 @@ import (
 // limit (uploads do, from S01.3).
 const DefaultMaxBodyBytes = 1 << 20
 
+// DefaultMaxUploadBytes is the default largest simple upload, the default
+// of the setting uploads.max_file_size.
+const DefaultMaxUploadBytes = 100 << 30
+
 // Options configures New.
 type Options struct {
 	Logger  *slog.Logger
@@ -30,6 +34,9 @@ type Options struct {
 	Files files.Service
 	// MaxBodyBytes limits request bodies; 0 means DefaultMaxBodyBytes.
 	MaxBodyBytes int64
+	// MaxUploadBytes is the largest file a simple upload accepts
+	// (uploads.max_file_size); 0 means DefaultMaxUploadBytes.
+	MaxUploadBytes int64
 }
 
 // Route is one entry of the route table.
@@ -39,6 +46,8 @@ type Route struct {
 	// methods.
 	Pattern string
 	Handler http.Handler
+	// MaxBody limits the request body; 0 means Options.MaxBodyBytes.
+	MaxBody int64
 }
 
 // Routes returns the route table. Operations of the spec go through the
@@ -51,6 +60,9 @@ func Routes(o Options) []Route {
 	if o.Files == nil {
 		o.Files = noFiles{}
 	}
+	if o.MaxUploadBytes <= 0 {
+		o.MaxUploadBytes = DefaultMaxUploadBytes
+	}
 	g := generated(&server{version: o.Version, checks: o.Checks, files: o.Files, owner: storage.DefaultNamespace}, o.Logger)
 
 	// The photos area exists on disk from S01, but its API is reserved
@@ -60,11 +72,12 @@ func Routes(o Options) []Route {
 		apperr.Write(w, r, o.Logger, apperr.New(apperr.NotAvailable, "the photos API is not available yet; it arrives with the media stages (S04)"))
 	})
 	return []Route{
-		{"GET /api/v1/system/health", http.HandlerFunc(g.GetHealth)},
-		{"GET /api/v1/files/items", http.HandlerFunc(g.GetItems)},
-		{"POST /api/v1/files/folders", strictJSON[gen.CreateFolderRequest](o.Logger, g.CreateFolder)},
-		{"/api/v1/photos", photos},
-		{"/api/v1/photos/", photos},
+		{Pattern: "GET /api/v1/system/health", Handler: http.HandlerFunc(g.GetHealth)},
+		{Pattern: "GET /api/v1/files/items", Handler: http.HandlerFunc(g.GetItems)},
+		{Pattern: "POST /api/v1/files/folders", Handler: strictJSON[gen.CreateFolderRequest](o.Logger, g.CreateFolder)},
+		{Pattern: "PUT /api/v1/files/content", Handler: declaredSize(o.MaxUploadBytes, o.Logger, g.UploadFile), MaxBody: o.MaxUploadBytes},
+		{Pattern: "/api/v1/photos", Handler: photos},
+		{Pattern: "/api/v1/photos/", Handler: photos},
 	}
 }
 
@@ -78,10 +91,10 @@ func noStore(next http.Handler) http.Handler {
 }
 
 // New builds the complete HTTP handler. From the outside in: request ID,
-// body limit, access log, panic recovery, routes. The body limit sits
-// outside the access log because http.MaxBytesHandler passes a copy of the
-// request on, and the access log must see the request the mux fills in
-// (its route pattern).
+// access log, panic recovery, routes. Each route has its own body limit
+// (uploads need far more than JSON), applied inside the mux: the access
+// log keeps the request the mux fills in (its route pattern), while
+// http.MaxBytesHandler passes a copy on.
 func New(o Options) http.Handler {
 	if o.Logger == nil {
 		o.Logger = slog.New(slog.DiscardHandler)
@@ -91,12 +104,15 @@ func New(o Options) http.Handler {
 	}
 	mux := http.NewServeMux()
 	for _, r := range Routes(o) {
-		mux.Handle(r.Pattern, r.Handler)
+		limit := r.MaxBody
+		if limit <= 0 {
+			limit = o.MaxBodyBytes
+		}
+		mux.Handle(r.Pattern, http.MaxBytesHandler(r.Handler, limit))
 	}
 	var h = problemsForUnmatched(mux, o.Logger)
 	h = noStore(h)
 	h = apperr.Recover(o.Logger)(h)
 	h = logging.AccessLog(o.Logger)(h)
-	h = http.MaxBytesHandler(h, o.MaxBodyBytes)
 	return logging.RequestID(h)
 }

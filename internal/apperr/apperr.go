@@ -45,6 +45,10 @@ const (
 	// MethodNotAllowed is a known endpoint called with a method it does
 	// not support.
 	MethodNotAllowed
+	// LengthRequired is an upload without a declared size (no
+	// Content-Length), which is needed to check limits and free space
+	// before any byte is stored.
+	LengthRequired
 )
 
 type kindInfo struct {
@@ -63,6 +67,7 @@ var kinds = map[Kind]kindInfo{
 	InsufficientStorage: {"insufficient_storage", http.StatusInsufficientStorage},
 	NotAvailable:        {"not_available", http.StatusNotImplemented},
 	MethodNotAllowed:    {"method_not_allowed", http.StatusMethodNotAllowed},
+	LengthRequired:      {"length_required", http.StatusLengthRequired},
 }
 
 // Kinds returns every defined kind, in order.

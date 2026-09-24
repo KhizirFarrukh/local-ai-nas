@@ -1,20 +1,21 @@
 # CURRENT_STATE
 
-**Last updated:** 2026-09-24 12:37 +0500 (session S005)
+**Last updated:** 2026-09-24 12:51 +0500 (session S005)
 **Plan version:** 1.1.1 (`code-agent-docs/plan.md`), **Approved baseline** 1.0.0 (S005) + the setup-script requirement (1.1.0, S005 E015)
 **Current phase:** Implementation: S01 (Basic NAS implementation) in progress; S01.1 and S01.2 done; S01.3, S01.5, and S01.6 in progress
 
 ## Active stage and task
 - **Active stage:** S01 (Basic NAS implementation), **In Progress** (`stages/S01-basic-nas.md`); S01.1 and S01.2 **Done**; S01.6 **In Progress** (T01, T02 done; T03–T06 later); S01.5 **In Progress** (T01–T04 done; T05/T06 later); S01.3 **In Progress**.
-- **Active task:** **S01.3-T04** Create folder (branch `feat/S01.3-T04-create-folder`): done, waiting for CI and the merge; next **S01.3-T05** simple streamed upload
+- **Active task:** **S01.3-T05** Simple streamed upload (branch `feat/S01.3-T05-upload`): done, waiting for CI and the merge; next **S01.3-T06** download
 
 ## In progress (write-ahead)
-- S01.3-T04: committed; push, CI, merge into `develop`.
+- S01.3-T05: committed; push, CI, merge into `develop`.
 
 ## Last completed
 - `develop` verified complete (S005): merge `c535cda` brought `cf60f72` (plan 0.4.0, which PR #3 had put on `main` only) and the user's `bda8321` (prompts 3 and 4).
 - Approval-stage decisions D-01–D-14 applied (S005 E007–E010). **Plan 1.0.0 baseline and S01 approved** (S005 E012).
-- **S01.3-T04 done** (S005 E072): `POST /api/v1/files/folders` with `parents` and `on_conflict` (fail/rename/overwrite); every new name checked before anything is created; strict JSON bodies (`api/body.go`); the resolver reports Windows device names with the reserved_name rule.
+- **S01.3-T05 done** (S005 E074): `PUT /api/v1/files/content`: declared size checked first (411/413/507 before any byte), temp file in the target folder + fsync + atomic commit (Link for fail/rename, Rename for overwrite), hidden temp names, per-route body limits; the simple-upload part of S01.4-T05 done early.
+- **S01.3-T04 done and merged** (CI run 35970636485 green; S005 E072): `POST /api/v1/files/folders` with `parents` and `on_conflict` (fail/rename/overwrite); every new name checked before anything is created; strict JSON bodies (`api/body.go`); the resolver reports Windows device names with the reserved_name rule.
 - **S01.3-T03 done and merged** (CI run 35969766390 green; S005 E070): item details with MIME (extension, else sniff) and a strong ETag (size + mtime + file ID) that changes on rewrite and on replacement.
 - **S01.3-T02 done and merged** (CI run 35969161697 green; S005 E068): `GET /api/v1/files/items` (folder page or file details), cursor pagination and 4 sort keys; 10,000-entry acceptance test; runtime v1.7.0 linked.
 - **S01.3-T01 done and merged** (CI run 35968332439 green; S005 E066): `files.Service` + hooks + `Local.Stat`; the API reaches files only through the interface (depguard + architecture test, both verified against a deliberate violation).
@@ -45,7 +46,7 @@
 
 ## Next steps
 1. **S01.3** (core file operations): T01 FilesService interface on os.Root with hooks (internal/files); then list (cursor pagination), details (MIME, ETag), create folder, simple streamed upload (PUT /content, free-space guard, name rules), download (Range/ETag), rename, move, copy, delete. **Spec-first:** each endpoint goes into `api/openapi.yaml` first, then `go generate ./internal/api`, then the strict operation (a missing one does not compile); add `github.com/oapi-codegen/runtime` v1.7.0 with the first operation that has parameters (register, R6). Each endpoint: an error case in `errorCases` (the contract test requires it), a review in `docs/api/conventions.md`, and fake-service tests that invalid input never reaches the service.
-2. Then S01.6-T03..T06 (remember the container bind note in the S01 change log), S01.4, S01.5-T05/T06, S01.7.
+2. **S01.4-T06 must also clean stale `.local-ai-nas-tmp-*` files** (S01 change log, T05 row). Then S01.6-T03..T06 (remember the container bind note in the S01 change log), S01.4, S01.5-T05/T06, S01.7.
 3. **Q18 (library size)** is needed before S01.7; ask the user when S01.7 comes close.
 4. CI: every push runs `.github/workflows/ci.yml`. `gh` is not installed; the repository is public. Watch a commit's run through the public REST API (`/repos/KhizirFarrukh/local-ai-nas/actions/runs?head_sha=<sha>`, then `/jobs`; 60 anonymous requests per hour) or the run's web page (its "Status" field). Step logs need sign-in: reproduce Linux failures with `GOOS=linux go test -c` binaries in the WSL Ubuntu distro, run from the package directory under /mnt/c when a test reads repo files.
 5. Every finished branch: merge it into `develop` myself and push (RULES User Preferences, S005).

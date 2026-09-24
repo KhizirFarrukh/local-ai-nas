@@ -53,6 +53,15 @@ Operations that create an item (simple upload, tus upload, new folder, copy, mov
 | `rename` | The new item gets a free name in the pattern `name (1).ext`, `name (2).ext`, and so on. The response shows the name used. |
 | `overwrite` | The existing file is replaced atomically. Folders are never merged or overwritten. |
 
+## Simple upload
+
+`PUT /api/v1/files/content?path=&on_conflict=` stores the request body, the raw file content, as the file at `path`. The Content-Type of the body is not used.
+
+- `Content-Length` is required (`411 length_required` without it). The server checks the size against `uploads.max_file_size` (`413 too_large`) and the free-space reserve (`507 insufficient_storage`) before it reads the body. The parent folder must exist, and with `on_conflict=fail` an existing target is refused (`409`) before the body is read as well. A client that sends `Expect: 100-continue` does not send a refused body at all.
+- The content goes to a hidden temporary file in the target folder, which is synced to disk and then renamed to its name in one step. A partly written file is never visible: listings skip temporary files (names starting with `.local-ai-nas-tmp-`, which the name rules reserve), and the target name appears only when the file is complete. A body shorter or longer than `Content-Length`, or a dropped connection, leaves nothing behind.
+- The answer is `201` with the new item (with `on_conflict=rename`, under the name used), or `200` when `on_conflict=overwrite` replaced a file.
+- For large files, or on unreliable networks, use the resumable upload below.
+
 ## Errors
 
 - Every error response is an RFC 9457 problem (`application/problem+json`) with a stable `code`, sometimes a `rule`, and the `correlation_id`. See [errors.md](errors.md).
@@ -90,4 +99,5 @@ Every endpoint is reviewed against this list before it is merged. The table afte
 | `* /api/v1/photos`, `* /api/v1/photos/…` | 1–4 and 7 met; 5 and 6 nothing to check. Always `501 not_available`; in the spec as `/photos` since S01.5-T03. |
 | `GET /api/v1/files/items` | 1–7 met. Path through the resolver (3); paging values checked before the service, which a fake-service test proves (5); no request body (6 n/a); errors 400/404/405/500 in the spec and in the contract test (2, 4); folder, file, paging, and error tests plus FuzzAPI (7). |
 | `POST /api/v1/files/folders` | 1–7 met. Path through the resolver, and the new folder plus every missing parent through the name rules before anything is created (3); the body must be JSON with no unknown fields and no trailing data, and `on_conflict` is checked against its enumeration before the service, which a fake-service test proves (5); the body is small and capped by the server's body limit, over which the answer is 413 (6); errors 400/404/405/409/413/500 in the spec and in the contract test (2, 4); created, renamed, existing, and parents tests, the invalid-input test, and FuzzAPI (7). |
+| `PUT /api/v1/files/content` | 1–7 met. Path through the resolver and the name through the name rules (3); `on_conflict`, the declared size (411, 413), the free space (507), the parent, and a `fail` conflict are checked before the body is read, which a fake-service test and a real-client test with `Expect: 100-continue` prove (5); the body is streamed with a 1 MiB buffer into a temporary file, fsynced, and committed atomically; its route has its own body limit, `uploads.max_file_size` (6); errors 400/404/405/409/411/413/500/507 in the spec, all but 507 in the contract test and 507 in the files tests (2, 4); byte-identity (SHA-256), each conflict policy, concurrent renames, invisibility during the upload, failures that leave nothing, and FuzzAPI (7). |
 | Other file endpoints (S01.3, S01.4) | Reviewed when they are added. |

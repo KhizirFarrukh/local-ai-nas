@@ -51,7 +51,8 @@ file_max_size = "10MiB"
 file_max_files = 5
 
 [uploads]
-# The largest file that can be uploaded.
+# The largest file that can be uploaded, by the simple upload (one
+# request) and by the resumable tus upload.
 max_file_size = "100GiB"
-# The largest body of one upload request.
+# The largest body of one request of a resumable (tus) upload.
 max_chunk_size = "64MiB"

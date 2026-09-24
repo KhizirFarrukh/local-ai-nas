@@ -34,6 +34,7 @@ func TestKindMapping(t *testing.T) {
 		{InsufficientStorage, "insufficient_storage", 507},
 		{NotAvailable, "not_available", 501},
 		{MethodNotAllowed, "method_not_allowed", 405},
+		{LengthRequired, "length_required", 411},
 		{Kind(999), "internal", 500}, // unknown kinds are treated as internal
 	}
 	if len(tests)-1 != len(kinds) {
@@ -53,8 +54,8 @@ func TestKindMapping(t *testing.T) {
 
 func TestKinds(t *testing.T) {
 	ks := Kinds()
-	if len(ks) != len(kinds) || ks[0] != Internal || ks[len(ks)-1] != MethodNotAllowed {
-		t.Errorf("Kinds() = %v, want all %d kinds from internal to method_not_allowed", ks, len(kinds))
+	if len(ks) != len(kinds) || ks[0] != Internal || ks[len(ks)-1] != LengthRequired {
+		t.Errorf("Kinds() = %v, want all %d kinds from internal to length_required", ks, len(kinds))
 	}
 }
 

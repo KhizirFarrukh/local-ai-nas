@@ -3,6 +3,7 @@ package api
 import (
 	"context"
 	"encoding/json"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -136,6 +137,11 @@ func (r *recordingFiles) List(context.Context, string, string, files.ListOptions
 }
 
 func (r *recordingFiles) CreateFolder(context.Context, string, string, files.FolderOptions) (files.Item, bool, error) {
+	r.calls++
+	return files.Item{}, false, apperr.New(apperr.NotFound, "fake")
+}
+
+func (r *recordingFiles) Upload(context.Context, string, string, io.Reader, int64, files.UploadOptions) (files.Item, bool, error) {
 	r.calls++
 	return files.Item{}, false, apperr.New(apperr.NotFound, "fake")
 }

@@ -15,12 +15,9 @@ func (s *server) CreateFolder(ctx context.Context, req gen.CreateFolderRequestOb
 	if b == nil {
 		return nil, apperr.New(apperr.InvalidRequest, "a JSON body is required")
 	}
-	var policy files.OnConflict
-	if b.OnConflict != nil {
-		if !b.OnConflict.Valid() {
-			return nil, apperr.Newf(apperr.InvalidRequest, "on_conflict must be fail, rename, or overwrite, got %q", *b.OnConflict)
-		}
-		policy = files.OnConflict(*b.OnConflict)
+	policy, err := conflictPolicy(b.OnConflict)
+	if err != nil {
+		return nil, err
 	}
 	opts := files.FolderOptions{Parents: b.Parents != nil && *b.Parents, OnConflict: policy}
 	it, created, err := s.files.CreateFolder(ctx, s.owner, b.Path, opts)

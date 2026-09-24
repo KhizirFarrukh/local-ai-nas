@@ -118,7 +118,7 @@ func ensureParent(root *os.Root, parent string, parents bool, apiPath string) er
 		info, err := root.Lstat(filepath.FromSlash(parent))
 		switch {
 		case storage.IsNotFound(err):
-			return apperr.Newf(apperr.NotFound, "the parent folder of %s does not exist (set parents to create it)", apiPath)
+			return apperr.Newf(apperr.NotFound, "the parent folder of %s does not exist", apiPath)
 		case err != nil:
 			return fsError(err, apiPath)
 		case !info.IsDir():

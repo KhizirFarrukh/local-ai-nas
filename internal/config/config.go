@@ -64,11 +64,12 @@ type Log struct {
 	FileMaxFiles int
 }
 
-// Uploads configures upload limits (S01.4).
+// Uploads configures upload limits (S01.3-T05, S01.4).
 type Uploads struct {
-	// MaxFileSize is the largest file that can be uploaded.
+	// MaxFileSize is the largest file that can be uploaded, by the simple
+	// upload and by tus.
 	MaxFileSize ByteSize
-	// MaxChunkSize is the largest body of one upload request.
+	// MaxChunkSize is the largest body of one tus upload request.
 	MaxChunkSize ByteSize
 }
 

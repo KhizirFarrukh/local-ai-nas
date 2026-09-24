@@ -64,6 +64,12 @@ func TestValidateName(t *testing.T) {
 		{"CONIN$", RuleReservedName},
 		{"conout$.txt", RuleReservedName},
 
+		// The prefix of the server's temporary files.
+		{".local-ai-nas-tmp-1a2b.part", RuleReservedName},
+		{".local-ai-nas-tmp-", RuleReservedName},
+		{".local-ai-nas-temp.txt", ""},
+		{"x.local-ai-nas-tmp-1", ""},
+
 		// Forbidden characters.
 		{"a<b", RuleForbiddenChar},
 		{"a>b", RuleForbiddenChar},
