@@ -1,0 +1,34 @@
+# Line endings: LF in the repository and in every working tree, on every OS.
+# This overrides a local core.autocrlf setting.
+* text=auto eol=lf
+
+# Windows command scripts need CRLF.
+*.bat text eol=crlf
+*.cmd text eol=crlf
+*.ps1 text eol=crlf
+
+# Binary files: never convert or diff as text.
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.webp binary
+*.avif binary
+*.heic binary
+*.heif binary
+*.tif binary
+*.tiff binary
+*.ico binary
+*.pdf binary
+*.mp4 binary
+*.mov binary
+*.mkv binary
+*.webm binary
+*.zip binary
+*.gz binary
+*.tar binary
+*.woff binary
+*.woff2 binary
+*.onnx binary
+*.db binary
+*.sqlite binary

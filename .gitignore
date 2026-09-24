@@ -1,0 +1,26 @@
+# Build and test output
+/bin/
+/dist/
+*.exe
+*.test
+*.prof
+/coverage.*
+*.coverprofile
+
+# Local development config and storage root (see deploy/config.example.toml).
+# Never commit a storage root, a database, or secrets.
+/dev/
+*.local.toml
+
+# Go workspace files (single module, ADR-0004)
+go.work
+go.work.sum
+
+# Web UI dependencies and build output (S02)
+node_modules/
+
+# Editors and operating systems
+.idea/
+*.swp
+.DS_Store
+Thumbs.db

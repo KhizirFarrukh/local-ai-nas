@@ -3,7 +3,7 @@
 | Field | Value |
 |---|---|
 | Stage ID | S01 |
-| Status | **Approved** (2026-09-24, S005) |
+| Status | **In Progress** (approved 2026-09-24, S005) |
 | Blocked reason | |
 | Plan version this stage is based on | 1.1.0 |
 | Origin | User-defined |
@@ -131,7 +131,7 @@ flowchart LR
 
 | Substage | Name | Status | Depends on | Requirements |
 |---|---|---|---|---|
-| S01.1 | Project foundation | Not started | plan 1.0.0; S01 approved (Q22 answered: AGPL-3.0) | NFR-008, NFR-009, NFR-013, NFR-014, NFR-016, NFR-025, NFR-029, NFR-030 |
+| S01.1 | Project foundation | In Progress | plan 1.0.0; S01 approved (Q22 answered: AGPL-3.0) | NFR-008, NFR-009, NFR-013, NFR-014, NFR-016, NFR-025, NFR-029, NFR-030 |
 | S01.2 | Storage layout and configuration | Not started | S01.1; **ADR-0003 Accepted** | FR-069–FR-072, NFR-026 |
 | S01.3 | Core file operations | Not started | S01.2, S01.5 (conventions), S01.6 (resolver) | FR-003, FR-005, FR-007, FR-073 |
 | S01.4 | Large file handling | Not started | S01.2, S01.3, S01.5 | FR-004, FR-074, NFR-006, NFR-021 |
@@ -159,7 +159,7 @@ flowchart LR
 
 | Task ID | Description | Status | Acceptance criteria |
 |---|---|---|---|
-| S01.1-T01 | **Go module and repository skeleton** (ADR-0001, ADR-0004): `go mod init github.com/KhizirFarrukh/local-ai-nas`; `go 1.27` + `toolchain go1.27.1`; `tool` directives for oapi-codegen v2.8.0, govulncheck v1.8.0, go-licenses v2.0.1; folders `cmd/local-ai-nas/`, `internal/{config,logging,apperr,db,health,api}`, `api/`, `deploy/`, `testdata/SOURCES.md`, `docs/`, `scripts/`. `.gitattributes` (`* text=auto eol=lf`, binary patterns), `.editorconfig`, `.gitignore`. Record every added module in `dependencies.md` in the same commit (R6). | Not started | `go build ./...` and `go vet ./...` pass on Windows and Linux. `git add --renormalize .` produces no changes. `dependencies.md` matches `go.mod`. |
+| S01.1-T01 | **Go module and repository skeleton** (ADR-0001, ADR-0004): `go mod init github.com/KhizirFarrukh/local-ai-nas`; `go 1.27` + `toolchain go1.27.1`; `tool` directives for oapi-codegen v2.8.0, govulncheck v1.8.0, go-licenses v2.0.1; folders `cmd/local-ai-nas/`, `internal/{config,logging,apperr,db,health,api}`, `api/`, `deploy/`, `testdata/SOURCES.md`, `docs/`, `scripts/`. `.gitattributes` (`* text=auto eol=lf`, binary patterns), `.editorconfig`, `.gitignore`. Record every added module in `dependencies.md` in the same commit (R6). | **Done** (S005) | `go build ./...` and `go vet ./...` pass on Windows and Linux. `git add --renormalize .` produces no changes. `dependencies.md` matches `go.mod`. |
 | S01.1-T02 | **License and license policy** (Q22 = **AGPL-3.0**, NFR-029): add `LICENSE` with the full GNU AGPL v3.0 text and update the README "License" section; document the licenses allowed for linked dependencies (AGPL-3.0-compatible: MIT, BSD-2/3-Clause, Apache-2.0, ISC, MPL-2.0, LGPL, GPL-3.0/AGPL-3.0) in `docs/licensing.md`; configure the `go-licenses check` allow-list. | Not started | `go tool go-licenses check ./...` passes. A deliberately disallowed test dependency fails it (verified once, then reverted). |
 | S01.1-T03 | **Lint and format** (ADR-0005): `.golangci.yml` (v2 format) enabling govet, staticcheck, errcheck, gosec, ineffassign, unused, and **depguard** rules (prepared: `internal/files` and `internal/photos` may not import each other; only `internal/transfer` may import both), plus the gofmt/goimports formatters. golangci-lint **v2.13.2 pinned as a binary**: a documented local install (upstream install script) and the official GitHub Action in CI. | Not started | `golangci-lint run` and `golangci-lint fmt --diff` are clean on the skeleton. A deliberate violation fails locally and in CI. |
 | S01.1-T04 | **Test setup**: standard `testing` + `github.com/google/go-cmp` v0.7.0; `internal/testutil` with a temp storage-root helper (`t.TempDir()`) and a server-on-`127.0.0.1:0` helper; a fuzz-test scaffold (`go test -fuzz`); a coverage profile with a threshold (80% on `internal/...`, enforced in CI). | Not started | A sample unit test, an integration test using the temp root, and a fuzz seed corpus run green. CI publishes the coverage figure and fails below the threshold. |

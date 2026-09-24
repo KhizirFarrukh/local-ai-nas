@@ -865,7 +865,7 @@ Work is **stage-gated** and governed by `code-agent-docs/RULES.md`.
 
 | ID | Name | Origin | Goal | Depends on | Status |
 |---|---|---|---|---|---|
-| S01 | Basic NAS implementation | User-defined | A reliable storage service that manages the files area through an API, with the two-area layout in place. | Plan baseline approval | Approved |
+| S01 | Basic NAS implementation | User-defined | A reliable storage service that manages the files area through an API, with the two-area layout in place. | Plan baseline approval | In Progress |
 | S02 | NAS GUI | User-defined | A graphical application that lets people use the NAS without touching the API. | S01 | Not started |
 | S03 | Security | User-defined | Comprehensive security so the NAS can be safely reached from the local network (single admin). | S01, S02 | Not started |
 | S04 | Media management | User-defined | A separate photos area with Google Photos style management. | S03 | Not started |
@@ -901,7 +901,7 @@ flowchart LR
   > "Stage 1 is basic NAS implementation."
   > "The NAS has two folders at the root: files and photos."
 - **Scope note (from P002):** S01 creates both the `files/` and `photos/` roots but implements only the files area. The photos area is managed from S04. There is no GUI and no authentication yet, so the server must bind to localhost only.
-- **Status:** **Approved** (stage document `stages/S01-basic-nas.md` approved by the user in S005)
+- **Status:** **In Progress** (stage document `stages/S01-basic-nas.md` approved by the user in S005; work started in S005)
 
 #### S01.1: Project foundation
 - **Goal:** Establish the approved stack, repository, tooling, and conventions, so every later change is built, checked, and tested the same way.

@@ -2,7 +2,7 @@
 
 **Purpose:** every dependency, external tool, dataset, and AI model the project uses or has evaluated, with its version, license, and verification status. This is required by P003 and by RULES.md **R6**: every new dependency is added here **in the same commit that introduces it**. **Section 12** lists what each platform needs at runtime; the per-platform setup scripts (S11.2, FR-149) install exactly that list (NFR-032).
 
-**Last updated:** 2026-09-24 (session S005: section 12 added). Verification method and raw results: `logs/sessions/2026-09-24_S003.md` entries E005 and E007, and audit A001 group F (`audits/A001-2026-09-24-documentation-audit.md`).
+**Last updated:** 2026-09-24 (session S005: section 12 added; S01.1-T01 created `go.mod`). Verification method and raw results: `logs/sessions/2026-09-24_S003.md` entries E005 and E007, and audit A001 group F (`audits/A001-2026-09-24-documentation-audit.md`).
 
 **Licensing policy (P003, NFR-029):** every dependency and model must have a license that allows anyone to deploy and use this project. Nothing may be restricted to non-commercial or research-only use. The project's own license is **AGPL-3.0** (Q22, decided in S005). Items that need attention under it are marked ⚠.
 
@@ -18,7 +18,7 @@ Versions are the **latest stable at verification**. Only **direct** dependencies
 
 | Name | Version | License | Purpose | Stage | ADR | Verification status |
 |---|---|---|---|---|---|---|
-| Go | go1.27.1 | BSD-3-Clause | Core server language, toolchain | S01+ | [ADR-0001](decisions/ADR-0001-backend-language-framework.md) | Verified 2026-09-24 (go.dev/dl) |
+| Go | go1.27.1 | BSD-3-Clause | Core server language, toolchain | S01+ | [ADR-0001](decisions/ADR-0001-backend-language-framework.md) | Verified 2026-09-24 (go.dev/dl). **Pinned in `go.mod`** (`go 1.27`, `toolchain go1.27.1`, S01.1-T01): an older local Go (e.g. winget's go1.27.0 on the Windows dev PC) downloads go1.27.1 automatically (`GOTOOLCHAIN=auto`) |
 | Python | 3.14.7 | PSF-2.0 | AI worker runtime | S12 | [ADR-0017](decisions/ADR-0017-ai-worker-architecture.md) | Version verified 2026-09-24 (endoflife.date). License **unverified**: the PSF wording was not found on docs.python.org/3/license.html in A001; re-check at S12.1 |
 | Node.js (LTS) | v24.21.0 ("Krypton" LTS, 2026-09-07) | MIT | Build-time only: SvelteKit/Vite build and tests | S02+ | [ADR-0009](decisions/ADR-0009-web-ui-sveltekit.md) | Verified 2026-09-24 (nodejs.org/dist/index.json) in audit A001. S02.1 pins the LTS current at that time |
 | pnpm | 12.6.0 | MIT | Web package manager (lockfile) | S02+ | [ADR-0009](decisions/ADR-0009-web-ui-sveltekit.md) | Verified 2026-09-24 (npm) |
@@ -44,13 +44,15 @@ Versions are the **latest stable at verification**. Only **direct** dependencies
 
 ## 3. Go development tools (not linked into the product)
 
+**How `go.mod` records these tools:** Go writes the three `tool` modules as `// indirect` requires, plus their own dependencies (for example kin-openapi, cobra, golang.org/x/tools, and x/sys, x/net, x/text at the versions in section 2). These are **build-time only**: `go build ./cmd/local-ai-nas` does not link them, and go-licenses and govulncheck check the product binary's real imports (S01.1-T02, T05).
+
 | Name | Version | License | Purpose | Stage | ADR | Verification status |
 |---|---|---|---|---|---|---|
-| github.com/oapi-codegen/oapi-codegen/v2 | v2.8.0 | Apache-2.0 | Generate Go server interfaces and types from `api/openapi.yaml` | S01.5 | [ADR-0002](decisions/ADR-0002-api-style.md) | Verified 2026-09-24 |
+| github.com/oapi-codegen/oapi-codegen/v2 | v2.8.0 | Apache-2.0 | Generate Go server interfaces and types from `api/openapi.yaml` | S01.5 | [ADR-0002](decisions/ADR-0002-api-style.md) | Verified 2026-09-24. **In `go.mod`** as a `tool` directive (S01.1-T01); `go tool oapi-codegen -version` = v2.8.0 |
 | github.com/google/go-cmp | v0.7.0 | BSD-3-Clause | Test comparisons and diffs | S01+ | [ADR-0005](decisions/ADR-0005-testing-linting-ci.md) | Verified 2026-09-24 |
 | golangci-lint (github.com/golangci/golangci-lint/v2) | v2.13.2 (pinned binary; CI action + local binary install, not a go.mod tool) | ⚠ GPL-3.0 (dev tool only; never linked or distributed) | Lint and format (gofmt/goimports), depguard architecture rules | S01+ | [ADR-0005](decisions/ADR-0005-testing-linting-ci.md) | Verified 2026-09-24 |
-| govulncheck (golang.org/x/vuln) | v1.8.0 | BSD-3-Clause | Vulnerability scan | S01+ | [ADR-0005](decisions/ADR-0005-testing-linting-ci.md) | Verified 2026-09-24 |
-| github.com/google/go-licenses/v2 | v2.0.1 | Apache-2.0 | Dependency license check | S01+ | [ADR-0005](decisions/ADR-0005-testing-linting-ci.md) | Verified 2026-09-24 |
+| govulncheck (golang.org/x/vuln) | v1.8.0 | BSD-3-Clause | Vulnerability scan | S01+ | [ADR-0005](decisions/ADR-0005-testing-linting-ci.md) | Verified 2026-09-24. **In `go.mod`** as a `tool` directive (S01.1-T01); `go tool govulncheck -version` = v1.8.0 |
+| github.com/google/go-licenses/v2 | v2.0.1 | Apache-2.0 | Dependency license check | S01+ | [ADR-0005](decisions/ADR-0005-testing-linting-ci.md) | Verified 2026-09-24. **In `go.mod`** as a `tool` directive (S01.1-T01) |
 
 ## 4. Web UI (npm)
 
