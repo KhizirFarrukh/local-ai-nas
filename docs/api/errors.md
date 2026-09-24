@@ -40,7 +40,9 @@ Unexpected server errors (`internal`) always have the same generic `detail`. The
 | `conflict` | 409 | The request clashes with the current state, for example the target already exists. |
 | `method_not_allowed` | 405 | The endpoint exists, but not with this method. The `Allow` header lists the methods it accepts. |
 | `length_required` | 411 | An upload without a `Content-Length` header. The server needs the size first, to check the limits and the free space before storing anything. |
+| `precondition_failed` | 412 | A conditional request (`If-Match`, `If-Unmodified-Since`) does not match the file's current version. |
 | `too_large` | 413 | The upload or request is over a size limit. |
+| `range_not_satisfiable` | 416 | The `Range` of a download lies outside the file. The `Content-Range` header gives the file's size (`bytes */<size>`). |
 | `internal` | 500 | An unexpected server error. See the server log under the `correlation_id`. |
 | `not_available` | 501 | The feature is part of the API but not available yet (for example the photos API in stage 1). |
 | `insufficient_storage` | 507 | The write would use the free space kept in reserve. |

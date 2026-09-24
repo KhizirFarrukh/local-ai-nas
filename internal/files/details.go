@@ -42,6 +42,12 @@ func withDetails(root *os.Root, it Item, apiPath string) (Item, error) {
 		return it, fsError(err, apiPath)
 	}
 	defer func() { _ = f.Close() }() // read-only
+	return fileDetails(f, it, apiPath)
+}
+
+// fileDetails adds the ETag and the media type of the open file f to it.
+// It reads with ReadAt, so the read position of f does not move.
+func fileDetails(f *os.File, it Item, apiPath string) (Item, error) {
 	id, err := storage.FileID(f)
 	if err != nil {
 		return it, fsError(err, apiPath)
@@ -50,8 +56,8 @@ func withDetails(root *os.Root, it Item, apiPath string) (Item, error) {
 	it.MIME = mimeByExtension(it.Name)
 	if it.MIME == "" {
 		head := make([]byte, sniffBytes)
-		n, err := io.ReadFull(f, head)
-		if err != nil && err != io.EOF && err != io.ErrUnexpectedEOF {
+		n, err := f.ReadAt(head, 0)
+		if err != nil && err != io.EOF {
 			return it, fsError(err, apiPath)
 		}
 		it.MIME = http.DetectContentType(head[:n])

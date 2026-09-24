@@ -25,6 +25,69 @@ tags:
     description: Reserved for the photos area (stage S04).
 paths:
   /files/content:
+    get:
+      tags: [files]
+      operationId: downloadFile
+      summary: Download a file
+      description: |
+        Sends the content of the file at `path` (HEAD sends the headers
+        only). Supports byte ranges (`Range`, single and multiple, `If-Range`)
+        and conditional requests with the `ETag` and `Last-Modified` values
+        (`If-None-Match`, `If-Modified-Since`, `If-Match`,
+        `If-Unmodified-Since`). The body's Content-Type is the file's media
+        type. `Content-Disposition` is always `attachment`, with the name
+        as an ASCII `filename` and the exact UTF-8 name as `filename*`
+        (RFC 6266, RFC 8187). Folders and links are refused (400).
+      parameters:
+        - $ref: "#/components/parameters/Path"
+      responses:
+        "200":
+          description: The whole file.
+          headers:
+            ETag:
+              schema:
+                type: string
+            Last-Modified:
+              schema:
+                type: string
+            Content-Disposition:
+              schema:
+                type: string
+            Accept-Ranges:
+              schema:
+                type: string
+          content:
+            "*/*":
+              schema:
+                type: string
+                format: binary
+        "206":
+          description: The requested ranges (one range, or `multipart/byteranges`).
+          headers:
+            Content-Range:
+              schema:
+                type: string
+          content:
+            "*/*":
+              schema:
+                type: string
+                format: binary
+        "304":
+          description: Not modified (`If-None-Match` or `If-Modified-Since`).
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "405":
+          $ref: "#/components/responses/MethodNotAllowed"
+        "409":
+          $ref: "#/components/responses/Conflict"
+        "412":
+          $ref: "#/components/responses/PreconditionFailed"
+        "416":
+          $ref: "#/components/responses/RangeNotSatisfiable"
+        "500":
+          $ref: "#/components/responses/InternalError"
     put:
       tags: [files]
       operationId: uploadFile
@@ -337,6 +400,8 @@ components:
             - not_available
             - method_not_allowed
             - length_required
+            - precondition_failed
+            - range_not_satisfiable
         rule:
           type: string
           description: The exact rule that was broken, for some codes (for example `reserved_name` for `invalid_name`).
@@ -404,6 +469,22 @@ components:
             $ref: "#/components/schemas/Problem"
     LengthRequired:
       description: The upload has no `Content-Length` header (`length_required`).
+      content:
+        application/problem+json:
+          schema:
+            $ref: "#/components/schemas/Problem"
+    PreconditionFailed:
+      description: A condition of the request does not hold (`precondition_failed`).
+      content:
+        application/problem+json:
+          schema:
+            $ref: "#/components/schemas/Problem"
+    RangeNotSatisfiable:
+      description: The range is outside the file (`range_not_satisfiable`); `Content-Range` gives the size.
+      headers:
+        Content-Range:
+          schema:
+            type: string
       content:
         application/problem+json:
           schema:

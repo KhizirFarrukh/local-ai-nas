@@ -146,6 +146,11 @@ func (r *recordingFiles) Upload(context.Context, string, string, io.Reader, int6
 	return files.Item{}, false, apperr.New(apperr.NotFound, "fake")
 }
 
+func (r *recordingFiles) Download(context.Context, string, string) (files.Item, io.ReadSeekCloser, error) {
+	r.calls++
+	return files.Item{}, nil, apperr.New(apperr.NotFound, "fake")
+}
+
 func TestGetItemsInvalidInputNeverReachesService(t *testing.T) {
 	svc := &recordingFiles{}
 	h := New(Options{Files: svc})

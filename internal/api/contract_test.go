@@ -80,6 +80,12 @@ var errorCases = []struct {
 	{http.MethodPost, "/api/v1/files/items?path=/", http.StatusMethodNotAllowed, "method_not_allowed"},
 	// POST /api/v1/files/folders: other methods (the body cases are below).
 	{http.MethodGet, "/api/v1/files/folders", http.StatusMethodNotAllowed, "method_not_allowed"},
+	// GET /api/v1/files/content (412 and 416 need request headers; the
+	// download tests validate them against the schema).
+	{http.MethodGet, "/api/v1/files/content", http.StatusBadRequest, "invalid_request"},
+	{http.MethodGet, "/api/v1/files/content?path=/docs", http.StatusBadRequest, "invalid_request"},
+	{http.MethodGet, "/api/v1/files/content?path=/docs/../../x", http.StatusBadRequest, "outside_root"},
+	{http.MethodGet, "/api/v1/files/content?path=/missing.txt", http.StatusNotFound, "not_found"},
 	// PUT /api/v1/files/content: other methods (the body cases are below).
 	{http.MethodPost, "/api/v1/files/content", http.StatusMethodNotAllowed, "method_not_allowed"},
 	// The reserved photos routes, with any method.

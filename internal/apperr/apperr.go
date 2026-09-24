@@ -49,6 +49,11 @@ const (
 	// Content-Length), which is needed to check limits and free space
 	// before any byte is stored.
 	LengthRequired
+	// PreconditionFailed is a conditional request (If-Match,
+	// If-Unmodified-Since) whose condition does not hold.
+	PreconditionFailed
+	// RangeNotSatisfiable is a Range request outside the file.
+	RangeNotSatisfiable
 )
 
 type kindInfo struct {
@@ -68,6 +73,8 @@ var kinds = map[Kind]kindInfo{
 	NotAvailable:        {"not_available", http.StatusNotImplemented},
 	MethodNotAllowed:    {"method_not_allowed", http.StatusMethodNotAllowed},
 	LengthRequired:      {"length_required", http.StatusLengthRequired},
+	PreconditionFailed:  {"precondition_failed", http.StatusPreconditionFailed},
+	RangeNotSatisfiable: {"range_not_satisfiable", http.StatusRequestedRangeNotSatisfiable},
 }
 
 // Kinds returns every defined kind, in order.

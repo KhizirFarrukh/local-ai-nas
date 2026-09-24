@@ -111,3 +111,7 @@ func (f *failingServer) CreateFolder(context.Context, gen.CreateFolderRequestObj
 func (f *failingServer) UploadFile(context.Context, gen.UploadFileRequestObject) (gen.UploadFileResponseObject, error) {
 	return nil, f.err
 }
+
+func (f *failingServer) DownloadFile(context.Context, gen.DownloadFileRequestObject) (gen.DownloadFileResponseObject, error) {
+	return nil, f.err
+}
