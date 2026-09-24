@@ -2,11 +2,11 @@
 
 | Field | Value |
 |---|---|
-| **Version** | 1.3.0 |
+| **Version** | 1.2.0 |
 | **Status** | **Approved baseline** (approved by the user in S005, 2026-09-24); 1.1.0 adds the user's setup-script requirement (S005 E015) |
 | **Last updated** | 2026-09-24 (session S005) |
 | **Source of vision** | `README.md` (repository root), the user's staged roadmap (`code-agent-docs/prompts/P002-staged-development-roadmap.json`), and the user's technology stack (`code-agent-docs/prompts/P003-technology-stack.json`) |
-| **Previous version** | 1.2.0, archived at `code-agent-docs/archive/plan-history/plan_v1.2.0.md` (0.1.0–1.1.4 also archived there) |
+| **Previous version** | 1.1.4, archived at `code-agent-docs/archive/plan-history/plan_v1.1.4.md` (0.1.0–1.1.3 also archived there) |
 
 > **This is a living document.** It changes as the user gives feedback. Every change follows `code-agent-docs/RULES.md` **R4**: the old version is archived, the version is bumped, and a revision entry is added. While the plan is a pre-1.0 draft, restructurings bump the MINOR version. **When the user approves this plan as the baseline, it becomes version 1.0.0.**
 >
@@ -867,7 +867,7 @@ Work is **stage-gated** and governed by `code-agent-docs/RULES.md`.
 | ID | Name | Origin | Goal | Depends on | Status |
 |---|---|---|---|---|---|
 | S01 | Basic NAS implementation | User-defined | A reliable storage service that manages the files area through an API, with the two-area layout in place. | Plan baseline approval | Done |
-| S02 | NAS GUI | User-defined | A graphical application that lets people use the NAS without touching the API. | S01 | Approved |
+| S02 | NAS GUI | User-defined | A graphical application that lets people use the NAS without touching the API. | S01 | Planned |
 | S03 | Security | User-defined | Comprehensive security so the NAS can be safely reached from the local network (single admin). | S01, S02 | Not started |
 | S04 | Media management | User-defined | A separate photos area with Google Photos style management. | S03 | Not started |
 | S05 | Media metadata | User-defined | Every photo has a sidecar JSON file that is the source of truth for its metadata. | S04 | Not started |
@@ -1054,7 +1054,7 @@ flowchart LR
 - **Goal:** A graphical application that lets people use the NAS without touching the API.
 - **User requirements (quoted):**
   > "Stage 2 is the NAS software (GUI) that helps in interacting with the actual NAS."
-- **Status:** **Approved** (stage document `stages/S02-nas-gui.md` approved by the user in S006)
+- **Status:** **Planned** (stage document `stages/S02-nas-gui.md` written in S006, waiting for the user's approval)
 
 #### S02.1: GUI technology and design foundation
 - **Goal:** Choose the GUI approach and build the design system and API client that every screen uses.
@@ -1164,7 +1164,7 @@ flowchart LR
 - **Requirements:** NFR-027, NFR-014.
 - **Acceptance criteria:**
   1. End-to-end tests cover browse, upload (with resume), download, rename, move, copy, delete, and preview, and pass in CI.
-  2. Cross-browser check done on current Chrome, Edge, and Firefox. Safari is not checked in S02 (the user's decision, S006).
+  2. Cross-browser check done on current Chrome, Edge, Firefox, and Safari.
   3. The GUI user guide section is written.
   4. The completion record is written and the user's sign-off is recorded.
 - **Risks/notes:** Safari testing may need a Mac or a cloud device service. That is a local tooling question, not a runtime dependency.
@@ -2620,4 +2620,3 @@ CI runs on Linux and Windows from S01.1.
 | 1.1.3 | 2026-09-24 | Clarification (PATCH), audit A002: NFR-031 and S06.8 no longer say that Q1 is pending (it was answered in S005), and S06.8 names the Q18 library size. No requirement or target changes. | Audit A002 findings F-003, F-004 (R12, S01.7-T07) | `audits/A002-2026-09-24-documentation-audit.md`; `logs/sessions/2026-09-24_S005.md` |
 | 1.1.4 | 2026-09-24 | Status (PATCH): **S01 Done**, signed off by the user. S01.7 is Done. The S01.7 throughput deviation is accepted as recorded, and it is measured on the Raspberry Pi and the mini-PC when they are available. No requirement or target changes. (Substage status updates were not versioned; a whole stage's completion is.) | The user's sign-off and decisions (S005 E126) | `logs/sessions/2026-09-24_S005.md`; `stages/S01-basic-nas.md` section 13 |
 | 1.2.0 | 2026-09-25 | Methodology (MINOR): **code first, tests at the end of each stage.** Code is written to be testable. Each stage's final testing substage writes its unit, integration, and system/application tests, including those named by earlier substages and the regression tests for recorded bugs. Coverage of 80% is enforced at the stage end, and CI reports it without blocking during the stage. Changed: 2b principle 6, section 9, 12.1, and 12.2 ("System / application" replaces "End-to-end"). No requirement or target changes. | The user's instruction (S006 E001) and answers (S006 E003) | `logs/sessions/2026-09-25_S006.md` |
-| 1.3.0 | 2026-09-25 | Stage change (MINOR): **S02 approved**. At the user's decision, S02.8 acceptance criterion 2 checks Chrome, Edge, and Firefox; Safari is not checked in S02. NFR-027 and the Safari checks of later stages are unchanged. S02 status is Approved. | The user's approval and answer "Skip Safari" (S006 E009) | `logs/sessions/2026-09-25_S006.md`; `stages/S02-nas-gui.md` |
