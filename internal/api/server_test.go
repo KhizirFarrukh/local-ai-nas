@@ -99,3 +99,7 @@ type failingServer struct{ err error }
 func (f *failingServer) GetHealth(context.Context, gen.GetHealthRequestObject) (gen.GetHealthResponseObject, error) {
 	return nil, f.err
 }
+
+func (f *failingServer) GetItems(context.Context, gen.GetItemsRequestObject) (gen.GetItemsResponseObject, error) {
+	return nil, f.err
+}

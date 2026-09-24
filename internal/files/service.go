@@ -19,6 +19,8 @@ import (
 type Service interface {
 	// Stat returns the item at path.
 	Stat(ctx context.Context, owner, path string) (Item, error)
+	// List returns one page of the folder at path (S01.3-T02).
+	List(ctx context.Context, owner, path string, opts ListOptions) (ListPage, error)
 }
 
 // Op names a file operation, for hooks and logs.

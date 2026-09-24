@@ -19,9 +19,58 @@ servers:
 tags:
   - name: system
     description: Server status.
+  - name: files
+    description: The files area of the caller's storage.
   - name: photos
     description: Reserved for the photos area (stage S04).
 paths:
+  /files/items:
+    get:
+      tags: [files]
+      operationId: getItems
+      summary: List a folder, or get the details of a file
+      description: |
+        For a folder, returns the folder and one page of its items, sorted
+        and paged as described in docs/api/conventions.md. For a file,
+        returns only the file (the paging parameters do not apply).
+      parameters:
+        - $ref: "#/components/parameters/Path"
+        - name: cursor
+          in: query
+          description: The `next_cursor` of the previous page. Only valid with the same sort and order.
+          schema:
+            type: string
+        - name: limit
+          in: query
+          description: The page size.
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 1000
+            default: 100
+        - name: sort
+          in: query
+          schema:
+            $ref: "#/components/schemas/ListSort"
+        - name: order
+          in: query
+          schema:
+            $ref: "#/components/schemas/ListOrder"
+      responses:
+        "200":
+          description: The item, and for a folder one page of its items.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ItemsResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "405":
+          $ref: "#/components/responses/MethodNotAllowed"
+        "500":
+          $ref: "#/components/responses/InternalError"
   /system/health:
     get:
       tags: [system]
@@ -63,7 +112,64 @@ paths:
         "500":
           $ref: "#/components/responses/InternalError"
 components:
+  parameters:
+    Path:
+      name: path
+      in: query
+      required: true
+      description: A path in the caller's files area, starting with `/` (the root of the area). See docs/api/conventions.md.
+      schema:
+        type: string
+      example: /docs/report.pdf
   schemas:
+    FileItem:
+      type: object
+      additionalProperties: false
+      required: [path, name, kind, size, mod_time]
+      properties:
+        path:
+          type: string
+          description: The item's path in the caller's files area, starting with `/`.
+        name:
+          type: string
+          description: The last element of the path; empty for the root.
+        kind:
+          $ref: "#/components/schemas/ItemKind"
+        size:
+          type: integer
+          format: int64
+          description: The size in bytes (0 for folders).
+        mod_time:
+          type: string
+          format: date-time
+          description: The last modification time, in UTC.
+    ItemKind:
+      type: string
+      description: A symbolic link is listed but never followed.
+      enum: [file, dir, symlink, other]
+    ItemsResponse:
+      type: object
+      additionalProperties: false
+      required: [item]
+      properties:
+        item:
+          $ref: "#/components/schemas/FileItem"
+        items:
+          type: array
+          description: For a folder, this page of its items.
+          items:
+            $ref: "#/components/schemas/FileItem"
+        next_cursor:
+          type: string
+          description: Present when more items follow; pass it as `cursor` to get the next page.
+    ListSort:
+      type: string
+      enum: [name, size, mod_time, kind]
+      default: name
+    ListOrder:
+      type: string
+      enum: [asc, desc]
+      default: asc
     Problem:
       type: object
       description: An RFC 9457 problem details object (docs/api/errors.md).
@@ -136,6 +242,12 @@ components:
       type: string
       enum: [ok, warn, fail]
   responses:
+    BadRequest:
+      description: The request is not valid (`invalid_request`, `invalid_name`, or `outside_root`).
+      content:
+        application/problem+json:
+          schema:
+            $ref: "#/components/schemas/Problem"
     NotFound:
       description: No endpoint at this path (`not_found`), or no such item.
       content:

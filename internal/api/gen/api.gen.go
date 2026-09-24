@@ -9,8 +9,12 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
+	"time"
+
+	"github.com/oapi-codegen/runtime"
 )
 
 // Defines values for HealthStatus.
@@ -28,6 +32,72 @@ func (e HealthStatus) Valid() bool {
 	case Ok:
 		return true
 	case Warn:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for ItemKind.
+const (
+	Dir     ItemKind = "dir"
+	File    ItemKind = "file"
+	Other   ItemKind = "other"
+	Symlink ItemKind = "symlink"
+)
+
+// Valid indicates whether the value is a known member of the ItemKind enum.
+func (e ItemKind) Valid() bool {
+	switch e {
+	case Dir:
+		return true
+	case File:
+		return true
+	case Other:
+		return true
+	case Symlink:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for ListOrder.
+const (
+	Asc  ListOrder = "asc"
+	Desc ListOrder = "desc"
+)
+
+// Valid indicates whether the value is a known member of the ListOrder enum.
+func (e ListOrder) Valid() bool {
+	switch e {
+	case Asc:
+		return true
+	case Desc:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for ListSort.
+const (
+	Kind    ListSort = "kind"
+	ModTime ListSort = "mod_time"
+	Name    ListSort = "name"
+	Size    ListSort = "size"
+)
+
+// Valid indicates whether the value is a known member of the ListSort enum.
+func (e ListSort) Valid() bool {
+	switch e {
+	case Kind:
+		return true
+	case ModTime:
+		return true
+	case Name:
+		return true
+	case Size:
 		return true
 	default:
 		return false
@@ -91,6 +161,24 @@ func (e ProblemType) Valid() bool {
 	}
 }
 
+// FileItem defines model for FileItem.
+type FileItem struct {
+	// Kind A symbolic link is listed but never followed.
+	Kind ItemKind `json:"kind"`
+
+	// ModTime The last modification time, in UTC.
+	ModTime time.Time `json:"mod_time"`
+
+	// Name The last element of the path; empty for the root.
+	Name string `json:"name"`
+
+	// Path The item's path in the caller's files area, starting with `/`.
+	Path string `json:"path"`
+
+	// Size The size in bytes (0 for folders).
+	Size int64 `json:"size"`
+}
+
 // HealthCheck defines model for HealthCheck.
 type HealthCheck struct {
 	Detail *string `json:"detail,omitempty"`
@@ -110,6 +198,26 @@ type HealthReport struct {
 
 // HealthStatus defines model for HealthStatus.
 type HealthStatus string
+
+// ItemKind A symbolic link is listed but never followed.
+type ItemKind string
+
+// ItemsResponse defines model for ItemsResponse.
+type ItemsResponse struct {
+	Item FileItem `json:"item"`
+
+	// Items For a folder, this page of its items.
+	Items *[]FileItem `json:"items,omitempty"`
+
+	// NextCursor Present when more items follow; pass it as `cursor` to get the next page.
+	NextCursor *string `json:"next_cursor,omitempty"`
+}
+
+// ListOrder defines model for ListOrder.
+type ListOrder string
+
+// ListSort defines model for ListSort.
+type ListSort string
 
 // Problem An RFC 9457 problem details object (docs/api/errors.md).
 type Problem struct {
@@ -141,14 +249,40 @@ type ProblemCode string
 // ProblemType Always `about:blank` for now; `title` is then the HTTP status text.
 type ProblemType string
 
+// Path defines model for Path.
+type Path = string
+
+// BadRequest An RFC 9457 problem details object (docs/api/errors.md).
+type BadRequest = Problem
+
 // InternalError An RFC 9457 problem details object (docs/api/errors.md).
 type InternalError = Problem
 
 // MethodNotAllowed An RFC 9457 problem details object (docs/api/errors.md).
 type MethodNotAllowed = Problem
 
+// NotFound An RFC 9457 problem details object (docs/api/errors.md).
+type NotFound = Problem
+
+// GetItemsParams defines parameters for GetItems.
+type GetItemsParams struct {
+	// Path A path in the caller's files area, starting with `/` (the root of the area). See docs/api/conventions.md.
+	Path Path `form:"path" json:"path"`
+
+	// Cursor The `next_cursor` of the previous page. Only valid with the same sort and order.
+	Cursor *string `form:"cursor,omitempty" json:"cursor,omitempty"`
+
+	// Limit The page size.
+	Limit *int       `form:"limit,omitempty" json:"limit,omitempty"`
+	Sort  *ListSort  `form:"sort,omitempty" json:"sort,omitempty"`
+	Order *ListOrder `form:"order,omitempty" json:"order,omitempty"`
+}
+
 // ServerInterface represents all server handlers.
 type ServerInterface interface {
+	// GetItems List a folder, or get the details of a file
+	// (GET /files/items)
+	GetItems(w http.ResponseWriter, r *http.Request, params GetItemsParams)
 	// GetHealth Server health and startup checks
 	// (GET /system/health)
 	GetHealth(w http.ResponseWriter, r *http.Request)
@@ -162,6 +296,91 @@ type ServerInterfaceWrapper struct {
 }
 
 type MiddlewareFunc func(http.Handler) http.Handler
+
+// GetItems operation middleware
+func (siw *ServerInterfaceWrapper) GetItems(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params GetItemsParams
+
+	// ------------- Required query parameter "path" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, true, "path", r.URL.Query(), &params.Path, runtime.BindQueryParameterOptions{Type: "string", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "path"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "path", Err: err})
+		}
+		return
+	}
+
+	// ------------- Optional query parameter "cursor" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "cursor", r.URL.Query(), &params.Cursor, runtime.BindQueryParameterOptions{Type: "string", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "cursor"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "cursor", Err: err})
+		}
+		return
+	}
+
+	// ------------- Optional query parameter "limit" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "limit", r.URL.Query(), &params.Limit, runtime.BindQueryParameterOptions{Type: "integer", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "limit"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "limit", Err: err})
+		}
+		return
+	}
+
+	// ------------- Optional query parameter "sort" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "sort", r.URL.Query(), &params.Sort, runtime.BindQueryParameterOptions{Type: "string", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "sort"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "sort", Err: err})
+		}
+		return
+	}
+
+	// ------------- Optional query parameter "order" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "order", r.URL.Query(), &params.Order, runtime.BindQueryParameterOptions{Type: "string", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "order"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "order", Err: err})
+		}
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.GetItems(w, r, params)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
 
 // GetHealth operation middleware
 func (siw *ServerInterfaceWrapper) GetHealth(w http.ResponseWriter, r *http.Request) {
@@ -297,10 +516,13 @@ func HandlerWithOptions(si ServerInterface, options StdHTTPServerOptions) http.H
 		ErrorHandlerFunc:   options.ErrorHandlerFunc,
 	}
 
+	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/files/items", wrapper.GetItems)
 	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/system/health", wrapper.GetHealth)
 
 	return m
 }
+
+type BadRequestApplicationProblemPlusJSONResponse Problem
 
 type InternalErrorApplicationProblemPlusJSONResponse Problem
 
@@ -311,6 +533,97 @@ type MethodNotAllowedApplicationProblemPlusJSONResponse struct {
 	Body Problem
 
 	Headers MethodNotAllowedResponseHeaders
+}
+
+type NotFoundApplicationProblemPlusJSONResponse Problem
+
+type GetItemsRequestObject struct {
+	Params GetItemsParams
+}
+
+type GetItemsResponseObject interface {
+	VisitGetItemsResponse(w http.ResponseWriter) error
+}
+
+type GetItems200JSONResponse ItemsResponse
+
+func (response GetItems200JSONResponse) VisitGetItemsResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type GetItems400ApplicationProblemPlusJSONResponse struct {
+	BadRequestApplicationProblemPlusJSONResponse
+}
+
+func (response GetItems400ApplicationProblemPlusJSONResponse) VisitGetItemsResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(400)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type GetItems404ApplicationProblemPlusJSONResponse struct {
+	NotFoundApplicationProblemPlusJSONResponse
+}
+
+func (response GetItems404ApplicationProblemPlusJSONResponse) VisitGetItemsResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(404)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type GetItems405ApplicationProblemPlusJSONResponse struct {
+	MethodNotAllowedApplicationProblemPlusJSONResponse
+}
+
+func (response GetItems405ApplicationProblemPlusJSONResponse) VisitGetItemsResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/problem+json")
+	if response.Headers.Allow != nil {
+		w.Header().Set("Allow", fmt.Sprint(*response.Headers.Allow))
+	}
+	w.WriteHeader(405)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type GetItems500ApplicationProblemPlusJSONResponse struct {
+	InternalErrorApplicationProblemPlusJSONResponse
+}
+
+func (response GetItems500ApplicationProblemPlusJSONResponse) VisitGetItemsResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(500)
+	_, err := buf.WriteTo(w)
+	return err
 }
 
 type GetHealthRequestObject struct {
@@ -385,6 +698,9 @@ func (response GetHealth503JSONResponse) VisitGetHealthResponse(w http.ResponseW
 
 // StrictServerInterface represents all server handlers.
 type StrictServerInterface interface {
+	// GetItems List a folder, or get the details of a file
+	// (GET /files/items)
+	GetItems(ctx context.Context, request GetItemsRequestObject) (GetItemsResponseObject, error)
 	// GetHealth Server health and startup checks
 	// (GET /system/health)
 	GetHealth(ctx context.Context, request GetHealthRequestObject) (GetHealthResponseObject, error)
@@ -427,6 +743,32 @@ type strictHandler struct {
 	ssi         StrictServerInterface
 	middlewares []StrictMiddlewareFunc
 	options     StrictHTTPServerOptions
+}
+
+// GetItems operation middleware
+func (sh *strictHandler) GetItems(w http.ResponseWriter, r *http.Request, params GetItemsParams) {
+	var request GetItemsRequestObject
+
+	request.Params = params
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.GetItems(ctx, request.(GetItemsRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "GetItems")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(GetItemsResponseObject); ok {
+		if err := validResponse.VisitGetItemsResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
 }
 
 // GetHealth operation middleware

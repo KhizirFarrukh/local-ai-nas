@@ -67,6 +67,16 @@ var errorCases = []struct {
 	// GET /api/v1/system/health: other methods.
 	{http.MethodPost, "/api/v1/system/health", http.StatusMethodNotAllowed, "method_not_allowed"},
 	{http.MethodDelete, "/api/v1/system/health", http.StatusMethodNotAllowed, "method_not_allowed"},
+	// GET /api/v1/files/items.
+	{http.MethodGet, "/api/v1/files/items", http.StatusBadRequest, "invalid_request"},
+	{http.MethodGet, "/api/v1/files/items?path=/&limit=0", http.StatusBadRequest, "invalid_request"},
+	{http.MethodGet, "/api/v1/files/items?path=/&limit=abc", http.StatusBadRequest, "invalid_request"},
+	{http.MethodGet, "/api/v1/files/items?path=/&sort=color", http.StatusBadRequest, "invalid_request"},
+	{http.MethodGet, "/api/v1/files/items?path=/&cursor=garbage", http.StatusBadRequest, "invalid_request"},
+	{http.MethodGet, "/api/v1/files/items?path=/docs/../../x", http.StatusBadRequest, "outside_root"},
+	{http.MethodGet, "/api/v1/files/items?path=/docs%5Ca.txt", http.StatusBadRequest, "invalid_name"},
+	{http.MethodGet, "/api/v1/files/items?path=/missing", http.StatusNotFound, "not_found"},
+	{http.MethodPost, "/api/v1/files/items?path=/", http.StatusMethodNotAllowed, "method_not_allowed"},
 	// The reserved photos routes, with any method.
 	{http.MethodGet, "/api/v1/photos", http.StatusNotImplemented, "not_available"},
 	{http.MethodPost, "/api/v1/photos", http.StatusNotImplemented, "not_available"},
@@ -80,7 +90,7 @@ var errorCases = []struct {
 // the Problem schema in the spec.
 func TestErrorResponsesMatchSchema(t *testing.T) {
 	doc := loadSpec(t)
-	h := New(Options{})
+	h := New(Options{Files: testFiles(t)})
 
 	// A mux with the same routes tells which route each case exercises.
 	routeOf := http.NewServeMux()
