@@ -42,6 +42,9 @@ const (
 	// NotAvailable is a feature that exists in the API but is not
 	// available yet, such as /api/v1/photos in S01.
 	NotAvailable
+	// MethodNotAllowed is a known endpoint called with a method it does
+	// not support.
+	MethodNotAllowed
 )
 
 type kindInfo struct {
@@ -59,6 +62,18 @@ var kinds = map[Kind]kindInfo{
 	TooLarge:            {"too_large", http.StatusRequestEntityTooLarge},
 	InsufficientStorage: {"insufficient_storage", http.StatusInsufficientStorage},
 	NotAvailable:        {"not_available", http.StatusNotImplemented},
+	MethodNotAllowed:    {"method_not_allowed", http.StatusMethodNotAllowed},
+}
+
+// Kinds returns every defined kind, in order.
+func Kinds() []Kind {
+	out := make([]Kind, 0, len(kinds))
+	for k := Internal; ; k++ {
+		if _, ok := kinds[k]; !ok {
+			return out
+		}
+		out = append(out, k)
+	}
 }
 
 func (k Kind) info() kindInfo {

@@ -2,7 +2,7 @@
 
 Every error response of the local-ai-nas API has the same format: an RFC 9457 **problem details** object, sent with the media type `application/problem+json`. The code is in [`internal/apperr`](../../internal/apperr/apperr.go).
 
-This page describes the format and the codes that exist so far. The full catalogue, with the codes for each endpoint and contract tests, comes with the API layer (S01.5-T03).
+This page describes the format and the codes. The spec [`api/openapi.yaml`](../../api/openapi.yaml) has the same format as the `Problem` schema and lists, for every endpoint, the error responses it can give. A contract test checks every error response against that schema (S01.5-T03).
 
 ## Format
 
@@ -36,8 +36,9 @@ Unexpected server errors (`internal`) always have the same generic `detail`. The
 | `invalid_request` | 400 | The request is malformed: bad parameters or body. |
 | `invalid_name` | 400 | A file or folder name breaks the name rules. |
 | `outside_root` | 400 | A path would leave your storage area. |
-| `not_found` | 404 | The file, folder, or upload does not exist. |
+| `not_found` | 404 | The file, folder, or upload does not exist, or there is no endpoint at this path. |
 | `conflict` | 409 | The request clashes with the current state, for example the target already exists. |
+| `method_not_allowed` | 405 | The endpoint exists, but not with this method. The `Allow` header lists the methods it accepts. |
 | `too_large` | 413 | The upload or request is over a size limit. |
 | `internal` | 500 | An unexpected server error. See the server log under the `correlation_id`. |
 | `not_available` | 501 | The feature is part of the API but not available yet (for example the photos API in stage 1). |

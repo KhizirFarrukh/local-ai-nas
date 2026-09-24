@@ -65,7 +65,7 @@ func New(o Options) http.Handler {
 	for _, r := range Routes(o) {
 		mux.Handle(r.Pattern, r.Handler)
 	}
-	var h http.Handler = mux
+	var h = problemsForUnmatched(mux, o.Logger)
 	h = apperr.Recover(o.Logger)(h)
 	h = logging.AccessLog(o.Logger)(h)
 	h = http.MaxBytesHandler(h, o.MaxBodyBytes)

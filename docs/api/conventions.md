@@ -86,6 +86,6 @@ Every endpoint is reviewed against this list before it is merged. The table afte
 
 | Endpoint | Checklist result |
 |---|---|
-| `GET /api/v1/system/health` | 1, 3, 4, 7 met. 5 and 6: nothing to check (no input, no request body). 2: not yet; the endpoint goes into the spec with the generated server (S01.5-T03/T04). A failing check gives 503 with the report, not a problem, by design. |
-| `* /api/v1/photos`, `* /api/v1/photos/…` | 1, 3, 4, 7 met; 5 and 6 nothing to check. Always `501 not_available`. 2: not yet (S01.5-T03). |
+| `GET /api/v1/system/health` | 1–4 and 7 met; 5 and 6 nothing to check (no input, no request body). In the spec since S01.5-T03 (the generated interface follows in T04). A failing check gives 503 with the report, not a problem, by design. |
+| `* /api/v1/photos`, `* /api/v1/photos/…` | 1–4 and 7 met; 5 and 6 nothing to check. Always `501 not_available`; in the spec as `/photos` since S01.5-T03. |
 | File endpoints (S01.3, S01.4) | Reviewed when they are added. |
