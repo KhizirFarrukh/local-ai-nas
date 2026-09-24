@@ -81,12 +81,22 @@ func (k Kind) String() string { return k.Code() }
 type Error struct {
 	Kind   Kind
 	Detail string
-	Err    error
+	// Rule optionally names the exact rule that was broken, such as
+	// "reserved_name" for an invalid_name error (S01.6-T02). Clients get
+	// it in the problem's "rule" field.
+	Rule string
+	Err  error
 }
 
 // New returns an error of the given kind with a client-safe detail.
 func New(kind Kind, detail string) *Error {
 	return &Error{Kind: kind, Detail: detail}
+}
+
+// NewRule returns an error of the given kind for a broken rule, with a
+// client-safe detail.
+func NewRule(kind Kind, rule, detail string) *Error {
+	return &Error{Kind: kind, Rule: rule, Detail: detail}
 }
 
 // Newf is New with a formatted detail.
@@ -132,6 +142,7 @@ type Problem struct {
 	Status        int    `json:"status"`
 	Detail        string `json:"detail,omitempty"`
 	Code          string `json:"code"`
+	Rule          string `json:"rule,omitempty"`
 	CorrelationID string `json:"correlation_id,omitempty"`
 }
 
@@ -145,10 +156,10 @@ const genericDetail = "An unexpected error occurred. The server log has the deta
 // detail, whatever their message says.
 func ProblemFor(err error, correlationID string) Problem {
 	kind := KindOf(err)
-	detail := genericDetail
+	detail, rule := genericDetail, ""
 	var e *Error
 	if kind != Internal && errors.As(err, &e) {
-		detail = e.Detail
+		detail, rule = e.Detail, e.Rule
 	}
 	return Problem{
 		Type:          "about:blank",
@@ -156,6 +167,7 @@ func ProblemFor(err error, correlationID string) Problem {
 		Status:        kind.Status(),
 		Detail:        detail,
 		Code:          kind.Code(),
+		Rule:          rule,
 		CorrelationID: correlationID,
 	}
 }
