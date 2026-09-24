@@ -1,11 +1,166 @@
-# local-ai-nas REST API contract (ADR-0002). The Go server interfaces and
-# types are generated from this file with oapi-codegen (S01.5).
+# local-ai-nas REST API contract (ADR-0002, docs/api/conventions.md). The Go
+# server interfaces and types are generated from this file with oapi-codegen.
 # OpenAPI 3.0.3 because oapi-codegen v2 targets OpenAPI 3.0.x.
-# Skeleton (S01.1-T01): paths are added from S01.5 on.
 openapi: 3.0.3
 info:
   title: local-ai-nas API
-  version: 0.0.0
+  version: 0.1.0
+  description: |
+    The REST API of local-ai-nas. Every endpoint is under `/api/v1`
+    (docs/api/versioning.md). Every error is an RFC 9457 problem
+    (`application/problem+json`, schema `Problem`, docs/api/errors.md).
+    Paths of files and folders go in query parameters or body fields and
+    start with `/`, the caller's own storage area.
+  license:
+    name: AGPL-3.0-or-later
+    url: https://www.gnu.org/licenses/agpl-3.0.html
 servers:
   - url: /api/v1
-paths: {}
+tags:
+  - name: system
+    description: Server status.
+  - name: photos
+    description: Reserved for the photos area (stage S04).
+paths:
+  /system/health:
+    get:
+      tags: [system]
+      operationId: getHealth
+      summary: Server health and startup checks
+      description: |
+        Runs the health checks (config, storage_writable, same_filesystem,
+        free_space, database). A warning keeps the status 200; a failed
+        check gives 503 with the same report body.
+      responses:
+        "200":
+          description: Healthy, possibly with warnings.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthReport"
+        "503":
+          description: At least one check failed.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthReport"
+        "405":
+          $ref: "#/components/responses/MethodNotAllowed"
+        "500":
+          $ref: "#/components/responses/InternalError"
+  /photos:
+    get:
+      tags: [photos]
+      operationId: getPhotos
+      summary: Reserved for the photos area
+      description: |
+        The photos area has no API before the media stages. This path and
+        every path under `/photos/`, with any method, answer
+        `501 not_available`.
+      responses:
+        "501":
+          $ref: "#/components/responses/NotAvailable"
+        "500":
+          $ref: "#/components/responses/InternalError"
+components:
+  schemas:
+    Problem:
+      type: object
+      description: An RFC 9457 problem details object (docs/api/errors.md).
+      additionalProperties: false
+      required: [type, title, status, code]
+      properties:
+        type:
+          type: string
+          description: Always `about:blank` for now; `title` is then the HTTP status text.
+          enum: ["about:blank"]
+        title:
+          type: string
+          description: The HTTP status text.
+        status:
+          type: integer
+          minimum: 400
+          maximum: 599
+          description: The HTTP status code, equal to the response status.
+        detail:
+          type: string
+          description: A human-readable explanation for this occurrence.
+        code:
+          type: string
+          description: A stable, machine-readable error code.
+          enum:
+            - internal
+            - invalid_request
+            - invalid_name
+            - outside_root
+            - not_found
+            - conflict
+            - too_large
+            - insufficient_storage
+            - not_available
+            - method_not_allowed
+        rule:
+          type: string
+          description: The exact rule that was broken, for some codes (for example `reserved_name` for `invalid_name`).
+        correlation_id:
+          type: string
+          description: The request ID; the same as the `X-Request-ID` header and the server logs.
+    HealthReport:
+      type: object
+      additionalProperties: false
+      required: [status, version, checks]
+      properties:
+        status:
+          $ref: "#/components/schemas/HealthStatus"
+        version:
+          type: string
+        checks:
+          type: array
+          items:
+            $ref: "#/components/schemas/HealthCheck"
+    HealthCheck:
+      type: object
+      additionalProperties: false
+      required: [name, status]
+      properties:
+        name:
+          type: string
+          description: config, storage_writable, same_filesystem, free_space, or database.
+        status:
+          $ref: "#/components/schemas/HealthStatus"
+        detail:
+          type: string
+        error:
+          type: string
+    HealthStatus:
+      type: string
+      enum: [ok, warn, fail]
+  responses:
+    NotFound:
+      description: No endpoint at this path (`not_found`), or no such item.
+      content:
+        application/problem+json:
+          schema:
+            $ref: "#/components/schemas/Problem"
+    MethodNotAllowed:
+      description: The endpoint exists but not with this method (`method_not_allowed`). The `Allow` header lists the methods.
+      headers:
+        Allow:
+          schema:
+            type: string
+      content:
+        application/problem+json:
+          schema:
+            $ref: "#/components/schemas/Problem"
+    NotAvailable:
+      description: The feature is part of the API but not available yet (`not_available`).
+      content:
+        application/problem+json:
+          schema:
+            $ref: "#/components/schemas/Problem"
+    InternalError:
+      description: An unexpected server error (`internal`); the details are in the server log under the correlation ID.
+      content:
+        application/problem+json:
+          schema:
+            $ref: "#/components/schemas/Problem"
