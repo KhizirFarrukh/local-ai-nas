@@ -24,6 +24,7 @@ This page describes the format and the codes that exist so far. The full catalog
 | `status` | The HTTP status code, the same as the response status. |
 | `detail` | A human-readable explanation for this occurrence. It never contains internal details such as server paths or stack traces. |
 | `code` | A stable, machine-readable code. Programs should use this, not `title` or `detail`. |
+| `rule` | Only for some codes: the exact rule that was broken, for example `reserved_name` for `invalid_name` (see [Name rules](#name-rules)). |
 | `correlation_id` | The request ID. The same ID is in the `X-Request-ID` response header and in every server log line for this request. |
 
 Unexpected server errors (`internal`) always have the same generic `detail`. The actual cause is only in the server log, under the `correlation_id`. A crash inside a request handler is handled the same way.
@@ -43,3 +44,21 @@ Unexpected server errors (`internal`) always have the same generic `detail`. The
 | `insufficient_storage` | 507 | The write would use the free space kept in reserve. |
 
 Codes are stable: a code keeps its meaning, and new codes are only added.
+
+## Name rules
+
+A name the API is asked to create (an upload, a new folder, the target of a rename, move, or copy) must follow these rules, on every operating system, so the storage works the same on Linux and Windows. An invalid name is refused with `invalid_name` and the `rule` below. Names are never changed silently. Files that already exist on disk with other names can still be read.
+
+| `rule` | The name is refused when |
+|---|---|
+| `empty_name` | it is empty |
+| `dot_name` | it is `.` or `..` |
+| `reserved_name` | it is a Windows device name, with any extension and in any case: `CON`, `PRN`, `AUX`, `NUL`, `CONIN$`, `CONOUT$`, `COM0`–`COM9`, `LPT0`–`LPT9`, `COM¹`–`COM³`, `LPT¹`–`LPT³` (for example `aux.txt`) |
+| `forbidden_character` | it contains any of `<` `>` `:` `"` `/` `\` `\|` `?` `*` |
+| `control_character` | it contains a control character (U+0000 to U+001F, or U+007F) |
+| `trailing_dot_or_space` | it ends with a dot or a space |
+| `name_too_long` | it is longer than 255 bytes in UTF-8 |
+| `path_too_long` | the whole path inside your storage area is longer than 4096 bytes |
+| `invalid_utf8` | it is not valid UTF-8 |
+
+Paths are also normalized to Unicode NFC: a name sent in decomposed form (common on macOS) is the same file as its composed form.

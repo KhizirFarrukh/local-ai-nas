@@ -99,6 +99,16 @@ func TestProblemFor(t *testing.T) {
 			err:  New(Internal, "secret internal state"),
 			want: Problem{Type: "about:blank", Title: "Internal Server Error", Status: 500, Detail: genericDetail, Code: "internal", CorrelationID: "req1"},
 		},
+		{
+			name: "a broken rule is reported",
+			err:  fmt.Errorf("create: %w", NewRule(InvalidName, "reserved_name", `"aux.txt" is reserved`)),
+			want: Problem{Type: "about:blank", Title: "Bad Request", Status: 400, Detail: `"aux.txt" is reserved`, Code: "invalid_name", Rule: "reserved_name", CorrelationID: "req1"},
+		},
+		{
+			name: "an internal error never shows a rule",
+			err:  NewRule(Internal, "some_rule", "hidden"),
+			want: Problem{Type: "about:blank", Title: "Internal Server Error", Status: 500, Detail: genericDetail, Code: "internal", CorrelationID: "req1"},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
