@@ -2,19 +2,20 @@
 
 **Last updated:** 2026-09-24 07:45 +0500 (session S005)
 **Plan version:** 1.1.1 (`code-agent-docs/plan.md`), **Approved baseline** 1.0.0 (S005) + the setup-script requirement (1.1.0, S005 E015)
-**Current phase:** Implementation: S01 (Basic NAS implementation) in progress; S01.1 and S01.2 done; next S01.6-T01/T02
+**Current phase:** Implementation: S01 (Basic NAS implementation) in progress; S01.1 and S01.2 done; S01.6 in progress
 
 ## Active stage and task
-- **Active stage:** S01 (Basic NAS implementation), **In Progress** (`stages/S01-basic-nas.md`); S01.1 and S01.2 **Done**; next in the execution order: S01.6-T01, S01.6-T02.
-- **Active task:** none (S01.2 closed; S01.6-T01 next)
+- **Active stage:** S01 (Basic NAS implementation), **In Progress** (`stages/S01-basic-nas.md`); S01.1 and S01.2 **Done**; S01.6 **In Progress** (T01, T02 now; T03–T06 later in the execution order).
+- **Active task:** none (S01.6-T01 done; S01.6-T02 next)
 
 ## In progress (write-ahead)
-- Merge `feat/S01.2-T06-photos-placeholder` (T06 + S01.2 closure) into `develop` after CI.
+- S01.6-T01: push, wait for CI, merge `feat/S01.6-T01-paths` into `develop`.
 
 ## Last completed
 - `develop` verified complete (S005): merge `c535cda` brought `cf60f72` (plan 0.4.0, which PR #3 had put on `main` only) and the user's `bda8321` (prompts 3 and 4).
 - Approval-stage decisions D-01–D-14 applied (S005 E007–E010). **Plan 1.0.0 baseline and S01 approved** (S005 E012).
-- **S01.2 closed** (S005 E052): T06 done (`/api/v1/photos` → 501 not_available); all 6 S01.2 tasks Done; substage acceptance checked (S01 change log).
+- **S01.6-T01 done** (S005 E054): path rules (UNC, drive letters, encoded separators, dot/space runs, NFC) with a 56-case attack corpus, an os.Root bypass test, and FuzzResolve (3.49 M execs clean).
+- **S01.2 closed and merged** (CI run 35964600803 green; S005 E052): T06 done (`/api/v1/photos` → 501 not_available); all 6 S01.2 tasks Done; substage acceptance checked (S01 change log).
 - **S01.2-T05 done and merged** (CI run 35964271426 green; S005 E050): health checks config, storage_writable, same_filesystem (warn + upload_finalize_mode=copy on a split), free_space, database; run at startup and on the health endpoint.
 - **S01.2-T04 done and merged** (CI run 35950125517 green; S005 E048): `storage.DiskFree` (Statfs / GetDiskFreeSpaceEx) and `SpaceGuard` (507 insufficient_storage before any byte is stored).
 - **S01.2-T03 done and merged** (CI run 35949731329 green; S005 E046): `storage.Resolver` (Resolve with safe path rules; OpenRoot as the second layer), `files.Item` with OwnerID, and the architecture test of `internal/files`.
@@ -34,12 +35,11 @@
 - Plan 1.1.0: the user's requirement to record every dependency and build a setup script per platform (FR-149, NFR-032, S11.2, Q41; `dependencies.md` section 12; RULES 1.5.0) (S005 E015–E016).
 
 ## Next steps
-1. **S01.6-T01** (path normalization and traversal prevention in the resolver): the attack corpus of at least 50 cases (also a fuzz seed corpus), rejected on Linux and Windows; drive letters, UNC, encoded separators; the NFC decision (golang.org/x/text, or reject non-NFC; record it in `dependencies.md`); `filepath.IsLocal`; os.Root as the second layer (partly done in S01.2-T03). Branch `feat/S01.6-T01-paths`.
-2. **S01.6-T02** (file name rules with a per-rule error code).
-3. Then S01.5-T01..T04 (API conventions, versioning, errors catalogue, validation), S01.3, S01.6-T03..T06 (remember the container bind note in the S01 change log), S01.4, S01.5-T05/T06, S01.7.
-4. **Q18 (library size)** is needed before S01.7; ask the user when S01.7 comes close.
-5. CI: every push runs `.github/workflows/ci.yml`. `gh` is not installed; the repository is public. Watch a commit's run through the public REST API (`/repos/KhizirFarrukh/local-ai-nas/actions/runs?head_sha=<sha>`, then `/jobs`; 60 anonymous requests per hour) or the run's web page (its "Status" field). Step logs need sign-in: reproduce Linux failures with `GOOS=linux go test -c` binaries in the WSL Ubuntu distro, run from the package directory under /mnt/c when a test reads repo files.
-6. Every finished branch: merge it into `develop` myself and push (RULES User Preferences, S005).
+1. **S01.6-T02** (file name rules with a per-rule error code): Windows reserved names on every OS (including with extensions, e.g. `aux.txt`), forbidden characters `<>:"/\|?*` and control characters, trailing dot or space, `.`/`..`, 255 bytes per component, overall path length. The API rejects (no rewriting). Branch `feat/S01.6-T02-names`. The T03 resolver test expects `/a..b/c...` to be accepted: T02 rejects the trailing dots, so update that case.
+2. Then S01.5-T01..T04 (API conventions, versioning, errors catalogue, validation), S01.3, S01.6-T03..T06 (remember the container bind note in the S01 change log), S01.4, S01.5-T05/T06, S01.7.
+3. **Q18 (library size)** is needed before S01.7; ask the user when S01.7 comes close.
+4. CI: every push runs `.github/workflows/ci.yml`. `gh` is not installed; the repository is public. Watch a commit's run through the public REST API (`/repos/KhizirFarrukh/local-ai-nas/actions/runs?head_sha=<sha>`, then `/jobs`; 60 anonymous requests per hour) or the run's web page (its "Status" field). Step logs need sign-in: reproduce Linux failures with `GOOS=linux go test -c` binaries in the WSL Ubuntu distro, run from the package directory under /mnt/c when a test reads repo files.
+5. Every finished branch: merge it into `develop` myself and push (RULES User Preferences, S005).
 
 ## Blocked or waiting on user
 - Q18 (library size) is needed before S01.7 only.

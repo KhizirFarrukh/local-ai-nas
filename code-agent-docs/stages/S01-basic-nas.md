@@ -136,7 +136,7 @@ flowchart LR
 | S01.3 | Core file operations | Not started | S01.2, S01.5 (conventions), S01.6 (resolver) | FR-003, FR-005, FR-007, FR-073 |
 | S01.4 | Large file handling | Not started | S01.2, S01.3, S01.5 | FR-004, FR-074, NFR-006, NFR-021 |
 | S01.5 | API layer | Not started | S01.1 | FR-075, NFR-001 |
-| S01.6 | Safety baseline | Not started | S01.2 | FR-076, FR-077, NFR-010, NFR-019, NFR-020 |
+| S01.6 | Safety baseline | In Progress | S01.2 | FR-076, FR-077, NFR-010, NFR-019, NFR-020 |
 | S01.7 | Integration, testing, and stage review | Not started | S01.1–S01.6 | NFR-003, NFR-014 |
 
 ### Execution order (A20; flagged in plan 10.14)
@@ -238,7 +238,7 @@ flowchart LR
 
 | Task ID | Description | Status | Acceptance criteria |
 |---|---|---|---|
-| S01.6-T01 | Path normalization and traversal prevention in the resolver. (1) Reject `..`, absolute paths, drive letters, UNC paths, NUL bytes, backslash separators, and encoded separators. (2) NFC-normalize names (`golang.org/x/text/unicode/norm` **if** needed, otherwise reject non-NFC; decided in the task and recorded in `dependencies.md`). (3) `filepath.IsLocal` check. (4) All I/O via `os.Root` as the second layer. | Not started | The attack corpus (≥ 50 cases, also a fuzz seed corpus) is rejected on Linux and Windows CI. `os.Root` blocks escapes even when the resolver is bypassed in tests. |
+| S01.6-T01 | Path normalization and traversal prevention in the resolver. (1) Reject `..`, absolute paths, drive letters, UNC paths, NUL bytes, backslash separators, and encoded separators. (2) NFC-normalize names (`golang.org/x/text/unicode/norm` **if** needed, otherwise reject non-NFC; decided in the task and recorded in `dependencies.md`). (3) `filepath.IsLocal` check. (4) All I/O via `os.Root` as the second layer. | **Done** (S005; NFC: normalize) | The attack corpus (≥ 50 cases, also a fuzz seed corpus) is rejected on Linux and Windows CI. `os.Root` blocks escapes even when the resolver is bypassed in tests. |
 | S01.6-T02 | Filename validation: Windows reserved names (`CON`, `PRN`, `AUX`, `NUL`, `COM1-9`, `LPT1-9`, with or without extensions, any case); forbidden characters `<>:"/\|?*` and control characters; trailing dot or space; `.` and `..`; ≤ 255 bytes per component; overall path-length policy. The API **rejects** invalid names with a per-rule code (no silent rewriting). | Not started | Table-driven tests cover each rule with its error code. |
 | S01.6-T03 | Symlink policy: symlinks inside the area are never followed for reads or writes (`os.Root` + `Lstat`), are listed as `kind=symlink` without a target, and are never created by the API. | Not started | A symlink pointing outside the root cannot be read, written, or traversed (Linux; Windows where the CI runner has symlink privilege, otherwise skipped with a reason). |
 | S01.6-T04 | Name-conflict handling: `on_conflict=fail\|rename\|overwrite` (default `fail`) for simple upload, tus finalize, create folder, copy, move, rename; the `name (n).ext` pattern with a race-safe loop. | Not started | Each policy is tested for each operation, including concurrent `rename` collisions. |
