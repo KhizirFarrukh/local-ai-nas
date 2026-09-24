@@ -6,6 +6,7 @@ import (
 	"io/fs"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"testing"
 
@@ -93,11 +94,16 @@ func TestNoOperationLeavesTheNamespace(t *testing.T) {
 	}
 	before := snapshotOutside(t, root, ns)
 
+	// The whole S01.6 attack corpus, plus more escapes (S01.7-T02).
 	escapes := []string{
 		"/..", "/../u0002/other.txt", "/../../photos/u0001/secret.jpg", "/docs/../../../root-secret.txt",
 		"/../../.local-ai-nas/db/secret.db", "/..%2Fu0002%2Fother.txt", `/..\u0002\other.txt`, `\..\x`,
 		"//server/share/x", "/C:/Windows/win.ini", "/c:", "/" + filepath.ToSlash(outside),
 		"/. ./x", "/.../x", "/docs/. /x", "/../u0002", "/docs/%00", "/docs/a.txt\x00.jpg",
+	}
+	escapes = append(escapes, testutil.AttackPaths...)
+	if runtime.GOOS == "windows" {
+		escapes = append(escapes, testutil.WindowsAttackPaths...)
 	}
 	// Paths through a link to the outside (os.Root refuses them).
 	var linkItems []string
@@ -107,7 +113,7 @@ func TestNoOperationLeavesTheNamespace(t *testing.T) {
 		linkItems = []string{"/escape-abs", "/escape-rel", "/escape-file"}
 	}
 	svc := files.NewLocal(storage.NewResolver(l), files.Options{})
-	c := client{t, testutil.NewServer(t, New(Options{Files: svc})).URL}
+	c := client{t, testutil.NewServer(t, New(Options{Files: svc, Uploads: testUploads(t, svc)})).URL}
 	type request struct {
 		method, path, body string
 		anyStatus          bool // a request on a link item itself: any answer but 5xx
@@ -125,6 +131,7 @@ func TestNoOperationLeavesTheNamespace(t *testing.T) {
 			{"POST", "/api/v1/files/operations/rename", `{"path":` + jsonString(p) + `,"new_name":` + jsonString(target[1:]) + `}`, anyStatus},
 			{"POST", "/api/v1/files/operations/move", `{"from":` + jsonString(p) + `,"to":` + jsonString(target) + `}`, anyStatus},
 			{"DELETE", "/api/v1/files/items?path=" + q(p) + "&recursive=true", "", anyStatus},
+			{"TUS", UploadsPath, p, anyStatus},
 		}
 	}
 	var requests []request
@@ -148,7 +155,15 @@ func TestNoOperationLeavesTheNamespace(t *testing.T) {
 		if r.body != "" {
 			body = []byte(r.body)
 		}
-		st, _, b := c.do(r.method, r.path, contentType, body, nil)
+		var st int
+		var b []byte
+		if r.method == "TUS" { // a tus upload with the path as its target
+			st, _, b = c.do("POST", r.path, "", nil, map[string]string{
+				"Tus-Resumable": "1.0.0", "Upload-Length": "4", "Upload-Metadata": "target_path " + b64(r.body),
+			})
+		} else {
+			st, _, b = c.do(r.method, r.path, contentType, body, nil)
+		}
 		if st >= 500 || !r.anyStatus && st < 400 {
 			t.Errorf("%s %s %s → %d %s, want 4xx", r.method, r.path, r.body, st, b)
 		}

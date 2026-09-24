@@ -13,52 +13,17 @@ import (
 	"github.com/KhizirFarrukh/local-ai-nas/internal/testutil"
 )
 
-// attackCorpus holds API paths that must be refused on every OS
-// (S01.6-T01). It also seeds FuzzResolve.
-var attackCorpus = []string{
-	// Not an API path at all.
-	"", "docs", "docs/../x", `\..\x`,
-	// Parent segments.
-	"/..", "/../", "/../x", "/../../etc/passwd", "/../../../../../../windows/win.ini",
-	"/a/../../x", "/a/b/../../../x", "/a/..", "/./../x", "/a/./../../x", "/a/b/c/../../../../x",
-	// Other namespaces, the photos area, internal data.
-	"/files/../photos/u0001/a.jpg", "/../u0002/secret.txt", "/../../photos/u0001",
-	"/../../.local-ai-nas/db/nas.db",
-	// Dot runs and dots with spaces (Windows may read them as "..").
-	"/...", "/..../x", "/....", "/.../.../x", "/.. ", "/. .", "/ ..", "/a/.. /b", "/a/... /b", "/a/ ../b",
-	// Backslashes.
-	`/..\x`, `/a\..\..\x`, `/a\b`, `\\server\share\x`,
-	// UNC-like and device paths.
-	"//server/share/x", "///x", "//./C:/x", "//?/C:/x",
-	// Drive letters.
-	"/C:", "/C:/Windows/System32", "/c:/x", "/a/D:/x", "/Z:",
-	// Percent-encoded separators and NUL (the path was encoded twice).
-	"/..%2Fx", "/..%2fx", "/%2F..%2Fx", "/a%5C..%5Cx", "/a%5c..%5cx", "/a%00b", "/x%00.txt",
-	"/%2e%2e%2f", "/a/%2F/b", "/C:%5Cx",
-	// NUL bytes.
-	"/a\x00b", "/\x00", "/..\x00/x", "/docs/\x00../x",
-	// Unicode look-alikes of dot segments (fullwidth full stop, one and
-	// two dot leaders, ellipsis), which folding tools read as dots.
-	"/\uFF0E\uFF0E/x", "/a/\uFF0E\uFF0E/\uFF0E\uFF0E/x", "/\u2025/x", "/\u2024\u2024/x", "/\uFF0E/\uFF0E\uFF0E", "/\u2026/x",
-}
-
-// windowsOnlyCorpus holds names that only Windows refuses at this layer
-// (S01.6-T02 refuses them on every OS with its own error codes, including
-// the forms with an extension such as "aux.txt", which Go's IsLocal accepts
-// since current Windows versions allow them).
-var windowsOnlyCorpus = []string{"/NUL", "/con", "/COM1", "/a/LPT1", "/ /x", "/docs./x", "/docs /x", "/a.", "/a "}
-
 func TestAttackCorpusIsLargeEnough(t *testing.T) {
-	if len(attackCorpus) < 50 {
-		t.Errorf("the attack corpus has %d cases, the task asks for at least 50", len(attackCorpus))
+	if len(testutil.AttackPaths) < 50 {
+		t.Errorf("the attack corpus has %d cases, the task asks for at least 50", len(testutil.AttackPaths))
 	}
 }
 
 func TestResolveRejectsAttackCorpus(t *testing.T) {
 	r, _ := newTestResolver(t)
-	corpus := slices.Clone(attackCorpus)
+	corpus := slices.Clone(testutil.AttackPaths)
 	if runtime.GOOS == "windows" {
-		corpus = append(corpus, windowsOnlyCorpus...)
+		corpus = append(corpus, testutil.WindowsAttackPaths...)
 	}
 	for _, p := range corpus {
 		if rel, err := r.Resolve(FilesArea, DefaultNamespace, p); err == nil {
@@ -105,7 +70,7 @@ func TestRootBlocksCorpusWithoutResolver(t *testing.T) {
 	}
 	defer func() { _ = root.Close() }()
 
-	corpus := append(slices.Clone(attackCorpus), windowsOnlyCorpus...)
+	corpus := append(slices.Clone(testutil.AttackPaths), testutil.WindowsAttackPaths...)
 	for _, p := range corpus {
 		raw := strings.TrimLeft(p, "/")
 		if raw == "" {
@@ -161,7 +126,7 @@ func TestRootBlocksCorpusWithoutResolver(t *testing.T) {
 // FuzzResolve checks, for any input, that an accepted path is local,
 // NFC, free of ".." segments, and stable when resolved again.
 func FuzzResolve(f *testing.F) {
-	for _, p := range attackCorpus {
+	for _, p := range testutil.AttackPaths {
 		f.Add(p)
 	}
 	for _, p := range []string{"/", "/a.txt", "/docs/a.txt", "/caf\u0065\u0301", "/a..b/c...", "/.hidden"} {

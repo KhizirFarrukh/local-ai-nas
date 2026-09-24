@@ -73,11 +73,15 @@ func cleanUserPath(userPath string) (string, error) {
 		return ".", nil
 	}
 	if !filepath.IsLocal(filepath.FromSlash(rel)) {
-		// On Windows, IsLocal refuses device names such as NUL. Report them
-		// with the same rule the name check uses on every OS.
+		// On Windows, IsLocal refuses device names such as NUL and names
+		// with a colon. Report them with the rules the name check uses on
+		// every OS.
 		for _, seg := range strings.Split(rel, "/") {
 			if isReservedName(seg) {
 				return "", apperr.NewRule(apperr.InvalidName, RuleReservedName, fmt.Sprintf("%q is a reserved device name on Windows", seg))
+			}
+			if i := strings.IndexAny(seg, forbiddenChars); i >= 0 {
+				return "", apperr.NewRule(apperr.InvalidName, RuleForbiddenChar, fmt.Sprintf("%q contains %q, which Windows does not allow in names", seg, seg[i]))
 			}
 		}
 		return "", apperr.Newf(apperr.InvalidName, "%q is not a valid path on this server", userPath)
