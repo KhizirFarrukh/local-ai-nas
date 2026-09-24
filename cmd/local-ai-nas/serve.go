@@ -12,7 +12,7 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/KhizirFarrukh/local-ai-nas/internal/apperr"
+	"github.com/KhizirFarrukh/local-ai-nas/internal/api"
 	"github.com/KhizirFarrukh/local-ai-nas/internal/config"
 	"github.com/KhizirFarrukh/local-ai-nas/internal/db"
 	"github.com/KhizirFarrukh/local-ai-nas/internal/health"
@@ -20,12 +20,9 @@ import (
 	"github.com/KhizirFarrukh/local-ai-nas/internal/storage"
 )
 
-// Request limits. Routes with large bodies (uploads, S01.3/S01.4) set
-// their own limits.
-const (
-	maxHeaderBytes = 64 << 10
-	maxBodyBytes   = 1 << 20
-)
+// maxHeaderBytes limits request headers. Body limits are set by the API
+// layer (internal/api).
+const maxHeaderBytes = 64 << 10
 
 // app holds what the serve and migrate commands build from the config.
 type app struct {
@@ -126,7 +123,7 @@ func cmdServe(ctx context.Context, args []string, stderr io.Writer) int {
 	logStartupChecks(ctx, log, checks)
 
 	srv := &http.Server{
-		Handler:           newHandler(log, checks),
+		Handler:           api.New(api.Options{Logger: log, Version: version, Checks: checks}),
 		ReadHeaderTimeout: a.cfg.Server.ReadHeaderTimeout.Duration,
 		IdleTimeout:       a.cfg.Server.IdleTimeout.Duration,
 		MaxHeaderBytes:    maxHeaderBytes,
@@ -139,29 +136,6 @@ func cmdServe(ctx context.Context, args []string, stderr io.Writer) int {
 	}
 	log.Info("stopped")
 	return exitOK
-}
-
-// newHandler builds the HTTP handler. From the outside in: request ID,
-// body limit, access log, panic recovery, routes. The body limit sits
-// outside the access log because http.MaxBytesHandler passes a copy of the
-// request on, and the access log must see the request the mux fills in
-// (its route pattern).
-func newHandler(log *slog.Logger, checks []health.Check) http.Handler {
-	mux := http.NewServeMux()
-	mux.Handle("GET /api/v1/system/health", health.Handler(version, checks...))
-
-	// The photos area exists on disk from S01, but its API is reserved
-	// until the media stages (S01.2-T06).
-	photos := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		apperr.Write(w, r, log, apperr.New(apperr.NotAvailable, "the photos API is not available yet; it arrives with the media stages (S04)"))
-	})
-	mux.Handle("/api/v1/photos", photos)
-	mux.Handle("/api/v1/photos/", photos)
-	var h http.Handler = mux
-	h = apperr.Recover(log)(h)
-	h = logging.AccessLog(log)(h)
-	h = http.MaxBytesHandler(h, maxBodyBytes)
-	return logging.RequestID(h)
 }
 
 // logStartupChecks runs the health checks once at startup and logs the

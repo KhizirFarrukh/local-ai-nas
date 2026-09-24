@@ -6,15 +6,16 @@
 
 ## Active stage and task
 - **Active stage:** S01 (Basic NAS implementation), **In Progress** (`stages/S01-basic-nas.md`); S01.1 and S01.2 **Done**; S01.6 **In Progress** (T01, T02 done; T03–T06 later); S01.5 **In Progress** (T01–T04 now; T05/T06 later).
-- **Active task:** none (S01.5-T01 done; S01.5-T02 next)
+- **Active task:** none (S01.5-T02 done; S01.5-T03 next)
 
 ## In progress (write-ahead)
-- S01.5-T01: push, CI, merge `docs/S01.5-T01-conventions` into `develop`.
+- S01.5-T02: push, CI, merge `feat/S01.5-T02-versioning` into `develop`.
 
 ## Last completed
 - `develop` verified complete (S005): merge `c535cda` brought `cf60f72` (plan 0.4.0, which PR #3 had put on `main` only) and the user's `bda8321` (prompts 3 and 4).
 - Approval-stage decisions D-01–D-14 applied (S005 E007–E010). **Plan 1.0.0 baseline and S01 approved** (S005 E012).
-- **S01.5-T01 done** (S005 E058): `docs/api/conventions.md` with the review checklist.
+- **S01.5-T02 done** (S005 E060): `docs/api/versioning.md`; `internal/api` route table + `New`; every route is under /api/v1 or /api/docs (test).
+- **S01.5-T01 done and merged** (CI run 35966117590 green; S005 E058): `docs/api/conventions.md` with the review checklist.
 - **S01.6-T02 done and merged** (CI run 35965767428 green; S005 E056): `storage.ValidateName` / `ValidateNewPath` with 9 rules reported in the problem's `rule` field; FuzzValidateName proves every accepted name is creatable on NTFS (136 k execs) and Linux.
 - **S01.6-T01 done and merged** (CI run 35965241227 green; S005 E054): path rules (UNC, drive letters, encoded separators, dot/space runs, NFC) with a 56-case attack corpus, an os.Root bypass test, and FuzzResolve (3.49 M execs clean).
 - **S01.2 closed and merged** (CI run 35964600803 green; S005 E052): T06 done (`/api/v1/photos` → 501 not_available); all 6 S01.2 tasks Done; substage acceptance checked (S01 change log).
