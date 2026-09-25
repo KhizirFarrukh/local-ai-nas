@@ -46,6 +46,9 @@ const (
 // defaults: the first page, DefaultLimit items, by name, ascending.
 type ListOptions struct {
 	Cursor string
+	// Offset starts the page at a position of the sorted folder, as an
+	// alternative to Cursor (S02.3-T02).
+	Offset int
 	Limit  int
 	Sort   SortKey
 	Order  Order
@@ -57,6 +60,8 @@ type ListPage struct {
 	Items  []Item // this page, in order
 	// NextCursor continues the listing; "" when this is the last page.
 	NextCursor string
+	// Total is the number of items in the folder, over all pages.
+	Total int
 }
 
 // normalize fills in the defaults and checks every option.
@@ -80,6 +85,12 @@ func (o ListOptions) normalize() (ListOptions, error) {
 	case Asc, Desc:
 	default:
 		return o, apperr.Newf(apperr.InvalidRequest, "order must be asc or desc, got %q", o.Order)
+	}
+	switch {
+	case o.Offset < 0:
+		return o, apperr.Newf(apperr.InvalidRequest, "offset must be 0 or more, got %d", o.Offset)
+	case o.Offset > 0 && o.Cursor != "":
+		return o, apperr.New(apperr.InvalidRequest, "offset and cursor cannot be used together")
 	}
 	return o, nil
 }
@@ -113,7 +124,8 @@ func (s *Local) List(ctx context.Context, owner, path string, opts ListOptions) 
 			page.Folder = folder
 			less := compareItems(opts.Sort, opts.Order)
 			slices.SortFunc(items, less)
-			start := 0
+			page.Total = len(items)
+			start := min(opts.Offset, len(items))
 			if after != nil {
 				pos := after.item()
 				start, _ = slices.BinarySearchFunc(items, pos, less)

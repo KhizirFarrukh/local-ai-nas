@@ -317,6 +317,8 @@ export interface components {
             items?: components["schemas"]["FileItem"][];
             /** @description Present when more items follow; pass it as `cursor` to get the next page. */
             next_cursor?: string;
+            /** @description For a folder, how many items it has in all pages. */
+            total?: number;
         };
         CreateFolderRequest: {
             /** @description The folder to create, starting with `/`. */
@@ -900,6 +902,13 @@ export interface operations {
                 path: components["parameters"]["Path"];
                 /** @description The `next_cursor` of the previous page. Only valid with the same sort and order. */
                 cursor?: string;
+                /**
+                 * @description Start the page at this position of the sorted folder, as an
+                 *     alternative to `cursor` (not both), for jumping to any part of
+                 *     a large folder. Items added or removed meanwhile can shift the
+                 *     positions; `cursor` never skips or repeats an item.
+                 */
+                offset?: number;
                 /** @description The page size. */
                 limit?: number;
                 sort?: components["schemas"]["ListSort"];
