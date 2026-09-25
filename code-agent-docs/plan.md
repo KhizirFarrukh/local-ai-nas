@@ -1098,7 +1098,7 @@ flowchart LR
   3. The URL reflects the current folder, and reloading restores it.
   4. Empty and error states show a clear next action.
 - **Risks/notes:** Includes a **prototype task** confirming that @tanstack/svelte-virtual works with Svelte 5 (ADR-0009), with a custom windowing fallback. Performance on low-end phones is tested in S02.7.
-- **Status:** Not started
+- **Status:** In Progress (S006)
 
 #### S02.4: Uploads and downloads
 - **Goal:** Easy, robust uploads and downloads from the GUI.
