@@ -64,6 +64,3 @@ export function theme(): Theme {
   shared ??= new Theme(globalThis.localStorage, document.documentElement);
   return shared;
 }
-
-// Deliberate lint error (S02.1-T05 acceptance), reverted in the next commit.
-const lintProbe = 1;
