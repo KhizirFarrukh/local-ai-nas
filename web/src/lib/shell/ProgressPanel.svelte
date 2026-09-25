@@ -26,7 +26,7 @@
     <div class="flex items-center gap-2 px-4 py-2">
       <button
         type="button"
-        class="flex flex-1 items-center justify-between gap-2 text-sm font-semibold"
+        class="flex flex-1 items-center justify-between gap-2 text-sm font-semibold pointer-coarse:min-h-11"
         aria-expanded={!folded}
         onclick={() => (folded = !folded)}
       >

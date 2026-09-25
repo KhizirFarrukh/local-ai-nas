@@ -164,7 +164,7 @@
     <div class="flex items-center gap-3 text-sm" data-testid="preview-pdf-pages">
       <button
         type="button"
-        class="inline-flex size-8 items-center justify-center rounded-md hover:bg-white/15 disabled:opacity-30"
+        class="inline-flex size-8 items-center justify-center rounded-md hover:bg-white/15 disabled:opacity-30 pointer-coarse:size-11"
         aria-label="Previous page"
         title="Previous page (Page Up)"
         disabled={pageNumber <= 1}
@@ -175,7 +175,7 @@
       <span aria-live="polite">Page {pageNumber} of {doc.numPages}</span>
       <button
         type="button"
-        class="inline-flex size-8 items-center justify-center rounded-md hover:bg-white/15 disabled:opacity-30"
+        class="inline-flex size-8 items-center justify-center rounded-md hover:bg-white/15 disabled:opacity-30 pointer-coarse:size-11"
         aria-label="Next page"
         title="Next page (Page Down)"
         disabled={pageNumber >= doc.numPages}

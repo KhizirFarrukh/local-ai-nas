@@ -122,23 +122,28 @@
   }
 </script>
 
-<Dialog bind:open {title} size="md" persistent>
+<Dialog bind:open {title} size="md" phone="full" persistent>
   <nav aria-label="Folder" class="flex flex-wrap items-center gap-1 text-sm">
-    <button type="button" class="rounded px-1 hover:bg-surface-2" onclick={() => (at = '/')}
-      >Files</button
+    <button
+      type="button"
+      class="rounded px-1 hover:bg-surface-2 pointer-coarse:min-h-11 pointer-coarse:px-2"
+      onclick={() => (at = '/')}>Files</button
     >
     {#each trail as name, i (i)}
       <ChevronRight class="size-3.5 text-fg-muted" aria-hidden="true" />
       <button
         type="button"
-        class="rounded px-1 hover:bg-surface-2 {i === trail.length - 1 ? 'font-semibold' : ''}"
+        class="rounded px-1 hover:bg-surface-2 pointer-coarse:min-h-11 pointer-coarse:px-2 {i ===
+        trail.length - 1
+          ? 'font-semibold'
+          : ''}"
         aria-current={i === trail.length - 1 ? 'location' : undefined}
         onclick={() => (at = join(trail.slice(0, i + 1)))}>{name}</button
       >
     {/each}
   </nav>
   <div
-    class="flex h-64 flex-col overflow-auto rounded-md border border-border"
+    class="flex h-64 flex-col overflow-auto rounded-md border border-border max-sm:h-auto max-sm:min-h-0 max-sm:flex-1"
     data-testid="folder-picker"
   >
     {#if loading}
@@ -153,7 +158,7 @@
           <li>
             <button
               type="button"
-              class="flex w-full items-center gap-3 px-3 py-2 text-left text-sm hover:bg-surface-2"
+              class="flex w-full items-center gap-3 px-3 py-2 text-left text-sm hover:bg-surface-2 pointer-coarse:py-3"
               onclick={() => (at = folder.path)}
             >
               <Folder class="size-5 shrink-0 text-accent" aria-hidden="true" />

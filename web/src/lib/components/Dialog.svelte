@@ -19,6 +19,11 @@
     onclose?: () => void;
     /** Keep the dialog open on a backdrop click, for dialogs with input. */
     persistent?: boolean;
+    /**
+     * On phones (under 640 px): a card, or the full screen for dialogs that
+     * hold a list or several choices (S02.7-T01).
+     */
+    phone?: 'card' | 'full';
   }
 
   let {
@@ -29,7 +34,8 @@
     children,
     actions,
     onclose,
-    persistent = false
+    persistent = false,
+    phone = 'card'
   }: Props = $props();
 
   const uid = $props.id();
@@ -68,18 +74,23 @@
   aria-describedby={description ? `${uid}-description` : undefined}
   class="m-auto w-[calc(100%-2rem)] {widths[
     size
-  ]} rounded-lg border border-border bg-surface p-0 text-fg shadow-xl backdrop:bg-overlay"
+  ]} rounded-lg border border-border bg-surface p-0 text-fg shadow-xl backdrop:bg-overlay {phone ===
+  'full'
+    ? 'max-sm:m-0 max-sm:h-dvh max-sm:max-h-none max-sm:w-full max-sm:max-w-none max-sm:rounded-none max-sm:border-0'
+    : ''}"
   onclose={closed}
   onclick={backdrop}
 >
-  <div class="flex flex-col gap-4 p-6">
+  <div class="flex flex-col gap-4 p-6 {phone === 'full' ? 'max-sm:h-full' : ''}">
     <h2 id="{uid}-title" class="text-lg font-semibold">{title}</h2>
     {#if description}
       <p id="{uid}-description" class="text-sm text-fg-muted">{description}</p>
     {/if}
     {#if children}{@render children()}{/if}
     {#if actions}
-      <div class="flex flex-wrap justify-end gap-2">{@render actions()}</div>
+      <div class="flex flex-wrap justify-end gap-2 {phone === 'full' ? 'max-sm:mt-auto' : ''}">
+        {@render actions()}
+      </div>
     {/if}
   </div>
 </dialog>

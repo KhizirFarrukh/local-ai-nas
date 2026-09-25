@@ -13,7 +13,7 @@
 
   let { item }: { item: Pick<FileItem, 'path' | 'name' | 'kind'> } = $props();
 
-  const classes = `${buttonBase} ${buttonVariants.ghost} size-8`;
+  const classes = `${buttonBase} ${buttonVariants.ghost} size-8 pointer-coarse:size-11`;
 
   // A double click on the action must not also open the item.
   function keep(event: MouseEvent) {

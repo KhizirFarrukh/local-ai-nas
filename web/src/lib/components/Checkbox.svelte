@@ -18,7 +18,7 @@
   }: Props = $props();
 </script>
 
-<label class="inline-flex items-center gap-2 text-sm {extra}">
+<label class="inline-flex items-center gap-2 text-sm pointer-coarse:min-h-11 {extra}">
   <input
     type="checkbox"
     bind:checked
