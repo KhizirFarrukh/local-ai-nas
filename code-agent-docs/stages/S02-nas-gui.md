@@ -219,7 +219,7 @@ web/
 
 | Substage | Name | Status | Depends on | Requirements |
 |---|---|---|---|---|
-| S02.1 | GUI technology and design foundation | In Progress | S01 | FR-078, FR-083, NFR-001, NFR-014 |
+| S02.1 | GUI technology and design foundation | **Done** (S006) | S01 | FR-078, FR-083, NFR-001, NFR-014 |
 | S02.2 | App shell and navigation | In Progress | S02.1 | FR-079 |
 | S02.3 | File browser | Not started | S02.2, S01.3 | FR-002 |
 | S02.4 | Uploads and downloads | Not started | S02.3, S01.4 | FR-003, FR-004, FR-006, FR-080 |
@@ -266,7 +266,7 @@ Its tests are written in S02.8.
 |---|---|---|---|
 | S02.2-T01 | **Layout and routes:** <br>• header with the app name and theme toggle; side navigation, which becomes a bottom bar on phones; <br>• `/files/[...path]`, `/photos` (placeholder: "comes with stage 4"), and `/settings` (theme, and About with the version and third-party licenses); <br>• `/` redirects to `/files/`; a not-found page. | **Done** (S006 E017) | Every section opens by URL. Back and forward work. A reload keeps the page. |
 | S02.2-T02 | **Errors and loading:** <br>• problem codes mapped to plain messages, with a details area (the `detail` text and request ID); <br>• the `+error` boundary and a global loading indicator; <br>• a "server not reachable" state with retry. | **Done** (S006 E018) | Stopping the server shows the unreachable state, and retry recovers once it is back. A bad path shows a clear not-found message. No action leaves a blank screen. |
-| S02.2-T03 | **Notifications and progress:** toasts (info, success, error; announced to screen readers), and a progress panel for long operations (uploads, bulk operations, archives). | Not started | A finished or failed operation raises a toast. The progress panel lists the running operations (checked with a slowed network in the browser tools). |
+| S02.2-T03 | **Notifications and progress:** toasts (info, success, error; announced to screen readers), and a progress panel for long operations (uploads, bulk operations, archives). | **Done** (S006 E019) | A finished or failed operation raises a toast. The progress panel lists the running operations (checked with a slowed network in the browser tools). |
 
 ### S02.3: File browser
 
@@ -475,6 +475,7 @@ Every task is on its own branch and merged only with CI green. The GUI is additi
 | 2026-09-25 | S006 | **Bug S02-B01** (found in S02.1-T01, fixed): `vite build` (adapter-static) empties `web/build/` first, which deleted the committed `.gitkeep`. Without it, a fresh clone has no `web/build/`, and `//go:embed all:build` (S02.1-T02) would not compile. Fix: the `build` script writes `build/.gitkeep` again after `vite build`. **Regression test for S02.8:** after `pnpm build`, `web/build/.gitkeep` exists and `git status` is clean for it | Bug found while building | None |
 | 2026-09-25 | S006 | **Bug S02-B02** (found in S02.1-T04, fixed): <br>• The CSP `style-src 'self'` blocked SvelteKit's route announcer, whose static `style` attribute (visually-hidden positioning) was dropped; the console showed two CSP violations. <br>• Fix: `style-src 'self' 'unsafe-inline'` in `web/svelte.config.js`. Scripts stay hash-only, and SvelteKit adds no style hash, so `'unsafe-inline'` takes effect. S03.5 may pin the attribute's hash (`'unsafe-hashes'`) instead. <br>• **Regression test for S02.8:** no CSP violation on the main pages, and the announcer is visually hidden. <br>**Also in S02.1-T04:** @playwright/test was installed early for the by-hand browser checks (tests in S02.8); the light `warning` token was darkened to `#9a5c06` for AA on `surface-2` (4.49 → 4.91) | Bug found while building S02.1-T04 | None |
 | 2026-09-25 | S006 | **Bugs S02-B03 and S02-B04** (found in S02.2-T02, fixed): <br>• **B03:** calling `activity.track()` (it writes `$state`) inside `$derived.by` threw Svelte's `state_unsafe_mutation`, so every folder load showed an error. Loads now start in an `$effect`. **Regression test:** the files page loads a folder without a page error. <br>• **B04:** `track()` read its `$state` counter (`pending++`), so an effect calling it re-ran on every change: an endless loop (`effect_update_depth_exceeded`) when requests failed at once, as with the server down. `track()` now updates the counter inside `untrack()`. **Regression test:** with the server down, one load makes one request, and the page recovers when the server is back | Bugs found while building S02.2-T02 | None |
+| 2026-09-25 | S006 | **Bug S02-B05** (found in S02.2-T03, fixed): with the server down, moving to a section not yet visited replaced the app with the browser's connection error, because SvelteKit could not load the route's code and fell back to a full page load. Fix: `data-sveltekit-preload-code="eager"` in `web/src/app.html`. **Regression test for S02.8:** with the server stopped, moving between all sections keeps the app and shows the banner. **Also:** the progress panel's Cancel buttons are named after their task; S02.1 closed (all four substage criteria checked, S006 E019) | Bug found while building S02.2-T03 | None |
 
 ## 13. Completion record
 

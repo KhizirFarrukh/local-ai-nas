@@ -1071,7 +1071,7 @@ flowchart LR
   3. The API client is generated from the committed OpenAPI spec, and CI fails on drift.
   4. Frontend lint, type checks, and unit tests run in CI.
 - **Risks/notes:** TypeScript 7 compatibility with svelte-check was not verified in S003. Pin a compatible TypeScript version if needed.
-- **Status:** In Progress (S006)
+- **Status:** Done (S006, 2026-09-25; details in `stages/S02-nas-gui.md`)
 
 #### S02.2: App shell and navigation
 - **Goal:** A stable layout and navigation frame that every feature plugs into.

@@ -24,6 +24,9 @@
   import ThemeSwitch from '$lib/components/ThemeSwitch.svelte';
   import Toast from '$lib/components/Toast.svelte';
   import Tooltip from '$lib/components/Tooltip.svelte';
+  import { ApiError as DemoError } from '$lib/api/errors';
+  import { tasks } from '$lib/shell/tasks.svelte';
+  import { toasts } from '$lib/shell/toasts.svelte';
 
   let dialogOpen = $state(false);
   let menuOpen = $state(false);
@@ -54,6 +57,32 @@
     menuX = event.type === 'contextmenu' ? event.clientX : r.left;
     menuY = event.type === 'contextmenu' ? event.clientY : r.bottom + 4;
     menuOpen = true;
+  }
+
+  // A pretend long operation for the progress panel: ten steps of 300 ms.
+  function demoTask(outcome: 'finish' | 'fail' | 'cancel') {
+    let stopped = false;
+    const task = tasks.start(`Demo task (${outcome})`, {
+      total: 10,
+      cancel: () => {
+        stopped = true;
+        task.cancelled();
+      }
+    });
+    let step = 0;
+    const tick = () => {
+      if (stopped) return;
+      step++;
+      task.update(step, 10, `${step} of 10 steps`);
+      if (step === 6 && outcome === 'fail') {
+        task.fail(new DemoError({ status: 507, code: 'insufficient_storage', message: 'full' }));
+      } else if (step === 10) {
+        task.finish('Demo task finished.');
+      } else {
+        setTimeout(tick, 300);
+      }
+    };
+    setTimeout(tick, 300);
   }
 
   async function callApi(path: string) {
@@ -169,6 +198,15 @@
     <Button onclick={() => callApi('/')}>API: list /</Button>
     <Button onclick={() => callApi('/nope')}>API: list /nope</Button>
     <span class="text-sm text-fg-muted" data-testid="api-result">{apiResult}</span>
+  </section>
+
+  <section class="flex flex-wrap items-center gap-2">
+    <Button onclick={() => demoTask('finish')}>Task that finishes</Button>
+    <Button onclick={() => demoTask('fail')}>Task that fails</Button>
+    <Button onclick={() => demoTask('cancel')}>Task to cancel</Button>
+    <Button onclick={() => toasts.push({ message: 'A note that goes away after 5 s.' })}
+      >Info note</Button
+    >
   </section>
 
   <div class="grid overflow-hidden rounded-lg border border-border lg:grid-cols-2">

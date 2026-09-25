@@ -14,6 +14,8 @@
   import ConnectionBanner from '$lib/shell/ConnectionBanner.svelte';
   import { connection } from '$lib/shell/connection.svelte';
   import Nav from '$lib/shell/Nav.svelte';
+  import ProgressPanel from '$lib/shell/ProgressPanel.svelte';
+  import Toaster from '$lib/shell/Toaster.svelte';
   import { theme, type ThemeChoice } from '$lib/util/theme.svelte';
 
   let { children } = $props();
@@ -77,3 +79,6 @@
     <Nav layout="bottom" />
   </div>
 </div>
+
+<ProgressPanel />
+<Toaster />

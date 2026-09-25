@@ -6,7 +6,11 @@
     <link rel="icon" href="%sveltekit.assets%/favicon.svg" type="image/svg+xml" />
     %sveltekit.head%
   </head>
-  <body data-sveltekit-preload-data="hover">
+  <!--
+    Code for every link on the page loads right away, so moving between
+    sections works even while the NAS cannot be reached (bug S02-B05).
+  -->
+  <body data-sveltekit-preload-data="hover" data-sveltekit-preload-code="eager">
     <div class="contents">%sveltekit.body%</div>
   </body>
 </html>
