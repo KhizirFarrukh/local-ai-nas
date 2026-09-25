@@ -90,7 +90,7 @@
   <div class="flex flex-wrap items-center gap-3 border-b border-border px-4 py-2">
     <Breadcrumbs crumbs={crumbs(path)} label="Folder" />
     <div class="ml-auto flex items-center gap-2">
-      {#if listing.total !== undefined}
+      {#if listing.total !== undefined && listing.folder?.kind === 'dir'}
         <span class="text-sm text-fg-muted" data-testid="item-count"
           >{formatCount(listing.total)} {listing.total === 1 ? 'item' : 'items'}</span
         >
