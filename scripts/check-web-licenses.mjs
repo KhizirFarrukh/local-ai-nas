@@ -19,6 +19,15 @@ const web = join(root, 'web');
 // for argparse (js-yaml in the API type generator, openapi-typescript).
 const devOnlyLicenses = ['BlueOak-1.0.0', 'Python-2.0'];
 
+// Packages whose npm metadata states no license, checked by hand; the value
+// is the license their own files state (docs/licensing.md). Exact versions
+// only: a new version is checked again.
+const verifiedByHand = {
+  // tus-js-client pulls it in. Its Readme ends with "## License MIT"; its
+  // package.json has no license field (checked 2026-09-25, S02.4-T01).
+  'combine-errors@3.0.3': 'MIT'
+};
+
 const allowed = new Set(
   readFileSync(join(root, 'scripts', 'allowed-licenses.txt'), 'utf8')
     .split('\n')
@@ -54,7 +63,8 @@ function check(label, byLicense, names) {
   for (const [license, packages] of Object.entries(byLicense)) {
     for (const pkg of packages) {
       count++;
-      if (!acceptable(license, names)) {
+      const stated = pkg.versions.map((v) => verifiedByHand[`${pkg.name}@${v}`]).find(Boolean);
+      if (!acceptable(stated ?? license, names)) {
         failures++;
         console.error(`not allowed (${label}): ${pkg.name}@${pkg.versions.join(', ')}: ${license}`);
       }

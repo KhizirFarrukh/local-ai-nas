@@ -793,6 +793,12 @@ export interface operations {
             201: {
                 headers: {
                     Location?: string;
+                    /**
+                     * @description The largest body one request to this endpoint may carry
+                     *     (uploads.max_chunk_size). Every answer of the upload
+                     *     endpoint carries it, the tus OPTIONS answer included.
+                     */
+                    "Upload-Max-Chunk-Size"?: number;
                     /** @description With a body, how many bytes the server has. */
                     "Upload-Offset"?: number;
                     /** @description When the upload is complete, the path of the file. */

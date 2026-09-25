@@ -7,6 +7,8 @@
   import FolderUp from '@lucide/svelte/icons/folder-up';
   import LayoutGrid from '@lucide/svelte/icons/layout-grid';
   import List from '@lucide/svelte/icons/list';
+  import Upload from '@lucide/svelte/icons/upload';
+  import { onDestroy } from 'svelte';
   import { goto } from '$app/navigation';
   import { page } from '$app/state';
   import { api, unwrap } from '$lib/api/client';
@@ -20,8 +22,9 @@
   import { FolderListing, type PageLoader } from '$lib/files/listing.svelte';
   import type { FileItem, SortKey, SortOrder } from '$lib/files/types';
   import { activity } from '$lib/shell/activity.svelte';
+  import { getUploader } from '$lib/uploads/state.svelte';
   import { formatCount } from '$lib/util/format';
-  import { basename, crumbs, filesHref, parent, pathFromParam } from '$lib/util/paths';
+  import { basename, child, crumbs, filesHref, parent, pathFromParam } from '$lib/util/paths';
   import { readStored, writeStored } from '$lib/util/stored';
 
   const path = $derived(pathFromParam(page.params.path));
@@ -43,6 +46,35 @@
   $effect(() => {
     void activity.track(listing.start());
   });
+
+  // Uploads (S02.4-T01): each file goes to this folder. When one lands in
+  // the folder on screen, the list refreshes in place (at most every 400 ms).
+  let fileInput: HTMLInputElement | undefined = $state();
+  let refreshTimer: ReturnType<typeof setTimeout> | undefined;
+  let stopListening: (() => void) | undefined;
+
+  void getUploader().then((manager) => {
+    stopListening = manager.onFinished((entry) => {
+      if (parent(entry.itemPath ?? entry.target) === path) {
+        clearTimeout(refreshTimer);
+        refreshTimer = setTimeout(() => void listing.refresh(), 400);
+      }
+    });
+  });
+  onDestroy(() => {
+    stopListening?.();
+    clearTimeout(refreshTimer);
+  });
+
+  async function upload(files: File[]) {
+    if (files.length === 0) {
+      return;
+    }
+    const manager = await getUploader();
+    for (const file of files) {
+      manager.add(file, child(path, file.name));
+    }
+  }
 
   function setMode(next: 'list' | 'grid') {
     mode = next;
@@ -90,6 +122,23 @@
   <div class="flex flex-wrap items-center gap-3 border-b border-border px-4 py-2">
     <Breadcrumbs crumbs={crumbs(path)} label="Folder" />
     <div class="ml-auto flex items-center gap-2">
+      <Button variant="primary" size="sm" onclick={() => fileInput?.click()}>
+        <Upload class="size-4" /> Upload
+      </Button>
+      <input
+        bind:this={fileInput}
+        type="file"
+        multiple
+        class="hidden"
+        aria-hidden="true"
+        tabindex="-1"
+        onchange={(e) => {
+          // Copy the list first: clearing the input empties it (bug S02-B06).
+          const files = [...(e.currentTarget.files ?? [])];
+          e.currentTarget.value = '';
+          void upload(files);
+        }}
+      />
       {#if listing.total !== undefined && listing.folder?.kind === 'dir'}
         <span class="text-sm text-fg-muted" data-testid="item-count"
           >{formatCount(listing.total)} {listing.total === 1 ? 'item' : 'items'}</span
