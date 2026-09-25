@@ -331,7 +331,7 @@ Its tests are written in S02.8.
 | S02.6-T02 | **Image, audio, video:** images (SVG included) only through `<img>`; `<audio>` and `<video>` with native controls, shaped for S04.8 (ADR-0020). | **Done** (S006 E035) | Seeking in a 2 GiB video starts playback at once. The network panel shows `206` answers, not a full download. |
 | S02.6-T03 | **Text and code:** the first 256 KiB by `Range`, decoded as UTF-8 (with replacement characters for invalid bytes), shown as text with a "showing the first 256 KiB" notice. | **Done** (S006 E036) | A 1 GiB log file previews at once with the notice. HTML source is shown as text. |
 | S02.6-T04 | **PDF:** decide between pdf.js and the built-in viewer on the criteria in 4.2 (recorded in section 12 and the register), then build it: lazily loaded, with scripting and `eval` off, and the worker served from the app. | **Done** (S006 E038) | A 100-page PDF previews and pages. A PDF with embedded JavaScript does not run it (a crafted file). |
-| S02.6-T05 | **Active-content safety:** check crafted SVG (script, event handler), HTML, and XML files in every preview path and by opening their download URL directly. | Not started | No script runs (no alert, and no request to a canary URL on a local listener). The direct URL downloads the file instead of rendering it. |
+| S02.6-T05 | **Active-content safety:** check crafted SVG (script, event handler), HTML, and XML files in every preview path and by opening their download URL directly. | **Done** (S006 E039) | No script runs (no alert, and no request to a canary URL on a local listener). The direct URL downloads the file instead of rendering it. |
 
 ### S02.7: Responsiveness and accessibility
 
