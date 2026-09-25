@@ -10,6 +10,9 @@
   import type { Component } from 'svelte';
   import type { FileItem } from '$lib/files/types';
   import type { PreviewKind } from './kinds';
+  import AudioView from './AudioView.svelte';
+  import ImageView from './ImageView.svelte';
+  import VideoView from './VideoView.svelte';
 
   /** The view of one kind; it calls `onfail` when the file cannot be shown. */
   export type PreviewView = Component<{
@@ -18,8 +21,12 @@
     onfail: (why: string) => void;
   }>;
 
-  /** The views by kind (S02.6-T02 to T04 add theirs); others get the fallback. */
-  const views: Partial<Record<PreviewKind, PreviewView>> = {};
+  /** The views by kind (S02.6-T03 and T04 add theirs); others get the fallback. */
+  const views: Partial<Record<PreviewKind, PreviewView>> = {
+    image: ImageView,
+    video: VideoView,
+    audio: AudioView
+  };
 </script>
 
 <script lang="ts">
