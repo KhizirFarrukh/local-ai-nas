@@ -11,6 +11,7 @@
   import Copy from '@lucide/svelte/icons/copy';
   import CopyPlus from '@lucide/svelte/icons/copy-plus';
   import Download from '@lucide/svelte/icons/download';
+  import Eye from '@lucide/svelte/icons/eye';
   import FolderOpen from '@lucide/svelte/icons/folder-open';
   import FolderOutput from '@lucide/svelte/icons/folder-output';
   import FolderPlus from '@lucide/svelte/icons/folder-plus';
@@ -26,7 +27,7 @@
   import Upload from '@lucide/svelte/icons/upload';
   import X from '@lucide/svelte/icons/x';
   import { onDestroy, untrack } from 'svelte';
-  import { goto } from '$app/navigation';
+  import { goto, pushState, replaceState } from '$app/navigation';
   import { page } from '$app/state';
   import { api, unwrap } from '$lib/api/client';
   import Breadcrumbs from '$lib/components/Breadcrumbs.svelte';
@@ -54,6 +55,7 @@
     type BulkKind
   } from '$lib/files/operations';
   import { Selection } from '$lib/files/selection.svelte';
+  import PreviewFrame from '$lib/previews/PreviewFrame.svelte';
   import ShortcutsDialog from '$lib/files/ShortcutsDialog.svelte';
   import type { FileItem, SortKey, SortOrder } from '$lib/files/types';
   import { activity } from '$lib/shell/activity.svelte';
@@ -247,12 +249,12 @@
   function selectionMenu(item: FileItem): MenuEntry[] {
     const one = selected === 1;
     const entries: MenuEntry[] = [];
-    if (one && item.kind === 'dir') {
+    if (one && (item.kind === 'dir' || item.kind === 'file')) {
       entries.push({
-        label: 'Open',
-        icon: FolderOpen,
+        label: item.kind === 'dir' ? 'Open' : 'Preview',
+        icon: item.kind === 'dir' ? FolderOpen : Eye,
         shortcut: 'Enter',
-        onselect: () => open(item)
+        onselect: () => open(item, focusedIndex)
       });
     }
     entries.push(
@@ -410,18 +412,27 @@
   // folder's view takes the focus (S02.5-T04): the old view is gone while
   // the folder loads, and the focus would fall back to the page.
   let focusView = $state(false);
+  let focusedIndex = $state(0);
   function fromView(): boolean {
     const active = document.activeElement;
     return !!active?.closest('[role="grid"]');
   }
 
-  function open(item: FileItem) {
+  function open(item: FileItem, index: number) {
     if (item.kind === 'dir') {
       focusView = fromView();
       goto(filesHref(item.path));
+    } else if (item.kind === 'file') {
+      // The preview (S02.6-T01) is a history entry, so Back closes it.
+      pushState('', { preview: { path: item.path, index } });
     }
-    // Files open in the preview (S02.6).
   }
+
+  // The preview belongs to this folder's listing; stepping replaces its
+  // history entry, and closing goes back past it.
+  const preview = $derived(
+    page.state.preview && parent(page.state.preview.path) === path ? page.state.preview : undefined
+  );
 
   const sortOptions: { value: string; label: string }[] = [
     { value: 'name:asc', label: 'Name, A to Z' },
@@ -616,6 +627,7 @@
       onmenu={showMenu}
       dimmed={(p) => clipboard.isCut(p)}
       autofocus={focusView}
+      bind:focused={focusedIndex}
     >
       {#snippet actions(item)}
         <DownloadAction {item} />
@@ -660,6 +672,14 @@
 />
 <DeleteDialog bind:open={deleteOpen} items={targets} onconfirm={() => void bulk('delete')} />
 <ShortcutsDialog bind:open={helpOpen} />
+{#if preview}
+  <PreviewFrame
+    {listing}
+    index={preview.index}
+    onstep={(index, item) => replaceState('', { preview: { path: item.path, index } })}
+    onclose={() => history.back()}
+  />
+{/if}
 <Menu
   bind:open={menuOpen}
   x={menuX}

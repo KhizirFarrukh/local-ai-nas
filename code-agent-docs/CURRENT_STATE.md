@@ -1,18 +1,19 @@
 # CURRENT_STATE
 
-**Last updated:** 2026-09-25 12:40 +0500 (session S006)
+**Last updated:** 2026-09-25 12:50 +0500 (session S006)
 **Plan version:** 1.3.0 (`code-agent-docs/plan.md`), **Approved baseline** 1.0.0 (S005) + the setup-script requirement (1.1.0, S005 E015)
-**Current phase:** **S01 (Basic NAS) Done**, signed off by the user (S005 E126). **S02 (NAS GUI) In Progress** (approved S006 E009); S02.5-T04 done
+**Current phase:** **S01 (Basic NAS) Done**, signed off by the user (S005 E126). **S02 (NAS GUI) In Progress** (approved S006 E009); S02.6-T01 done
 
 ## Active stage and task
 - **Active stage:** **S02: NAS GUI**, **In Progress** (`stages/S02-nas-gui.md`; approved in S006 E009, with "Skip Safari": S02 checks Chrome, Edge, and Firefox). S01 is **Done** (`stages/S01-basic-nas.md`, completion record in section 13).
-- **Active task:** **S02.5-T04** (branch `feat/S02.5-T04-menus`): done, waiting for CI and the merge; next S02.6-T01 (preview frame); S02.5 closes when T04 is merged.
+- **Active task:** **S02.6-T01** (branch `feat/S02.6-T01-preview-frame`): done, waiting for CI and the merge; next S02.6-T02 (image, audio, video).
 
 ## In progress (write-ahead)
-- S02.5-T04: committed on `feat/S02.5-T04-menus`; push, CI, merge into `develop` (branches may be stacked while CI runs).
+- S02.6-T01: committed on `feat/S02.6-T01-preview-frame`; push, CI, merge into `develop` (branches may be stacked while CI runs).
 
 ## Last completed
-- **S02.5-T04 done** (S006 E033): context menus and shortcuts; CI and the merge follow.
+- **S02.6-T01 done** (S006 E034): preview frame; CI and the merge follow.
+- **S02.5-T04 done and merged; S02.5 closed** (CI run 36108937772 green; `develop` 90da220; S006 E033, E034): context menus and shortcuts.
 - **S02.5-T03 done and merged** (CI run 36107520781 green; `develop` 91a1493; S006 E032): conflict dialog.
 - **S02.5-T02 done and merged** (CI run 36107023746 green; `develop` 01d3ab2; S006 E031): operation dialogs.
 - **S02.5-T01 done and merged** (CI run 36106413450 green; `develop` 93bc657; S006 E030): selection model; bug S02-B09 fixed.

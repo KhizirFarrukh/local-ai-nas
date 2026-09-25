@@ -33,7 +33,8 @@
     sort: SortKey;
     order: SortOrder;
     onsort: (key: SortKey) => void;
-    onopen: (item: FileItem) => void;
+    /** Opens the item at a position: a folder, or a file's preview. */
+    onopen: (item: FileItem, index: number) => void;
     /** The selected items; the owner clears it for a new folder. */
     selection: Selection;
     /** The focused position; the owner can move it. */
@@ -200,7 +201,7 @@
       const item = listing.at(focused);
       if (item) {
         event.preventDefault();
-        onopen(item);
+        onopen(item, focused);
       }
     }
   }
@@ -430,7 +431,7 @@
                   tabindex="-1"
                   onmousedown={(e) => e.preventDefault()}
                   onclick={(e) => click(index, e)}
-                  ondblclick={() => item && onopen(item)}
+                  ondblclick={() => item && onopen(item, index)}
                   onkeydown={undefined}
                 >
                   {#if item}
@@ -466,7 +467,7 @@
                   tabindex="-1"
                   onmousedown={(e) => e.preventDefault()}
                   onclick={(e) => click(index, e)}
-                  ondblclick={() => item && onopen(item)}
+                  ondblclick={() => item && onopen(item, index)}
                   onkeydown={undefined}
                 >
                   {#if item}
