@@ -9,7 +9,7 @@
   import ArrowDown from '@lucide/svelte/icons/arrow-down';
   import ArrowUp from '@lucide/svelte/icons/arrow-up';
   import { createVirtualizer } from '@tanstack/svelte-virtual';
-  import { untrack } from 'svelte';
+  import { untrack, type Snippet } from 'svelte';
   import { formatDate, formatSize } from '$lib/util/format';
   import { iconFor, kindLabel } from './icons';
   import type { FolderListing } from './listing.svelte';
@@ -24,9 +24,20 @@
     onopen: (item: FileItem) => void;
     /** The focused position; the owner can move it. */
     focused?: number;
+    /** Buttons for one item, shown on hover and on the focused item. */
+    actions?: Snippet<[FileItem]>;
   }
 
-  let { listing, mode, sort, order, onsort, onopen, focused = $bindable(0) }: Props = $props();
+  let {
+    listing,
+    mode,
+    sort,
+    order,
+    onsort,
+    onopen,
+    focused = $bindable(0),
+    actions
+  }: Props = $props();
 
   const uid = $props.id();
   const rowHeight = 44;
@@ -133,6 +144,11 @@
   function cellId(index: number) {
     return `${uid}-item-${index}`;
   }
+
+  // Touch screens have no hover, so they always show the actions.
+  function actionsClass(index: number) {
+    return index === focused ? '' : 'opacity-0 group-hover:opacity-100 pointer-coarse:opacity-100';
+  }
 </script>
 
 {#snippet name(item: FileItem)}
@@ -170,6 +186,9 @@
           </button>
         </div>
       {/each}
+      {#if actions}
+        <div class="w-8 shrink-0" aria-hidden="true"></div>
+      {/if}
     </div>
   {/if}
 
@@ -203,7 +222,7 @@
                   id={cellId(index)}
                   role="gridcell"
                   aria-selected={index === focused}
-                  class="flex w-full cursor-default items-center gap-4 border-b border-border px-4 text-sm {index ===
+                  class="group flex w-full cursor-default items-center gap-4 border-b border-border px-4 text-sm {index ===
                   focused
                     ? 'bg-accent-soft'
                     : 'hover:bg-surface-2'}"
@@ -224,6 +243,11 @@
                     <span class="hidden w-32 truncate text-fg-muted lg:block"
                       >{kindLabel(item)}</span
                     >
+                    {#if actions}
+                      <span class="flex w-8 shrink-0 justify-end {actionsClass(index)}"
+                        >{@render actions(item)}</span
+                      >
+                    {/if}
                   {:else}
                     <span class="h-3 w-1/3 animate-pulse rounded bg-surface-2" aria-label="Loading"
                     ></span>
@@ -234,7 +258,7 @@
                   id={cellId(index)}
                   role="gridcell"
                   aria-selected={index === focused}
-                  class="flex min-w-0 flex-1 cursor-default flex-col items-center justify-center gap-2 rounded-lg p-2 text-center text-sm {index ===
+                  class="group relative flex min-w-0 flex-1 cursor-default flex-col items-center justify-center gap-2 rounded-lg p-2 text-center text-sm {index ===
                   focused
                     ? 'bg-accent-soft'
                     : 'hover:bg-surface-2'}"
@@ -251,6 +275,11 @@
                       aria-hidden="true"
                     />
                     <span class="line-clamp-2 w-full break-words">{item.name}</span>
+                    {#if actions}
+                      <span class="absolute top-1 right-1 {actionsClass(index)}"
+                        >{@render actions(item)}</span
+                      >
+                    {/if}
                   {:else}
                     <span class="size-12 animate-pulse rounded bg-surface-2" aria-label="Loading"
                     ></span>

@@ -3,6 +3,7 @@
   a grid, with sorting, breadcrumbs, and the empty and error states.
 -->
 <script lang="ts">
+  import Download from '@lucide/svelte/icons/download';
   import FolderOpen from '@lucide/svelte/icons/folder-open';
   import FolderUp from '@lucide/svelte/icons/folder-up';
   import LayoutGrid from '@lucide/svelte/icons/layout-grid';
@@ -19,6 +20,8 @@
   import ErrorPanel from '$lib/components/ErrorPanel.svelte';
   import IconButton from '$lib/components/IconButton.svelte';
   import Spinner from '$lib/components/Spinner.svelte';
+  import DownloadAction from '$lib/files/DownloadAction.svelte';
+  import { downloadArchive } from '$lib/files/download';
   import FileView from '$lib/files/FileView.svelte';
   import { FolderListing, type PageLoader } from '$lib/files/listing.svelte';
   import type { FileItem, SortKey, SortOrder } from '$lib/files/types';
@@ -152,6 +155,12 @@
           }}
         />
       {/each}
+      {#if listing.total && listing.folder?.kind === 'dir'}
+        <!-- S02.4-T04: the folder on screen as one ZIP file. -->
+        <Button size="sm" onclick={() => void downloadArchive([path])}>
+          <Download class="size-4" /> Download folder
+        </Button>
+      {/if}
       {#if listing.total !== undefined && listing.folder?.kind === 'dir'}
         <span class="text-sm text-fg-muted" data-testid="item-count"
           >{formatCount(listing.total)} {listing.total === 1 ? 'item' : 'items'}</span
@@ -227,7 +236,11 @@
       {/snippet}
     </EmptyState>
   {:else}
-    <FileView {listing} {mode} {sort} {order} onsort={setSort} onopen={open} />
+    <FileView {listing} {mode} {sort} {order} onsort={setSort} onopen={open}>
+      {#snippet actions(item)}
+        <DownloadAction {item} />
+      {/snippet}
+    </FileView>
   {/if}
 </div>
 
