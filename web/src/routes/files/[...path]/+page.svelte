@@ -7,6 +7,7 @@
   import FolderUp from '@lucide/svelte/icons/folder-up';
   import LayoutGrid from '@lucide/svelte/icons/layout-grid';
   import List from '@lucide/svelte/icons/list';
+  import FolderUp2 from '@lucide/svelte/icons/folder-input';
   import Upload from '@lucide/svelte/icons/upload';
   import { onDestroy } from 'svelte';
   import { goto } from '$app/navigation';
@@ -22,9 +23,12 @@
   import { FolderListing, type PageLoader } from '$lib/files/listing.svelte';
   import type { FileItem, SortKey, SortOrder } from '$lib/files/types';
   import { activity } from '$lib/shell/activity.svelte';
+  import DropZone from '$lib/uploads/DropZone.svelte';
+  import { pickedFromInput } from '$lib/uploads/plan';
+  import { startUpload } from '$lib/uploads/start';
   import { getUploader } from '$lib/uploads/state.svelte';
   import { formatCount } from '$lib/util/format';
-  import { basename, child, crumbs, filesHref, parent, pathFromParam } from '$lib/util/paths';
+  import { basename, crumbs, filesHref, parent, pathFromParam } from '$lib/util/paths';
   import { readStored, writeStored } from '$lib/util/stored';
 
   const path = $derived(pathFromParam(page.params.path));
@@ -50,6 +54,7 @@
   // Uploads (S02.4-T01): each file goes to this folder. When one lands in
   // the folder on screen, the list refreshes in place (at most every 400 ms).
   let fileInput: HTMLInputElement | undefined = $state();
+  let folderInput: HTMLInputElement | undefined = $state();
   let refreshTimer: ReturnType<typeof setTimeout> | undefined;
   let stopListening: (() => void) | undefined;
 
@@ -66,13 +71,11 @@
     clearTimeout(refreshTimer);
   });
 
-  async function upload(files: File[]) {
-    if (files.length === 0) {
-      return;
-    }
-    const manager = await getUploader();
-    for (const file of files) {
-      manager.add(file, child(path, file.name));
+  // Files and folders (S02.4-T02): folders are created first, then the files
+  // follow into them.
+  function upload(files: File[]) {
+    if (files.length > 0) {
+      void startUpload(pickedFromInput(files), path);
     }
   }
 
@@ -125,20 +128,30 @@
       <Button variant="primary" size="sm" onclick={() => fileInput?.click()}>
         <Upload class="size-4" /> Upload
       </Button>
-      <input
-        bind:this={fileInput}
-        type="file"
-        multiple
-        class="hidden"
-        aria-hidden="true"
-        tabindex="-1"
-        onchange={(e) => {
-          // Copy the list first: clearing the input empties it (bug S02-B06).
-          const files = [...(e.currentTarget.files ?? [])];
-          e.currentTarget.value = '';
-          void upload(files);
-        }}
-      />
+      <Button size="sm" onclick={() => folderInput?.click()}>
+        <FolderUp2 class="size-4" /> Upload folder
+      </Button>
+      {#each [{ folder: false }, { folder: true }] as kind (kind.folder)}
+        <input
+          type="file"
+          multiple
+          class="hidden"
+          aria-hidden="true"
+          tabindex="-1"
+          data-testid={kind.folder ? 'folder-input' : 'file-input'}
+          {...kind.folder ? { webkitdirectory: true } : {}}
+          {@attach (node: HTMLInputElement) => {
+            if (kind.folder) folderInput = node;
+            else fileInput = node;
+          }}
+          onchange={(e) => {
+            // Copy the list first: clearing the input empties it (bug S02-B06).
+            const files = [...(e.currentTarget.files ?? [])];
+            e.currentTarget.value = '';
+            upload(files);
+          }}
+        />
+      {/each}
       {#if listing.total !== undefined && listing.folder?.kind === 'dir'}
         <span class="text-sm text-fg-muted" data-testid="item-count"
           >{formatCount(listing.total)} {listing.total === 1 ? 'item' : 'items'}</span
@@ -197,9 +210,15 @@
     <EmptyState
       icon={FolderOpen}
       title="This folder is empty"
-      description="Files you upload or create here will show up in this list."
+      description="Upload files or a whole folder, or drop them anywhere on this page."
     >
       {#snippet actions()}
+        <Button variant="primary" onclick={() => fileInput?.click()}>
+          <Upload class="size-4" /> Upload files
+        </Button>
+        <Button onclick={() => folderInput?.click()}>
+          <FolderUp2 class="size-4" /> Upload a folder
+        </Button>
         {#if path !== '/'}
           <Button onclick={() => goto(filesHref(parent(path)))}>
             <FolderUp class="size-4" /> Parent folder
@@ -211,3 +230,8 @@
     <FileView {listing} {mode} {sort} {order} onsort={setSort} onopen={open} />
   {/if}
 </div>
+
+<DropZone
+  target={path === '/' ? 'Files' : basename(path)}
+  ondrop={(dropped) => void startUpload(dropped.files, path, dropped.emptyFolders)}
+/>
