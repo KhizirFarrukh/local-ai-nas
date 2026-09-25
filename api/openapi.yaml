@@ -338,6 +338,13 @@ paths:
             Location:
               schema:
                 type: string
+            Upload-Max-Chunk-Size:
+              description: |
+                The largest body one request to this endpoint may carry
+                (uploads.max_chunk_size). Every answer of the upload
+                endpoint carries it, the tus OPTIONS answer included.
+              schema:
+                type: integer
             Upload-Offset:
               description: With a body, how many bytes the server has.
               schema:

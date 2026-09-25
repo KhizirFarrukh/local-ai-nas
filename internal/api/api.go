@@ -32,6 +32,11 @@ const DefaultMaxChunkBytes = 64 << 20
 // UploadsPath is where the tus server is mounted (S01.4).
 const UploadsPath = "/api/v1/files/uploads/"
 
+// MaxChunkHeader, on every answer of the tus endpoint, is the largest body
+// one tus request may carry (uploads.max_chunk_size), so a client such as
+// the web interface can size its chunks (S02.4-T01).
+const MaxChunkHeader = "Upload-Max-Chunk-Size"
+
 // Options configures New.
 type Options struct {
 	Logger  *slog.Logger

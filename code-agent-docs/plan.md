@@ -1112,7 +1112,7 @@ flowchart LR
   3. Multi-item download streams a ZIP without the server buffering it in memory.
   4. Per-file errors (limit, conflict, disk full) are shown clearly.
 - **Risks/notes:** Browser support for folder drag-and-drop varies (checked in S02.8).
-- **Status:** Not started
+- **Status:** In Progress (S006)
 
 #### S02.5: File operations UI
 - **Goal:** Every file operation available from the GUI, individually and in bulk.

@@ -80,6 +80,12 @@ const byRule: Record<string, string> = {
 /** Codes whose request ID is worth showing: the server log explains them. */
 const reportable = new Set<string>(['internal', 'unexpected_response', 'unavailable']);
 
+/** Starts a server detail with a capital letter and ends it with a full stop. */
+function sentence(text: string): string {
+  const t = text.charAt(0).toUpperCase() + text.slice(1);
+  return /[.!?]$/.test(t) ? t : t + '.';
+}
+
 /** Describes any thrown value for the user. */
 export function describe(error: unknown): ErrorMessage {
   if (!(error instanceof ApiError)) {
@@ -93,7 +99,7 @@ export function describe(error: unknown): ErrorMessage {
     error.code === 'invalid_name' && error.rule && byRule[error.rule]
       ? byRule[error.rule]
       : error.code === 'conflict' && error.detail
-        ? error.detail
+        ? sentence(error.detail)
         : base.message;
   const detail =
     reportable.has(error.code) && error.correlationId

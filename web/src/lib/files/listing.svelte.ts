@@ -50,6 +50,40 @@ export class FolderListing {
     await this.fetch(0, true);
   }
 
+  /**
+   * Loads the pages on screen again, after a change in the folder, and
+   * swaps them in at once, so the view keeps its place and does not flicker.
+   */
+  async refresh(): Promise<void> {
+    const wanted = this.pages.size > 0 ? [...this.pages.keys()] : [0];
+    const generation = ++this.generation;
+    this.loading.clear();
+    try {
+      const results = await Promise.all(
+        wanted.map((page) =>
+          this.load({
+            path: this.path,
+            offset: page * pageSize,
+            limit: pageSize,
+            sort: this.sort,
+            order: this.order
+          })
+        )
+      );
+      if (generation !== this.generation) {
+        return;
+      }
+      this.pages.clear();
+      wanted.forEach((page, i) => this.pages.set(page, results[i].items ?? []));
+      this.folder = results[0].item;
+      this.total = results[0].total ?? results[0].items?.length ?? 0;
+      this.error = undefined;
+      this.version++;
+    } catch {
+      // Keep what is shown; the next change or a reload tries again.
+    }
+  }
+
   /** The item at a position, or undefined while its page is loading. */
   at(index: number): FileItem | undefined {
     void this.version; // views re-read when a page arrives

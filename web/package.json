@@ -24,6 +24,8 @@
     "@lucide/svelte": "1.48.0",
     "@sveltejs/kit": "2.70.3",
     "@tanstack/svelte-virtual": "3.13.39",
+    "@uppy/core": "6.0.1",
+    "@uppy/tus": "6.0.0",
     "openapi-fetch": "0.17.0",
     "svelte": "5.57.1",
     "tailwindcss": "4.3.3"
