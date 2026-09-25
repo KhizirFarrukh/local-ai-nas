@@ -8,7 +8,6 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
-	"runtime/metrics"
 	"strconv"
 	"testing"
 	"time"
@@ -41,12 +40,6 @@ func memTestSize(t *testing.T) int64 {
 type heapSampler struct {
 	stop, done chan struct{}
 	base, max  uint64
-}
-
-func heapObjects() uint64 {
-	s := []metrics.Sample{{Name: "/memory/classes/heap/objects:bytes"}}
-	metrics.Read(s)
-	return s[0].Value.Uint64()
 }
 
 func sampleHeap() *heapSampler {

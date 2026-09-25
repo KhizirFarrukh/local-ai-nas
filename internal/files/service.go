@@ -44,6 +44,10 @@ type Service interface {
 	Copy(ctx context.Context, owner, from, to string, opts CopyOptions) (Item, bool, error)
 	// Delete deletes the item at path permanently (S01.3-T09).
 	Delete(ctx context.Context, owner, path string, opts DeleteOptions) error
+	// PlanArchive checks the items at paths and lists them for a ZIP
+	// archive, and WriteArchive streams that archive (S02.4-T03).
+	PlanArchive(ctx context.Context, owner string, paths []string) (ArchivePlan, error)
+	WriteArchive(ctx context.Context, plan ArchivePlan, w io.Writer) error
 }
 
 // Op names a file operation, for hooks and logs.
@@ -60,6 +64,7 @@ const (
 	OpMove         Op = "move"
 	OpCopy         Op = "copy"
 	OpDelete       Op = "delete"
+	OpArchive      Op = "archive"
 )
 
 // Event describes one operation for the hooks.

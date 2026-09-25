@@ -449,6 +449,81 @@ paths:
           $ref: "#/components/responses/PreconditionFailed"
         "423":
           $ref: "#/components/responses/Locked"
+  /files/archives:
+    post:
+      tags: [files]
+      operationId: createArchive
+      summary: Prepare a ZIP archive of files and folders
+      description: |
+        Checks the items at `paths` and everything in the folders among
+        them: they exist, no link is anywhere inside (links are never
+        followed), and there are at most 100,000 files and folders. The
+        answer is a ticket whose `url` streams the archive for 5 minutes;
+        a browser downloads it like any file. Entries are stored (not
+        compressed), with ZIP64 for large files, UTF-8 names, and the
+        items' times (docs/api/conventions.md, Archives).
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ArchiveRequest"
+      responses:
+        "201":
+          description: The archive is ready to download from `url`.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ArchiveTicket"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "405":
+          $ref: "#/components/responses/MethodNotAllowed"
+        "413":
+          $ref: "#/components/responses/TooLarge"
+        "422":
+          $ref: "#/components/responses/TooLargeForSync"
+        "500":
+          $ref: "#/components/responses/InternalError"
+  /files/archives/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        description: The `id` of a ticket from POST /files/archives.
+        schema:
+          type: string
+    get:
+      tags: [files]
+      operationId: downloadArchive
+      summary: Download a prepared ZIP archive
+      description: |
+        Streams the archive of a ticket, as an attachment. It can be
+        downloaded more than once while the ticket lasts (browsers may
+        retry). A file removed since the ticket was made is left out. An
+        error after the stream has started ends the connection, so the
+        download shows as failed.
+      responses:
+        "200":
+          description: The archive.
+          headers:
+            Content-Disposition:
+              description: "`attachment` with the archive's file name (RFC 6266, RFC 8187)."
+              schema:
+                type: string
+          content:
+            application/zip:
+              schema:
+                type: string
+                format: binary
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "405":
+          $ref: "#/components/responses/MethodNotAllowed"
+        "500":
+          $ref: "#/components/responses/InternalError"
   /files/items:
     get:
       tags: [files]
@@ -645,6 +720,47 @@ components:
           type: integer
           minimum: 0
           description: For a folder, how many items it has in all pages.
+    ArchiveRequest:
+      type: object
+      additionalProperties: false
+      required: [paths]
+      properties:
+        paths:
+          type: array
+          minItems: 1
+          maxItems: 10000
+          description: The files and folders to put in the archive, each starting with `/`.
+          items:
+            type: string
+        name:
+          type: string
+          description: |
+            The file name of the download, such as `photos.zip` (".zip" is
+            added when missing). Default: the item's name for one item,
+            otherwise `download-<date>.zip`.
+    ArchiveTicket:
+      type: object
+      additionalProperties: false
+      required: [id, url, name, expires_at, entries, size]
+      properties:
+        id:
+          type: string
+        url:
+          type: string
+          description: Where to download the archive, `/api/v1/files/archives/{id}`.
+        name:
+          type: string
+          description: The archive's file name.
+        expires_at:
+          type: string
+          format: date-time
+        entries:
+          type: integer
+          description: How many files and folders the archive holds.
+        size:
+          type: integer
+          format: int64
+          description: The total size of the files in it, in bytes (the archive is slightly larger).
     CreateFolderRequest:
       type: object
       additionalProperties: false

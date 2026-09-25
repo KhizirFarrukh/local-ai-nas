@@ -151,3 +151,11 @@ func (noFiles) Copy(context.Context, string, string, string, files.CopyOptions) 
 func (noFiles) Delete(context.Context, string, string, files.DeleteOptions) error {
 	return errNoFiles
 }
+
+func (noFiles) PlanArchive(context.Context, string, []string) (files.ArchivePlan, error) {
+	return files.ArchivePlan{}, errNoFiles
+}
+
+func (noFiles) WriteArchive(context.Context, files.ArchivePlan, io.Writer) error {
+	return errNoFiles
+}

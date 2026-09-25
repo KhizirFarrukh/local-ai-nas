@@ -202,3 +202,13 @@ func TestGetItemsWithoutFilesService(t *testing.T) {
 		t.Errorf("no files service: status %d, want 501 not_available", rec.Code)
 	}
 }
+
+func (r *recordingFiles) PlanArchive(context.Context, string, []string) (files.ArchivePlan, error) {
+	r.calls++
+	return files.ArchivePlan{}, apperr.New(apperr.NotFound, "fake")
+}
+
+func (r *recordingFiles) WriteArchive(context.Context, files.ArchivePlan, io.Writer) error {
+	r.calls++
+	return apperr.New(apperr.NotFound, "fake")
+}
