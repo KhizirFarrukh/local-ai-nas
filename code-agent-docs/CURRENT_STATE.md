@@ -1,19 +1,20 @@
 # CURRENT_STATE
 
-**Last updated:** 2026-09-25 12:54 +0500 (session S006)
+**Last updated:** 2026-09-25 13:00 +0500 (session S006)
 **Plan version:** 1.3.0 (`code-agent-docs/plan.md`), **Approved baseline** 1.0.0 (S005) + the setup-script requirement (1.1.0, S005 E015)
-**Current phase:** **S01 (Basic NAS) Done**, signed off by the user (S005 E126). **S02 (NAS GUI) In Progress** (approved S006 E009); S02.6-T02 done
+**Current phase:** **S01 (Basic NAS) Done**, signed off by the user (S005 E126). **S02 (NAS GUI) In Progress** (approved S006 E009); S02.6-T03 done
 
 ## Active stage and task
 - **Active stage:** **S02: NAS GUI**, **In Progress** (`stages/S02-nas-gui.md`; approved in S006 E009, with "Skip Safari": S02 checks Chrome, Edge, and Firefox). S01 is **Done** (`stages/S01-basic-nas.md`, completion record in section 13).
-- **Active task:** **S02.6-T02** (branch `feat/S02.6-T02-media`): done, waiting for CI and the merge; next S02.6-T03 (text and code).
+- **Active task:** **S02.6-T03** (branch `feat/S02.6-T03-text`): done, waiting for CI and the merge; next S02.6-T04 (PDF).
 
 ## In progress (write-ahead)
-- S02.6-T02: committed on `feat/S02.6-T02-media`; push, CI, merge into `develop` (branches may be stacked while CI runs).
+- S02.6-T03: committed on `feat/S02.6-T03-text`; push, CI, merge into `develop` (branches may be stacked while CI runs).
 
 ## Last completed
+- **S02.6-T03 done** (S006 E036): text and code; CI and the merge follow.
 - **S02.6-T02 done** (S006 E035): image, audio, video; CI and the merge follow.
-- **S02.6-T01 done** (S006 E034): preview frame; CI and the merge follow.
+- **S02.6-T01 done and merged** (CI run 36109737519 green; `develop` 0ffac44; S006 E034): preview frame.
 - **S02.5-T04 done and merged; S02.5 closed** (CI run 36108937772 green; `develop` 90da220; S006 E033, E034): context menus and shortcuts.
 - **S02.5-T03 done and merged** (CI run 36107520781 green; `develop` 91a1493; S006 E032): conflict dialog.
 - **S02.5-T02 done and merged** (CI run 36107023746 green; `develop` 01d3ab2; S006 E031): operation dialogs.
