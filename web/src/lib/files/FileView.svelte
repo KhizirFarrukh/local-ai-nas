@@ -4,6 +4,12 @@
   listing loads their pages. The view is one ARIA grid; the focused item is
   its active descendant, moved with the arrow keys, Home, End, Page Up, and
   Page Down, and opened with Enter or a double click.
+
+  Selection (S02.5-T01) works as in common file managers. A click, or
+  moving with the keys, selects one item. Ctrl/Cmd-click and Space toggle
+  one. Shift with a click or a key selects a range (with Ctrl/Cmd, adding
+  it). Ctrl/Cmd+A selects all, and Escape or a click on empty space clears
+  the selection. Ctrl/Cmd with a key moves the focus only.
 -->
 <script lang="ts">
   import ArrowDown from '@lucide/svelte/icons/arrow-down';
@@ -13,6 +19,7 @@
   import { formatDate, formatSize } from '$lib/util/format';
   import { iconFor, kindLabel } from './icons';
   import type { FolderListing } from './listing.svelte';
+  import type { PickMode, Selection } from './selection.svelte';
   import type { FileItem, SortKey, SortOrder } from './types';
 
   interface Props {
@@ -22,9 +29,11 @@
     order: SortOrder;
     onsort: (key: SortKey) => void;
     onopen: (item: FileItem) => void;
+    /** The selected items; the owner clears it for a new folder. */
+    selection: Selection;
     /** The focused position; the owner can move it. */
     focused?: number;
-    /** Buttons for one item, shown on hover and on the focused item. */
+    /** Buttons for one item, shown on hover and on selected items. */
     actions?: Snippet<[FileItem]>;
   }
 
@@ -35,6 +44,7 @@
     order,
     onsort,
     onopen,
+    selection,
     focused = $bindable(0),
     actions
   }: Props = $props();
@@ -88,6 +98,7 @@
     void listing;
     untrack(() => {
       focused = 0;
+      selection.anchor = undefined; // positions change with the sort
       $virtualizer.scrollToOffset(0);
     });
   });
@@ -99,15 +110,47 @@
     { key: 'kind', label: 'Type', class: 'w-32 hidden lg:block' }
   ];
 
-  function move(to: number) {
+  /** How a click or a key with these modifiers changes the selection. */
+  function pickMode(event: MouseEvent | KeyboardEvent, key: boolean): PickMode | undefined {
+    const ctrl = event.ctrlKey || event.metaKey;
+    if (event.shiftKey) {
+      return ctrl ? 'add-range' : 'range';
+    }
+    if (ctrl) {
+      return key ? undefined : 'toggle'; // Ctrl/Cmd with a key only moves the focus
+    }
+    return 'only';
+  }
+
+  function move(to: number, event: KeyboardEvent) {
     if (total === 0) {
       return;
     }
     focused = Math.max(0, Math.min(total - 1, to));
     $virtualizer.scrollToIndex(Math.floor(focused / columns), { align: 'auto' });
+    const how = pickMode(event, true);
+    if (how) {
+      void selection.pick(focused, how, listing);
+    }
   }
 
   function keydown(event: KeyboardEvent) {
+    const ctrl = event.ctrlKey || event.metaKey;
+    if (ctrl && event.key.toLowerCase() === 'a' && !event.shiftKey && !event.altKey) {
+      event.preventDefault();
+      selection.selectAll();
+      return;
+    }
+    if (event.key === ' ' && total > 0) {
+      event.preventDefault(); // not a scroll
+      void selection.pick(focused, 'toggle', listing);
+      return;
+    }
+    if (event.key === 'Escape' && selection.count(total) > 0) {
+      event.preventDefault();
+      selection.clear();
+      return;
+    }
     const page = Math.max(
       1,
       Math.floor((scroller?.clientHeight ?? 400) / (mode === 'grid' ? tileHeight : rowHeight))
@@ -124,7 +167,7 @@
     };
     if (event.key in moves) {
       event.preventDefault();
-      move(moves[event.key]);
+      move(moves[event.key], event);
     } else if (event.key === 'Enter') {
       const item = listing.at(focused);
       if (item) {
@@ -136,9 +179,25 @@
 
   // Clicks keep the focus on the grid itself: a focused cell would lose
   // focus when it scrolls out and the virtual list removes it.
-  function pick(index: number) {
+  function click(index: number, event: MouseEvent) {
     focused = index;
     scroller?.focus();
+    void selection.pick(index, pickMode(event, false) ?? 'only', listing);
+  }
+
+  // A click on empty space clears the selection; one on the scroll bar
+  // (outside the client area) does not.
+  function clickEmpty(event: MouseEvent) {
+    if (!scroller || (event.target as Element).closest('[role="gridcell"]')) {
+      return;
+    }
+    const box = scroller.getBoundingClientRect();
+    if (
+      event.clientX - box.left < scroller.clientWidth &&
+      event.clientY - box.top < scroller.clientHeight
+    ) {
+      selection.clear();
+    }
   }
 
   function cellId(index: number) {
@@ -146,8 +205,18 @@
   }
 
   // Touch screens have no hover, so they always show the actions.
-  function actionsClass(index: number) {
-    return index === focused ? '' : 'opacity-0 group-hover:opacity-100 pointer-coarse:opacity-100';
+  function actionsClass(selected: boolean) {
+    return selected ? '' : 'opacity-0 group-hover:opacity-100 pointer-coarse:opacity-100';
+  }
+
+  // Selected items are tinted; the focused one gets a ring while the
+  // keyboard is in use.
+  function cellClass(index: number, selected: boolean) {
+    const ring =
+      index === focused
+        ? 'group-focus-visible/grid:ring-2 group-focus-visible/grid:ring-accent group-focus-visible/grid:ring-inset'
+        : '';
+    return `${selected ? 'bg-accent-soft' : 'hover:bg-surface-2'} ${ring}`;
   }
 </script>
 
@@ -200,10 +269,12 @@
     aria-label="Items in {listing.folder?.name || 'Files'}"
     aria-rowcount={rows}
     aria-colcount={mode === 'list' ? 4 : columns}
+    aria-multiselectable="true"
     aria-activedescendant={total > 0 ? cellId(focused) : undefined}
     data-testid="file-view"
-    class="min-h-0 flex-1 overflow-auto focus-visible:outline-offset-[-2px]"
+    class="group/grid min-h-0 flex-1 overflow-auto focus-visible:outline-offset-[-2px]"
     onkeydown={keydown}
+    onclick={clickEmpty}
   >
     <div class="relative w-full" style:height="{$virtualizer.getTotalSize()}px">
       {#each $virtualizer.getVirtualItems() as row (row.key)}
@@ -217,18 +288,19 @@
           {#each Array.from({ length: columns }, (_, c) => row.index * columns + c) as index (index)}
             {#if index < total}
               {@const item = listing.at(index)}
+              {@const selected = item ? selection.has(item.path) : false}
               {#if mode === 'list'}
                 <div
                   id={cellId(index)}
                   role="gridcell"
-                  aria-selected={index === focused}
-                  class="group flex w-full cursor-default items-center gap-4 border-b border-border px-4 text-sm {index ===
-                  focused
-                    ? 'bg-accent-soft'
-                    : 'hover:bg-surface-2'}"
+                  aria-selected={selected}
+                  class="group flex w-full cursor-default items-center gap-4 border-b border-border px-4 text-sm {cellClass(
+                    index,
+                    selected
+                  )}"
                   tabindex="-1"
                   onmousedown={(e) => e.preventDefault()}
-                  onclick={() => pick(index)}
+                  onclick={(e) => click(index, e)}
                   ondblclick={() => item && onopen(item)}
                   onkeydown={undefined}
                 >
@@ -244,7 +316,7 @@
                       >{kindLabel(item)}</span
                     >
                     {#if actions}
-                      <span class="flex w-8 shrink-0 justify-end {actionsClass(index)}"
+                      <span class="flex w-8 shrink-0 justify-end {actionsClass(selected)}"
                         >{@render actions(item)}</span
                       >
                     {/if}
@@ -257,14 +329,14 @@
                 <div
                   id={cellId(index)}
                   role="gridcell"
-                  aria-selected={index === focused}
-                  class="group relative flex min-w-0 flex-1 cursor-default flex-col items-center justify-center gap-2 rounded-lg p-2 text-center text-sm {index ===
-                  focused
-                    ? 'bg-accent-soft'
-                    : 'hover:bg-surface-2'}"
+                  aria-selected={selected}
+                  class="group relative flex min-w-0 flex-1 cursor-default flex-col items-center justify-center gap-2 rounded-lg p-2 text-center text-sm {cellClass(
+                    index,
+                    selected
+                  )}"
                   tabindex="-1"
                   onmousedown={(e) => e.preventDefault()}
-                  onclick={() => pick(index)}
+                  onclick={(e) => click(index, e)}
                   ondblclick={() => item && onopen(item)}
                   onkeydown={undefined}
                 >
@@ -276,7 +348,7 @@
                     />
                     <span class="line-clamp-2 w-full break-words">{item.name}</span>
                     {#if actions}
-                      <span class="absolute top-1 right-1 {actionsClass(index)}"
+                      <span class="absolute top-1 right-1 {actionsClass(selected)}"
                         >{@render actions(item)}</span
                       >
                     {/if}

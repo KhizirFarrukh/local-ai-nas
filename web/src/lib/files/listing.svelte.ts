@@ -31,7 +31,7 @@ export class FolderListing {
   // eslint-disable-next-line svelte/prefer-svelte-reactivity
   private pages = new Map<number, FileItem[]>();
   // eslint-disable-next-line svelte/prefer-svelte-reactivity
-  private loading = new Set<number>();
+  private loading = new Map<number, Promise<boolean>>();
   private generation = 0;
 
   constructor(
@@ -92,20 +92,36 @@ export class FolderListing {
 
   /** Makes sure the pages that hold positions first..last are loading. */
   ensure(first: number, last: number): void {
-    if (this.total === undefined) {
-      return;
-    }
-    const end = Math.min(last, this.total - 1);
-    for (let page = Math.floor(Math.max(0, first) / pageSize); page * pageSize <= end; page++) {
-      if (!this.pages.has(page) && !this.loading.has(page)) {
-        void this.fetch(page, false);
-      }
-    }
+    void this.loadRange(first, last);
   }
 
-  private async fetch(page: number, first: boolean): Promise<void> {
+  /**
+   * Loads the pages that hold positions first..last, such as for a
+   * selection over pages not seen yet (S02.5-T01). Resolves to false when
+   * one of them failed.
+   */
+  async loadRange(first: number, last: number): Promise<boolean> {
+    if (this.total === undefined) {
+      return false;
+    }
+    const end = Math.min(last, this.total - 1);
+    const pending: Promise<boolean>[] = [];
+    for (let page = Math.floor(Math.max(0, first) / pageSize); page * pageSize <= end; page++) {
+      if (!this.pages.has(page)) {
+        pending.push(this.loading.get(page) ?? this.fetch(page, false));
+      }
+    }
+    return (await Promise.all(pending)).every(Boolean);
+  }
+
+  private fetch(page: number, first: boolean): Promise<boolean> {
+    const pending = this.fetchPage(page, first);
+    this.loading.set(page, pending);
+    return pending;
+  }
+
+  private async fetchPage(page: number, first: boolean): Promise<boolean> {
     const generation = this.generation;
-    this.loading.add(page);
     try {
       const result = await this.load({
         path: this.path,
@@ -115,16 +131,18 @@ export class FolderListing {
         order: this.order
       });
       if (generation !== this.generation) {
-        return; // the folder was reloaded meanwhile
+        return false; // the folder was reloaded meanwhile
       }
       this.pages.set(page, result.items ?? []);
       this.folder = result.item;
       this.total = result.total ?? result.items?.length ?? 0;
       this.version++;
+      return true;
     } catch (error) {
       if (generation === this.generation && first) {
         this.error = error;
       }
+      return false;
     } finally {
       if (generation === this.generation) {
         this.loading.delete(page);

@@ -1,6 +1,8 @@
 <!--
   The files area (S02.3, FR-002): the folder at the address, as a list or
-  a grid, with sorting, breadcrumbs, and the empty and error states.
+  a grid, with sorting, breadcrumbs, and the empty and error states. While
+  items are selected (S02.5-T01), the toolbar shows the selection's count
+  and actions instead.
 -->
 <script lang="ts">
   import Download from '@lucide/svelte/icons/download';
@@ -10,7 +12,8 @@
   import List from '@lucide/svelte/icons/list';
   import FolderUp2 from '@lucide/svelte/icons/folder-input';
   import Upload from '@lucide/svelte/icons/upload';
-  import { onDestroy } from 'svelte';
+  import X from '@lucide/svelte/icons/x';
+  import { onDestroy, untrack } from 'svelte';
   import { goto } from '$app/navigation';
   import { page } from '$app/state';
   import { api, unwrap } from '$lib/api/client';
@@ -21,9 +24,10 @@
   import IconButton from '$lib/components/IconButton.svelte';
   import Spinner from '$lib/components/Spinner.svelte';
   import DownloadAction from '$lib/files/DownloadAction.svelte';
-  import { downloadArchive } from '$lib/files/download';
+  import { downloadArchive, downloadSelection } from '$lib/files/download';
   import FileView from '$lib/files/FileView.svelte';
   import { FolderListing, type PageLoader } from '$lib/files/listing.svelte';
+  import { Selection } from '$lib/files/selection.svelte';
   import type { FileItem, SortKey, SortOrder } from '$lib/files/types';
   import { activity } from '$lib/shell/activity.svelte';
   import DropZone from '$lib/uploads/DropZone.svelte';
@@ -53,6 +57,30 @@
   $effect(() => {
     void activity.track(listing.start());
   });
+
+  // The selection (S02.5-T01) belongs to the folder: another folder starts
+  // with none. A new sort keeps it, since items are kept by path.
+  const selection = new Selection();
+  const selected = $derived(selection.count(listing.total));
+  $effect(() => {
+    void path;
+    untrack(() => selection.clear());
+  });
+
+  // Ctrl/Cmd+A and Escape also work when nothing has the focus, as after
+  // a click on the page's background.
+  function pageKeys(event: KeyboardEvent) {
+    if (document.activeElement !== document.body || listing.total === undefined) {
+      return;
+    }
+    const ctrl = event.ctrlKey || event.metaKey;
+    if (ctrl && event.key.toLowerCase() === 'a' && !event.shiftKey && !event.altKey) {
+      event.preventDefault();
+      selection.selectAll();
+    } else if (event.key === 'Escape' && selected > 0) {
+      selection.clear();
+    }
+  }
 
   // Uploads (S02.4-T01): each file goes to this folder. When one lands in
   // the folder on screen, the list refreshes in place (at most every 400 ms).
@@ -124,10 +152,35 @@
   <title>{path === '/' ? 'Files' : basename(path)} · local-ai-nas</title>
 </svelte:head>
 
+<svelte:window onkeydown={pageKeys} />
+
 <div class="flex h-full flex-col">
   <div class="flex flex-wrap items-center gap-3 border-b border-border px-4 py-2">
     <Breadcrumbs crumbs={crumbs(path)} label="Folder" />
-    <div class="ml-auto flex items-center gap-2">
+    {#if selected > 0}
+      <div
+        class="ml-auto flex items-center gap-2"
+        role="toolbar"
+        aria-label="Selected items"
+        data-testid="selection-bar"
+      >
+        <span class="text-sm font-medium" aria-live="polite">{formatCount(selected)} selected</span>
+        <Button
+          size="sm"
+          variant="primary"
+          onclick={() => void downloadSelection(selection, listing, path)}
+        >
+          <Download class="size-4" /> Download
+        </Button>
+        {#if !selection.everything}
+          <Button size="sm" onclick={() => selection.selectAll()}>Select all</Button>
+        {/if}
+        <IconButton label="Clear the selection" size="sm" onclick={() => selection.clear()}>
+          <X class="size-4" />
+        </IconButton>
+      </div>
+    {/if}
+    <div class="ml-auto flex items-center gap-2 {selected > 0 ? 'hidden' : ''}">
       <Button variant="primary" size="sm" onclick={() => fileInput?.click()}>
         <Upload class="size-4" /> Upload
       </Button>
@@ -236,7 +289,7 @@
       {/snippet}
     </EmptyState>
   {:else}
-    <FileView {listing} {mode} {sort} {order} onsort={setSort} onopen={open}>
+    <FileView {listing} {selection} {mode} {sort} {order} onsort={setSort} onopen={open}>
       {#snippet actions(item)}
         <DownloadAction {item} />
       {/snippet}

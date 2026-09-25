@@ -8,6 +8,7 @@
 import { api as sharedApi, unwrap, type Api } from '$lib/api/client';
 import { tasks as sharedTasks, type Tasks } from '$lib/shell/tasks.svelte';
 import { formatCount, formatSize } from '$lib/util/format';
+import type { ItemSource, Selection } from './selection.svelte';
 import type { FileItem } from './types';
 
 /** The download URL of a file. */
@@ -56,6 +57,37 @@ export async function download(
     items.map((item) => item.path),
     deps
   );
+}
+
+/**
+ * Downloads what is selected in `folder` (S02.5-T01): the folder itself
+ * when everything in it is selected (so any number of items works), else
+ * the selected items. Links and special files are left out.
+ */
+export async function downloadSelection(
+  selection: Selection,
+  source: ItemSource,
+  folder: string,
+  deps: DownloadDeps = shared
+): Promise<void> {
+  if (selection.everything) {
+    await downloadArchive([folder], deps);
+    return;
+  }
+  const items = await selection.resolve(source);
+  if (!items) {
+    deps.tasks.notes.push({
+      kind: 'error',
+      message: 'Download: the folder’s items could not be loaded. Try again.'
+    });
+    return;
+  }
+  const wanted = items.filter(downloadable);
+  if (wanted.length === 0) {
+    deps.tasks.notes.push({ message: 'Links and special files cannot be downloaded.' });
+    return;
+  }
+  await download(wanted, deps);
 }
 
 /**

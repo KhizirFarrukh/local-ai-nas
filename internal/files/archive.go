@@ -12,7 +12,6 @@ import (
 	"time"
 
 	"github.com/KhizirFarrukh/local-ai-nas/internal/apperr"
-	"github.com/KhizirFarrukh/local-ai-nas/internal/storage"
 )
 
 // MaxArchiveItems is the most files and folders one archive holds (S02.4-T03),
@@ -113,20 +112,12 @@ func planTree(root *os.Root, rel, name string, info fs.FileInfo, plan *ArchivePl
 	if !info.IsDir() {
 		return nil
 	}
-	names, err := readNames(root, rel)
+	children, err := readInfos(root, rel)
 	if err != nil {
 		return err
 	}
-	for _, child := range names {
-		childRel := path.Join(rel, child)
-		childInfo, err := root.Lstat(filepath.FromSlash(childRel))
-		if storage.IsNotFound(err) {
-			continue // removed since the listing
-		}
-		if err != nil {
-			return fsError(err, "/"+childRel)
-		}
-		if err := planTree(root, childRel, name+"/"+child, childInfo, plan); err != nil {
+	for _, child := range children {
+		if err := planTree(root, path.Join(rel, child.Name()), name+"/"+child.Name(), child, plan); err != nil {
 			return err
 		}
 	}

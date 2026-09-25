@@ -152,20 +152,12 @@ func scanCopy(root *os.Root, from, to string, src fs.FileInfo, limits CopyLimits
 		if !info.IsDir() {
 			return nil
 		}
-		children, err := readNames(root, srcPath)
+		children, err := readInfos(root, srcPath)
 		if err != nil {
 			return err
 		}
-		for _, name := range children {
-			child := path.Join(rel, name)
-			info, err := root.Lstat(filepath.FromSlash(path.Join(from, child)))
-			if storage.IsNotFound(err) {
-				continue // removed since the listing
-			}
-			if err != nil {
-				return fsError(err, "/"+path.Join(from, child))
-			}
-			if err := walk(child, info); err != nil {
+		for _, info := range children {
+			if err := walk(path.Join(rel, info.Name()), info); err != nil {
 				return err
 			}
 		}
@@ -196,6 +188,37 @@ func readNames(root *os.Root, dir string) ([]string, error) {
 		}
 	}
 	return names, nil
+}
+
+// readInfos returns the items in the folder dir as the folder read reports
+// them, in name order, without the server's temporary files; links are
+// described, never followed. One folder read costs far less than an Lstat
+// per item, which on Windows took about 1 ms each (bug S02-B09).
+func readInfos(root *os.Root, dir string) ([]fs.FileInfo, error) {
+	f, err := root.Open(filepath.FromSlash(dir))
+	if err != nil {
+		return nil, fsError(err, "/"+dir)
+	}
+	defer func() { _ = f.Close() }() // read-only
+	entries, err := f.ReadDir(-1)
+	if err != nil {
+		return nil, fsError(err, "/"+dir)
+	}
+	infos := make([]fs.FileInfo, 0, len(entries))
+	for _, e := range entries {
+		if storage.IsTempName(e.Name()) {
+			continue
+		}
+		info, err := e.Info() // Lstat: links are never followed
+		if storage.IsNotFound(err) {
+			continue // removed since the folder was read
+		}
+		if err != nil {
+			return nil, fsError(err, "/"+path.Join(dir, e.Name()))
+		}
+		infos = append(infos, info)
+	}
+	return infos, nil
 }
 
 // checkCopiedName applies the name rules to a name the copy creates below
