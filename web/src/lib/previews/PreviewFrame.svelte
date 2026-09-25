@@ -12,6 +12,7 @@
   import type { PreviewKind } from './kinds';
   import AudioView from './AudioView.svelte';
   import ImageView from './ImageView.svelte';
+  import TextView from './TextView.svelte';
   import VideoView from './VideoView.svelte';
 
   /** The view of one kind; it calls `onfail` when the file cannot be shown. */
@@ -21,11 +22,12 @@
     onfail: (why: string) => void;
   }>;
 
-  /** The views by kind (S02.6-T03 and T04 add theirs); others get the fallback. */
+  /** The views by kind (S02.6-T04 adds PDF); others get the fallback. */
   const views: Partial<Record<PreviewKind, PreviewView>> = {
     image: ImageView,
     video: VideoView,
-    audio: AudioView
+    audio: AudioView,
+    text: TextView
   };
 </script>
 
