@@ -1,15 +1,15 @@
 # CURRENT_STATE
 
-**Last updated:** 2026-09-25 06:25 +0500 (session S006)
+**Last updated:** 2026-09-25 06:35 +0500 (session S006)
 **Plan version:** 1.3.0 (`code-agent-docs/plan.md`), **Approved baseline** 1.0.0 (S005) + the setup-script requirement (1.1.0, S005 E015)
-**Current phase:** **S01 (Basic NAS) Done**, signed off by the user (S005 E126). **S02 (NAS GUI) In Progress** (approved S006 E009); S02.1-T03 done
+**Current phase:** **S01 (Basic NAS) Done**, signed off by the user (S005 E126). **S02 (NAS GUI) In Progress** (approved S006 E009); S02.1-T04 done
 
 ## Active stage and task
 - **Active stage:** **S02: NAS GUI**, **In Progress** (`stages/S02-nas-gui.md`; approved in S006 E009, with "Skip Safari": S02 checks Chrome, Edge, and Firefox). S01 is **Done** (`stages/S01-basic-nas.md`, completion record in section 13).
-- **Active task:** **S02.1-T03** (branch `feat/S02.1-T03-api-client`): done, waiting for CI and the merge; next **S02.1-T04** design system
+- **Active task:** **S02.1-T04** (branch `feat/S02.1-T04-design-system`): done, waiting for CI and the merge; next **S02.1-T05** CI and project hygiene
 
 ## In progress (write-ahead)
-- S02.1-T03: committed on `feat/S02.1-T03-api-client`; push, CI, merge into `develop` (branches may be stacked while CI runs).
+- S02.1-T04: committed on `feat/S02.1-T04-design-system`; push, CI, merge into `develop` (branches may be stacked while CI runs).
 
 ## Last completed
 - **S02.1-T01 done** (S006 E011): `web/` SvelteKit project (exact versions, pnpm 12.6.0); format, lint, check, and build pass on Windows and Linux (WSL); packages registered; Node.js 24.19.0 on Windows (newest in winget), 24.21.0 in WSL.

@@ -12,6 +12,12 @@ export default defineConfig(
   {
     languageOptions: {
       globals: { ...globals.browser, ...globals.node }
+    },
+    rules: {
+      // The app is always served at the root of its own origin (the core
+      // embeds it, S02.1-T02), with no base path, and its links are built
+      // from file paths at run time. resolve() adds nothing here.
+      'svelte/no-navigation-without-resolve': 'off'
     }
   },
   {

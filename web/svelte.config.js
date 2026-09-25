@@ -17,7 +17,10 @@ const config = {
       directives: {
         'default-src': ['self'],
         'script-src': ['self'],
-        'style-src': ['self'],
+        // SvelteKit's route announcer (for screen readers) carries a static
+        // style attribute, which a strict style-src blocks (bug S02-B02).
+        // Scripts stay strict; S03.5 may pin the attribute's hash instead.
+        'style-src': ['self', 'unsafe-inline'],
         'img-src': ['self', 'data:', 'blob:'],
         'media-src': ['self', 'blob:'],
         'font-src': ['self'],
