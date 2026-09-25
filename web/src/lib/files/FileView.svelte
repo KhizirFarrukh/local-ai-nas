@@ -10,6 +10,11 @@
   one. Shift with a click or a key selects a range (with Ctrl/Cmd, adding
   it). Ctrl/Cmd+A selects all, and Escape or a click on empty space clears
   the selection. Ctrl/Cmd with a key moves the focus only.
+
+  Menus (S02.5-T04): a right-click, a long press on a touch screen, the
+  menu key, or Shift+F10 asks the owner for the menu of the selection, or
+  of the folder on empty space.
+  An item not yet selected becomes the selection first, as in Explorer.
 -->
 <script lang="ts">
   import ArrowDown from '@lucide/svelte/icons/arrow-down';
@@ -35,6 +40,12 @@
     focused?: number;
     /** Buttons for one item, shown on hover and on selected items. */
     actions?: Snippet<[FileItem]>;
+    /** Opens a menu at x, y: for the selection, or the folder (no item). */
+    onmenu?: (item: FileItem | undefined, x: number, y: number) => void;
+    /** Items shown dimmed, such as cut items waiting to be moved. */
+    dimmed?: (path: string) => boolean;
+    /** Take the focus when shown, as after opening a folder from the view. */
+    autofocus?: boolean;
   }
 
   let {
@@ -46,7 +57,10 @@
     onopen,
     selection,
     focused = $bindable(0),
-    actions
+    actions,
+    onmenu,
+    dimmed,
+    autofocus = false
   }: Props = $props();
 
   const uid = $props.id();
@@ -80,6 +94,14 @@
         $virtualizer.setOptions(options);
         $virtualizer.measure();
       });
+    }
+  });
+
+  // A folder opened from the view, by keyboard or pointer, keeps the focus
+  // in the view, so keyboard users do not start over from the top.
+  $effect(() => {
+    if (autofocus && scroller) {
+      untrack(() => scroller?.focus());
     }
   });
 
@@ -136,6 +158,12 @@
 
   function keydown(event: KeyboardEvent) {
     const ctrl = event.ctrlKey || event.metaKey;
+    if (event.key === 'ContextMenu' || (event.key === 'F10' && event.shiftKey && !ctrl)) {
+      event.preventDefault();
+      keyMenuAt = performance.now();
+      void menuFor(total > 0 ? focused : undefined);
+      return;
+    }
     if (ctrl && event.key.toLowerCase() === 'a' && !event.shiftKey && !event.altKey) {
       event.preventDefault();
       selection.selectAll();
@@ -185,6 +213,100 @@
     void selection.pick(index, pickMode(event, false) ?? 'only', listing);
   }
 
+  // The menu of the item at index (selected first when it is not), or of
+  // the folder; placed at the pointer, or under the item for the keyboard.
+  let keyMenuAt = -Infinity; // when the menu key last opened a menu
+  async function menuFor(index: number | undefined, x?: number, y?: number) {
+    if (!onmenu || !scroller) {
+      return;
+    }
+    const item = index === undefined ? undefined : listing.at(index);
+    if (index !== undefined && item) {
+      focused = index;
+      if (!selection.has(item.path)) {
+        await selection.pick(index, 'only', listing);
+      }
+    } else {
+      selection.clear();
+    }
+    if (x === undefined || y === undefined) {
+      const cell = index === undefined ? null : document.getElementById(cellId(index));
+      const box = (cell ?? scroller).getBoundingClientRect();
+      x = box.left + 24;
+      y = cell ? box.bottom : box.top + 8;
+    }
+    onmenu(item, x, y);
+  }
+
+  function contextmenu(event: MouseEvent) {
+    if (!onmenu) {
+      return;
+    }
+    event.preventDefault();
+    endPress(); // a browser that sends this for a long press opens it here
+    // The menu key also sends this event; its keydown has opened the menu.
+    if (performance.now() - keyMenuAt < 500) {
+      return;
+    }
+    scroller?.focus();
+    const cell = (event.target as Element).closest('[role="gridcell"]');
+    const index = cell ? Number(cell.id.slice(cell.id.lastIndexOf('-') + 1)) : undefined;
+    void menuFor(index, event.clientX, event.clientY);
+  }
+
+  // A long press on a touch screen (500 ms without moving) opens the menu
+  // in every browser; some also send `contextmenu`, which ends the press.
+  // The click a browser may send when the finger lifts is dropped, since
+  // the menu opens under the finger and the click would pick an entry.
+  let press: { timer: ReturnType<typeof setTimeout>; x: number; y: number } | undefined;
+
+  function dropNextClick() {
+    const drop = (event: Event) => {
+      event.stopPropagation();
+      event.preventDefault();
+      done();
+    };
+    const done = () => {
+      window.removeEventListener('click', drop, true);
+      window.removeEventListener('pointerdown', done, true);
+    };
+    window.addEventListener('click', drop, true);
+    window.addEventListener('pointerdown', done, true); // the next touch clicks again
+  }
+
+  function pressStart(event: PointerEvent) {
+    endPress();
+    if (event.pointerType !== 'touch' || !onmenu) {
+      return;
+    }
+    const { clientX: x, clientY: y } = event;
+    const cell = (event.target as Element).closest('[role="gridcell"]');
+    const index = cell ? Number(cell.id.slice(cell.id.lastIndexOf('-') + 1)) : undefined;
+    press = {
+      x,
+      y,
+      timer: setTimeout(() => {
+        press = undefined;
+        dropNextClick();
+        keyMenuAt = performance.now(); // a `contextmenu` right after is the same press
+        void menuFor(index, x, y);
+      }, 500)
+    };
+  }
+
+  function pressMove(event: PointerEvent) {
+    if (press && Math.hypot(event.clientX - press.x, event.clientY - press.y) > 10) {
+      endPress(); // scrolling, not pressing
+    }
+  }
+
+  function endPress() {
+    if (press) {
+      clearTimeout(press.timer);
+      press = undefined;
+    }
+  }
+
   // A click on empty space clears the selection; one on the scroll bar
   // (outside the client area) does not.
   function clickEmpty(event: MouseEvent) {
@@ -216,7 +338,9 @@
       index === focused
         ? 'group-focus-visible/grid:ring-2 group-focus-visible/grid:ring-accent group-focus-visible/grid:ring-inset'
         : '';
-    return `${selected ? 'bg-accent-soft' : 'hover:bg-surface-2'} ${ring}`;
+    const item = listing.at(index);
+    const dim = item && dimmed?.(item.path) ? 'opacity-50' : '';
+    return `${selected ? 'bg-accent-soft' : 'hover:bg-surface-2'} ${ring} ${dim}`;
   }
 </script>
 
@@ -272,9 +396,14 @@
     aria-multiselectable="true"
     aria-activedescendant={total > 0 ? cellId(focused) : undefined}
     data-testid="file-view"
-    class="group/grid min-h-0 flex-1 overflow-auto focus-visible:outline-offset-[-2px]"
+    class="group/grid min-h-0 flex-1 overflow-auto select-none focus-visible:outline-offset-[-2px] [-webkit-touch-callout:none]"
     onkeydown={keydown}
     onclick={clickEmpty}
+    oncontextmenu={contextmenu}
+    onpointerdown={pressStart}
+    onpointermove={pressMove}
+    onpointerup={endPress}
+    onpointercancel={endPress}
   >
     <div class="relative w-full" style:height="{$virtualizer.getTotalSize()}px">
       {#each $virtualizer.getVirtualItems() as row (row.key)}
