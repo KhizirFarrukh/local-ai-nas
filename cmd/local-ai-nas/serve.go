@@ -21,6 +21,8 @@ import (
 	"github.com/KhizirFarrukh/local-ai-nas/internal/schedule"
 	"github.com/KhizirFarrukh/local-ai-nas/internal/storage"
 	"github.com/KhizirFarrukh/local-ai-nas/internal/uploads"
+	"github.com/KhizirFarrukh/local-ai-nas/internal/webapp"
+	"github.com/KhizirFarrukh/local-ai-nas/web"
 )
 
 // maxHeaderBytes limits request headers. Body limits are set by the API
@@ -154,6 +156,16 @@ func cmdServe(ctx context.Context, args []string, stderr io.Writer) int {
 		cleanup(ctx, log, tus, fsvc, a.cfg.Uploads.Expiry.Duration)
 	})
 
+	// The web interface embedded at build time (S02.1-T02).
+	app, err := webapp.New(web.Build())
+	if err != nil {
+		log.Error("cannot load the web interface", "error", err.Error())
+		return exitError
+	}
+	if !app.Built() {
+		log.Warn("the web interface is not part of this build; run pnpm build in web/ and build again")
+	}
+
 	srv := &http.Server{
 		Handler: api.New(api.Options{
 			Logger:  log,
@@ -164,6 +176,7 @@ func cmdServe(ctx context.Context, args []string, stderr io.Writer) int {
 			MaxUploadBytes: int64(a.cfg.Uploads.MaxFileSize),
 			Uploads:        tus,
 			MaxChunkBytes:  int64(a.cfg.Uploads.MaxChunkSize),
+			App:            app,
 		}),
 		ReadHeaderTimeout: a.cfg.Server.ReadHeaderTimeout.Duration,
 		IdleTimeout:       a.cfg.Server.IdleTimeout.Duration,

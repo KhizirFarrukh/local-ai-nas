@@ -5,7 +5,7 @@ How the local-ai-nas API changes over time without breaking its clients (S01.5-T
 ## The version is in the path
 
 - The current version is **v1**: every endpoint is under `/api/v1`. The offline documentation at `/api/docs` is not versioned.
-- A test checks that the server registers no route outside `/api/v1` and `/api/docs`.
+- A test checks that the API registers no route outside `/api/v1` and `/api/docs`. The web interface (S02) answers every path outside `/api` and is not part of the versioned API.
 - The spec's `info.version` is the version of the document itself. It changes with every edit, while the path version changes only for breaking changes.
 
 ## What may change within v1

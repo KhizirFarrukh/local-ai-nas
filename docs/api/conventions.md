@@ -6,7 +6,8 @@ The contract is [`api/openapi.yaml`](../../api/openapi.yaml) (OpenAPI 3.0.3). Th
 
 ## Base path and areas
 
-- Every endpoint is under **`/api/v1`**. The offline API documentation is under `/api/docs`. Nothing else is served. Versioning is described in [versioning.md](versioning.md).
+- Every endpoint is under **`/api/v1`**. The offline API documentation is under `/api/docs`. Versioning is described in [versioning.md](versioning.md).
+- Every path outside `/api` belongs to the **web interface** (S02). It is not part of the API. An unknown path under `/api` is always a `404` problem, never the web page.
 - The storage has two areas that never mix:
   - `/api/v1/files/...` is the **files area**.
   - `/api/v1/photos/...` is **reserved** for the photos area. Until the media stages (S04), every request there gets `501` with the problem code `not_available`.

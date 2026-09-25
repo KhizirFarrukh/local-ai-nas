@@ -51,6 +51,9 @@ type Options struct {
 	// MaxChunkBytes limits the body of one tus request
 	// (uploads.max_chunk_size); 0 means DefaultMaxChunkBytes.
 	MaxChunkBytes int64
+	// App serves every path outside /api: the web interface (S02.1-T02).
+	// nil answers those paths with 404 problems, as for unknown API paths.
+	App http.Handler
 }
 
 // Route is one entry of the route table.
@@ -125,6 +128,19 @@ func noStore(next http.Handler) http.Handler {
 	})
 }
 
+// withApp sends every path outside /api to the web interface. Paths under
+// /api stay with the API, so an unknown API path is still a 404 problem and
+// never the app's page.
+func withApp(api, app http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if p := r.URL.Path; p == "/api" || strings.HasPrefix(p, "/api/") {
+			api.ServeHTTP(w, r)
+			return
+		}
+		app.ServeHTTP(w, r)
+	})
+}
+
 // New builds the complete HTTP handler. From the outside in: request ID,
 // access log, panic recovery, routes. Each route has its own body limit
 // (uploads need far more than JSON), applied inside the mux: the access
@@ -146,6 +162,9 @@ func New(o Options) http.Handler {
 		mux.Handle(r.Pattern, http.MaxBytesHandler(r.Handler, limit))
 	}
 	var h = problemsForUnmatched(mux, o.Logger)
+	if o.App != nil {
+		h = withApp(h, o.App)
+	}
 	h = noStore(h)
 	h = apperr.Recover(o.Logger)(h)
 	h = logging.AccessLog(o.Logger)(h)
