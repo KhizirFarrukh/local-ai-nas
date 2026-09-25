@@ -282,6 +282,9 @@ type ItemsResponse struct {
 
 	// NextCursor Present when more items follow; pass it as `cursor` to get the next page.
 	NextCursor *string `json:"next_cursor,omitempty"`
+
+	// Total For a folder, how many items it has in all pages.
+	Total *int `json:"total,omitempty"`
 }
 
 // ListOrder defines model for ListOrder.
@@ -408,6 +411,12 @@ type GetItemsParams struct {
 
 	// Cursor The `next_cursor` of the previous page. Only valid with the same sort and order.
 	Cursor *string `form:"cursor,omitempty" json:"cursor,omitempty"`
+
+	// Offset Start the page at this position of the sorted folder, as an
+	// alternative to `cursor` (not both), for jumping to any part of
+	// a large folder. Items added or removed meanwhile can shift the
+	// positions; `cursor` never skips or repeats an item.
+	Offset *int `form:"offset,omitempty" json:"offset,omitempty"`
 
 	// Limit The page size.
 	Limit *int       `form:"limit,omitempty" json:"limit,omitempty"`
@@ -637,6 +646,19 @@ func (siw *ServerInterfaceWrapper) GetItems(w http.ResponseWriter, r *http.Reque
 			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "cursor"})
 		} else {
 			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "cursor", Err: err})
+		}
+		return
+	}
+
+	// ------------- Optional query parameter "offset" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "offset", r.URL.Query(), &params.Offset, runtime.BindQueryParameterOptions{Type: "integer", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "offset"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "offset", Err: err})
 		}
 		return
 	}

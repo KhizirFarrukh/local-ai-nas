@@ -1084,7 +1084,7 @@ flowchart LR
   2. API errors show a consistent, human-readable message, never a blank screen.
   3. Long operations show progress, and completions and failures raise notifications.
 - **Risks/notes:** The placeholders are replaced in S04.7 (Photos) and S10.5 (Settings).
-- **Status:** In Progress (S006)
+- **Status:** Done (S006, 2026-09-25; details in `stages/S02-nas-gui.md`)
 
 #### S02.3: File browser
 - **Goal:** Browse the files area comfortably, even with very large folders.

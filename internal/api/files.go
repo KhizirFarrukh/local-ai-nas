@@ -45,6 +45,7 @@ func (s *server) GetItems(ctx context.Context, req gen.GetItemsRequestObject) (g
 		if page.NextCursor != "" {
 			resp.NextCursor = &page.NextCursor
 		}
+		resp.Total = &page.Total
 	}
 	return gen.GetItems200JSONResponse(resp), nil
 }
@@ -53,6 +54,15 @@ func (s *server) GetItems(ctx context.Context, req gen.GetItemsRequestObject) (g
 // their types; this checks their values.
 func listOptions(p gen.GetItemsParams) (files.ListOptions, error) {
 	var o files.ListOptions
+	if p.Offset != nil {
+		if *p.Offset < 0 {
+			return o, apperr.Newf(apperr.InvalidRequest, "offset must be 0 or more, got %d", *p.Offset)
+		}
+		if p.Cursor != nil {
+			return o, apperr.New(apperr.InvalidRequest, "offset and cursor cannot be used together")
+		}
+		o.Offset = *p.Offset
+	}
 	if p.Limit != nil {
 		if *p.Limit < 1 || *p.Limit > files.MaxLimit {
 			return o, apperr.Newf(apperr.InvalidRequest, "limit must be between 1 and %d, got %d", files.MaxLimit, *p.Limit)

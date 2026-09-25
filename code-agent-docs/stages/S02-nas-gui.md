@@ -220,7 +220,7 @@ web/
 | Substage | Name | Status | Depends on | Requirements |
 |---|---|---|---|---|
 | S02.1 | GUI technology and design foundation | **Done** (S006) | S01 | FR-078, FR-083, NFR-001, NFR-014 |
-| S02.2 | App shell and navigation | In Progress | S02.1 | FR-079 |
+| S02.2 | App shell and navigation | **Done** (S006) | S02.1 | FR-079 |
 | S02.3 | File browser | In Progress | S02.2, S01.3 | FR-002 |
 | S02.4 | Uploads and downloads | Not started | S02.3, S01.4 | FR-003, FR-004, FR-006, FR-080 |
 | S02.5 | File operations UI | Not started | S02.3, S01.3, S01.6 | FR-007, FR-021, FR-077, FR-081 |
@@ -280,7 +280,7 @@ Its tests are written in S02.8.
 | Task ID | Description | Status | Acceptance criteria |
 |---|---|---|---|
 | S02.3-T01 | **Virtualization prototype** (ADR-0009): `@tanstack/svelte-virtual` on Svelte 5 with 50,000 synthetic rows, a grid variant, and keyboard focus. Keep it, or switch to a custom windowing component. | **Done** (S006 E020) | The decision and the reason are recorded in section 12. Scrolling 50,000 rows shows no visible stutter, checked in the browser's performance panel (no long tasks over 50 ms while scrolling). |
-| S02.3-T02 | **Server: `total` and `offset`** in the listing (spec-first; files service; conventions review row; the guard-test entries). | Not started | `curl` shows that `?offset=30000&limit=100` returns items 30,000–30,099 in the requested sort, with `total` in the answer. `cursor` still works, and `offset` with `cursor` together is a `400` problem. |
+| S02.3-T02 | **Server: `total` and `offset`** in the listing (spec-first; files service; conventions review row; the guard-test entries). | **Done** (S006 E021) | `curl` shows that `?offset=30000&limit=100` returns items 30,000–30,099 in the requested sort, with `total` in the answer. `cursor` still works, and `offset` with `cursor` together is a `400` problem. |
 | S02.3-T03 | **List and grid views:** <br>• virtualized, with pages loaded by `offset` when their region becomes visible; <br>• sorting (name, size, date, type; ascending and descending); <br>• icons by type, sizes and dates in the browser's locale; <br>• the view mode is remembered. | Not started | In a 50,000-file folder (created with a script), scrolling stays smooth. Dragging the scrollbar to the middle shows those items within about a second. The order matches the API for every sort. |
 | S02.3-T04 | **Navigation and states:** breadcrumbs, opening folders (click, Enter), `/files/<encoded path>` URLs for any valid name, empty-folder and error states with actions (upload, new folder, parent folder, retry). | Not started | Names with spaces, `#`, `%`, `?`, and Unicode round-trip through the URL and a reload. Every state shows its next action. |
 

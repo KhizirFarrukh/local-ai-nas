@@ -458,6 +458,16 @@ paths:
           description: The `next_cursor` of the previous page. Only valid with the same sort and order.
           schema:
             type: string
+        - name: offset
+          in: query
+          description: |
+            Start the page at this position of the sorted folder, as an
+            alternative to `cursor` (not both), for jumping to any part of
+            a large folder. Items added or removed meanwhile can shift the
+            positions; `cursor` never skips or repeats an item.
+          schema:
+            type: integer
+            minimum: 0
         - name: limit
           in: query
           description: The page size.
@@ -624,6 +634,10 @@ components:
         next_cursor:
           type: string
           description: Present when more items follow; pass it as `cursor` to get the next page.
+        total:
+          type: integer
+          minimum: 0
+          description: For a folder, how many items it has in all pages.
     CreateFolderRequest:
       type: object
       additionalProperties: false
