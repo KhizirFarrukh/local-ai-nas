@@ -10,14 +10,15 @@
     "node": ">=24.19.0 <25"
   },
   "scripts": {
-    "dev": "vite dev",
-    "build": "vite build && node -e \"require('node:fs').writeFileSync('build/.gitkeep', '')\"",
+    "dev": "node scripts/about.mjs && vite dev",
+    "build": "node scripts/about.mjs && vite build && node -e \"require('node:fs').writeFileSync('build/.gitkeep', '')\"",
     "preview": "vite preview",
-    "check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
+    "check": "node scripts/about.mjs && svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
     "lint": "eslint .",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "generate": "openapi-typescript ../api/openapi.yaml -o src/lib/api/schema.d.ts"
+    "generate": "openapi-typescript ../api/openapi.yaml -o src/lib/api/schema.d.ts",
+    "about": "node scripts/about.mjs"
   },
   "dependencies": {
     "@lucide/svelte": "1.48.0",

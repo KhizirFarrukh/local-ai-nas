@@ -220,7 +220,7 @@ web/
 | Substage | Name | Status | Depends on | Requirements |
 |---|---|---|---|---|
 | S02.1 | GUI technology and design foundation | In Progress | S01 | FR-078, FR-083, NFR-001, NFR-014 |
-| S02.2 | App shell and navigation | Not started | S02.1 | FR-079 |
+| S02.2 | App shell and navigation | In Progress | S02.1 | FR-079 |
 | S02.3 | File browser | Not started | S02.2, S01.3 | FR-002 |
 | S02.4 | Uploads and downloads | Not started | S02.3, S01.4 | FR-003, FR-004, FR-006, FR-080 |
 | S02.5 | File operations UI | Not started | S02.3, S01.3, S01.6 | FR-007, FR-021, FR-077, FR-081 |
@@ -264,7 +264,7 @@ Its tests are written in S02.8.
 
 | Task ID | Description | Status | Acceptance criteria |
 |---|---|---|---|
-| S02.2-T01 | **Layout and routes:** <br>• header with the app name and theme toggle; side navigation, which becomes a bottom bar on phones; <br>• `/files/[...path]`, `/photos` (placeholder: "comes with stage 4"), and `/settings` (theme, and About with the version and third-party licenses); <br>• `/` redirects to `/files/`; a not-found page. | Not started | Every section opens by URL. Back and forward work. A reload keeps the page. |
+| S02.2-T01 | **Layout and routes:** <br>• header with the app name and theme toggle; side navigation, which becomes a bottom bar on phones; <br>• `/files/[...path]`, `/photos` (placeholder: "comes with stage 4"), and `/settings` (theme, and About with the version and third-party licenses); <br>• `/` redirects to `/files/`; a not-found page. | **Done** (S006 E017) | Every section opens by URL. Back and forward work. A reload keeps the page. |
 | S02.2-T02 | **Errors and loading:** <br>• problem codes mapped to plain messages, with a details area (the `detail` text and request ID); <br>• the `+error` boundary and a global loading indicator; <br>• a "server not reachable" state with retry. | Not started | Stopping the server shows the unreachable state, and retry recovers once it is back. A bad path shows a clear not-found message. No action leaves a blank screen. |
 | S02.2-T03 | **Notifications and progress:** toasts (info, success, error; announced to screen readers), and a progress panel for long operations (uploads, bulk operations, archives). | Not started | A finished or failed operation raises a toast. The progress panel lists the running operations (checked with a slowed network in the browser tools). |
 
