@@ -8,3 +8,12 @@
 minimumReleaseAgeExclude:
   - vite@8.3.1
   - '@lucide/svelte@1.48.0'
+
+# pnpm audit (CI, S02.1-T05) ignores these advisories, each checked:
+# - GHSA-pxg6-pf52-xh8x (low): cookie below 0.7.0 accepts out-of-bounds
+#   characters. @sveltejs/kit uses cookie only in its server runtime, which
+#   the static single-page build does not ship (cookie's code is not in
+#   web/build; checked 2026-09-25). Remove when kit moves to cookie 0.7.
+auditConfig:
+  ignoreGhsas:
+    - GHSA-pxg6-pf52-xh8x
