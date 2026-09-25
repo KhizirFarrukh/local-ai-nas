@@ -52,7 +52,7 @@ Datasets and models follow the same "anyone may deploy and use" rule. Attributio
 ## How the policy is checked
 
 - **Go:** [`scripts/check-licenses.sh`](../scripts/check-licenses.sh) runs `go tool go-licenses check ./...` with the allow-list. It fails on any linked package with a license outside the list or with no recognized license. CI runs it on every pull request (S01.1-T05). On Windows, run it from Git Bash.
-- **Web UI:** [`scripts/check-web-licenses.mjs`](../scripts/check-web-licenses.mjs) (S02.1-T05) runs `pnpm licenses list` in `web/`. The packages that ship in the built interface (the `dependencies` and what they pull in) must be on `scripts/allowed-licenses.txt`; every package, the development tools included, must be on that list or in the table of permissive tool licenses above. SPDX expressions are read as written: an `OR` needs one allowed part, an `AND` needs all. CI runs it in the `web` job.
+- **Web UI:** [`scripts/check-web-licenses.mjs`](../scripts/check-web-licenses.mjs) (S02.1-T05) runs `pnpm licenses list` in `web/`. The packages that ship in the built interface (the `dependencies` and what they pull in) must be on `scripts/allowed-licenses.txt`; every package, the development tools included, must be on that list or in the table of permissive tool licenses above. SPDX expressions are read as written: an `OR` needs one allowed part, an `AND` needs all. A package whose npm metadata states no license is checked by hand and listed in the script by exact version with the license its own files state; so far `combine-errors@3.0.3` (MIT, stated in its Readme; pulled in by tus-js-client). CI runs it in the `web` job.
 - **Release (S11.6):** a full audit of dependencies, external tools, datasets, and models.
 
 ## Adding a dependency
