@@ -23,6 +23,7 @@
   "dependencies": {
     "@lucide/svelte": "1.48.0",
     "@sveltejs/kit": "2.70.3",
+    "@tanstack/svelte-virtual": "3.13.39",
     "openapi-fetch": "0.17.0",
     "svelte": "5.57.1",
     "tailwindcss": "4.3.3"
