@@ -4,6 +4,7 @@
 // "overwrite" returns an existing folder; files still follow their own
 // conflict policy).
 import { api, unwrap } from '$lib/api/client';
+import { ConflictBatch, conflicts } from '$lib/files/conflicts.svelte';
 import { tasks } from '$lib/shell/tasks.svelte';
 import { planUpload, type PickedFile } from './plan';
 import { getUploader } from './state.svelte';
@@ -35,8 +36,10 @@ export async function startUpload(
       return; // the files would have nowhere to go
     }
   }
+  // Taken names ask the conflict dialog, with "apply to all" for this batch.
   const manager = await getUploader();
+  const batch = new ConflictBatch(conflicts, plan.files.length);
   for (const { file, target } of plan.files) {
-    manager.add(file, target, onConflict);
+    manager.add(file, target, onConflict, batch);
   }
 }

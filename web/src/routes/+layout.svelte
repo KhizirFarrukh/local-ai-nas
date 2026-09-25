@@ -10,6 +10,7 @@
   import Sun from '@lucide/svelte/icons/sun';
   import { navigating } from '$app/state';
   import IconButton from '$lib/components/IconButton.svelte';
+  import ConflictDialog from '$lib/files/ConflictDialog.svelte';
   import { activity } from '$lib/shell/activity.svelte';
   import ConnectionBanner from '$lib/shell/ConnectionBanner.svelte';
   import { connection } from '$lib/shell/connection.svelte';
@@ -82,3 +83,4 @@
 
 <ProgressPanel />
 <Toaster />
+<ConflictDialog />
