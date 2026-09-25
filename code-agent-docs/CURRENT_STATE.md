@@ -1,17 +1,19 @@
 # CURRENT_STATE
 
-**Last updated:** 2026-09-25 01:44 +0500 (session S006)
+**Last updated:** 2026-09-25 06:17 +0500 (session S006)
 **Plan version:** 1.3.0 (`code-agent-docs/plan.md`), **Approved baseline** 1.0.0 (S005) + the setup-script requirement (1.1.0, S005 E015)
-**Current phase:** **S01 (Basic NAS) Done**, signed off by the user (S005 E126). **S02 (NAS GUI) Approved** (S006 E009); implementation starts with S02.1-T01
+**Current phase:** **S01 (Basic NAS) Done**, signed off by the user (S005 E126). **S02 (NAS GUI) In Progress** (approved S006 E009); S02.1-T01 done
 
 ## Active stage and task
-- **Active stage:** **S02: NAS GUI**, **Approved** (`stages/S02-nas-gui.md`; approved in S006 E009, with "Skip Safari": S02 checks Chrome, Edge, and Firefox). S01 is **Done** (`stages/S01-basic-nas.md`, completion record in section 13).
-- **Active task:** the S02 stage document (branch `docs/S02-stage-plan`): approved; waiting for CI and the merge. Then **S02.1-T01**
+- **Active stage:** **S02: NAS GUI**, **In Progress** (`stages/S02-nas-gui.md`; approved in S006 E009, with "Skip Safari": S02 checks Chrome, Edge, and Firefox). S01 is **Done** (`stages/S01-basic-nas.md`, completion record in section 13).
+- **Active task:** **S02.1-T01** Toolchain and project (branch `feat/S02.1-T01-toolchain`): done, waiting for CI and the merge; next **S02.1-T02** embedding and serving (may start on a stacked branch while CI runs)
 
 ## In progress (write-ahead)
-- `docs/S02-stage-plan`: approval recorded; push, CI, merge into `develop`.
+- S02.1-T01: committed; push, CI, merge into `develop`.
 
 ## Last completed
+- **S02.1-T01 done** (S006 E011): `web/` SvelteKit project (exact versions, pnpm 12.6.0); format, lint, check, and build pass on Windows and Linux (WSL); packages registered; Node.js 24.19.0 on Windows (newest in winget), 24.21.0 in WSL.
+- **S02 plan merged** (CI run 36056943504 green; `develop` a3b4b87).
 - **S02 approved** (S006 E009): "Approve S02 (Recommended)", and "Skip Safari" for the cross-browser checks. Plan 1.3.0.
 - **Testing approach change merged** (CI run 36054572413 green; `develop` bdc9832).
 - **Testing approach changed** (S006 E001–E004), at the user's instruction:
@@ -99,7 +101,7 @@
 
 ## Pointers
 - Latest session log: `code-agent-docs/logs/sessions/2026-09-25_S006.md` (current); S005 is closed
-- Stage documents: `code-agent-docs/stages/S02-nas-gui.md` (**Approved**); `code-agent-docs/stages/S01-basic-nas.md` (**Done**; completion record in section 13)
+- Stage documents: `code-agent-docs/stages/S02-nas-gui.md` (**In Progress**); `code-agent-docs/stages/S01-basic-nas.md` (**Done**; completion record in section 13)
 - Audit reports: `code-agent-docs/audits/A002-2026-09-24-documentation-audit.md` (the S01 final review) and `A002-readme-proposal.md`; `A001-2026-09-24-documentation-audit.md` (decisions received in section 9)
 - ADRs: `code-agent-docs/decisions/ADR-0001` … `ADR-0020` (0019 Proposed; 0012 superseded in part by 0020; the rest Accepted, including 0003 since S005)
 - Dependency register: `code-agent-docs/dependencies.md` (section 12: deployment prerequisites per platform, the input for the S11.2 setup scripts)
