@@ -24,6 +24,8 @@ type server struct {
 	owner string
 	// log is for responses that write problems themselves (downloads).
 	log *slog.Logger
+	// archives keeps the archive tickets (S02.4-T03).
+	archives *archiveTickets
 }
 
 var _ gen.StrictServerInterface = (*server)(nil)

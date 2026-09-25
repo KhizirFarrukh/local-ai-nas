@@ -8,6 +8,7 @@ import (
 	"log/slog"
 	"net/http"
 	"strings"
+	"time"
 
 	"github.com/KhizirFarrukh/local-ai-nas/internal/api/gen"
 	"github.com/KhizirFarrukh/local-ai-nas/internal/apperr"
@@ -56,6 +57,8 @@ type Options struct {
 	// MaxChunkBytes limits the body of one tus request
 	// (uploads.max_chunk_size); 0 means DefaultMaxChunkBytes.
 	MaxChunkBytes int64
+	// Now is the clock of archive tickets (S02.4-T03); nil means time.Now.
+	Now func() time.Time
 	// App serves every path outside /api: the web interface (S02.1-T02).
 	// nil answers those paths with 404 problems, as for unknown API paths.
 	App http.Handler
@@ -94,7 +97,10 @@ func Routes(o Options) []Route {
 			apperr.Write(w, r, o.Logger, apperr.New(apperr.NotAvailable, "resumable uploads are not set up on this server"))
 		})
 	}
-	g := generated(&server{version: o.Version, checks: o.Checks, files: o.Files, owner: storage.DefaultNamespace, log: o.Logger}, o.Logger)
+	g := generated(&server{
+		version: o.Version, checks: o.Checks, files: o.Files, owner: storage.DefaultNamespace, log: o.Logger,
+		archives: newArchiveTickets(o.Now),
+	}, o.Logger)
 
 	// The photos area exists on disk from S01, but its API is reserved
 	// until the media stages (S01.2-T06). One hand-written route answers
@@ -111,6 +117,8 @@ func Routes(o Options) []Route {
 		{Pattern: "POST /api/v1/files/operations/move", Handler: strictJSON[gen.MoveRequest](o.Logger, g.MoveItem)},
 		{Pattern: "POST /api/v1/files/operations/copy", Handler: strictJSON[gen.CopyRequest](o.Logger, g.CopyItem)},
 		{Pattern: "GET /api/v1/files/content", Handler: withRequest(g.DownloadFile)},
+		{Pattern: "POST /api/v1/files/archives", Handler: strictJSON[gen.ArchiveRequest](o.Logger, g.CreateArchive), MaxBody: archiveBodyBytes},
+		{Pattern: "GET " + ArchivesPath + "{id}", Handler: http.HandlerFunc(g.DownloadArchive)},
 		{Pattern: "PUT /api/v1/files/content", Handler: declaredSize(o.MaxUploadBytes, o.Logger, g.UploadFile), MaxBody: o.MaxUploadBytes},
 		// tus is an external protocol served by tusd; the spec documents it
 		// under the uploads tag (docs/api/conventions.md).

@@ -158,6 +158,21 @@ var notCaused = map[string]string{
 	"GET /files/content 409":         "a file replaced between the lookup and the open, five times in a row (internal/files stress test)",
 }
 
+// testedInS02_8 lists statuses of operations added during stage 2, whose
+// requests are written with the stage's tests in S02.8 (RULES R6, S006).
+// S02.8-T02 reaches each of them here and empties this list.
+var testedInS02_8 = map[string]bool{
+	"POST /files/archives 201":     true,
+	"POST /files/archives 400":     true,
+	"POST /files/archives 404":     true,
+	"POST /files/archives 405":     true,
+	"POST /files/archives 413":     true,
+	"POST /files/archives 422":     true,
+	"GET /files/archives/{id} 200": true,
+	"GET /files/archives/{id} 404": true,
+	"GET /files/archives/{id} 405": true,
+}
+
 func b64(s string) string { return base64.StdEncoding.EncodeToString([]byte(s)) }
 
 // TestIntegration is the S01.7-T01 integration suite: the program runs
@@ -315,7 +330,7 @@ func TestIntegration(t *testing.T) {
 				key := method + " " + path + " " + code
 				_, why := notCaused[key]
 				_, whyAny := notCaused[code]
-				if !h.covered[key] && !why && !whyAny {
+				if !h.covered[key] && !why && !whyAny && !testedInS02_8[key] {
 					missing = append(missing, key)
 				}
 			}

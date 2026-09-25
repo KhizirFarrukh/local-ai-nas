@@ -100,6 +100,14 @@ func (f *failingServer) GetHealth(context.Context, gen.GetHealthRequestObject) (
 	return nil, f.err
 }
 
+func (f *failingServer) CreateArchive(context.Context, gen.CreateArchiveRequestObject) (gen.CreateArchiveResponseObject, error) {
+	return nil, f.err
+}
+
+func (f *failingServer) DownloadArchive(context.Context, gen.DownloadArchiveRequestObject) (gen.DownloadArchiveResponseObject, error) {
+	return nil, f.err
+}
+
 func (f *failingServer) GetItems(context.Context, gen.GetItemsRequestObject) (gen.GetItemsResponseObject, error) {
 	return nil, f.err
 }

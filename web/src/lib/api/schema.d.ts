@@ -198,6 +198,59 @@ export interface paths {
         patch: operations["appendUpload"];
         trace?: never;
     };
+    "/files/archives": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Prepare a ZIP archive of files and folders
+         * @description Checks the items at `paths` and everything in the folders among
+         *     them: they exist, no link is anywhere inside (links are never
+         *     followed), and there are at most 100,000 files and folders. The
+         *     answer is a ticket whose `url` streams the archive for 5 minutes;
+         *     a browser downloads it like any file. Entries are stored (not
+         *     compressed), with ZIP64 for large files, UTF-8 names, and the
+         *     items' times (docs/api/conventions.md, Archives).
+         */
+        post: operations["createArchive"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/files/archives/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The `id` of a ticket from POST /files/archives. */
+                id: string;
+            };
+            cookie?: never;
+        };
+        /**
+         * Download a prepared ZIP archive
+         * @description Streams the archive of a ticket, as an attachment. It can be
+         *     downloaded more than once while the ticket lasts (browsers may
+         *     retry). A file removed since the ticket was made is left out. An
+         *     error after the stream has started ends the connection, so the
+         *     download shows as failed.
+         */
+        get: operations["downloadArchive"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/files/items": {
         parameters: {
             query?: never;
@@ -319,6 +372,32 @@ export interface components {
             next_cursor?: string;
             /** @description For a folder, how many items it has in all pages. */
             total?: number;
+        };
+        ArchiveRequest: {
+            /** @description The files and folders to put in the archive, each starting with `/`. */
+            paths: string[];
+            /**
+             * @description The file name of the download, such as `photos.zip` (".zip" is
+             *     added when missing). Default: the item's name for one item,
+             *     otherwise `download-<date>.zip`.
+             */
+            name?: string;
+        };
+        ArchiveTicket: {
+            id: string;
+            /** @description Where to download the archive, `/api/v1/files/archives/{id}`. */
+            url: string;
+            /** @description The archive's file name. */
+            name: string;
+            /** Format: date-time */
+            expires_at: string;
+            /** @description How many files and folders the archive holds. */
+            entries: number;
+            /**
+             * Format: int64
+             * @description The total size of the files in it, in bytes (the archive is slightly larger).
+             */
+            size: number;
         };
         CreateFolderRequest: {
             /** @description The folder to create, starting with `/`. */
@@ -896,6 +975,64 @@ export interface operations {
             423: components["responses"]["Locked"];
             500: components["responses"]["InternalError"];
             507: components["responses"]["InsufficientStorage"];
+        };
+    };
+    createArchive: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ArchiveRequest"];
+            };
+        };
+        responses: {
+            /** @description The archive is ready to download from `url`. */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ArchiveTicket"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            404: components["responses"]["NotFound"];
+            405: components["responses"]["MethodNotAllowed"];
+            413: components["responses"]["TooLarge"];
+            422: components["responses"]["TooLargeForSync"];
+            500: components["responses"]["InternalError"];
+        };
+    };
+    downloadArchive: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The `id` of a ticket from POST /files/archives. */
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The archive. */
+            200: {
+                headers: {
+                    /** @description `attachment` with the archive's file name (RFC 6266, RFC 8187). */
+                    "Content-Disposition"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/zip": string;
+                };
+            };
+            404: components["responses"]["NotFound"];
+            405: components["responses"]["MethodNotAllowed"];
+            500: components["responses"]["InternalError"];
         };
     };
     getItems: {

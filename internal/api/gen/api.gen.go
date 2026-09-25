@@ -201,6 +201,34 @@ func (e ProblemType) Valid() bool {
 	}
 }
 
+// ArchiveRequest defines model for ArchiveRequest.
+type ArchiveRequest struct {
+	// Name The file name of the download, such as `photos.zip` (".zip" is
+	// added when missing). Default: the item's name for one item,
+	// otherwise `download-<date>.zip`.
+	Name *string `json:"name,omitempty"`
+
+	// Paths The files and folders to put in the archive, each starting with `/`.
+	Paths []string `json:"paths"`
+}
+
+// ArchiveTicket defines model for ArchiveTicket.
+type ArchiveTicket struct {
+	// Entries How many files and folders the archive holds.
+	Entries   int       `json:"entries"`
+	ExpiresAt time.Time `json:"expires_at"`
+	Id        string    `json:"id"`
+
+	// Name The archive's file name.
+	Name string `json:"name"`
+
+	// Size The total size of the files in it, in bytes (the archive is slightly larger).
+	Size int64 `json:"size"`
+
+	// Url Where to download the archive, `/api/v1/files/archives/{id}`.
+	Url string `json:"url"`
+}
+
 // CopyRequest defines model for CopyRequest.
 type CopyRequest struct {
 	// From The item to copy, starting with `/`.
@@ -424,6 +452,9 @@ type GetItemsParams struct {
 	Order *ListOrder `form:"order,omitempty" json:"order,omitempty"`
 }
 
+// CreateArchiveJSONRequestBody defines body for CreateArchive for application/json ContentType.
+type CreateArchiveJSONRequestBody = ArchiveRequest
+
 // CreateFolderJSONRequestBody defines body for CreateFolder for application/json ContentType.
 type CreateFolderJSONRequestBody = CreateFolderRequest
 
@@ -438,6 +469,12 @@ type RenameItemJSONRequestBody = RenameRequest
 
 // ServerInterface represents all server handlers.
 type ServerInterface interface {
+	// CreateArchive Prepare a ZIP archive of files and folders
+	// (POST /files/archives)
+	CreateArchive(w http.ResponseWriter, r *http.Request)
+	// DownloadArchive Download a prepared ZIP archive
+	// (GET /files/archives/{id})
+	DownloadArchive(w http.ResponseWriter, r *http.Request, id string)
 	// DownloadFile Download a file
 	// (GET /files/content)
 	DownloadFile(w http.ResponseWriter, r *http.Request, params DownloadFileParams)
@@ -475,6 +512,46 @@ type ServerInterfaceWrapper struct {
 }
 
 type MiddlewareFunc func(http.Handler) http.Handler
+
+// CreateArchive operation middleware
+func (siw *ServerInterfaceWrapper) CreateArchive(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.CreateArchive(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// DownloadArchive operation middleware
+func (siw *ServerInterfaceWrapper) DownloadArchive(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "id" -------------
+	var id string
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", r.PathValue("id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "", ValueIsUnescaped: true})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "id", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.DownloadArchive(w, r, id)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
 
 // DownloadFile operation middleware
 func (siw *ServerInterfaceWrapper) DownloadFile(w http.ResponseWriter, r *http.Request) {
@@ -895,6 +972,8 @@ func HandlerWithOptions(si ServerInterface, options StdHTTPServerOptions) http.H
 	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/files/operations/rename", wrapper.RenameItem)
 	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/files/operations/move", wrapper.MoveItem)
 	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/files/operations/copy", wrapper.CopyItem)
+	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/files/archives", wrapper.CreateArchive)
+	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/files/archives/{id}", wrapper.DownloadArchive)
 	m.HandleFunc(http.MethodDelete+" "+options.BaseURL+"/files/items", wrapper.DeleteItem)
 	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/files/items", wrapper.GetItems)
 	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/system/health", wrapper.GetHealth)
@@ -937,6 +1016,214 @@ type RangeNotSatisfiableApplicationProblemPlusJSONResponse struct {
 type TooLargeApplicationProblemPlusJSONResponse Problem
 
 type TooLargeForSyncApplicationProblemPlusJSONResponse Problem
+
+type CreateArchiveRequestObject struct {
+	Body *CreateArchiveJSONRequestBody
+}
+
+type CreateArchiveResponseObject interface {
+	VisitCreateArchiveResponse(w http.ResponseWriter) error
+}
+
+type CreateArchive201JSONResponse ArchiveTicket
+
+func (response CreateArchive201JSONResponse) VisitCreateArchiveResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(201)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type CreateArchive400ApplicationProblemPlusJSONResponse struct {
+	BadRequestApplicationProblemPlusJSONResponse
+}
+
+func (response CreateArchive400ApplicationProblemPlusJSONResponse) VisitCreateArchiveResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(400)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type CreateArchive404ApplicationProblemPlusJSONResponse struct {
+	NotFoundApplicationProblemPlusJSONResponse
+}
+
+func (response CreateArchive404ApplicationProblemPlusJSONResponse) VisitCreateArchiveResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(404)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type CreateArchive405ApplicationProblemPlusJSONResponse struct {
+	MethodNotAllowedApplicationProblemPlusJSONResponse
+}
+
+func (response CreateArchive405ApplicationProblemPlusJSONResponse) VisitCreateArchiveResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/problem+json")
+	if response.Headers.Allow != nil {
+		w.Header().Set("Allow", fmt.Sprint(*response.Headers.Allow))
+	}
+	w.WriteHeader(405)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type CreateArchive413ApplicationProblemPlusJSONResponse struct {
+	TooLargeApplicationProblemPlusJSONResponse
+}
+
+func (response CreateArchive413ApplicationProblemPlusJSONResponse) VisitCreateArchiveResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(413)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type CreateArchive422ApplicationProblemPlusJSONResponse struct {
+	TooLargeForSyncApplicationProblemPlusJSONResponse
+}
+
+func (response CreateArchive422ApplicationProblemPlusJSONResponse) VisitCreateArchiveResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(422)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type CreateArchive500ApplicationProblemPlusJSONResponse struct {
+	InternalErrorApplicationProblemPlusJSONResponse
+}
+
+func (response CreateArchive500ApplicationProblemPlusJSONResponse) VisitCreateArchiveResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(500)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type DownloadArchiveRequestObject struct {
+	Id string `json:"id"`
+}
+
+type DownloadArchiveResponseObject interface {
+	VisitDownloadArchiveResponse(w http.ResponseWriter) error
+}
+
+type DownloadArchive200ResponseHeaders struct {
+	ContentDisposition *string
+}
+
+type DownloadArchive200ApplicationzipResponse struct {
+	Body          io.Reader
+	Headers       DownloadArchive200ResponseHeaders
+	ContentLength int64
+}
+
+func (response DownloadArchive200ApplicationzipResponse) VisitDownloadArchiveResponse(w http.ResponseWriter) error {
+
+	w.Header().Set("Content-Type", "application/zip")
+	if response.ContentLength != 0 {
+		w.Header().Set("Content-Length", fmt.Sprint(response.ContentLength))
+	}
+	if response.Headers.ContentDisposition != nil {
+		w.Header().Set("Content-Disposition", fmt.Sprint(*response.Headers.ContentDisposition))
+	}
+	w.WriteHeader(200)
+
+	if closer, ok := response.Body.(io.ReadCloser); ok {
+		defer closer.Close()
+	}
+	_, err := io.Copy(w, response.Body)
+	return err
+}
+
+type DownloadArchive404ApplicationProblemPlusJSONResponse struct {
+	NotFoundApplicationProblemPlusJSONResponse
+}
+
+func (response DownloadArchive404ApplicationProblemPlusJSONResponse) VisitDownloadArchiveResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(404)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type DownloadArchive405ApplicationProblemPlusJSONResponse struct {
+	MethodNotAllowedApplicationProblemPlusJSONResponse
+}
+
+func (response DownloadArchive405ApplicationProblemPlusJSONResponse) VisitDownloadArchiveResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/problem+json")
+	if response.Headers.Allow != nil {
+		w.Header().Set("Allow", fmt.Sprint(*response.Headers.Allow))
+	}
+	w.WriteHeader(405)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type DownloadArchive500ApplicationProblemPlusJSONResponse struct {
+	InternalErrorApplicationProblemPlusJSONResponse
+}
+
+func (response DownloadArchive500ApplicationProblemPlusJSONResponse) VisitDownloadArchiveResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(500)
+	_, err := buf.WriteTo(w)
+	return err
+}
 
 type DownloadFileRequestObject struct {
 	Params DownloadFileParams
@@ -2114,6 +2401,12 @@ func (response GetHealth503JSONResponse) VisitGetHealthResponse(w http.ResponseW
 
 // StrictServerInterface represents all server handlers.
 type StrictServerInterface interface {
+	// CreateArchive Prepare a ZIP archive of files and folders
+	// (POST /files/archives)
+	CreateArchive(ctx context.Context, request CreateArchiveRequestObject) (CreateArchiveResponseObject, error)
+	// DownloadArchive Download a prepared ZIP archive
+	// (GET /files/archives/{id})
+	DownloadArchive(ctx context.Context, request DownloadArchiveRequestObject) (DownloadArchiveResponseObject, error)
 	// DownloadFile Download a file
 	// (GET /files/content)
 	DownloadFile(ctx context.Context, request DownloadFileRequestObject) (DownloadFileResponseObject, error)
@@ -2180,6 +2473,63 @@ type strictHandler struct {
 	ssi         StrictServerInterface
 	middlewares []StrictMiddlewareFunc
 	options     StrictHTTPServerOptions
+}
+
+// CreateArchive operation middleware
+func (sh *strictHandler) CreateArchive(w http.ResponseWriter, r *http.Request) {
+	var request CreateArchiveRequestObject
+
+	var body CreateArchiveJSONRequestBody
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		sh.options.RequestErrorHandlerFunc(w, r, fmt.Errorf("can't decode JSON body: %w", err))
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.CreateArchive(ctx, request.(CreateArchiveRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "CreateArchive")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(CreateArchiveResponseObject); ok {
+		if err := validResponse.VisitCreateArchiveResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// DownloadArchive operation middleware
+func (sh *strictHandler) DownloadArchive(w http.ResponseWriter, r *http.Request, id string) {
+	var request DownloadArchiveRequestObject
+
+	request.Id = id
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.DownloadArchive(ctx, request.(DownloadArchiveRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "DownloadArchive")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(DownloadArchiveResponseObject); ok {
+		if err := validResponse.VisitDownloadArchiveResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
 }
 
 // DownloadFile operation middleware

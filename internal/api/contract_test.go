@@ -73,6 +73,8 @@ var errorCases = []struct {
 	{http.MethodGet, "/api/v1/files/items", http.StatusBadRequest, "invalid_request"},
 	{http.MethodGet, "/api/v1/files/items?path=/&limit=0", http.StatusBadRequest, "invalid_request"},
 	{http.MethodGet, "/api/v1/files/items?path=/&limit=abc", http.StatusBadRequest, "invalid_request"},
+	// GET /api/v1/files/archives/{id} (S02.4-T03; its own tests come in S02.8).
+	{http.MethodGet, "/api/v1/files/archives/unknown", http.StatusNotFound, "not_found"},
 	{http.MethodGet, "/api/v1/files/items?path=/&sort=color", http.StatusBadRequest, "invalid_request"},
 	{http.MethodGet, "/api/v1/files/items?path=/&cursor=garbage", http.StatusBadRequest, "invalid_request"},
 	{http.MethodGet, "/api/v1/files/items?path=/docs/../../x", http.StatusBadRequest, "outside_root"},
@@ -127,6 +129,8 @@ var bodyErrorCases = []struct {
 	status                          int
 	code                            string
 }{
+	// POST /api/v1/files/archives (S02.4-T03; its own tests come in S02.8).
+	{http.MethodPost, "/api/v1/files/archives", jsonType, `{"paths":[]}`, 0, http.StatusBadRequest, "invalid_request"},
 	// POST /api/v1/files/folders.
 	{http.MethodPost, "/api/v1/files/folders", "", "", 0, http.StatusBadRequest, "invalid_request"},
 	{http.MethodPost, "/api/v1/files/folders", jsonType, `{"path":"/new","extra":1}`, 0, http.StatusBadRequest, "invalid_request"},
