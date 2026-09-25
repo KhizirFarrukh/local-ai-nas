@@ -31,7 +31,7 @@
   <Icon class="mt-0.5 size-5 shrink-0 {colors[kind]}" aria-hidden="true" />
   <div class="flex-1">
     <p>{message}</p>
-    {#if detail}<p class="mt-1 text-xs text-fg-muted">{detail}</p>{/if}
+    {#if detail}<p class="mt-1 text-xs whitespace-pre-line text-fg-muted">{detail}</p>{/if}
   </div>
   {#if onclose}
     <button
