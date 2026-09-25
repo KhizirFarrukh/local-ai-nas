@@ -3,7 +3,7 @@
 | Field | Value |
 |---|---|
 | Stage ID | S02 |
-| Status | **Approved** (2026-09-25, session S006 E009) |
+| Status | **In Progress** (approved 2026-09-25, session S006 E009) |
 | Blocked reason | |
 | Plan version this stage is based on | 1.3.0 |
 | Origin | User-defined |
@@ -219,7 +219,7 @@ web/
 
 | Substage | Name | Status | Depends on | Requirements |
 |---|---|---|---|---|
-| S02.1 | GUI technology and design foundation | Not started | S01 | FR-078, FR-083, NFR-001, NFR-014 |
+| S02.1 | GUI technology and design foundation | In Progress | S01 | FR-078, FR-083, NFR-001, NFR-014 |
 | S02.2 | App shell and navigation | Not started | S02.1 | FR-079 |
 | S02.3 | File browser | Not started | S02.2, S01.3 | FR-002 |
 | S02.4 | Uploads and downloads | Not started | S02.3, S01.4 | FR-003, FR-004, FR-006, FR-080 |
@@ -248,7 +248,7 @@ Its tests are written in S02.8.
 
 | Task ID | Description | Status | Acceptance criteria |
 |---|---|---|---|
-| S02.1-T01 | **Toolchain and project:** <br>• install pnpm 12.6.0 on the development PC (Node.js 24 LTS is present: 24.19.0; update to the current 24.21.0 LTS); <br>• create `web/` (SvelteKit + adapter-static SPA, TypeScript 6.0.3, Tailwind 4, ESLint, Prettier, svelte-check), with scripts `dev`, `build`, `check`, `lint`, `format`, `generate`; <br>• `engines`; `pnpm-lock.yaml`; `.gitignore` for `web/build` except `.gitkeep`; <br>• register every package (R6), and the Node.js and pnpm rows (sections 1 and 12). | Not started | `pnpm install --frozen-lockfile`, `pnpm lint`, `pnpm check`, and `pnpm build` succeed on Windows and on Linux (WSL). Every package is in the register with a license on the allow-list. |
+| S02.1-T01 | **Toolchain and project:** <br>• install pnpm 12.6.0 on the development PC (Node.js 24 LTS is present: 24.19.0; update to the current 24.21.0 LTS); <br>• create `web/` (SvelteKit + adapter-static SPA, TypeScript 6.0.3, Tailwind 4, ESLint, Prettier, svelte-check), with scripts `dev`, `build`, `check`, `lint`, `format`, `generate`; <br>• `engines`; `pnpm-lock.yaml`; `.gitignore` for `web/build` except `.gitkeep`; <br>• register every package (R6), and the Node.js and pnpm rows (sections 1 and 12). | **Done** (S006 E011) | `pnpm install --frozen-lockfile`, `pnpm lint`, `pnpm check`, and `pnpm build` succeed on Windows and on Linux (WSL). Every package is in the register with a license on the allow-list. |
 | S02.1-T02 | **Embedding and serving:** <br>• `web/embed.go`; the app handler in the core with the SPA fallback, caching, and security headers (4.2); <br>• the notice page for a binary without the UI; <br>• `/api/*` never falls back; <br>• the route-inventory guard test and `docs/api/versioning.md` updated for `/`. | Not started | A binary built after `pnpm build` serves the app at `http://127.0.0.1:8080/`. A deep link survives a reload. The browser's network panel shows no request to another host. The response headers carry the CSP and `nosniff`. A binary built without Node.js shows the notice. An unknown `/api/…` path is still a `404` problem. |
 | S02.1-T03 | **API client:** `pnpm generate` (openapi-typescript) into `src/lib/api/schema.d.ts`; `client.ts` (openapi-fetch) and `errors.ts` (problems → `ApiError`). | Not started | `pnpm check` passes with the generated types. A call against the running server returns typed data, and a failing call returns an `ApiError` with `code` and `correlation_id` (checked from the gallery page or the console). |
 | S02.1-T04 | **Design system:** tokens and themes (OS default, runtime toggle, remembered); the base components (4.2); Lucide icons; the development-only component gallery. | Not started | The gallery shows every component in both themes. The theme follows the OS and switches without a reload. Keyboard use of Dialog and Menu works (Tab, Escape, arrow keys). |
@@ -471,6 +471,7 @@ Every task is on its own branch and merged only with CI green. The GUI is additi
 |---|---|---|---|---|
 | 2026-09-25 | S006 | Created from `templates/stage-template.md` (plan 1.2.0, section 10.3). Code first, tests in S02.8 (R6, S006). Package versions checked on the npm registry. | R3: the stage is about to start | Approval pending |
 | 2026-09-25 | S006 | **Approved** by the user. The user decided "Skip Safari": cross-browser checks, the Playwright projects, the NFR-027 row, section 9, and section 10 now cover Chrome, Edge, and Firefox. Based on plan 1.3.0 | The user's approval and decision (S006 E009) | No (this is the approval) |
+| 2026-09-25 | S006 | **S02.1-T01 details:** <br>• `web/` was created by hand, not with `sv create`, so every file is known and every version exact (`.npmrc` `save-exact`, `engine-strict`). <br>• Shipped code (svelte, @sveltejs/kit, tailwindcss) is in `dependencies`, tools in `devDependencies`. <br>• pnpm 12's minimum-release-age guard refused vite 8.3.1 (a day old), which is excluded by name in `web/pnpm-workspace.yaml`. <br>• Node.js stays **24.19.0 on Windows** (the newest in winget; 24.21.0 in WSL). <br>• `.gitignore`: `/web/build/*` except `.gitkeep`. <br>• A transitive package (`flatted`) ships a `.go` file under `node_modules/.pnpm/`, which Go ignores (dot directory; `go list ./...` shows no web package) | Found while building S02.1-T01 | None |
 
 ## 13. Completion record
 

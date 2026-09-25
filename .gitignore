@@ -16,8 +16,12 @@
 go.work
 go.work.sum
 
-# Web UI dependencies and build output (S02)
+# Web UI dependencies and build output (S02). web/build/ keeps its .gitkeep so
+# that go:embed (web/embed.go) works without a UI build.
 node_modules/
+/web/.svelte-kit/
+/web/build/*
+!/web/build/.gitkeep
 
 # Editors and operating systems
 .idea/

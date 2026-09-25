@@ -20,8 +20,8 @@ Versions are the **latest stable at verification**. Only **direct** dependencies
 |---|---|---|---|---|---|---|
 | Go | go1.27.1 | BSD-3-Clause | Core server language, toolchain | S01+ | [ADR-0001](decisions/ADR-0001-backend-language-framework.md) | Verified 2026-09-24 (go.dev/dl). **Pinned in `go.mod`** (`go 1.27`, `toolchain go1.27.1`, S01.1-T01): an older local Go (e.g. winget's go1.27.0 on the Windows dev PC) downloads go1.27.1 automatically (`GOTOOLCHAIN=auto`) |
 | Python | 3.14.7 | PSF-2.0 | AI worker runtime | S12 | [ADR-0017](decisions/ADR-0017-ai-worker-architecture.md) | Version verified 2026-09-24 (endoflife.date). License **unverified**: the PSF wording was not found on docs.python.org/3/license.html in A001; re-check at S12.1 |
-| Node.js (LTS) | v24.21.0 ("Krypton" LTS, 2026-09-07) | MIT | Build-time only: SvelteKit/Vite build and tests | S02+ | [ADR-0009](decisions/ADR-0009-web-ui-sveltekit.md) | Verified 2026-09-24 (nodejs.org/dist/index.json) in audit A001. S02.1 pins the LTS current at that time |
-| pnpm | 12.6.0 | MIT | Web package manager (lockfile) | S02+ | [ADR-0009](decisions/ADR-0009-web-ui-sveltekit.md) | Verified 2026-09-24 (npm) |
+| Node.js (LTS) | v24.21.0 ("Krypton" LTS, 2026-09-07) | MIT | Build-time only: SvelteKit/Vite build and tests | S02+ | [ADR-0009](decisions/ADR-0009-web-ui-sveltekit.md) | Verified 2026-09-24 (nodejs.org/dist/index.json) in audit A001. S02.1 pins the LTS current at that time **Installed** (S02.1-T01): 24.19.0 on the Windows development PC (winget `OpenJS.NodeJS.LTS`, whose newest is 24.19.0 as of 2026-09-25), and 24.21.0 in WSL (official Linux tarball in `~/.local/opt`, SHA-256 checked). `web/package.json` `engines`: `>=24.19.0 <25`. |
+| pnpm | 12.6.0 | MIT | Web package manager (lockfile) | S02+ | [ADR-0009](decisions/ADR-0009-web-ui-sveltekit.md) | Verified 2026-09-24 (npm) **Installed** (S02.1-T01) with `npm install -g pnpm@12.6.0` on Windows and in WSL; `packageManager: pnpm@12.6.0` in `web/package.json`. Its minimum-release-age guard is on (`web/pnpm-workspace.yaml` lists the one exception). |
 | uv | 0.12.18 | MIT OR Apache-2.0 | Python env and lockfile | S12 | [ADR-0017](decisions/ADR-0017-ai-worker-architecture.md) | Verified 2026-09-24 (PyPI) |
 | Perl | 5.40.1-6+deb13u1 (Debian trixie) | Artistic-1.0-Perl OR GPL-1.0-or-later | Runtime for ExifTool (bundled in the image) | S04+ | [ADR-0012](decisions/ADR-0012-media-toolchain.md) | Version verified 2026-09-24 (sources.debian.org) in A001. License per Perl's standard terms (not re-fetched) |
 
@@ -72,25 +72,29 @@ Versions are the **latest stable at verification**. Only **direct** dependencies
 
 | Name | Version | License | Purpose | Stage | ADR | Verification status |
 |---|---|---|---|---|---|---|
-| svelte | 5.57.1 | MIT | UI framework (bundled) | S02+ | [ADR-0009](decisions/ADR-0009-web-ui-sveltekit.md) | Verified 2026-09-24 (npm) |
-| @sveltejs/kit | 2.70.3 | MIT | App framework | S02+ | [ADR-0009](decisions/ADR-0009-web-ui-sveltekit.md) | Verified 2026-09-24 |
-| @sveltejs/adapter-static | 3.0.10 | MIT | Static SPA build | S02+ | [ADR-0009](decisions/ADR-0009-web-ui-sveltekit.md) | Verified 2026-09-24 |
-| vite | 8.3.0 | MIT | Build tool and dev server (proxy to core) | S02+ | [ADR-0009](decisions/ADR-0009-web-ui-sveltekit.md) | Verified 2026-09-24 |
-| tailwindcss / @tailwindcss/vite | 4.3.3 | MIT | CSS utility framework (build time) | S02+ | [ADR-0009](decisions/ADR-0009-web-ui-sveltekit.md) | Verified 2026-09-24 |
-| typescript | **6.0.3** (pinned; 7.0.2 is the latest but unsupported by svelte-check) | Apache-2.0 | Type checking | S02+ | [ADR-0009](decisions/ADR-0009-web-ui-sveltekit.md) | Verified 2026-09-24. svelte-check 4.7.6 declares `typescript: ^5.0.0 \|\| ^6.0.0` (audit A001 F-021) |
+| svelte | 5.57.1 | MIT | UI framework (bundled) | S02+ | [ADR-0009](decisions/ADR-0009-web-ui-sveltekit.md) | Verified 2026-09-24 (npm) **Installed** in `web/package.json` (S02.1-T01). |
+| @sveltejs/kit | 2.70.3 | MIT | App framework | S02+ | [ADR-0009](decisions/ADR-0009-web-ui-sveltekit.md) | Verified 2026-09-24 **Installed** in `web/package.json` (S02.1-T01). |
+| @sveltejs/adapter-static | 3.0.10 | MIT | Static SPA build | S02+ | [ADR-0009](decisions/ADR-0009-web-ui-sveltekit.md) | Verified 2026-09-24 **Installed** in `web/package.json` (S02.1-T01). |
+| vite | 8.3.1 | MIT | Build tool and dev server (proxy to core) | S02+ | [ADR-0009](decisions/ADR-0009-web-ui-sveltekit.md) | Verified 2026-09-25 (npm; 8.3.0 in S003). **Installed** in `web/package.json` (S02.1-T01). |
+| tailwindcss / @tailwindcss/vite | 4.3.3 | MIT | CSS utility framework (build time) | S02+ | [ADR-0009](decisions/ADR-0009-web-ui-sveltekit.md) | Verified 2026-09-24 **Installed** in `web/package.json` (S02.1-T01). |
+| typescript | **6.0.3** (pinned; 7.0.2 is the latest but unsupported by svelte-check) | Apache-2.0 | Type checking | S02+ | [ADR-0009](decisions/ADR-0009-web-ui-sveltekit.md) | Verified 2026-09-24. svelte-check 4.7.6 declares `typescript: ^5.0.0 \|\| ^6.0.0` (audit A001 F-021) **Installed** in `web/package.json` (S02.1-T01). |
 | @uppy/core, @uppy/tus | 6.0.1, 6.0.0 | MIT | Upload UI and tus client | S02.4, S04.7 | [ADR-0008](decisions/ADR-0008-resumable-uploads-tus.md) | Verified 2026-09-24 |
 | openapi-typescript | 7.13.0 | MIT | Generate TypeScript types from the spec (dev) | S02.1 | [ADR-0002](decisions/ADR-0002-api-style.md) | Verified 2026-09-24 |
 | openapi-fetch | 0.17.0 | MIT | Typed API client (bundled) | S02.1 | [ADR-0002](decisions/ADR-0002-api-style.md) | Verified 2026-09-24 |
 | @tanstack/svelte-virtual | 3.13.39 | MIT | List and grid virtualization | S02.3, S04.7 | [ADR-0009](decisions/ADR-0009-web-ui-sveltekit.md) | Verified 2026-09-24. Svelte 5 fit to be prototyped in S02.3 |
 | hls.js | 1.7.3 | Apache-2.0 | HLS player: manual quality menu + Auto (adaptive bitrate); MSE/ManagedMediaSource | S04.8 | [ADR-0020](decisions/ADR-0020-video-streaming-quality-levels.md) | Verified 2026-09-24 (npm) in S004 |
 | redoc (standalone bundle, vendored) | 2.5.4 | MIT | Offline API documentation page served by the core | S01.5 | [ADR-0002](decisions/ADR-0002-api-style.md) | Verified 2026-09-24. **Vendored** since S01.5-T06 as `internal/api/docs/redoc.standalone.js`, taken from the npm tarball `redoc-2.5.4.tgz`, which matched npm's integrity `sha512-M6jWhG1qoBnH6TFmzJnstyCZ87HmOY/UzDm78mHiYihEdlV/YcS9ogOo1NlElnJMeLsyxHFe2yFc4sNjHTrABQ==` (sha1 c2b77b368800f56f69d43697d0fc45738fd8f466). The bundle's **SHA-256 is `dcaf76612bc4a3fbcc923a8966dee2f6146a5f32e5ce1b6f02dd60cbbf89500b`** (1,103,471 bytes); `TestAPIDocs` checks it (`api.RedocSHA256`). Redoc's LICENSE and the bundle's third-party license file are vendored next to it; `.gitattributes` keeps all three byte for byte |
-| svelte-check | 4.7.6 | MIT | Svelte/TypeScript checks (dev) | S02+ | [ADR-0005](decisions/ADR-0005-testing-linting-ci.md) | Verified 2026-09-24 |
-| eslint / eslint-plugin-svelte | 10.11.0 / 3.23.0 | MIT | Lint (dev) | S02+ | [ADR-0005](decisions/ADR-0005-testing-linting-ci.md) | Verified 2026-09-24 |
-| prettier / prettier-plugin-svelte | 3.9.9 / 4.1.1 | MIT | Format (dev) | S02+ | [ADR-0005](decisions/ADR-0005-testing-linting-ci.md) | Verified 2026-09-24 |
+| svelte-check | 4.7.6 | MIT | Svelte/TypeScript checks (dev) | S02+ | [ADR-0005](decisions/ADR-0005-testing-linting-ci.md) | Verified 2026-09-24 **Installed** in `web/package.json` (S02.1-T01). |
+| eslint / eslint-plugin-svelte | 10.11.0 / 3.23.0 | MIT | Lint (dev) | S02+ | [ADR-0005](decisions/ADR-0005-testing-linting-ci.md) | Verified 2026-09-24 **Installed** in `web/package.json` (S02.1-T01). |
+| prettier / prettier-plugin-svelte | 3.9.9 / 4.1.1 | MIT | Format (dev) | S02+ | [ADR-0005](decisions/ADR-0005-testing-linting-ci.md) | Verified 2026-09-24 **Installed** in `web/package.json` (S02.1-T01). |
+| @sveltejs/vite-plugin-svelte | 7.3.1 | MIT | Svelte compiler integration for Vite (SvelteKit's peer; `vitePreprocess`) | S02+ | [ADR-0009](decisions/ADR-0009-web-ui-sveltekit.md) | Verified 2026-09-25 (npm). **Installed** in `web/package.json` (S02.1-T01). |
+| @eslint/js / typescript-eslint / globals | 10.0.1 / 8.70.1 / 17.12.0 | MIT | ESLint's recommended rules, TypeScript rules and parser, and browser/Node globals for the flat config (dev). typescript-eslint accepts TypeScript `<6.1.0` | S02+ | [ADR-0005](decisions/ADR-0005-testing-linting-ci.md) | Verified 2026-09-25 (npm). **Installed** in `web/package.json` (S02.1-T01). |
 | vitest | 5.0.1 | MIT | Unit and component tests (dev) | S02+ | [ADR-0005](decisions/ADR-0005-testing-linting-ci.md) | Verified 2026-09-24 |
 | @playwright/test | 1.63.0 | Apache-2.0 | End-to-end tests (dev) | S02+ | [ADR-0005](decisions/ADR-0005-testing-linting-ci.md) | Verified 2026-09-24 |
 | pdfjs-dist | 6.3.289 | Apache-2.0 | PDF previews | S02.6 | [ADR-0009](decisions/ADR-0009-web-ui-sveltekit.md) | **Candidate**: decided in S02.6 (vs. the browser's built-in viewer) |
 | axe-core / @axe-core/playwright | 4.13.0 / 4.13.0 | ⚠ MPL-2.0 (file-level copyleft; dev and test tool only, not shipped) | Automated accessibility checks | S02.7 | [ADR-0005](decisions/ADR-0005-testing-linting-ci.md) (plan S02.7, 12.1) | Verified 2026-09-24 (npm) in A001. **Candidate** |
+
+**License scan of the installed tree (S02.1-T01, `pnpm licenses list`):** 166 packages. All carry licenses on `scripts/allowed-licenses.txt` except **BlueOak-1.0.0** (`minimatch`, a permissive license, pulled in by the dev tools only). MPL-2.0 appears for `lightningcss` (Tailwind's CSS processor, build time). S02.1-T05 adds the check to CI: the packages that ship are held to the allow-list, and the dev tools to it plus BlueOak-1.0.0 (reason in `docs/licensing.md`).
 
 ## 5. Python (AI worker, S12)
 
