@@ -176,6 +176,22 @@ To use a config file instead of flags, copy [`deploy/config.example.toml`](deplo
 
 Other commands: `migrate up` and `migrate status` (database migrations; `serve` also migrates on start) and `version`.
 
+### The web interface
+
+The server includes the web interface (stage 2, being built) when the interface is built first. For that you need Node.js 24 LTS and pnpm 12.6.0 (`npm install -g pnpm@12.6.0`):
+
+```sh
+cd web
+pnpm install
+pnpm build
+cd ..
+go run ./cmd/local-ai-nas serve --storage-root "$PWD/dev/data"
+```
+
+Then open `http://127.0.0.1:8080/` in a browser on this computer. Without the build, the server shows a short notice there, and the API works as before.
+
+To work on the interface, run the server as above, and in a second terminal run `cd web` and `pnpm dev`. The development server at `http://localhost:5173/` reloads on every change and passes `/api` requests on to the server.
+
 ### Use the API
 
 With the server running, you manage the Files area over HTTP. For example, from a second terminal on Linux or macOS:
@@ -213,8 +229,10 @@ The container runs your working copy with `go run` and keeps its data in a Docke
 | Lint and format | `scripts/install-golangci-lint.sh` once, then `./bin/golangci-lint run ./...` and `./bin/golangci-lint fmt --diff` |
 | Dependency licenses | `scripts/check-licenses.sh` |
 | Performance baseline | `scripts/perf-baseline.sh` (results in [docs/perf/](docs/perf/)) |
+| Web interface: format, lint, type checks | in `web/`: `pnpm format:check`, `pnpm lint`, `pnpm check` |
+| Web interface licenses | `node scripts/check-web-licenses.mjs` |
 
-On Windows, run the `scripts/*.sh` files from Git Bash. More in [docs/testing.md](docs/testing.md). CI runs all of these except the performance baseline on Linux and Windows for every push.
+On Windows, run the `scripts/*.sh` files from Git Bash. More in [docs/testing.md](docs/testing.md). CI runs all of these except the performance baseline for every push, on Linux and Windows (the web interface checks on Linux).
 
 ---
 

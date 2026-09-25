@@ -38,6 +38,13 @@ ExifTool, libvips, libheif, and FFmpeg are not linked into the binary. The core 
 
 Tools that are never linked or distributed may have copyleft licenses. Examples: golangci-lint (GPL-3.0) and axe-core (MPL-2.0, tests only).
 
+The npm tools of the web UI (build, lint, type generation, tests) may also use these permissive licenses, which are not on the list for shipped code because nothing shipped needs them yet:
+
+| License | Package and reason |
+|---|---|
+| BlueOak-1.0.0 | `minimatch`, pulled in by the linters. Permissive (a modern MIT-style license with a patent grant). |
+| Python-2.0 | `argparse`, pulled in by `js-yaml` in the API type generator (openapi-typescript). Permissive (the PSF license family). |
+
 ### Datasets and AI models
 
 Datasets and models follow the same "anyone may deploy and use" rule. Attribution licenses are allowed, and the attribution is shown in the documentation and the About page. For example, GeoNames data is CC BY 4.0 (S05.4).
@@ -45,11 +52,11 @@ Datasets and models follow the same "anyone may deploy and use" rule. Attributio
 ## How the policy is checked
 
 - **Go:** [`scripts/check-licenses.sh`](../scripts/check-licenses.sh) runs `go tool go-licenses check ./...` with the allow-list. It fails on any linked package with a license outside the list or with no recognized license. CI runs it on every pull request (S01.1-T05). On Windows, run it from Git Bash.
-- **Web UI (from S02):** `pnpm licenses` with the same allow-list (ADR-0005).
+- **Web UI:** [`scripts/check-web-licenses.mjs`](../scripts/check-web-licenses.mjs) (S02.1-T05) runs `pnpm licenses list` in `web/`. The packages that ship in the built interface (the `dependencies` and what they pull in) must be on `scripts/allowed-licenses.txt`; every package, the development tools included, must be on that list or in the table of permissive tool licenses above. SPDX expressions are read as written: an `OR` needs one allowed part, an `AND` needs all. CI runs it in the `web` job.
 - **Release (S11.6):** a full audit of dependencies, external tools, datasets, and models.
 
 ## Adding a dependency
 
 1. Check its license against the lists above. If it is not allowed, do not add it.
 2. Record it in `code-agent-docs/dependencies.md` with version, license, purpose, and verification, **in the same commit** (RULES R6). Anything the running NAS needs on the target machine also gets a row in section 12 (per-platform prerequisites, NFR-032).
-3. Run `scripts/check-licenses.sh`.
+3. Run `scripts/check-licenses.sh`, and for npm packages `node scripts/check-web-licenses.mjs`.

@@ -18,6 +18,16 @@ updates:
     commit-message:
       prefix: "chore(ci)"
 
+  # The web interface's npm packages (S02.1-T05). pnpm's minimum release
+  # age applies to what these pull requests pin.
+  - package-ecosystem: npm
+    directory: /web
+    target-branch: develop
+    schedule:
+      interval: weekly
+    commit-message:
+      prefix: "chore(deps)"
+
   # Base images in deploy/Dockerfile.dev (S01.1-T06).
   - package-ecosystem: docker
     directory: /deploy
