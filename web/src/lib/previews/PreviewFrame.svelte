@@ -12,6 +12,7 @@
   import type { PreviewKind } from './kinds';
   import AudioView from './AudioView.svelte';
   import ImageView from './ImageView.svelte';
+  import PdfView from './PdfView.svelte';
   import TextView from './TextView.svelte';
   import VideoView from './VideoView.svelte';
 
@@ -22,12 +23,13 @@
     onfail: (why: string) => void;
   }>;
 
-  /** The views by kind (S02.6-T04 adds PDF); others get the fallback. */
+  /** The views by kind; kinds without one get the fallback card. */
   const views: Partial<Record<PreviewKind, PreviewView>> = {
     image: ImageView,
     video: VideoView,
     audio: AudioView,
-    text: TextView
+    text: TextView,
+    pdf: PdfView
   };
 </script>
 
@@ -102,6 +104,9 @@
     }
   }
 
+  // The keys are read on the window: a button that turns disabled (the
+  // last page, the last file) drops the focus to the page, outside the
+  // dialog, and the keys must still work.
   function keydown(event: KeyboardEvent) {
     // Media controls and fields use the arrow keys themselves.
     if ((event.target as Element).closest('video, audio, input, textarea, select')) {
@@ -114,6 +119,8 @@
   }
 </script>
 
+<svelte:window onkeydown={keydown} />
+
 <dialog
   bind:this={dialog}
   aria-label={item ? `Preview of ${item.name}` : 'Preview'}
@@ -121,7 +128,6 @@
   tabindex="-1"
   data-testid="preview"
   {onclose}
-  onkeydown={keydown}
 >
   <header class="flex h-14 shrink-0 items-center gap-3 px-4">
     <div class="min-w-0 flex-1">

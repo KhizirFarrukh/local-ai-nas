@@ -6,3 +6,5 @@ pnpm-lock.yaml
 src/lib/api/schema.d.ts
 # Written by scripts/about.mjs before dev, check, and build.
 src/lib/generated/
+# Copied from pdfjs-dist by scripts/pdfjs-assets.mjs.
+static/pdfjs/

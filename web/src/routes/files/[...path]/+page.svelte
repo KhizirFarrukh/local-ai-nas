@@ -107,7 +107,12 @@
   function pageKeys(event: KeyboardEvent) {
     const target = event.target as HTMLElement;
     const onBody = target === document.body || target.tagName === 'MAIN';
-    if (event.defaultPrevented || listing.total === undefined) {
+    // A dialog (a preview, a confirmation) has its own keys.
+    if (
+      event.defaultPrevented ||
+      listing.total === undefined ||
+      document.querySelector('dialog[open]')
+    ) {
       return;
     }
     if (!onBody && !target.closest('[role="grid"]')) {

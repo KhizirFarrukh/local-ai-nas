@@ -24,6 +24,17 @@ These licenses are allowed. The machine-readable list for the Go check is [`scri
 | LGPL-2.1, LGPL-3.0 | Weak copyleft. The whole program's source is available under the AGPL, so the relinking requirement of static Go linking is met. |
 | GPL-3.0, AGPL-3.0 | Strong copyleft of the same family. GPL-3.0 section 13 and AGPL-3.0 section 13 explicitly allow combining the two. |
 
+Files that a bundled package ships besides its code are held to the same list. pdf.js (`pdfjs-dist`, Apache-2.0, S02.6-T04) is one: the web UI copies only the files it needs, each with its license file, through `web/scripts/pdfjs-assets.mjs`:
+
+| Files | License |
+|---|---|
+| Adobe CMaps (`cmaps/`) | BSD-3-Clause |
+| Foxit standard fonts (`standard_fonts/Foxit*`) | BSD-3-Clause (PDFium) |
+| JBIG2 image decoder (`jbig2_nowasm_fallback.js`) | BSD-3-Clause (PDFium), Mozilla's port Apache-2.0 |
+| OpenJPEG image decoder (`openjpeg_nowasm_fallback.js`) | BSD-2-Clause, Mozilla's port BSD-2-Clause |
+
+pdfjs-dist also contains the Liberation Sans fonts under GPL-2.0 with a font exception. They are **not copied**: GPL-2.0-only is not allowed (below), and pdf.js uses the system's sans-serif font without them.
+
 Not allowed in linked or bundled code:
 - **GPL-2.0-only**: incompatible with (A)GPL-3.0. go-licenses reports GPL-2.0 without telling "-only" and "-or-later" apart, so GPL-2.0 is not on the list. A GPL-2.0-or-later library needs a manual review and a recorded exception here.
 - Non-commercial, research-only, or field-of-use licenses (for example CC BY-NC, the InsightFace model terms), and source-available licenses (SSPL, BUSL, Elastic License).

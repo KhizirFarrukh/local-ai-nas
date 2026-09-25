@@ -23,6 +23,8 @@ node_modules/
 /web/build/*
 !/web/build/.gitkeep
 /web/src/lib/generated/
+# Copied from pdfjs-dist by web/scripts/pdfjs-assets.mjs before dev and build (S02.6-T04).
+/web/static/pdfjs/
 
 # Editors and operating systems
 .idea/

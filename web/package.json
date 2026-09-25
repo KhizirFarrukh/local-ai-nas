@@ -10,8 +10,8 @@
     "node": ">=24.19.0 <25"
   },
   "scripts": {
-    "dev": "node scripts/about.mjs && vite dev",
-    "build": "node scripts/about.mjs && vite build && node -e \"require('node:fs').writeFileSync('build/.gitkeep', '')\"",
+    "dev": "node scripts/about.mjs && node scripts/pdfjs-assets.mjs && vite dev",
+    "build": "node scripts/about.mjs && node scripts/pdfjs-assets.mjs && vite build && node -e \"require('node:fs').writeFileSync('build/.gitkeep', '')\"",
     "preview": "vite preview",
     "check": "node scripts/about.mjs && svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
     "lint": "eslint .",
@@ -27,6 +27,7 @@
     "@uppy/core": "6.0.1",
     "@uppy/tus": "6.0.0",
     "openapi-fetch": "0.17.0",
+    "pdfjs-dist": "6.3.289",
     "svelte": "5.57.1",
     "tailwindcss": "4.3.3"
   },
