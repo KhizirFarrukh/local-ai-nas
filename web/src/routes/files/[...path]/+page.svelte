@@ -3,9 +3,13 @@
   a grid, with sorting, breadcrumbs, and the empty and error states. While
   items are selected (S02.5-T01), the toolbar shows the selection's count
   and actions instead; the operations open their dialogs (S02.5-T02).
+  Every action is also in the menus (right-click, long press, the menu
+  key) and has a shortcut; "?" lists them (S02.5-T04).
 -->
 <script lang="ts">
+  import ClipboardPaste from '@lucide/svelte/icons/clipboard-paste';
   import Copy from '@lucide/svelte/icons/copy';
+  import CopyPlus from '@lucide/svelte/icons/copy-plus';
   import Download from '@lucide/svelte/icons/download';
   import FolderOpen from '@lucide/svelte/icons/folder-open';
   import FolderOutput from '@lucide/svelte/icons/folder-output';
@@ -13,7 +17,10 @@
   import FolderUp from '@lucide/svelte/icons/folder-up';
   import LayoutGrid from '@lucide/svelte/icons/layout-grid';
   import List from '@lucide/svelte/icons/list';
+  import Keyboard from '@lucide/svelte/icons/keyboard';
   import Pencil from '@lucide/svelte/icons/pencil';
+  import Scissors from '@lucide/svelte/icons/scissors';
+  import SquareCheck from '@lucide/svelte/icons/square-check-big';
   import Trash from '@lucide/svelte/icons/trash-2';
   import FolderUp2 from '@lucide/svelte/icons/folder-input';
   import Upload from '@lucide/svelte/icons/upload';
@@ -27,13 +34,16 @@
   import EmptyState from '$lib/components/EmptyState.svelte';
   import ErrorPanel from '$lib/components/ErrorPanel.svelte';
   import IconButton from '$lib/components/IconButton.svelte';
+  import Menu, { type MenuEntry } from '$lib/components/Menu.svelte';
   import Spinner from '$lib/components/Spinner.svelte';
   import DeleteDialog from '$lib/files/DeleteDialog.svelte';
   import DownloadAction from '$lib/files/DownloadAction.svelte';
   import { downloadArchive, downloadSelection } from '$lib/files/download';
   import FileView from '$lib/files/FileView.svelte';
   import FolderPicker from '$lib/files/FolderPicker.svelte';
+  import { isMac, keyAction, shortcutLabel } from '$lib/files/keys';
   import { FolderListing, type PageLoader } from '$lib/files/listing.svelte';
+  import { clipboard } from '$lib/files/clipboard.svelte';
   import { ConflictBatch, conflicts } from '$lib/files/conflicts.svelte';
   import NameDialog from '$lib/files/NameDialog.svelte';
   import {
@@ -44,6 +54,7 @@
     type BulkKind
   } from '$lib/files/operations';
   import { Selection } from '$lib/files/selection.svelte';
+  import ShortcutsDialog from '$lib/files/ShortcutsDialog.svelte';
   import type { FileItem, SortKey, SortOrder } from '$lib/files/types';
   import { activity } from '$lib/shell/activity.svelte';
   import { ApiError } from '$lib/api/errors';
@@ -85,18 +96,65 @@
     untrack(() => selection.clear());
   });
 
-  // Ctrl/Cmd+A and Escape also work when nothing has the focus, as after
-  // a click on the page's background.
+  // Shortcuts (S02.5-T04, keys.ts) work while the file view has the focus,
+  // or the page itself (the body, or the main area a click on the
+  // background focuses); never while typing, on a button, or in a dialog or
+  // menu. Ctrl/Cmd+A and Escape work on the page too; in the view, it
+  // handles them itself.
+  const mac = isMac();
   function pageKeys(event: KeyboardEvent) {
-    if (document.activeElement !== document.body || listing.total === undefined) {
+    const target = event.target as HTMLElement;
+    const onBody = target === document.body || target.tagName === 'MAIN';
+    if (event.defaultPrevented || listing.total === undefined) {
+      return;
+    }
+    if (!onBody && !target.closest('[role="grid"]')) {
       return;
     }
     const ctrl = event.ctrlKey || event.metaKey;
-    if (ctrl && event.key.toLowerCase() === 'a' && !event.shiftKey && !event.altKey) {
+    if (onBody && ctrl && event.key.toLowerCase() === 'a' && !event.shiftKey && !event.altKey) {
       event.preventDefault();
       selection.selectAll();
-    } else if (event.key === 'Escape' && selected > 0) {
+      return;
+    }
+    if (onBody && event.key === 'Escape' && selected > 0) {
       selection.clear();
+      return;
+    }
+    const action = keyAction(event, mac);
+    if (!action || listing.folder?.kind !== 'dir') {
+      return;
+    }
+    event.preventDefault();
+    switch (action) {
+      case 'rename':
+        if (selected === 1) void openDialog('rename');
+        break;
+      case 'delete':
+        if (selected > 0) void openDialog('delete');
+        break;
+      case 'new-folder':
+        newFolderOpen = true;
+        break;
+      case 'parent':
+        if (path !== '/') {
+          focusView = fromView() || onBody;
+          void goto(filesHref(parent(path)));
+        }
+        break;
+      case 'copy':
+      case 'cut':
+        if (selected > 0) void toClipboard(action === 'copy' ? 'copy' : 'move');
+        break;
+      case 'paste':
+        void paste();
+        break;
+      case 'help':
+        helpOpen = true;
+        break;
+      case 'menu':
+        showMenu(undefined, 280, 120); // nothing focused: the folder's menu
+        break;
     }
   }
 
@@ -109,6 +167,19 @@
   let copyOpen = $state(false);
   let deleteOpen = $state(false);
   let targets = $state.raw<FileItem[]>([]);
+
+  type DialogKind = 'rename' | 'move' | 'copy' | 'delete';
+
+  /** Opens an operation's dialog for the selected items. */
+  async function openDialog(kind: DialogKind) {
+    if (!(await takeSelection())) {
+      return;
+    }
+    if (kind === 'rename') renameOpen = true;
+    else if (kind === 'move') moveOpen = true;
+    else if (kind === 'copy') copyOpen = true;
+    else deleteOpen = true;
+  }
 
   /** Takes the selected items for a dialog; false when there are none. */
   async function takeSelection(): Promise<boolean> {
@@ -123,15 +194,151 @@
 
   // A taken name asks the conflict dialog (S02.5-T03); "apply to all"
   // holds for the rest of this run.
-  async function bulk(kind: BulkKind, folder = path) {
-    const batch = new ConflictBatch(conflicts, targets.length, true);
-    const result = await runBulk(kind, targets, folder, {
+  async function bulk(kind: BulkKind, folder = path, items: FileItem[] = targets) {
+    const batch = new ConflictBatch(conflicts, items.length, true);
+    const result = await runBulk(kind, items, folder, {
       onConflict: (item) => batch.choose(item.name, item.kind === 'dir', child(folder, item.name))
     });
     if (kind !== 'copy') {
       selection.forget(result.done.map((item) => item.path));
     }
     await listing.refresh();
+  }
+
+  // The app's clipboard (S02.5-T04): Ctrl/Cmd+C or X here, Ctrl/Cmd+V in
+  // any folder. Cut items show dimmed until they are moved.
+  async function toClipboard(mode: 'copy' | 'move') {
+    const items = await selection.resolve(listing);
+    if (!items || items.length === 0) {
+      return;
+    }
+    clipboard.set(mode, items);
+    toasts.push({
+      message: `${itemsText(items)} ready to ${mode === 'copy' ? 'copy' : 'move'}. In the folder they should go to, press ${shortcutLabel('paste', mac)} or use Paste in its menu.`
+    });
+  }
+
+  async function paste(folder = path) {
+    const { mode, items } = clipboard;
+    if (!mode) {
+      toasts.push({ message: 'Nothing to paste: copy or cut items first.' });
+      return;
+    }
+    await bulk(mode, folder, items);
+    if (mode === 'move') {
+      clipboard.clear();
+    }
+  }
+
+  // Menus (S02.5-T04): the selection's, or the folder's on empty space.
+  let menuOpen = $state(false);
+  let menuX = $state(0);
+  let menuY = $state(0);
+  let menuItems = $state.raw<MenuEntry[]>([]);
+  let helpOpen = $state(false);
+
+  function showMenu(item: FileItem | undefined, x: number, y: number) {
+    menuItems = item ? selectionMenu(item) : folderMenu();
+    menuX = x;
+    menuY = y;
+    menuOpen = true;
+  }
+
+  function selectionMenu(item: FileItem): MenuEntry[] {
+    const one = selected === 1;
+    const entries: MenuEntry[] = [];
+    if (one && item.kind === 'dir') {
+      entries.push({
+        label: 'Open',
+        icon: FolderOpen,
+        shortcut: 'Enter',
+        onselect: () => open(item)
+      });
+    }
+    entries.push(
+      {
+        label: 'Download',
+        icon: Download,
+        onselect: () => void downloadSelection(selection, listing, path)
+      },
+      'separator',
+      {
+        label: 'Cut',
+        icon: Scissors,
+        shortcut: shortcutLabel('cut', mac),
+        onselect: () => void toClipboard('move')
+      },
+      {
+        label: 'Copy',
+        icon: Copy,
+        shortcut: shortcutLabel('copy', mac),
+        onselect: () => void toClipboard('copy')
+      }
+    );
+    if (one && item.kind === 'dir' && clipboard.mode) {
+      entries.push({
+        label: `Paste into “${item.name}”`,
+        icon: ClipboardPaste,
+        onselect: () => void paste(item.path)
+      });
+    }
+    entries.push('separator');
+    if (one) {
+      entries.push({
+        label: 'Rename…',
+        icon: Pencil,
+        shortcut: shortcutLabel('rename', mac),
+        onselect: () => void openDialog('rename')
+      });
+    }
+    entries.push(
+      { label: 'Move to…', icon: FolderOutput, onselect: () => void openDialog('move') },
+      { label: 'Copy to…', icon: CopyPlus, onselect: () => void openDialog('copy') },
+      'separator',
+      {
+        label: 'Delete…',
+        icon: Trash,
+        shortcut: shortcutLabel('delete', mac),
+        danger: true,
+        onselect: () => void openDialog('delete')
+      }
+    );
+    return entries;
+  }
+
+  function folderMenu(): MenuEntry[] {
+    return [
+      {
+        label: 'New folder…',
+        icon: FolderPlus,
+        shortcut: shortcutLabel('new-folder', mac),
+        onselect: () => (newFolderOpen = true)
+      },
+      { label: 'Upload files…', icon: Upload, onselect: () => fileInput?.click() },
+      { label: 'Upload a folder…', icon: FolderUp2, onselect: () => folderInput?.click() },
+      'separator',
+      {
+        label: clipboard.mode ? `Paste ${itemsText(clipboard.items)}` : 'Paste',
+        icon: ClipboardPaste,
+        shortcut: shortcutLabel('paste', mac),
+        disabled: !clipboard.mode,
+        onselect: () => void paste()
+      },
+      {
+        label: 'Select all',
+        icon: SquareCheck,
+        shortcut: mac ? '⌘A' : 'Ctrl+A',
+        disabled: !listing.total,
+        onselect: () => selection.selectAll()
+      },
+      'separator',
+      {
+        label: 'Keyboard shortcuts',
+        icon: Keyboard,
+        shortcut: '?',
+        onselect: () => (helpOpen = true)
+      }
+    ];
   }
 
   async function newFolder(name: string) {
@@ -199,8 +406,18 @@
     writeStored('order', order);
   }
 
+  // After opening a folder or going up from the file view, the new
+  // folder's view takes the focus (S02.5-T04): the old view is gone while
+  // the folder loads, and the focus would fall back to the page.
+  let focusView = $state(false);
+  function fromView(): boolean {
+    const active = document.activeElement;
+    return !!active?.closest('[role="grid"]');
+  }
+
   function open(item: FileItem) {
     if (item.kind === 'dir') {
+      focusView = fromView();
       goto(filesHref(item.path));
     }
     // Files open in the preview (S02.6).
@@ -236,7 +453,7 @@
     <Breadcrumbs crumbs={crumbs(path)} label="Folder" />
     {#if selected > 0}
       <div
-        class="ml-auto flex items-center gap-2"
+        class="ml-auto flex flex-wrap items-center gap-2"
         role="toolbar"
         aria-label="Selected items"
         data-testid="selection-bar"
@@ -250,21 +467,17 @@
           <Download class="size-4" /> Download
         </Button>
         {#if selected === 1}
-          <Button size="sm" onclick={async () => (renameOpen = await takeSelection())}>
+          <Button size="sm" onclick={() => void openDialog('rename')}>
             <Pencil class="size-4" /> Rename
           </Button>
         {/if}
-        <Button size="sm" onclick={async () => (moveOpen = await takeSelection())}>
+        <Button size="sm" onclick={() => void openDialog('move')}>
           <FolderOutput class="size-4" /> Move
         </Button>
-        <Button size="sm" onclick={async () => (copyOpen = await takeSelection())}>
+        <Button size="sm" onclick={() => void openDialog('copy')}>
           <Copy class="size-4" /> Copy
         </Button>
-        <Button
-          size="sm"
-          variant="danger"
-          onclick={async () => (deleteOpen = await takeSelection())}
-        >
+        <Button size="sm" variant="danger" onclick={() => void openDialog('delete')}>
           <Trash class="size-4" /> Delete
         </Button>
         {#if !selection.everything}
@@ -275,7 +488,7 @@
         </IconButton>
       </div>
     {/if}
-    <div class="ml-auto flex items-center gap-2 {selected > 0 ? 'hidden' : ''}">
+    <div class="ml-auto flex flex-wrap items-center gap-2 {selected > 0 ? 'hidden' : ''}">
       <Button variant="primary" size="sm" onclick={() => fileInput?.click()}>
         <Upload class="size-4" /> Upload
       </Button>
@@ -392,7 +605,18 @@
       {/snippet}
     </EmptyState>
   {:else}
-    <FileView {listing} {selection} {mode} {sort} {order} onsort={setSort} onopen={open}>
+    <FileView
+      {listing}
+      {selection}
+      {mode}
+      {sort}
+      {order}
+      onsort={setSort}
+      onopen={open}
+      onmenu={showMenu}
+      dimmed={(p) => clipboard.isCut(p)}
+      autofocus={focusView}
+    >
       {#snippet actions(item)}
         <DownloadAction {item} />
       {/snippet}
@@ -435,6 +659,16 @@
   onpick={(folder) => void bulk('copy', folder)}
 />
 <DeleteDialog bind:open={deleteOpen} items={targets} onconfirm={() => void bulk('delete')} />
+<ShortcutsDialog bind:open={helpOpen} />
+<Menu
+  bind:open={menuOpen}
+  x={menuX}
+  y={menuY}
+  label={menuItems.some((e) => e !== 'separator' && e.label === 'Delete…')
+    ? 'Selected items'
+    : 'This folder'}
+  items={menuItems}
+/>
 
 <DropZone
   target={path === '/' ? 'Files' : basename(path)}
