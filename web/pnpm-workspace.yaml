@@ -17,3 +17,10 @@ minimumReleaseAgeExclude:
 auditConfig:
   ignoreGhsas:
     - GHSA-pxg6-pf52-xh8x
+
+# Optional dependencies not installed (S02.6-T04):
+# - @napi-rs/canvas: pdfjs-dist's native canvas for rendering in Node. The
+#   app renders PDFs in the browser only, so the module (and its platform
+#   binaries) would never be used.
+ignoredOptionalDependencies:
+  - '@napi-rs/canvas'

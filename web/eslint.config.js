@@ -33,6 +33,6 @@ export default defineConfig(
   },
   {
     // schema.d.ts is generated from api/openapi.yaml (pnpm generate).
-    ignores: ['build/', '.svelte-kit/', 'node_modules/', 'src/lib/api/schema.d.ts']
+    ignores: ['build/', '.svelte-kit/', 'node_modules/', 'src/lib/api/schema.d.ts', 'static/pdfjs/']
   }
 );
