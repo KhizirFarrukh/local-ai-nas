@@ -313,7 +313,7 @@ Its tests are written in S02.8.
 |---|---|---|---|
 | S02.5-T01 | **Selection model:** click, Ctrl/Cmd-click, Shift-range, select all, the keyboard, and a selection bar with a count and actions. | **Done** (S006 E030) | Selections behave as in common file managers, including across pages loaded later. |
 | S02.5-T02 | **Operation dialogs:** <br>• new folder, rename, move and copy with the folder picker, delete confirmation (permanent, with the item count); <br>• `invalid_name` rules in plain words; <br>• bulk runs with progress and a failure summary; <br>• the `422 too_large_for_sync` copy limit explained. | **Done** (S006 E031) | Each S01 operation works on one item and on a selection. A name breaking a rule shows the rule. Deleting always asks first. |
-| S02.5-T03 | **Conflict dialog:** skip, keep both, replace (files only), with "apply to all"; the choice becomes `on_conflict` for each item; for folders, only skip and keep both. | Not started | For a move, copy, upload, and new folder into taken names, each choice gives the matching server result (checked with a listing afterwards). |
+| S02.5-T03 | **Conflict dialog:** skip, keep both, replace (files only), with "apply to all"; the choice becomes `on_conflict` for each item; for folders, only skip and keep both. | **Done** (S006 E032) | For a move, copy, upload, and new folder into taken names, each choice gives the matching server result (checked with a listing afterwards). |
 | S02.5-T04 | **Context menus and shortcuts:** right-click and long-press menus; the shortcut map (4.2); the `?` help list. | Not started | Every main action is reachable from the context menu and by keyboard alone. |
 
 ### S02.6: File previews

@@ -188,11 +188,20 @@ function summarize(
     result.done.length === items.length
       ? `${w.done} ${itemsText(items)}.`
       : `${w.done} ${formatCount(result.done.length)} of ${formatCount(items.length)} items.`;
+  // Items skipped by choice (or already in place); after a stop, the rest
+  // count as stopped instead.
+  const skipped =
+    result.skipped.length > 0 && !result.cancelled
+      ? ` ${formatCount(result.skipped.length)} skipped.`
+      : '';
   if (result.failed.length === 0) {
     const stopped = result.cancelled ? ` Stopped before the rest.` : '';
+    const nothing = result.done.length === 0 && result.skipped.length > 0 && !result.cancelled;
     task.summary(result.cancelled ? 'cancelled' : 'done', {
-      kind: result.cancelled ? 'info' : 'success',
-      message: done + stopped
+      kind: result.cancelled || nothing ? 'info' : 'success',
+      message: nothing
+        ? `Skipped ${itemsText(result.skipped)}: nothing was ${w.done.toLowerCase()}.`
+        : done + skipped + stopped
     });
     return;
   }
@@ -216,7 +225,9 @@ function summarize(
   task.summary('failed', {
     kind: 'error',
     message:
-      result.done.length > 0 ? `${done} ${failed}` : `Could not ${w.verb} ${itemsText(items)}.`,
+      result.done.length > 0 || result.skipped.length > 0
+        ? `${done}${skipped} ${failed}`
+        : `Could not ${w.verb} ${itemsText(items)}.`,
     detail: shown.join('\n')
   });
 }

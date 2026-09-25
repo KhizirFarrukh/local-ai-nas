@@ -1,18 +1,19 @@
 # CURRENT_STATE
 
-**Last updated:** 2026-09-25 12:18 +0500 (session S006)
+**Last updated:** 2026-09-25 12:24 +0500 (session S006)
 **Plan version:** 1.3.0 (`code-agent-docs/plan.md`), **Approved baseline** 1.0.0 (S005) + the setup-script requirement (1.1.0, S005 E015)
-**Current phase:** **S01 (Basic NAS) Done**, signed off by the user (S005 E126). **S02 (NAS GUI) In Progress** (approved S006 E009); S02.5-T02 done
+**Current phase:** **S01 (Basic NAS) Done**, signed off by the user (S005 E126). **S02 (NAS GUI) In Progress** (approved S006 E009); S02.5-T03 done
 
 ## Active stage and task
 - **Active stage:** **S02: NAS GUI**, **In Progress** (`stages/S02-nas-gui.md`; approved in S006 E009, with "Skip Safari": S02 checks Chrome, Edge, and Firefox). S01 is **Done** (`stages/S01-basic-nas.md`, completion record in section 13).
-- **Active task:** **S02.5-T02** (branch `feat/S02.5-T02-operations`): done, waiting for CI and the merge; next S02.5-T03 (conflict dialog).
+- **Active task:** **S02.5-T03** (branch `feat/S02.5-T03-conflicts`): done, waiting for CI and the merge; next S02.5-T04 (context menus and shortcuts).
 
 ## In progress (write-ahead)
-- S02.5-T02: committed on `feat/S02.5-T02-operations`; push, CI, merge into `develop` (branches may be stacked while CI runs).
+- S02.5-T03: committed on `feat/S02.5-T03-conflicts`; push, CI, merge into `develop` (branches may be stacked while CI runs).
 
 ## Last completed
-- **S02.5-T02 done** (S006 E031): operation dialogs; CI and the merge follow.
+- **S02.5-T03 done** (S006 E032): conflict dialog; CI and the merge follow.
+- **S02.5-T02 done and merged** (CI run 36107023746 green; `develop` 01d3ab2; S006 E031): operation dialogs.
 - **S02.5-T01 done and merged** (CI run 36106413450 green; `develop` 93bc657; S006 E030): selection model; bug S02-B09 fixed.
 - **S02.4-T04 done and merged; S02.4 closed** (CI run 36105157693 green; `develop` 0addb89; S006 E028, E030): download actions (a file by link, folders and the folder on screen as ZIP archives), checked in Edge and Firefox; upload cancel checked for S02.4's criterion 2.
 - **S02.4-T03 done and merged** (CI run 36104271693 green; `develop` b40b464; S006 E027): streamed ZIP archives; a 4.2 GiB folder opens in Explorer and Info-ZIP `unzip`, and the server stays near 19 MB.

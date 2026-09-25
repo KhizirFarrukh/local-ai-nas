@@ -34,6 +34,7 @@
   import FileView from '$lib/files/FileView.svelte';
   import FolderPicker from '$lib/files/FolderPicker.svelte';
   import { FolderListing, type PageLoader } from '$lib/files/listing.svelte';
+  import { ConflictBatch, conflicts } from '$lib/files/conflicts.svelte';
   import NameDialog from '$lib/files/NameDialog.svelte';
   import {
     createFolder,
@@ -45,13 +46,14 @@
   import { Selection } from '$lib/files/selection.svelte';
   import type { FileItem, SortKey, SortOrder } from '$lib/files/types';
   import { activity } from '$lib/shell/activity.svelte';
+  import { ApiError } from '$lib/api/errors';
   import { toasts } from '$lib/shell/toasts.svelte';
   import DropZone from '$lib/uploads/DropZone.svelte';
   import { pickedFromInput } from '$lib/uploads/plan';
   import { startUpload } from '$lib/uploads/start';
   import { getUploader } from '$lib/uploads/state.svelte';
   import { formatCount } from '$lib/util/format';
-  import { basename, crumbs, filesHref, parent, pathFromParam } from '$lib/util/paths';
+  import { basename, child, crumbs, filesHref, parent, pathFromParam } from '$lib/util/paths';
   import { readStored, writeStored } from '$lib/util/stored';
 
   const path = $derived(pathFromParam(page.params.path));
@@ -119,8 +121,13 @@
     return items.length > 0;
   }
 
+  // A taken name asks the conflict dialog (S02.5-T03); "apply to all"
+  // holds for the rest of this run.
   async function bulk(kind: BulkKind, folder = path) {
-    const result = await runBulk(kind, targets, folder);
+    const batch = new ConflictBatch(conflicts, targets.length, true);
+    const result = await runBulk(kind, targets, folder, {
+      onConflict: (item) => batch.choose(item.name, item.kind === 'dir', child(folder, item.name))
+    });
     if (kind !== 'copy') {
       selection.forget(result.done.map((item) => item.path));
     }
@@ -128,7 +135,19 @@
   }
 
   async function newFolder(name: string) {
-    const folder = await createFolder(path, name);
+    let folder;
+    try {
+      folder = await createFolder(path, name);
+    } catch (error) {
+      if (!(error instanceof ApiError && error.code === 'conflict')) {
+        throw error;
+      }
+      const choice = await new ConflictBatch(conflicts, 1).choose(name, true, child(path, name));
+      if (choice !== 'rename') {
+        return; // skipped: the folder that is there stays
+      }
+      folder = await createFolder(path, name, 'rename');
+    }
     toasts.push({ kind: 'success', message: `Created the folder “${folder.name}”.` });
     await listing.refresh();
   }

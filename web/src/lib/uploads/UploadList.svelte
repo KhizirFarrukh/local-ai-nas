@@ -33,6 +33,8 @@
         return e.itemPath && e.itemPath !== e.target ? `Done, saved as ${e.itemPath}` : 'Done';
       case 'cancelled':
         return 'Cancelled';
+      case 'skipped':
+        return 'Skipped: the name is taken';
       case 'failed': {
         const m = describe(e.error);
         return `${m.title}. ${m.message}`;
@@ -61,13 +63,13 @@
             <RotateCw class="size-4" />
           </IconButton>
         {/if}
-        {#if entry.status !== 'done' && entry.status !== 'cancelled'}
+        {#if entry.status !== 'done' && entry.status !== 'cancelled' && entry.status !== 'skipped'}
           <IconButton label="Cancel {entry.name}" size="sm" onclick={() => manager.cancel(entry)}>
             <X class="size-4" />
           </IconButton>
         {/if}
       </div>
-      {#if entry.status !== 'failed' && entry.status !== 'cancelled'}
+      {#if entry.status !== 'failed' && entry.status !== 'cancelled' && entry.status !== 'skipped'}
         <ProgressBar value={entry.uploaded} max={entry.size || 1} label="Uploading {entry.name}" />
       {/if}
       <span

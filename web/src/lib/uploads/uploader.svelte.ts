@@ -7,9 +7,18 @@
 import Uppy from '@uppy/core';
 import Tus from '@uppy/tus';
 import { ApiError, isProblem } from '$lib/api/errors';
+import type { ConflictBatch } from '$lib/files/conflicts.svelte';
 import { UploadsPath } from './endpoint';
 
-export type UploadStatus = 'queued' | 'uploading' | 'paused' | 'done' | 'failed' | 'cancelled';
+export type UploadStatus =
+  | 'queued'
+  | 'uploading'
+  | 'paused'
+  | 'done'
+  | 'failed'
+  | 'cancelled'
+  /** The name was taken and the user chose to skip it (S02.5-T03). */
+  | 'skipped';
 export type ConflictPolicy = 'fail' | 'rename' | 'overwrite';
 
 /** Statuses worth retrying: 0 means no answer. */
@@ -26,6 +35,10 @@ export class UploadEntry {
   error = $state.raw<ApiError | undefined>(undefined);
   /** Where the file ended up (Item-Path; differs with "rename"). */
   itemPath = $state<string | undefined>(undefined);
+  /** What the server does with a taken name; the conflict dialog changes it. */
+  policy: ConflictPolicy = 'fail';
+  /** The upload's operation, which asks about taken names (S02.5-T03). */
+  batch: ConflictBatch | undefined;
 
   private lastBytes = 0;
   private lastTime = 0;
@@ -142,6 +155,9 @@ export class Uploader {
       entry.status = 'failed';
       entry.speed = 0;
       entry.error = uploadError(error, response);
+      if (entry.error.code === 'conflict' && entry.policy === 'fail' && entry.batch) {
+        void this.askConflict(entry, entry.batch);
+      }
     });
   }
 
@@ -151,8 +167,16 @@ export class Uploader {
     return () => this.finished.delete(listener);
   }
 
-  /** Queues a file for the path `target`. */
-  add(file: File, target: string, onConflict: ConflictPolicy = 'fail'): UploadEntry {
+  /**
+   * Queues a file for the path `target`. With a `batch`, a taken name asks
+   * the conflict dialog; without one, the upload fails with "Already there".
+   */
+  add(
+    file: File,
+    target: string,
+    onConflict: ConflictPolicy = 'fail',
+    batch?: ConflictBatch
+  ): UploadEntry {
     const id = this.uppy.addFile({
       name: file.name,
       type: file.type,
@@ -162,6 +186,8 @@ export class Uploader {
       meta: { target_path: target, on_conflict: onConflict, relativePath: target }
     });
     const entry = new UploadEntry(id, file.name, target, file.size);
+    entry.policy = onConflict;
+    entry.batch = batch;
     this.byId.set(id, entry);
     this.entries.push(entry);
     return entry;
@@ -181,7 +207,7 @@ export class Uploader {
 
   /** Stops an upload and removes its data from the server. */
   cancel(entry: UploadEntry): void {
-    if (entry.status === 'done' || entry.status === 'cancelled') {
+    if (entry.status === 'done' || entry.status === 'cancelled' || entry.status === 'skipped') {
       return;
     }
     if (this.uppy.getFile(entry.id)) {
@@ -189,6 +215,26 @@ export class Uploader {
     }
     entry.status = 'cancelled';
     entry.speed = 0;
+  }
+
+  /** Asks what to do about a taken name, then skips or tries again. */
+  private async askConflict(entry: UploadEntry, batch: ConflictBatch): Promise<void> {
+    const choice = await batch.choose(entry.name, false, entry.target);
+    if (entry.status !== 'failed') {
+      return; // retried or cleared meanwhile
+    }
+    if (choice === 'skip' || choice === 'cancel') {
+      if (this.uppy.getFile(entry.id)) {
+        this.uppy.removeFile(entry.id);
+      }
+      entry.status = 'skipped';
+      entry.error = undefined;
+      return;
+    }
+    entry.policy = choice;
+    const file = this.uppy.getFile(entry.id);
+    this.uppy.setFileMeta(entry.id, { ...file.meta, on_conflict: choice });
+    this.retry(entry);
   }
 
   retry(entry: UploadEntry): void {
@@ -205,7 +251,12 @@ export class Uploader {
       if (entry.status === 'failed' && this.uppy.getFile(entry.id)) {
         this.uppy.removeFile(entry.id);
       }
-      if (entry.status === 'done' || entry.status === 'failed' || entry.status === 'cancelled') {
+      if (
+        entry.status === 'done' ||
+        entry.status === 'failed' ||
+        entry.status === 'cancelled' ||
+        entry.status === 'skipped'
+      ) {
         this.byId.delete(entry.id);
       }
     }
