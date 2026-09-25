@@ -8,7 +8,11 @@
   import Monitor from '@lucide/svelte/icons/monitor';
   import Moon from '@lucide/svelte/icons/moon';
   import Sun from '@lucide/svelte/icons/sun';
+  import { navigating } from '$app/state';
   import IconButton from '$lib/components/IconButton.svelte';
+  import { activity } from '$lib/shell/activity.svelte';
+  import ConnectionBanner from '$lib/shell/ConnectionBanner.svelte';
+  import { connection } from '$lib/shell/connection.svelte';
   import Nav from '$lib/shell/Nav.svelte';
   import { theme, type ThemeChoice } from '$lib/util/theme.svelte';
 
@@ -25,7 +29,12 @@
   const themeIcons = { system: Monitor, light: Sun, dark: Moon };
   const themeNames = { system: 'system theme', light: 'light theme', dark: 'dark theme' };
   const ThemeIcon = $derived(themeIcons[current.choice]);
+
+  const conn = connection();
+  const busy = $derived(navigating.to !== null || activity.pending > 0);
 </script>
+
+<svelte:window ononline={() => conn.retry()} />
 
 <a
   href="#main"
@@ -50,6 +59,10 @@
       </IconButton>
     </div>
   </header>
+  <div class="relative h-0.5 shrink-0 overflow-hidden" aria-hidden="true">
+    {#if busy}<div class="absolute inset-y-0 w-1/3 animate-pulse bg-accent"></div>{/if}
+  </div>
+  <ConnectionBanner />
 
   <div class="flex min-h-0 flex-1">
     <aside class="hidden w-56 shrink-0 border-r border-border bg-surface md:block">

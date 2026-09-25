@@ -32,6 +32,25 @@ interface Result<D> {
   response: Response;
 }
 
+type Listener = (error: ApiError) => void;
+const listeners = new Set<Listener>();
+
+/**
+ * Registers a listener for every error `unwrap` throws, such as the shell's
+ * connection state (S02.2-T02). Returns a function that removes it.
+ */
+export function onApiError(listener: Listener): () => void {
+  listeners.add(listener);
+  return () => listeners.delete(listener);
+}
+
+function report(error: ApiError): ApiError {
+  for (const listener of listeners) {
+    listener(error);
+  }
+  return error;
+}
+
 /**
  * Waits for a call and returns its data, or throws an ApiError: for a
  * problem answer, for any other non-success answer, and when the server
@@ -42,10 +61,10 @@ export async function unwrap<D>(pending: Promise<Result<D>>): Promise<D> {
   try {
     result = await pending;
   } catch (cause) {
-    throw ApiError.unreachable(cause);
+    throw report(ApiError.unreachable(cause));
   }
   if (result.error !== undefined || !result.response.ok) {
-    throw ApiError.fromResponse(result.response, result.error);
+    throw report(ApiError.fromResponse(result.response, result.error));
   }
   return result.data as D;
 }
