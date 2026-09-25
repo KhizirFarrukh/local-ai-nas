@@ -16,7 +16,7 @@
 <div
   role="radiogroup"
   aria-label="Theme"
-  class="inline-flex rounded-md border border-border-strong p-0.5"
+  class="inline-flex self-start rounded-md border border-border-strong p-0.5"
 >
   {#each options as option (option.value)}
     {@const Icon = option.icon}

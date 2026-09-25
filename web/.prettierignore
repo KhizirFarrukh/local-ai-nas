@@ -4,3 +4,5 @@ node_modules/
 pnpm-lock.yaml
 # Generated from api/openapi.yaml by `pnpm generate`.
 src/lib/api/schema.d.ts
+# Written by scripts/about.mjs before dev, check, and build.
+src/lib/generated/
