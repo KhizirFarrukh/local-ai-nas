@@ -1,8 +1,10 @@
 # pnpm settings for the web UI (S02.1-T01).
 #
 # pnpm refuses package versions published less than a day ago (its
-# minimum release age, a supply-chain guard). vite 8.3.1 was that new when
-# S02.1-T01 pinned it (checked on the npm registry, 2026-09-25), so it is
-# excluded by name. Remove the entry once it is older than the limit.
+# minimum release age, a supply-chain guard). The versions below were that
+# new when S02 pinned them (checked on the npm registry, 2026-09-25), so
+# they are excluded by name. Remove an entry once it is older than the
+# limit.
 minimumReleaseAgeExclude:
   - vite@8.3.1
+  - '@lucide/svelte@1.48.0'
