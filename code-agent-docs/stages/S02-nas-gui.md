@@ -223,8 +223,8 @@ web/
 | S02.2 | App shell and navigation | **Done** (S006) | S02.1 | FR-079 |
 | S02.3 | File browser | **Done** (S006) | S02.2, S01.3 | FR-002 |
 | S02.4 | Uploads and downloads | **Done** (S006) | S02.3, S01.4 | FR-003, FR-004, FR-006, FR-080 |
-| S02.5 | File operations UI | In Progress | S02.3, S01.3, S01.6 | FR-007, FR-021, FR-077, FR-081 |
-| S02.6 | File previews | Not started | S02.3, S01.3 | FR-082, NFR-022 |
+| S02.5 | File operations UI | **Done** (S006) | S02.3, S01.3, S01.6 | FR-007, FR-021, FR-077, FR-081 |
+| S02.6 | File previews | In Progress | S02.3, S01.3 | FR-082, NFR-022 |
 | S02.7 | Responsiveness and accessibility | Not started | S02.2–S02.6 | NFR-015 |
 | S02.8 | Testing and stage review | Not started | S02.1–S02.7 | NFR-014, NFR-027 |
 
@@ -327,7 +327,7 @@ Its tests are written in S02.8.
 
 | Task ID | Description | Status | Acceptance criteria |
 |---|---|---|---|
-| S02.6-T01 | **Preview frame:** an overlay with previous and next, keyboard control (arrows, Escape), a download button, type detection (the item's `mime`, then the extension), and the fallback card. | Not started | Every file in a folder can be stepped through. Unsupported types show the fallback. |
+| S02.6-T01 | **Preview frame:** an overlay with previous and next, keyboard control (arrows, Escape), a download button, type detection (the item's `mime`, then the extension), and the fallback card. | **Done** (S006 E034) | Every file in a folder can be stepped through. Unsupported types show the fallback. |
 | S02.6-T02 | **Image, audio, video:** images (SVG included) only through `<img>`; `<audio>` and `<video>` with native controls, shaped for S04.8 (ADR-0020). | Not started | Seeking in a 2 GiB video starts playback at once. The network panel shows `206` answers, not a full download. |
 | S02.6-T03 | **Text and code:** the first 256 KiB by `Range`, decoded as UTF-8 (with replacement characters for invalid bytes), shown as text with a "showing the first 256 KiB" notice. | Not started | A 1 GiB log file previews at once with the notice. HTML source is shown as text. |
 | S02.6-T04 | **PDF:** decide between pdf.js and the built-in viewer on the criteria in 4.2 (recorded in section 12 and the register), then build it: lazily loaded, with scripting and `eval` off, and the worker served from the app. | Not started | A 100-page PDF previews and pages. A PDF with embedded JavaScript does not run it (a crafted file). |
