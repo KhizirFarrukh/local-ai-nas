@@ -53,7 +53,7 @@ const byCode: Record<ProblemCode | ClientCode, Omit<ErrorMessage, 'detail'>> = {
   },
   too_large_for_sync: {
     title: 'Too much at once',
-    message: 'Copy at most 1,000 items or 1 GiB at a time. Split the copy into smaller parts.'
+    message: 'This is more than one request handles. Split it into smaller parts.'
   },
   locked: { title: 'Busy', message: 'This is being changed right now. Try again in a moment.' },
   unavailable: {
@@ -95,12 +95,16 @@ export function describe(error: unknown): ErrorMessage {
     };
   }
   const base = byCode[error.code] ?? { title: 'Error', message: error.message };
+  // The server's detail states the limit it applies (a copy's, or an
+  // archive's), so that is what the user reads, with the way out.
   const message =
     error.code === 'invalid_name' && error.rule && byRule[error.rule]
       ? byRule[error.rule]
       : error.code === 'conflict' && error.detail
         ? sentence(error.detail)
-        : base.message;
+        : error.code === 'too_large_for_sync' && error.detail
+          ? `${sentence(error.detail)} Split it into smaller parts.`
+          : base.message;
   const detail =
     reportable.has(error.code) && error.correlationId
       ? `Request ${error.correlationId}`

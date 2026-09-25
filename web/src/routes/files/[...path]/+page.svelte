@@ -2,14 +2,19 @@
   The files area (S02.3, FR-002): the folder at the address, as a list or
   a grid, with sorting, breadcrumbs, and the empty and error states. While
   items are selected (S02.5-T01), the toolbar shows the selection's count
-  and actions instead.
+  and actions instead; the operations open their dialogs (S02.5-T02).
 -->
 <script lang="ts">
+  import Copy from '@lucide/svelte/icons/copy';
   import Download from '@lucide/svelte/icons/download';
   import FolderOpen from '@lucide/svelte/icons/folder-open';
+  import FolderOutput from '@lucide/svelte/icons/folder-output';
+  import FolderPlus from '@lucide/svelte/icons/folder-plus';
   import FolderUp from '@lucide/svelte/icons/folder-up';
   import LayoutGrid from '@lucide/svelte/icons/layout-grid';
   import List from '@lucide/svelte/icons/list';
+  import Pencil from '@lucide/svelte/icons/pencil';
+  import Trash from '@lucide/svelte/icons/trash-2';
   import FolderUp2 from '@lucide/svelte/icons/folder-input';
   import Upload from '@lucide/svelte/icons/upload';
   import X from '@lucide/svelte/icons/x';
@@ -23,13 +28,24 @@
   import ErrorPanel from '$lib/components/ErrorPanel.svelte';
   import IconButton from '$lib/components/IconButton.svelte';
   import Spinner from '$lib/components/Spinner.svelte';
+  import DeleteDialog from '$lib/files/DeleteDialog.svelte';
   import DownloadAction from '$lib/files/DownloadAction.svelte';
   import { downloadArchive, downloadSelection } from '$lib/files/download';
   import FileView from '$lib/files/FileView.svelte';
+  import FolderPicker from '$lib/files/FolderPicker.svelte';
   import { FolderListing, type PageLoader } from '$lib/files/listing.svelte';
+  import NameDialog from '$lib/files/NameDialog.svelte';
+  import {
+    createFolder,
+    itemsText,
+    renameItem,
+    runBulk,
+    type BulkKind
+  } from '$lib/files/operations';
   import { Selection } from '$lib/files/selection.svelte';
   import type { FileItem, SortKey, SortOrder } from '$lib/files/types';
   import { activity } from '$lib/shell/activity.svelte';
+  import { toasts } from '$lib/shell/toasts.svelte';
   import DropZone from '$lib/uploads/DropZone.svelte';
   import { pickedFromInput } from '$lib/uploads/plan';
   import { startUpload } from '$lib/uploads/start';
@@ -80,6 +96,48 @@
     } else if (event.key === 'Escape' && selected > 0) {
       selection.clear();
     }
+  }
+
+  // Operations (S02.5-T02). Each dialog works on the items that were
+  // selected when it opened; afterwards the list refreshes, and items that
+  // moved away or were deleted leave the selection.
+  let newFolderOpen = $state(false);
+  let renameOpen = $state(false);
+  let moveOpen = $state(false);
+  let copyOpen = $state(false);
+  let deleteOpen = $state(false);
+  let targets = $state.raw<FileItem[]>([]);
+
+  /** Takes the selected items for a dialog; false when there are none. */
+  async function takeSelection(): Promise<boolean> {
+    const items = await selection.resolve(listing);
+    if (!items) {
+      toasts.push({ kind: 'error', message: 'The folder’s items could not be loaded. Try again.' });
+      return false;
+    }
+    targets = items;
+    return items.length > 0;
+  }
+
+  async function bulk(kind: BulkKind, folder = path) {
+    const result = await runBulk(kind, targets, folder);
+    if (kind !== 'copy') {
+      selection.forget(result.done.map((item) => item.path));
+    }
+    await listing.refresh();
+  }
+
+  async function newFolder(name: string) {
+    const folder = await createFolder(path, name);
+    toasts.push({ kind: 'success', message: `Created the folder “${folder.name}”.` });
+    await listing.refresh();
+  }
+
+  async function rename(name: string) {
+    const [item] = targets;
+    await renameItem(item, name);
+    selection.forget([item.path]);
+    await listing.refresh();
   }
 
   // Uploads (S02.4-T01): each file goes to this folder. When one lands in
@@ -172,6 +230,24 @@
         >
           <Download class="size-4" /> Download
         </Button>
+        {#if selected === 1}
+          <Button size="sm" onclick={async () => (renameOpen = await takeSelection())}>
+            <Pencil class="size-4" /> Rename
+          </Button>
+        {/if}
+        <Button size="sm" onclick={async () => (moveOpen = await takeSelection())}>
+          <FolderOutput class="size-4" /> Move
+        </Button>
+        <Button size="sm" onclick={async () => (copyOpen = await takeSelection())}>
+          <Copy class="size-4" /> Copy
+        </Button>
+        <Button
+          size="sm"
+          variant="danger"
+          onclick={async () => (deleteOpen = await takeSelection())}
+        >
+          <Trash class="size-4" /> Delete
+        </Button>
         {#if !selection.everything}
           <Button size="sm" onclick={() => selection.selectAll()}>Select all</Button>
         {/if}
@@ -187,6 +263,11 @@
       <Button size="sm" onclick={() => folderInput?.click()}>
         <FolderUp2 class="size-4" /> Upload folder
       </Button>
+      {#if listing.folder?.kind === 'dir'}
+        <Button size="sm" onclick={() => (newFolderOpen = true)}>
+          <FolderPlus class="size-4" /> New folder
+        </Button>
+      {/if}
       {#each [{ folder: false }, { folder: true }] as kind (kind.folder)}
         <input
           type="file"
@@ -272,7 +353,7 @@
     <EmptyState
       icon={FolderOpen}
       title="This folder is empty"
-      description="Upload files or a whole folder, or drop them anywhere on this page."
+      description="Upload files or a whole folder, drop them anywhere on this page, or make a new folder."
     >
       {#snippet actions()}
         <Button variant="primary" onclick={() => fileInput?.click()}>
@@ -280,6 +361,9 @@
         </Button>
         <Button onclick={() => folderInput?.click()}>
           <FolderUp2 class="size-4" /> Upload a folder
+        </Button>
+        <Button onclick={() => (newFolderOpen = true)}>
+          <FolderPlus class="size-4" /> New folder
         </Button>
         {#if path !== '/'}
           <Button onclick={() => goto(filesHref(parent(path)))}>
@@ -296,6 +380,42 @@
     </FileView>
   {/if}
 </div>
+
+<NameDialog
+  bind:open={newFolderOpen}
+  title="New folder"
+  label="Folder name"
+  submitLabel="Create"
+  initial="New folder"
+  onsubmit={newFolder}
+/>
+<NameDialog
+  bind:open={renameOpen}
+  title="Rename {itemsText(targets)}"
+  label="New name"
+  submitLabel="Rename"
+  initial={targets[0]?.name ?? ''}
+  selectStem={targets[0]?.kind === 'file'}
+  onsubmit={rename}
+/>
+<FolderPicker
+  bind:open={moveOpen}
+  title="Move {itemsText(targets)}"
+  submitLabel="Move here"
+  start={path}
+  items={targets}
+  move
+  onpick={(folder) => void bulk('move', folder)}
+/>
+<FolderPicker
+  bind:open={copyOpen}
+  title="Copy {itemsText(targets)}"
+  submitLabel="Copy here"
+  start={path}
+  items={targets}
+  onpick={(folder) => void bulk('copy', folder)}
+/>
+<DeleteDialog bind:open={deleteOpen} items={targets} onconfirm={() => void bulk('delete')} />
 
 <DropZone
   target={path === '/' ? 'Files' : basename(path)}

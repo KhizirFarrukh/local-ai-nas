@@ -2,7 +2,7 @@
 // operations, archives. The progress panel lists them; when one ends, a
 // notification says how it went, and it leaves the list.
 import { describe } from '$lib/api/messages';
-import { toasts, type Toasts } from './toasts.svelte';
+import { toasts, type ToastInput, type Toasts } from './toasts.svelte';
 
 export type TaskState = 'running' | 'done' | 'failed' | 'cancelled';
 
@@ -54,6 +54,12 @@ export class Task {
   cancelled(message = `${this.label}: cancelled`): void {
     this.end('cancelled');
     this.owner.notes.push({ kind: 'info', message });
+  }
+
+  /** Ends the task with a notification of its own, such as a bulk run's summary. */
+  summary(state: 'done' | 'failed' | 'cancelled', note: ToastInput): void {
+    this.end(state);
+    this.owner.notes.push(note);
   }
 
   private end(state: TaskState): void {
