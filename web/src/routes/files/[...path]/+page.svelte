@@ -18,6 +18,7 @@
   import FolderUp from '@lucide/svelte/icons/folder-up';
   import LayoutGrid from '@lucide/svelte/icons/layout-grid';
   import List from '@lucide/svelte/icons/list';
+  import MoreVertical from '@lucide/svelte/icons/ellipsis-vertical';
   import Keyboard from '@lucide/svelte/icons/keyboard';
   import Pencil from '@lucide/svelte/icons/pencil';
   import Scissors from '@lucide/svelte/icons/scissors';
@@ -242,10 +243,58 @@
   let menuX = $state(0);
   let menuY = $state(0);
   let menuItems = $state.raw<MenuEntry[]>([]);
+  let menuLabel = $state('');
   let helpOpen = $state(false);
+
+  /** Opens `items` as a menu under the button that was pressed. */
+  function menuUnder(event: MouseEvent, items: MenuEntry[], label: string) {
+    const box = (event.currentTarget as HTMLElement).getBoundingClientRect();
+    menuItems = items;
+    menuLabel = label;
+    menuX = box.left;
+    menuY = box.bottom + 4;
+    menuOpen = true;
+  }
+
+  // Phones (under 640 px) keep the main buttons and put the rest in a
+  // "More" menu (S02.7-T01).
+  function moreSelected(): MenuEntry[] {
+    const entries: MenuEntry[] = [];
+    if (selected === 1) {
+      entries.push({ label: 'Rename…', icon: Pencil, onselect: () => void openDialog('rename') });
+    }
+    entries.push(
+      { label: 'Move to…', icon: FolderOutput, onselect: () => void openDialog('move') },
+      { label: 'Copy to…', icon: CopyPlus, onselect: () => void openDialog('copy') }
+    );
+    if (!selection.everything) {
+      entries.push({
+        label: 'Select all',
+        icon: SquareCheck,
+        onselect: () => selection.selectAll()
+      });
+    }
+    return entries;
+  }
+
+  function moreFolder(): MenuEntry[] {
+    const entries: MenuEntry[] = [
+      { label: 'Upload a folder…', icon: FolderUp2, onselect: () => folderInput?.click() },
+      { label: 'New folder…', icon: FolderPlus, onselect: () => (newFolderOpen = true) }
+    ];
+    if (listing.total) {
+      entries.push({
+        label: 'Download folder',
+        icon: Download,
+        onselect: () => void downloadArchive([path])
+      });
+    }
+    return entries;
+  }
 
   function showMenu(item: FileItem | undefined, x: number, y: number) {
     menuItems = item ? selectionMenu(item) : folderMenu();
+    menuLabel = item ? 'Selected items' : 'This folder';
     menuX = x;
     menuY = y;
     menuOpen = true;
@@ -478,27 +527,44 @@
         <Button
           size="sm"
           variant="primary"
+          aria-label="Download"
           onclick={() => void downloadSelection(selection, listing, path)}
         >
-          <Download class="size-4" /> Download
+          <Download class="size-4" /> <span class="max-sm:hidden">Download</span>
         </Button>
         {#if selected === 1}
-          <Button size="sm" onclick={() => void openDialog('rename')}>
+          <Button size="sm" class="max-sm:hidden" onclick={() => void openDialog('rename')}>
             <Pencil class="size-4" /> Rename
           </Button>
         {/if}
-        <Button size="sm" onclick={() => void openDialog('move')}>
+        <Button size="sm" class="max-sm:hidden" onclick={() => void openDialog('move')}>
           <FolderOutput class="size-4" /> Move
         </Button>
-        <Button size="sm" onclick={() => void openDialog('copy')}>
+        <Button size="sm" class="max-sm:hidden" onclick={() => void openDialog('copy')}>
           <Copy class="size-4" /> Copy
         </Button>
-        <Button size="sm" variant="danger" onclick={() => void openDialog('delete')}>
-          <Trash class="size-4" /> Delete
+        <Button
+          size="sm"
+          variant="danger"
+          aria-label="Delete"
+          onclick={() => void openDialog('delete')}
+        >
+          <Trash class="size-4" /> <span class="max-sm:hidden">Delete</span>
         </Button>
         {#if !selection.everything}
-          <Button size="sm" onclick={() => selection.selectAll()}>Select all</Button>
+          <Button size="sm" class="max-sm:hidden" onclick={() => selection.selectAll()}
+            >Select all</Button
+          >
         {/if}
+        <IconButton
+          label="More actions"
+          size="sm"
+          class="sm:hidden"
+          aria-haspopup="menu"
+          onclick={(e) => menuUnder(e, moreSelected(), 'More actions for the selection')}
+        >
+          <MoreVertical class="size-4" />
+        </IconButton>
         <IconButton label="Clear the selection" size="sm" onclick={() => selection.clear()}>
           <X class="size-4" />
         </IconButton>
@@ -508,13 +574,22 @@
       <Button variant="primary" size="sm" onclick={() => fileInput?.click()}>
         <Upload class="size-4" /> Upload
       </Button>
-      <Button size="sm" onclick={() => folderInput?.click()}>
+      <Button size="sm" class="max-sm:hidden" onclick={() => folderInput?.click()}>
         <FolderUp2 class="size-4" /> Upload folder
       </Button>
       {#if listing.folder?.kind === 'dir'}
-        <Button size="sm" onclick={() => (newFolderOpen = true)}>
+        <Button size="sm" class="max-sm:hidden" onclick={() => (newFolderOpen = true)}>
           <FolderPlus class="size-4" /> New folder
         </Button>
+        <IconButton
+          label="More actions"
+          size="sm"
+          class="sm:hidden"
+          aria-haspopup="menu"
+          onclick={(e) => menuUnder(e, moreFolder(), 'More actions for this folder')}
+        >
+          <MoreVertical class="size-4" />
+        </IconButton>
       {/if}
       {#each [{ folder: false }, { folder: true }] as kind (kind.folder)}
         <input
@@ -539,7 +614,7 @@
       {/each}
       {#if listing.total && listing.folder?.kind === 'dir'}
         <!-- S02.4-T04: the folder on screen as one ZIP file. -->
-        <Button size="sm" onclick={() => void downloadArchive([path])}>
+        <Button size="sm" class="max-sm:hidden" onclick={() => void downloadArchive([path])}>
           <Download class="size-4" /> Download folder
         </Button>
       {/if}
@@ -552,7 +627,7 @@
         <label class="flex items-center gap-2 text-sm">
           <span class="sr-only">Sort</span>
           <select
-            class="h-8 rounded-md border border-border-strong bg-surface px-2 text-sm"
+            class="h-8 rounded-md border border-border-strong bg-surface px-2 text-sm pointer-coarse:h-11"
             value="{sort}:{order}"
             onchange={(e) => pickSort(e.currentTarget.value)}
           >
@@ -685,15 +760,7 @@
     onclose={() => history.back()}
   />
 {/if}
-<Menu
-  bind:open={menuOpen}
-  x={menuX}
-  y={menuY}
-  label={menuItems.some((e) => e !== 'separator' && e.label === 'Delete…')
-    ? 'Selected items'
-    : 'This folder'}
-  items={menuItems}
-/>
+<Menu bind:open={menuOpen} x={menuX} y={menuY} label={menuLabel} items={menuItems} />
 
 <DropZone
   target={path === '/' ? 'Files' : basename(path)}

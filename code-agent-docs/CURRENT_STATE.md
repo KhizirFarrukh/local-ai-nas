@@ -1,19 +1,20 @@
 # CURRENT_STATE
 
-**Last updated:** 2026-09-25 13:12 +0500 (session S006)
+**Last updated:** 2026-09-25 13:21 +0500 (session S006)
 **Plan version:** 1.3.0 (`code-agent-docs/plan.md`), **Approved baseline** 1.0.0 (S005) + the setup-script requirement (1.1.0, S005 E015)
-**Current phase:** **S01 (Basic NAS) Done**, signed off by the user (S005 E126). **S02 (NAS GUI) In Progress** (approved S006 E009); S02.6-T05 done
+**Current phase:** **S01 (Basic NAS) Done**, signed off by the user (S005 E126). **S02 (NAS GUI) In Progress** (approved S006 E009); S02.7-T01 done
 
 ## Active stage and task
 - **Active stage:** **S02: NAS GUI**, **In Progress** (`stages/S02-nas-gui.md`; approved in S006 E009, with "Skip Safari": S02 checks Chrome, Edge, and Firefox). S01 is **Done** (`stages/S01-basic-nas.md`, completion record in section 13).
-- **Active task:** **S02.6-T05** (branch `feat/S02.6-T05-active-content`): done, waiting for CI and the merge; next S02.7-T01 (responsive layouts); S02.6 closes when T04 and T05 are merged.
+- **Active task:** **S02.7-T01** (branch `feat/S02.7-T01-responsive`): done, waiting for CI and the merge; next S02.7-T02 (keyboard and screen readers).
 
 ## In progress (write-ahead)
-- S02.6-T05: committed on `feat/S02.6-T05-active-content`; push, CI, merge into `develop` (branches may be stacked while CI runs).
+- S02.7-T01: committed on `feat/S02.7-T01-responsive`; push, CI, merge into `develop` (branches may be stacked while CI runs).
 
 ## Last completed
-- **S02.6-T05 done** (S006 E039): active-content safety; CI and the merge follow.
-- **S02.6-T04 done** (S006 E038): PDF; CI and the merge follow.
+- **S02.7-T01 done** (S006 E040): phone and tablet layouts; CI and the merge follow.
+- **S02.6-T05 done and merged; S02.6 closed** (CI run 36111632658 green; `develop` 617b1d9; S006 E039, E040): active-content safety.
+- **S02.6-T04 done and merged** (CI run 36111396132 green; `develop` 4d64054; S006 E038): PDF with pdf.js.
 - **S02.6-T03 done and merged** (CI run 36110347962 green; `develop` 2b0617f; S006 E036, E037): text and code.
 - **S02.6-T02 done and merged** (CI run 36110110156 green; `develop` a7850fc; S006 E035): image, audio, video.
 - **S02.6-T01 done and merged** (CI run 36109737519 green; `develop` 0ffac44; S006 E034): preview frame.

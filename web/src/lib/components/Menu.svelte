@@ -137,7 +137,7 @@
           role="menuitem"
           tabindex="-1"
           disabled={entry.disabled}
-          class="flex w-full items-center gap-3 px-3 py-2 text-left hover:bg-surface-2 focus:bg-surface-2 focus:outline-none disabled:opacity-50 {entry.danger
+          class="flex w-full items-center gap-3 px-3 py-2 text-left pointer-coarse:py-3 hover:bg-surface-2 focus:bg-surface-2 focus:outline-none disabled:opacity-50 {entry.danger
             ? 'text-danger'
             : ''}"
           onclick={() => choose(entry)}

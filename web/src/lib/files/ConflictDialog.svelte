@@ -56,6 +56,7 @@
     ? 'A folder'
     : 'An item'} with this name is already in {where}. What should happen?"
   size="md"
+  phone="full"
   persistent
   onclose={closed}
 >

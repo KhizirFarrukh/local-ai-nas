@@ -140,14 +140,14 @@
       <a
         href={contentHref(item.path)}
         download
-        class="inline-flex h-9 items-center gap-2 rounded-md px-3 text-sm font-medium hover:bg-white/15"
+        class="inline-flex h-9 items-center gap-2 rounded-md px-3 text-sm font-medium hover:bg-white/15 pointer-coarse:h-11"
       >
         <Download class="size-4" aria-hidden="true" /> Download
       </a>
     {/if}
     <button
       type="button"
-      class="inline-flex size-9 items-center justify-center rounded-md hover:bg-white/15"
+      class="inline-flex size-9 items-center justify-center rounded-md hover:bg-white/15 pointer-coarse:size-11"
       aria-label="Close the preview"
       title="Close (Escape)"
       onclick={() => dialog?.close()}
@@ -156,7 +156,7 @@
     </button>
   </header>
 
-  <div class="relative flex min-h-0 flex-1 items-center justify-center px-14 pb-4">
+  <div class="relative flex min-h-0 flex-1 items-center justify-center px-2 pb-4 sm:px-14">
     {#if item}
       {#key item.path}
         {#if View && !failed}
@@ -172,7 +172,7 @@
     {/if}
     <button
       type="button"
-      class="absolute top-1/2 left-2 inline-flex size-10 -translate-y-1/2 items-center justify-center rounded-full bg-white/10 hover:bg-white/25 disabled:opacity-30"
+      class="absolute top-1/2 left-2 inline-flex size-10 -translate-y-1/2 items-center justify-center rounded-full bg-black/40 hover:bg-white/25 disabled:opacity-30 pointer-coarse:size-11 sm:bg-white/10"
       aria-label="Previous file"
       title="Previous (←)"
       disabled={index <= 0}
@@ -182,7 +182,7 @@
     </button>
     <button
       type="button"
-      class="absolute top-1/2 right-2 inline-flex size-10 -translate-y-1/2 items-center justify-center rounded-full bg-white/10 hover:bg-white/25 disabled:opacity-30"
+      class="absolute top-1/2 right-2 inline-flex size-10 -translate-y-1/2 items-center justify-center rounded-full bg-black/40 hover:bg-white/25 disabled:opacity-30 pointer-coarse:size-11 sm:bg-white/10"
       aria-label="Next file"
       title="Next (→)"
       disabled={index >= total - 1}

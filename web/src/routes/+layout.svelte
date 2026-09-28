@@ -47,7 +47,7 @@
 
 <div class="flex h-full flex-col">
   <header class="flex h-14 shrink-0 items-center gap-3 border-b border-border bg-surface px-4">
-    <a href="/files" class="flex items-center gap-2 font-semibold">
+    <a href="/files" class="flex items-center gap-2 font-semibold pointer-coarse:min-h-11">
       <HardDrive class="size-6 text-accent" aria-hidden="true" />
       <span>local-ai-nas</span>
     </a>

@@ -27,7 +27,9 @@
   {type}
   aria-label={label}
   title={label}
-  class="{buttonBase} {buttonVariants[variant]} {size === 'sm' ? 'size-8' : 'size-10'} {extra}"
+  class="{buttonBase} {buttonVariants[variant]} {size === 'sm'
+    ? 'size-8'
+    : 'size-10'} pointer-coarse:size-11 {extra}"
   {...rest}
 >
   {@render children()}

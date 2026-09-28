@@ -32,9 +32,10 @@
     ...rest
   }: Props = $props();
 
+  // Touch screens get 44 px targets (S02.7-T01, WCAG 2.5.5).
   const sizes: Record<ButtonSize, string> = {
-    sm: 'h-8 px-3 text-sm',
-    md: 'h-10 px-4 text-sm'
+    sm: 'h-8 px-3 text-sm pointer-coarse:h-11 pointer-coarse:min-w-11',
+    md: 'h-10 px-4 text-sm pointer-coarse:h-11 pointer-coarse:min-w-11'
   };
 </script>
 

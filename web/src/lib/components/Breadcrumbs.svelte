@@ -27,7 +27,7 @@
         {:else}
           <a
             href={crumb.href}
-            class="truncate rounded px-1 text-fg-muted hover:bg-surface-2 hover:text-fg"
+            class="truncate rounded px-1 text-fg-muted hover:bg-surface-2 hover:text-fg pointer-coarse:min-w-11 pointer-coarse:py-3 pointer-coarse:text-center"
             >{crumb.label}</a
           >
         {/if}

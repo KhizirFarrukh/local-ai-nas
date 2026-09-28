@@ -12,7 +12,7 @@
   const list = shortcuts(isMac());
 </script>
 
-<Dialog bind:open title="Keyboard shortcuts" size="lg">
+<Dialog bind:open title="Keyboard shortcuts" size="lg" phone="full">
   <table class="w-full text-sm">
     <thead class="sr-only">
       <tr><th>Keys</th><th>What they do</th></tr>

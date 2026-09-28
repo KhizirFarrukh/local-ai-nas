@@ -208,9 +208,23 @@
 
   // Clicks keep the focus on the grid itself: a focused cell would lose
   // focus when it scrolls out and the virtual list removes it.
+  // On a touch screen (S02.7-T01), as on phones' file managers: a tap
+  // opens the item, a long press selects it (with its menu), and while
+  // something is selected, taps add or remove items.
+  let lastPointer = 'mouse';
+
   function click(index: number, event: MouseEvent) {
     focused = index;
     scroller?.focus();
+    const item = listing.at(index);
+    if (lastPointer === 'touch' && !event.shiftKey && !event.ctrlKey && !event.metaKey && item) {
+      if (selection.count(total) === 0) {
+        onopen(item, index);
+      } else {
+        void selection.pick(index, 'toggle', listing);
+      }
+      return;
+    }
     void selection.pick(index, pickMode(event, false) ?? 'only', listing);
   }
 
@@ -276,6 +290,7 @@
   }
 
   function pressStart(event: PointerEvent) {
+    lastPointer = event.pointerType;
     endPress();
     if (event.pointerType !== 'touch' || !onmenu) {
       return;
@@ -358,13 +373,13 @@
   {#if mode === 'list'}
     <div
       role="presentation"
-      class="flex h-10 shrink-0 items-center gap-4 border-b border-border px-4 text-sm text-fg-muted"
+      class="flex h-10 shrink-0 items-center gap-4 border-b border-border px-4 text-sm text-fg-muted pointer-coarse:h-11"
     >
       {#each columnsDef as col (col.key)}
         <div class={col.class}>
           <button
             type="button"
-            class="inline-flex items-center gap-1 rounded px-1 font-medium hover:text-fg"
+            class="inline-flex items-center gap-1 rounded px-1 font-medium hover:text-fg pointer-coarse:min-h-11 pointer-coarse:min-w-11"
             aria-label="Sort by {col.label.toLowerCase()}{col.key === sort
               ? `, now ${order === 'asc' ? 'ascending' : 'descending'}`
               : ''}"

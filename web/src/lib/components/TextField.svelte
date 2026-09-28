@@ -35,7 +35,7 @@
     bind:value
     aria-invalid={error ? 'true' : undefined}
     aria-describedby={error ? `${id}-error` : hint ? `${id}-hint` : undefined}
-    class="h-10 rounded-md border bg-surface px-3 text-fg placeholder:text-fg-muted {error
+    class="h-10 rounded-md border bg-surface px-3 text-fg placeholder:text-fg-muted pointer-coarse:h-11 {error
       ? 'border-danger'
       : 'border-border-strong'}"
     {...rest}
