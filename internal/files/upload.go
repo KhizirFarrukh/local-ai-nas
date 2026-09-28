@@ -22,6 +22,10 @@ type UploadOptions struct {
 	// OnConflict applies when the name is taken. Overwrite replaces a file
 	// atomically and never replaces a folder.
 	OnConflict OnConflict
+	// ContentHash is the hash of a finished resumable upload, computed
+	// while it arrived (S01.4-T07); CommitUpload records it. Upload computes
+	// its own and ignores this.
+	ContentHash string
 }
 
 // copyBufferSize is the buffer of a streamed write: large enough for fast
@@ -52,7 +56,7 @@ func (s *Local) Upload(ctx context.Context, owner, apiPath string, body io.Reade
 				return err
 			}
 			dir := path.Dir(rel)
-			tmp, err := writeTemp(ctx, root, dir, body, size)
+			tmp, sum, err := writeTemp(ctx, root, dir, body, size)
 			if err != nil {
 				return err
 			}
@@ -69,6 +73,9 @@ func (s *Local) Upload(ctx context.Context, owner, apiPath string, body io.Reade
 				return fsError(err, apiPath)
 			}
 			it, err := withDetails(root, NewItem(owner, final, info), "/"+final)
+			if err == nil && s.hashes.Record(ctx, owner, final, it.ETag, sum) == nil {
+				it.ContentHash = sum
+			}
 			r = result{it, created}
 			return err
 		})
@@ -123,6 +130,9 @@ func (s *Local) CommitUpload(ctx context.Context, owner, apiPath, src string, o 
 				return fsError(err, apiPath)
 			}
 			it, err := withDetails(root, NewItem(owner, final, info), "/"+final)
+			if err == nil && o.ContentHash != "" && s.hashes.Record(ctx, owner, final, it.ETag, o.ContentHash) == nil {
+				it.ContentHash = o.ContentHash
+			}
 			r = result{it, created}
 			return err
 		})
@@ -208,14 +218,15 @@ func checkTarget(root *os.Root, rel string, policy OnConflict, apiPath string) e
 }
 
 // writeTemp copies exactly size bytes from body into a new, synced
-// temporary file in dir and returns its path. On any error the temporary
-// file is removed.
-func writeTemp(ctx context.Context, root *os.Root, dir string, body io.Reader, size int64) (tmp string, err error) {
+// temporary file in dir and returns its path and the content hash of the
+// bytes, computed as they pass (FR-211: no second read). On any error the
+// temporary file is removed.
+func writeTemp(ctx context.Context, root *os.Root, dir string, body io.Reader, size int64) (tmp, sum string, err error) {
 	tmp = path.Join(dir, storage.TempPrefix+rand.Text()+".part")
 	name := filepath.FromSlash(tmp)
 	f, err := root.OpenFile(name, os.O_WRONLY|os.O_CREATE|os.O_EXCL, 0o640)
 	if err != nil {
-		return "", apperr.Wrap(apperr.Internal, "cannot create the temporary file", err)
+		return "", "", apperr.Wrap(apperr.Internal, "cannot create the temporary file", err)
 	}
 	defer func() {
 		if err != nil {
@@ -223,16 +234,17 @@ func writeTemp(ctx context.Context, root *os.Root, dir string, body io.Reader, s
 			_ = root.Remove(name)
 		}
 	}()
-	if err := copyExactly(ctx, onlyWriter{f}, body, size); err != nil {
-		return "", err
+	h := newHash()
+	if err := copyExactly(ctx, onlyWriter{io.MultiWriter(f, h)}, body, size); err != nil {
+		return "", "", err
 	}
 	if err := f.Sync(); err != nil {
-		return "", apperr.Wrap(apperr.Internal, "syncing the upload failed", err)
+		return "", "", apperr.Wrap(apperr.Internal, "syncing the upload failed", err)
 	}
 	if err := f.Close(); err != nil {
-		return "", apperr.Wrap(apperr.Internal, "closing the upload failed", err)
+		return "", "", apperr.Wrap(apperr.Internal, "closing the upload failed", err)
 	}
-	return tmp, nil
+	return tmp, hashString(h), nil
 }
 
 // onlyWriter hides the ReadFrom method of *os.File, so the copy uses its

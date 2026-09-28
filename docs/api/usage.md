@@ -112,8 +112,10 @@ curl.exe -s -T report.txt "$API/files/content?path=/docs/report.txt&on_conflict=
 The first upload answers `201` with the file:
 
 ```json
-{"etag":"\"5019dc6a2390a2b2672027d8\"","kind":"file","mime":"text/plain; charset=utf-8","mod_time":"2026-09-24T18:02:06.1744911Z","name":"report.txt","path":"/docs/report.txt","size":11}
+{"content_hash":"sha256:c46cfe1b5f258414d5b96f5eadb1fd9def960877cde6bd3f37d2916f18665233","etag":"\"32643e0e8b822164bfb11738\"","kind":"file","mime":"text/plain; charset=utf-8","mod_time":"2026-09-28T06:52:16.4935751Z","name":"report.txt","path":"/docs/report.txt","size":11}
 ```
+
+`content_hash` is the SHA-256 of the content, computed while the file arrived. The file's details (`GET /files/items?path=...`) show it as long as the file is unchanged; a file changed without the NAS has none.
 
 The second one finds the name taken. Because of `on_conflict=rename`, it stores the file as `report (1).txt`. `on_conflict=overwrite` would replace the file (`200`), and without `on_conflict` the answer is `409 conflict`.
 

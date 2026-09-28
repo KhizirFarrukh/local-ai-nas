@@ -252,6 +252,14 @@ type CreateFolderRequest struct {
 
 // FileItem defines model for FileItem.
 type FileItem struct {
+	// ContentHash The hash of the file's content, as `sha256:` and 64 lowercase
+	// hexadecimal digits (only for a single file, not in listings). It
+	// is present for files uploaded or copied through the NAS and
+	// unchanged since; a file changed in another way has none until it
+	// is hashed again (a later version). Two files with the same hash
+	// have the same content.
+	ContentHash *string `json:"content_hash,omitempty"`
+
 	// Etag A strong entity tag of the file's current version (only for a
 	// single file, not in listings). It changes when the file is
 	// written or replaced; the download sends the same value.

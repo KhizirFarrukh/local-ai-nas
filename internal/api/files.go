@@ -107,6 +107,9 @@ func fileItem(it files.Item) gen.FileItem {
 	if it.ETag != "" {
 		fi.Etag = &it.ETag
 	}
+	if it.ContentHash != "" {
+		fi.ContentHash = &it.ContentHash
+	}
 	return fi
 }
 

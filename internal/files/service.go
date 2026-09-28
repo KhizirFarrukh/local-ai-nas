@@ -107,6 +107,9 @@ type Options struct {
 	Space *storage.SpaceGuard
 	// CopyLimits bound a copy within one request; zero means no limit.
 	CopyLimits CopyLimits
+	// Hashes keeps the files' content hashes (S01.3-T10); nil means
+	// NopHashes.
+	Hashes Hashes
 }
 
 // Local implements Service on the local disk. Every path goes through the
@@ -118,6 +121,7 @@ type Local struct {
 	space      *storage.SpaceGuard
 	copyLimits CopyLimits
 	locks      *storage.Locks
+	hashes     Hashes
 }
 
 var _ Service = (*Local)(nil)
@@ -127,7 +131,10 @@ func NewLocal(r *storage.Resolver, o Options) *Local {
 	if o.Hooks == nil {
 		o.Hooks = NopHooks{}
 	}
-	return &Local{resolver: r, hooks: o.Hooks, space: o.Space, copyLimits: o.CopyLimits, locks: storage.NewLocks()}
+	if o.Hashes == nil {
+		o.Hashes = NopHashes{}
+	}
+	return &Local{resolver: r, hooks: o.Hooks, space: o.Space, copyLimits: o.CopyLimits, locks: storage.NewLocks(), hashes: o.Hashes}
 }
 
 // lockFolder serializes the steps that give a new name to an item in the
@@ -196,6 +203,9 @@ func (s *Local) Stat(ctx context.Context, owner, path string) (Item, error) {
 				return fsError(err, path)
 			}
 			it, err = withDetails(root, NewItem(owner, rel, info), path)
+			if err == nil && it.Kind == KindFile {
+				it.ContentHash, _ = s.hashes.Lookup(ctx, owner, rel, it.ETag) // none on failure
+			}
 			return err
 		})
 		return it, err

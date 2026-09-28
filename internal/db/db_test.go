@@ -110,6 +110,9 @@ func TestReaderCannotWrite(t *testing.T) {
 	}
 }
 
+// migrations is the number of migration files (internal/db/migrations).
+const migrations = 2
+
 func TestMigrateIdempotent(t *testing.T) {
 	d := openTest(t)
 	ctx := t.Context()
@@ -118,8 +121,8 @@ func TestMigrateIdempotent(t *testing.T) {
 	if err != nil {
 		t.Fatalf("first Migrate: %v", err)
 	}
-	if len(first) != 1 || first[0].Source.Version != 1 {
-		t.Fatalf("first Migrate applied %d migrations, want version 1 only", len(first))
+	if len(first) != migrations || first[0].Source.Version != 1 || first[len(first)-1].Source.Version != migrations {
+		t.Fatalf("first Migrate applied %d migrations, want versions 1 to %d", len(first), migrations)
 	}
 	second, err := d.Migrate(ctx)
 	if err != nil {
@@ -133,12 +136,12 @@ func TestMigrateIdempotent(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if len(st) != 1 || st[0].State != "applied" {
-		t.Errorf("status = %d migrations, first state %q; want 1 applied", len(st), st[0].State)
+	if len(st) != migrations || st[0].State != "applied" || st[len(st)-1].State != "applied" {
+		t.Errorf("status = %d migrations, first state %q; want %d applied", len(st), st[0].State, migrations)
 	}
 
 	// The schema exists and its constraints hold.
-	for _, table := range []string{"settings", "uploads"} {
+	for _, table := range []string{"settings", "uploads", "content_hashes"} {
 		var name string
 		if err := d.Read.QueryRowContext(ctx, "SELECT name FROM sqlite_schema WHERE type = 'table' AND name = ?", table).Scan(&name); err != nil {
 			t.Errorf("table %s: %v", table, err)
@@ -153,6 +156,11 @@ func TestMigrateIdempotent(t *testing.T) {
 	if err == nil {
 		t.Error("STRICT table accepted text in an INTEGER column")
 	}
+	_, err = d.Write.ExecContext(ctx, `INSERT INTO content_hashes (namespace, path, etag, hash, hashed_at)
+		VALUES ('u0001', 'a.txt', '"e"', 'md5:0123', 0)`)
+	if err == nil {
+		t.Error("content_hashes accepted a hash that is not sha256:<64 hex digits>")
+	}
 }
 
 func TestMigrationStatusBeforeMigrate(t *testing.T) {
@@ -161,8 +169,8 @@ func TestMigrationStatusBeforeMigrate(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if len(st) != 1 || st[0].State != "pending" {
-		t.Errorf("status before Migrate: %d migrations, want 1 pending", len(st))
+	if len(st) != migrations || st[0].State != "pending" {
+		t.Errorf("status before Migrate: %d migrations, want %d pending", len(st), migrations)
 	}
 }
 
