@@ -44,6 +44,7 @@ NFR-014 requires tests, linting, formatting, and CI on every stage. NFR-023 requ
 ## Consequences
 
 - **Easier:** one lint entry point (golangci-lint), security and license gates on every PR, and automated update PRs.
+- **Note (2026-09-28, S007; the tool choices above are unchanged):** by the user's preference, CI now runs only at the completion of a stage, on a tag `S<NN>-done`, or by hand (RULES User Preferences). "Every PR" above now means every stage-completion run; Dependabot PRs are checked locally or at the stage end.
 - **Harder:** GPL-licensed golangci-lint must stay a development tool. It is never vendored into release artifacts (recorded in the dependency register).
 - **Required:** CI workflow (S01.1-T07); Dependabot config (S01.1-T07); `testdata/SOURCES.md`; the license allow-list (after Q22).
 

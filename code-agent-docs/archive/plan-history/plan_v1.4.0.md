@@ -2,11 +2,11 @@
 
 | Field | Value |
 |---|---|
-| **Version** | 1.4.1 |
+| **Version** | 1.4.0 |
 | **Status** | **Approved baseline** (approved by the user in S005, 2026-09-24); 1.1.0 adds the user's setup-script requirement (S005 E015) |
 | **Last updated** | 2026-09-28 (session S007) |
 | **Source of vision** | `README.md` (repository root), the user's staged roadmap (`code-agent-docs/prompts/P002-staged-development-roadmap.json`), the user's technology stack (`code-agent-docs/prompts/P003-technology-stack.json`), and the user's feature additions (`code-agent-docs/prompts/P005-feature-additions.json`, with the user's chat decisions in S007) |
-| **Previous version** | 1.4.0, archived at `code-agent-docs/archive/plan-history/plan_v1.4.0.md` (0.1.0–1.3.0 also archived there) |
+| **Previous version** | 1.3.0, archived at `code-agent-docs/archive/plan-history/plan_v1.3.0.md` (0.1.0–1.2.0 also archived there) |
 | **Stage IDs** | Changed in 1.4.0 (P005): the packaging stage is now **S13** (was S11) and AI is **S15** (was S12). Older documents use the old IDs; the table in **10.18** translates them. |
 
 > **This is a living document.** It changes as the user gives feedback. Every change follows `code-agent-docs/RULES.md` **R4**: the old version is archived, the version is bumped, and a revision entry is added. While the plan is a pre-1.0 draft, restructurings bump the MINOR version. **When the user approves this plan as the baseline, it becomes version 1.0.0.**
@@ -505,7 +505,7 @@ Assumptions are numbered permanently. Ones overturned by the 0.2.0 design are ma
 - **A20:** Within a stage, the task execution order may differ from substage numbering when dependencies require it. The stage document records the order.
 - **A21:** The target browsers play HLS natively or through Media Source Extensions / ManagedMediaSource (hls.js). Where only native HLS is available, the quality menu offers Auto only (ADR-0020).
 - **A22:** _(1.4.0, P005)_ Drive pools are **Linux only** (they need root and Linux tools). On Windows 11 and in any setup without the storage helper, the pool feature is hidden, and single-path storage works as before (Q47).
-- **A23:** _(1.4.0, P005; decided in S007, ADR-0021 Accepted)_ Content hashes use SHA-256 from the Go standard library. Perceptual hashes are 64-bit (ADR-0022).
+- **A23:** _(1.4.0, P005)_ Content hashes use SHA-256 from the Go standard library unless benchmarks in ADR-0021 justify BLAKE3. Perceptual hashes are 64-bit (ADR-0022).
 
 ---
 
@@ -814,7 +814,7 @@ Optional pool (S14, Linux): drives → mdadm RAID 0/1 → ext4 or XFS → mounte
 | SMB | Samba, Linux-only, optional | [ADR-0019](decisions/ADR-0019-smb-via-samba.md) | **Proposed** (deferred to S09.1) |
 | File watching | fsnotify v1.10.1 + periodic reconciliation; inotify watch-limit guidance | [ADR-0016](decisions/ADR-0016-file-watching.md) | Accepted |
 | AI worker | Python 3.14 + ONNX Runtime 1.30.0 in a separate optional container; uv, Ruff, pytest; pulls jobs from a local-only internal API (token); media read-only; core validates and writes results (I9); no internet at runtime | [ADR-0017](decisions/ADR-0017-ai-worker-architecture.md) | Accepted |
-| Content hash (P005) | SHA-256 (Go standard library) at upload, BLAKE3 only if benchmarks justify it | [ADR-0021](decisions/ADR-0021-content-hash-algorithm.md) | **Accepted** (S007: SHA-256) |
+| Content hash (P005) | SHA-256 (Go standard library) at upload, BLAKE3 only if benchmarks justify it | [ADR-0021](decisions/ADR-0021-content-hash-algorithm.md) | **Proposed** (needed before the S01 follow-up and S04.2) |
 | Perceptual hash and similarity index (P005) | 64-bit dHash/pHash from a small rendition; BK-tree or multi-index hashing; goimagehash (BSD-2-Clause) or an in-house implementation | [ADR-0022](decisions/ADR-0022-perceptual-hash-and-similarity-index.md) | **Proposed** (S04.4, S11.1) |
 | Look-alike stacks and bursts (P005) | Stack data in each member's sidecar; cover and user-lock rules; burst identifiers first | [ADR-0023](decisions/ADR-0023-look-alike-stacks.md) | **Proposed** (S11.4) |
 | File shortcuts (P005) | App-level shortcut records by stable file ID (not symlinks or hard links); read-only view over shares | [ADR-0024](decisions/ADR-0024-file-shortcuts.md) | **Proposed** (S11.6) |
@@ -832,7 +832,7 @@ Optional pool (S14, Linux): drives → mdadm RAID 0/1 → ext4 or XFS → mounte
 - **Exact AI model variants**, **GPU execution providers**, and **embedding storage** (ADR-0017/0018). Chosen in S15 by benchmark.
 - **Semantic search** needs a text model at query time. That is an **exception to I4** and needs explicit user approval before it is built (ADR-0018, FR-054). _Default decided in S005 (D-06): precomputed forms only; revisit with Q36._
 - ~~Storage layout (ADR-0003)~~: accepted in S005 (D-01), no longer pending.
-- **P005 decisions:** ADR-0021 to ADR-0029 (the table above). ADR-0021 (content hash) was **Accepted** in S007 (SHA-256); the others are Proposed.
+- **P005 decisions, all Proposed:** ADR-0021 to ADR-0029 (the table above). ADR-0021 (content hash) is needed first, before the S01 follow-up tasks and S04.2.
 - **Complex RAID** (parity, combined drives, nesting, SnapRAID with mergerfs) is deferred by the user's decision in S007 (section 11a).
 - Implementation-time confirmations recorded as tasks:
   - Node.js LTS and TypeScript 7 / svelte-check compatibility (S02.1).
@@ -3187,7 +3187,7 @@ Each final review substage above also runs a **documentation audit** (R12, `temp
 | Security | From S01.6; formalized in S03.9 |
 | Performance | At the scales named in NFR-003 |
 
-CI runs on Linux and Windows from S01.1. _Since S007 (the user's preference):_ CI runs **at the completion of each stage**, not on every commit or push: it starts when a stage-completion tag such as `S02-done` is pushed, or by hand ("Run workflow"; the user's choice, S007 E013). Plan wording such as "on every PR" (NFR-023) or "passes in CI" means the stage-completion run.
+CI runs on Linux and Windows from S01.1. _Since S007 (the user's preference):_ CI runs **at the completion of each stage**, not on every commit or push. Plan wording such as "on every PR" (NFR-023) or "passes in CI" means the stage-completion run.
 
 ### 12.3 Fixture sets
 - **Files (S01):**
@@ -3274,4 +3274,3 @@ CI runs on Linux and Windows from S01.1. _Since S007 (the user's preference):_ C
 | 1.2.0 | 2026-09-25 | Methodology (MINOR): **code first, tests at the end of each stage.** Code is written to be testable. Each stage's final testing substage writes its unit, integration, and system/application tests, including those named by earlier substages and the regression tests for recorded bugs. Coverage of 80% is enforced at the stage end, and CI reports it without blocking during the stage. Changed: 2b principle 6, section 9, 12.1, and 12.2 ("System / application" replaces "End-to-end"). No requirement or target changes. | The user's instruction (S006 E001) and answers (S006 E003) | `logs/sessions/2026-09-25_S006.md` |
 | 1.3.0 | 2026-09-25 | Stage change (MINOR): **S02 approved**. At the user's decision, S02.8 acceptance criterion 2 checks Chrome, Edge, and Firefox; Safari is not checked in S02. NFR-027 and the Safari checks of later stages are unchanged. S02 status is Approved. | The user's approval and answer "Skip Safari" (S006 E009) | `logs/sessions/2026-09-25_S006.md`; `stages/S02-nas-gui.md` |
 | 1.4.0 | 2026-09-28 | **Feature additions** (MINOR, R4). New stages **S11** duplicate and look-alike management (with automatic burst grouping), **S12** storage optimization, and **S14** multi-drive storage pools (**RAID 0 and RAID 1 only**; parity, virtual drives, and nesting deferred to 11a). **Renumbering:** packaging S11 → **S13**, AI S12 → **S15**, S12.11 → S15.12, with the new S15.11 (AI-assisted library cleanup); "Stage ID changes" table in 10.18. Invariant **I10** (preview, confirmation, undo for destructive bulk operations). Goals G11, G12; NG4 and NG8 revised; NG11 added. FR-150–FR-213 and NFR-033–NFR-039 added; FR-022, FR-142, and NFR-006 amended. A18 revised; A22, A23 added. Q36 and Q38 updated; Q42–Q51 added (Q50 answered in S007). Architecture 6.1–6.5, section 7 (ADR-0021–ADR-0029 Proposed), 7.1, 8.1, 8.7, and concerns 8.22–8.26. P005 notes on existing substages (10.17 item 12). Milestones: M3 = S01–S13 (Q51), M4 pools, M5 AI. Testing, fixtures, and risks RK-32–RK-36. Fixes to the prompt are listed in the session log (E006). | Plan change request #5 (`code-agent-docs/prompts/P005-feature-additions.json`) and the user's messages in S007 (E004: burst grouping; E005: fix the prompt's issues; E008: RAID 0 and 1 only, at the end) | `logs/sessions/2026-09-28_S007.md` |
-| 1.4.1 | 2026-09-28 | Decisions (PATCH): **ADR-0021 Accepted** (SHA-256; section 7, 7.1, A23). 12.2 names the CI trigger: a stage-completion tag or a manual run. No requirement or scope change. | The user's answers in S007 (E013): "SHA-256 (Recommended)", "Stage tag + manual (Recommended)" | `logs/sessions/2026-09-28_S007.md` |

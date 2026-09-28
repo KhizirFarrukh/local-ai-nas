@@ -45,7 +45,7 @@ $API = 'http://127.0.0.1:8080/api/v1'
 - downloading a range;
 - renaming, moving, copying, and deleting.
 
-They work in a new folder, `/local-ai-nas-demo-<time>`, and remove it at the end. `KEEP=1` or `-Keep` keeps it. CI runs both on every push.
+They work in a new folder, `/local-ai-nas-demo-<time>`, and remove it at the end. `KEEP=1` or `-Keep` keeps it. CI runs both (at the end of each stage).
 
 ```sh
 scripts/demo.sh                          # or: scripts/demo.sh http://127.0.0.1:8080

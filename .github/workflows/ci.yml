@@ -1,13 +1,13 @@
-# Continuous integration (ADR-0005, S01.1-T05). Runs on pull requests into
-# develop and main, and on pushes to working branches, because finished
-# branches are merged into develop by the agent without always opening a PR.
+# Continuous integration (ADR-0005, S01.1-T05). By the user's preference
+# (S007), CI runs only when a stage is complete: when a tag such as S02-done
+# is pushed, or when started by hand with "Run workflow". Commits, pushes,
+# merges, and pull requests start nothing; the checks run locally instead.
 name: CI
 
 on:
   push:
-    branches: [develop, main, "feat/**", "fix/**", "docs/**", "chore/**"]
-  pull_request:
-    branches: [develop, main]
+    tags: ["S[0-9][0-9]-done"]
+  workflow_dispatch:
 
 permissions:
   contents: read

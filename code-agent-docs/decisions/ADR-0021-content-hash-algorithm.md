@@ -3,9 +3,9 @@
 | Field | Value |
 |---|---|
 | Number | ADR-0021 |
-| Status | Proposed |
+| Status | **Accepted** (2026-09-28, S007) |
 | Date proposed | 2026-09-28 (session S007) |
-| Date of last status change | 2026-09-28 (session S007) |
+| Date of last status change | 2026-09-28 (session S007, accepted) |
 | Supersedes | none |
 | Superseded by | none |
 
@@ -49,7 +49,7 @@ Both are 10 to 48 times faster than gigabit Ethernet, so neither slows an upload
 
 ## Decision
 
-**Recommended: Option A, SHA-256 from the standard library.**
+**Option A, SHA-256 from the standard library** (accepted by the user in S007).
 
 - Stored as text with the algorithm name: `sha256:<64 lowercase hex digits>`. A later change of algorithm (a new ADR) can then coexist with old hashes and be backfilled, without ambiguity.
 - Computed while the upload streams (simple uploads and each tus chunk), with the hash state saved with the upload session between chunks. If the state cannot be restored (e.g. an upload from before this change, or a lost state file), the assembled file is hashed once before the atomic rename.
@@ -68,7 +68,10 @@ Both are 10 to 48 times faster than gigabit Ethernet, so neither slows an upload
 
 ## Approval record
 
-_Pending: put to the user with the P005 report (S007)._
+The user chose SHA-256 when asked "ADR-0021: which hash should the NAS store for every uploaded file?":
+
+> "SHA-256 (Recommended)"
+> (2026-09-28, session S007, log E013)
 
 ## Links
 
