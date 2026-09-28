@@ -1,18 +1,19 @@
 # CURRENT_STATE
 
-**Last updated:** 2026-09-28 12:33 +0500 (session S007)
+**Last updated:** 2026-09-28 13:09 +0500 (session S007)
 **Plan version:** 1.4.1 (`code-agent-docs/plan.md`), **Approved baseline** 1.0.0 (S005); 1.4.0 adds P005 (15 stages, 120 substages; packaging is now S13 and AI S15, table in plan 10.18)
 **Current phase:** **S01 (Basic NAS) Done** (signed off, S005 E126; P005 follow-up tasks done in S007). **S02 (NAS GUI) In Progress** (approved S006 E009); S02.1–S02.7 Done; S02.8 remains
 
 ## Active stage and task
 - **Active stage:** **S02: NAS GUI**, **In Progress** (`stages/S02-nas-gui.md`; approved in S006 E009, with "Skip Safari": S02 checks Chrome, Edge, and Firefox). S01 is **Done** (`stages/S01-basic-nas.md`, completion record in section 13).
-- **Active task:** none. Next: **S02.8-T02** (integration and system tests: Playwright against the real binary). The P005 follow-up tasks of S01 are all done.
+- **Active task:** none. Next: **S02.8-T03** (cross-browser report, user guide, README, plan status, register). The P005 follow-up tasks of S01 are all done.
 - **The user's instruction (S007 E010):** after P005, resume S02 and work until the stage is complete, and also build the P005 items that belong to the current or earlier stages (the S01 follow-up tasks).
 
 ## In progress (write-ahead)
 - none.
 
 ## Last completed
+- **S02.8-T02 done** (S007 E022): 42 Playwright system tests per browser (125 passed, 1 skipped in Chromium, Firefox, Edge), listing and ZIP64 integration tests, axe 0 violations in both themes; bug S02-B11 (a renamed item was no longer selected) fixed.
 - **S02.8-T01 done** (S007 E021): 197 web unit and component tests (coverage of `web/src/lib` 95.4% statements, 82.9% branches), Go tests for archives and the web app (`internal/...` 89.9%), regression tests for S02-B01, B04, B07, B08, B09.
 - **S01.4-T07 done; S01 follow-ups complete** (S007 E019): resumable uploads are hashed chunk by chunk (state saved per chunk, one full read only as a fallback); the client checksum no longer reads the file again.
 - **S01.3-T10 done** (P005 follow-up; S007 E018): simple uploads and copies store a SHA-256 content hash (`content_hash` in item details), kept through rename, move, and delete, never reported for a file changed outside the NAS.

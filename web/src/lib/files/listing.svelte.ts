@@ -90,6 +90,20 @@ export class FolderListing {
     return this.pages.get(Math.floor(index / pageSize))?.[index % pageSize];
   }
 
+  /**
+   * The position of the item at path among the pages loaded, or undefined
+   * when it is not on one of them.
+   */
+  indexOf(path: string): number | undefined {
+    for (const [page, items] of this.pages) {
+      const i = items.findIndex((item) => item.path === path);
+      if (i >= 0) {
+        return page * pageSize + i;
+      }
+    }
+    return undefined;
+  }
+
   /** Makes sure the pages that hold positions first..last are loading. */
   ensure(first: number, last: number): void {
     void this.loadRange(first, last);

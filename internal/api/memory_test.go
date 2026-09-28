@@ -1,6 +1,7 @@
 package api
 
 import (
+	"bytes"
 	"encoding/base64"
 	"encoding/json"
 	"io"
@@ -190,6 +191,50 @@ func TestMemoryBound(t *testing.T) {
 		t.Errorf("download: %d bytes, %d, %v", n, resp.StatusCode, err)
 	}
 	check("download", h, "")
+
+	// A ZIP archive of the sparse file (S02.4-T03): streamed without
+	// holding it, and, over 4 GiB, written with ZIP64 records (the 10 GiB
+	// Linux job checks those).
+	h = sampleHeap()
+	st, _, b = c.do("POST", "/api/v1/files/archives", "application/json", []byte(`{"paths":["/mem/sparse.bin"]}`), nil)
+	if st != http.StatusCreated {
+		t.Fatalf("archive: %d %s", st, b)
+	}
+	var ticket gen.ArchiveTicket
+	if err := json.Unmarshal(b, &ticket); err != nil {
+		t.Fatal(err)
+	}
+	resp, err = http.Get(srv.URL + ticket.Url)
+	if err != nil {
+		t.Fatal(err)
+	}
+	tail := &lastBytes{keep: 1 << 10}
+	n, err = io.Copy(tail, resp.Body)
+	_ = resp.Body.Close()
+	if err != nil || resp.StatusCode != http.StatusOK || n <= size {
+		t.Errorf("archive download: %d bytes for %d of content, %d, %v", n, size, resp.StatusCode, err)
+	}
+	zip64 := bytes.Contains(tail.b, []byte{'P', 'K', 6, 6}) // the ZIP64 end of central directory
+	if size > 1<<32 && !zip64 {
+		t.Error("an archive over 4 GiB has no ZIP64 end record")
+	}
+	t.Logf("archive of %d bytes: %d bytes sent, ZIP64 %v", size, n, zip64)
+	check("archive", h, "")
+}
+
+// lastBytes keeps the last bytes written to it, such as the end records of
+// a ZIP archive, whatever the archive's size.
+type lastBytes struct {
+	keep int
+	b    []byte
+}
+
+func (l *lastBytes) Write(p []byte) (int, error) {
+	l.b = append(l.b, p...)
+	if len(l.b) > l.keep {
+		l.b = append(l.b[:0], l.b[len(l.b)-l.keep:]...)
+	}
+	return len(p), nil
 }
 
 // b64 encodes a tus metadata value.

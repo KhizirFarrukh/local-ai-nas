@@ -20,7 +20,8 @@
     "generate": "openapi-typescript ../api/openapi.yaml -o src/lib/api/schema.d.ts",
     "test": "node scripts/about.mjs && vitest run",
     "coverage": "node scripts/about.mjs && vitest run --coverage",
-    "about": "node scripts/about.mjs"
+    "about": "node scripts/about.mjs",
+    "test:e2e": "pnpm build && playwright test"
   },
   "dependencies": {
     "@lucide/svelte": "1.48.0",

@@ -439,11 +439,18 @@
     await listing.refresh();
   }
 
+  // The renamed item stays selected and focused, as in file managers, so
+  // the next key acts on it (bug S02-B11).
   async function rename(name: string) {
     const [item] = targets;
-    await renameItem(item, name);
+    const renamed = await renameItem(item, name);
     selection.forget([item.path]);
     await listing.refresh();
+    const at = listing.indexOf(renamed.path);
+    if (at !== undefined) {
+      focusedIndex = at;
+      await selection.pick(at, 'only', listing);
+    }
   }
 
   // Uploads (S02.4-T01): each file goes to this folder. When one lands in

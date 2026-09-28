@@ -209,6 +209,46 @@ jobs:
           retention-days: 7
           if-no-files-found: error
 
+  e2e:
+    # S02.8-T02: system tests. Playwright drives the real binary, with the
+    # web interface embedded, in Chromium and Firefox, and Edge on Windows
+    # (web/playwright.config.ts builds the binary and a storage root).
+    name: System tests (${{ matrix.os }})
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 40
+    defaults:
+      run:
+        working-directory: web
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - uses: actions/setup-go@v7.0.0
+        with:
+          go-version-file: go.mod
+      - uses: pnpm/action-setup@v6.1.0
+        with:
+          package_json_file: web/package.json
+          cache: true
+          cache_dependency_path: web/pnpm-lock.yaml
+      - uses: actions/setup-node@v7.0.0
+        with:
+          node-version: 24.21.0
+      - name: pnpm install
+        run: pnpm install --frozen-lockfile
+      - name: Browsers
+        run: pnpm exec playwright install --with-deps chromium firefox
+      - name: Build the interface and run the system tests
+        run: pnpm test:e2e
+      - uses: actions/upload-artifact@v7.0.1
+        if: failure()
+        with:
+          name: playwright-report-${{ matrix.os }}
+          path: web/playwright-report/
+          retention-days: 7
+
   build:
     name: Build ${{ matrix.goos }}/${{ matrix.goarch }}
     # The binaries embed the web interface built by the web job.
