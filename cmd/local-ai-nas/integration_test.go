@@ -25,6 +25,7 @@ import (
 type liveServer struct {
 	url  string
 	root string // the storage root
+	stop func() // ends the process and waits for it; safe to call again
 }
 
 // startLive runs the program (this test binary acting as main) with a new
@@ -32,7 +33,12 @@ type liveServer struct {
 // of the test.
 func startLive(t *testing.T, args ...string) liveServer {
 	t.Helper()
-	root := testutil.StorageRoot(t)
+	return startLiveAt(t, testutil.StorageRoot(t), args...)
+}
+
+// startLiveAt is startLive with a given storage root.
+func startLiveAt(t *testing.T, root string, args ...string) liveServer {
+	t.Helper()
 	addr := freeAddr(t)
 	cmd := exec.Command(os.Args[0], append([]string{"serve", "--storage-root", root, "--server-bind", addr}, args...)...)
 	cmd.Env = append(os.Environ(), runAsMainEnv+"=1")
@@ -46,16 +52,17 @@ func startLive(t *testing.T, args ...string) liveServer {
 		_ = cmd.Wait()
 		close(done)
 	}()
-	t.Cleanup(func() {
+	stop := func() {
 		_ = cmd.Process.Kill()
 		<-done
-	})
+	}
+	t.Cleanup(stop)
 	url := "http://" + addr
 	for deadline := time.Now().Add(20 * time.Second); ; {
 		resp, err := http.Get(url + "/api/v1/system/health")
 		if err == nil {
 			_ = resp.Body.Close()
-			return liveServer{url: url, root: root}
+			return liveServer{url: url, root: root, stop: stop}
 		}
 		select {
 		case <-done:
