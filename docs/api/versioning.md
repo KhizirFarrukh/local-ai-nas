@@ -40,4 +40,4 @@ These changes are **not allowed within v1**. They need a new version (`/api/v2`)
 
 ## Before 1.0 of the product
 
-Until the first stable release (S11.7), the API is **pre-release**. Breaking changes may still happen within v1 when the design needs them, but each one is recorded in the changelog and in the session log. From the first stable release on, the rules above apply without exception.
+Until the first stable release (S13.7), the API is **pre-release**. Breaking changes may still happen within v1 when the design needs them, but each one is recorded in the changelog and in the session log. From the first stable release on, the rules above apply without exception.

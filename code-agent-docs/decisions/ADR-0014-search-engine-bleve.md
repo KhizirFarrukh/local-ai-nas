@@ -41,7 +41,7 @@ S06 delivers fast, forgiving search across both areas:
 | Detail | Choice | Reason |
 |---|---|---|
 | Text analyzer | A custom analyzer: unicode tokenizer → lowercase → ASCII folding (accents) → English possessive and stop filters → Porter stemmer. Also an **unstemmed** sub-field for exact-match boosting | Exact > stem > synonym > fuzzy ranking (FR-051) |
-| Keyword fields | `area`, `owner`, `acl`, `type`, `ext`, `tag`, `face_group` (the last reserved for S12) | Exact filters |
+| Keyword fields | `area`, `owner`, `acl`, `type`, `ext`, `tag`, `face_group` (the last reserved for S15) | Exact filters |
 | Typed fields | `taken_at` and `modified_at` (datetime); `size` (numeric) | Range operators |
 | Native Bleve synonyms | Bleve v2.5+ supports synonym indexing (`docs/synonyms.md`). S06.5 may use it as the *mechanism* to apply our dictionary, but the dictionary itself stays project-owned and user-extendable as decided above | Keeps the user's decision; chooses the mechanism with evidence in S06.5 |
 
@@ -60,5 +60,5 @@ S06 delivers fast, forgiving search across both areas:
 
 - **Related requirements:** FR-025, FR-047–FR-053, FR-055–FR-063, FR-104–FR-110, NFR-003, NFR-024
 - **Related ADRs:** ADR-0007, ADR-0011, ADR-0013
-- **Related stages:** S06 onward (S07.4 filters, S12.7 AI fields)
+- **Related stages:** S06 onward (S07.4 filters, S15.7 AI fields)
 - **Plan version:** 0.3.0

@@ -3,12 +3,12 @@
 | Field | Value |
 |---|---|
 | Stage ID | S01 |
-| Status | **Done** (approved 2026-09-24, S005; signed off by the user 2026-09-24, S005 E126) |
+| Status | **Done** (approved 2026-09-24, S005; signed off by the user 2026-09-24, S005 E126). _P005 follow-up tasks open (section 5, end), scheduled now by the user (S007 E010); the Done status is kept._ |
 | Blocked reason | |
-| Plan version this stage is based on | 1.1.4 |
+| Plan version this stage is based on | 1.1.4 (follow-up tasks: 1.4.0) |
 | Origin | User-defined |
 | Created | 2026-09-24 (session S002) |
-| Last updated | 2026-09-24 (session S005) |
+| Last updated | 2026-09-28 (session S007: P005 follow-up tasks) |
 | Depends on stages | none (requires plan baseline approval) |
 | Related ADRs | ADR-0001 Go (Accepted) · ADR-0002 REST/OpenAPI (Accepted) · ADR-0003 storage layout (Accepted, S005) · ADR-0004 repository layout (Accepted) · ADR-0005 testing/CI (Accepted) · ADR-0006 dev environment (Accepted) · ADR-0007 SQLite (Accepted) · ADR-0008 tus (Accepted) |
 
@@ -38,7 +38,7 @@ A reliable storage service, written in **Go**, that manages the **files area thr
 | NFR-001 | Local-only, no remote assets | Fully for S01 scope | S01.5 |
 | NFR-003 | Performance (S01 targets) | Partially (baseline) | S01.7 |
 | NFR-006 | Data integrity (atomic writes) | Fully for uploads and copies | S01.4 |
-| NFR-008 | Dev environment | Partially (production packaging in S11) | S01.1 |
+| NFR-008 | Dev environment | Partially (production packaging in S13) | S01.1 |
 | NFR-009 | Platforms (CI on Linux + Windows) | Partially | S01.1 |
 | NFR-010 | Security baseline | Partially (S03 completes) | S01.6 |
 | NFR-013 | Licensing | Ongoing | S01.1 |
@@ -50,7 +50,7 @@ A reliable storage service, written in **Go**, that manages the **files area thr
 | NFR-025 | Forward compatibility | Ongoing | all |
 | NFR-026 | Area separation enforced | Partially (photos in S04) | S01.2 |
 | NFR-029 | License policy (anyone may deploy and use) | Ongoing (CI license check) | S01.1 |
-| NFR-030 | Multi-architecture (amd64 + arm64) | Partially (pure-Go cross-builds in CI; images in S11) | S01.1 |
+| NFR-030 | Multi-architecture (amd64 + arm64) | Partially (pure-Go cross-builds in CI; images in S13) | S01.1 |
 
 ## 3. Scope
 
@@ -68,7 +68,7 @@ A reliable storage service, written in **Go**, that manages the **files area thr
 - Any photos-area functionality. `photos/` is created and validated only; `/api/v1/photos` returns `not_available`.
 - Job system (S04.3), search (S06), trash (S08). S01 deletes are permanent.
 - External media tools (ExifTool, libvips, FFmpeg). None is needed in S01.
-- Production packaging (S11).
+- Production packaging (S13).
 
 ## 4. Design approach
 
@@ -137,9 +137,10 @@ flowchart LR
 | S01.4 | Large file handling | **Done** (S005) | S01.2, S01.3, S01.5 | FR-004, FR-074, NFR-006, NFR-021 |
 | S01.5 | API layer | **Done** (S005) | S01.1 | FR-075, NFR-001 |
 | S01.6 | Safety baseline | **Done** (S005) | S01.2 | FR-076, FR-077, NFR-010, NFR-019, NFR-020 |
-| S01.7 | Integration, testing, and stage review | In Progress | S01.1–S01.6 | NFR-003, NFR-014 |
+| S01.7 | Integration, testing, and stage review | **Done** (S005) | S01.1–S01.6 | NFR-003, NFR-014 |
+| P005 follow-up | Content hash at upload; portable storage root | Not started | ADR-0021 **Accepted** (for T10 and T07) | FR-211, NFR-036 |
 
-### Execution order (A20; flagged in plan 10.14)
+### Execution order (A20; flagged in plan 10.17)
 
 1. S01.1 (all tasks)
 2. S01.2 (all tasks)
@@ -260,6 +261,20 @@ flowchart LR
 | S01.7-T06 | Demo scripts `scripts/demo.sh` and `scripts/demo.ps1` (curl) covering create folder, simple upload, tus upload with a forced interruption and resume, list, ranged download, rename, move, copy, delete. | **Done** (S005; Windows run recorded in E121, both in CI) | Both scripts run green against a fresh instance (Linux in CI; Windows manually, recorded). |
 | S01.7-T07 | **Documentation audit (R12)** using `templates/audit-checklist.md`, reported as the next audit number in `audits/`. | **Done** (S005; A002: 11 findings, the Critical one fixed; README proposal R-11/R-12 for the user) | Audit report complete; no Critical finding open (each fixed or escalated to the user) |
 | S01.7-T08 | Completion record and user sign-off. | **Done** (S005; signed off in E126) | Section 13 is filled in. The user's sign-off is quoted in the session log. |
+
+### P005 follow-up tasks (plan 1.4.0; S01 stays Done)
+
+- **Source:** plan change request #5 (`prompts/P005-feature-additions.json`, `stage_document_updates`), plan 1.4.0 notes on S01.2, S01.3, and S01.4.
+- **When:** now, with the current stage (Q50, answered by the user in S007 E010: "make sure to work on the new stuff too if they were meant to be part of current or previous stages").
+- **Gate:** **ADR-0021 (content hash algorithm) must be Accepted by the user** before S01.3-T10 and S01.4-T07 are built (R5). S01.2-T07 does not depend on it.
+- **Tests:** S01's testing substage is closed, so each follow-up task writes its own unit and integration tests, and S01's guard tests (spec against routes, architecture tests) must stay green. Coverage stays at or above 80%.
+- **Re-confirmation:** S01 was signed off before these changes; they are listed in the P005 report for the user to re-confirm.
+
+| Task ID | Description | Status | Acceptance criteria |
+|---|---|---|---|
+| S01.2-T07 | **Portable storage root** (NFR-036): check that nothing persisted stores an absolute path under the root (database rows hold namespace-relative paths; tusd session files are located by upload ID under `tmp/uploads/`); make any exception relative. Document how to move the root (stop, copy, change `storage.root`, start). The health check keeps verifying that `tmp/uploads/` and the areas share one filesystem (A18). | Not started | An integration test copies a whole storage root, with an unfinished tus upload, to a new path, starts the server there, and finishes the upload and reads every file. No code path assumes one physical disk. The move is documented in `docs/`. |
+| S01.3-T10 | **Content hash at upload** (FR-211, ADR-0021): simple uploads hash the stream while writing it (no extra read) and store `sha256:<hex>` in a new `content_hashes` table (migration `00002`): namespace, path, size, modification time, file ID, hash. Rename and move update the path (folders by prefix); copy copies the row for each copied file (the bytes are identical); delete removes the rows. A stored hash counts only while size, modification time, and file ID still match, so files changed outside the app are never reported with a stale hash. Item details return it as the optional `contentHash` field (additive change to `api/openapi.yaml`). | Not started (needs ADR-0021) | Uploading a fixture stores the hash of its bytes; rename, move (file and folder), copy, and delete keep the table correct; after an outside change the details omit the hash; the spec, the generated code, and the drift check agree. |
+| S01.4-T07 | **Content hash for resumable uploads** (FR-211, plan 8.26): the tus data store is wrapped so each chunk is hashed as it is written; the SHA-256 state (`MarshalBinary`) is saved with the session after every chunk; on finish the saved state gives the hash without reading the file again. If the state is missing or does not cover exactly the bytes written (e.g. a failed write, an upload from before this change), the assembled file is hashed once before the atomic rename. The optional expected-`sha256` check uses this hash, which removes today's second read in `syncAndVerify`. | Not started (needs ADR-0021) | An upload interrupted and resumed (also across a server restart) stores the correct hash; a corrupted or missing state falls back to one full read and still stores the correct hash; a wrong expected `sha256` is still rejected; the 10 GB memory bound (S01.4-T04) still holds. |
 
 ## 6. Files and modules expected to be created or changed
 
@@ -420,6 +435,7 @@ go tool go-licenses check ./...         # allow-list from S01.1-T02
 | 2026-09-24 | S005 | **S01.7-T05/T06:** `docs/api/usage.md` gives every operation with curl for Linux/macOS and for Windows PowerShell; each code block was run as written on Linux and in Windows PowerShell 5.1. `scripts/demo.sh` and `scripts/demo.ps1` check every answer, including a tus upload that is cut off and resumed. A new CI job `demo` runs both against a fresh server (Linux, and Windows PowerShell 5.1), **more than the acceptance's "Windows manually"**, and fails if the server logged an error. **Found:** (1) tusd logs a client's cut-off request body (`BodyReadError`) at ERROR; the tus log adapter now makes it a WARN, and errors stay for server faults. (2) `scripts/perf-baseline.sh` and `scripts/check-api-docs-offline.sh` were not executable in Git; fixed. (3) Windows PowerShell 5.1 drops the quotes of JSON arguments to native programs, so the guide and `demo.ps1` send JSON through a file | Found while building S01.7-T05/T06 | None (same tasks and acceptance criteria) |
 | 2026-09-24 | S005 | **S01.7-T07 (audit A002, `audits/A002-2026-09-24-documentation-audit.md`):** 11 findings: 1 Critical (CURRENT_STATE's next steps still listed S01.7 from T01; fixed), 2 Major (the README status line changed in T05 outside the sections this document names: restored, and proposed as R-11 with R-12 in `audits/A002-readme-proposal.md`; the register lacked the system tools that the scripts and guides use: added), 8 Minor (7 fixed, 1 accepted). Plan 1.1.3 (NFR-031 and S06.8 no longer say that Q1 is pending). The README row of section 6 now also names S01.1-T02 (License section). The audit checklist gained product-documentation checks | Audit A002 (R12) | **Needed: the user's decision on R-11/R-12 at the S01 sign-off (S01.7-T08)** |
 | 2026-09-24 | S005 | **S01 Done.** S01.7-T08: section 9 checked with evidence; section 13 (completion record) filled in. **The user signed off S01** ("Sign off S01 (Recommended)"), **accepted the throughput deviation** ("Accept, measure later (Recommended)"), and **approved README R-11 and R-12** ("Apply both (Recommended)"), which were applied (S005 E126). Plan 1.1.4 | The user's sign-off (S005 E126) | None (the stage is complete) |
+| 2026-09-28 | S007 | **P005 follow-up tasks** added (S01.2-T07, S01.3-T10, S01.4-T07); stage IDs renumbered per plan 1.4.0 (packaging S13); the S01.7 overview row corrected to Done (it said In Progress after sign-off). The status stays Done. | Plan change request #5; the user's instruction in S007 E010 | Re-confirmation of S01 asked in the P005 report; ADR-0021 approval needed before T10 and T07 |
 
 ## 13. Completion record
 

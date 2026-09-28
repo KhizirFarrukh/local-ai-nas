@@ -2,12 +2,11 @@
 
 | Field | Value |
 |---|---|
-| **Version** | 1.4.0 |
+| **Version** | 1.3.0 |
 | **Status** | **Approved baseline** (approved by the user in S005, 2026-09-24); 1.1.0 adds the user's setup-script requirement (S005 E015) |
-| **Last updated** | 2026-09-28 (session S007) |
-| **Source of vision** | `README.md` (repository root), the user's staged roadmap (`code-agent-docs/prompts/P002-staged-development-roadmap.json`), the user's technology stack (`code-agent-docs/prompts/P003-technology-stack.json`), and the user's feature additions (`code-agent-docs/prompts/P005-feature-additions.json`, with the user's chat decisions in S007) |
-| **Previous version** | 1.3.0, archived at `code-agent-docs/archive/plan-history/plan_v1.3.0.md` (0.1.0–1.2.0 also archived there) |
-| **Stage IDs** | Changed in 1.4.0 (P005): the packaging stage is now **S13** (was S11) and AI is **S15** (was S12). Older documents use the old IDs; the table in **10.18** translates them. |
+| **Last updated** | 2026-09-24 (session S005) |
+| **Source of vision** | `README.md` (repository root), the user's staged roadmap (`code-agent-docs/prompts/P002-staged-development-roadmap.json`), and the user's technology stack (`code-agent-docs/prompts/P003-technology-stack.json`) |
+| **Previous version** | 1.2.0, archived at `code-agent-docs/archive/plan-history/plan_v1.2.0.md` (0.1.0–1.1.4 also archived there) |
 
 > **This is a living document.** It changes as the user gives feedback. Every change follows `code-agent-docs/RULES.md` **R4**: the old version is archived, the version is bumped, and a revision entry is added. While the plan is a pre-1.0 draft, restructurings bump the MINOR version. **When the user approves this plan as the baseline, it becomes version 1.0.0.**
 >
@@ -50,9 +49,9 @@ Every photo has a **sidecar JSON file** next to it (`IMG_0001.jpg.json`) that is
 
 **Search** covers both areas through one query path. It reads only the index (I4) and is forgiving: word forms (`receipts` → `receipt`), synonyms (`receipts` → `invoice`, `voucher`), typos (`reciept`), and operators such as `before:2026`, `place:karachi`, `in:photos`, and `type:video`.
 
-The system grows into a **multi-user** NAS: each user has private files and photos, and items can be shared explicitly with ownership and read-access data (I5). Later stages find duplicates and look-alike photos (S11), shrink the library on request (S12), and combine drives into pools (S14). **Optional, fully local AI** (I6, I7) comes last (I8). It classifies photos (so unlabelled receipts are found by searching `receipts`) and groups faces. Results are stored in the sidecars, so search never runs a model.
+The system grows into a **multi-user** NAS: each user has private files and photos, and items can be shared explicitly with ownership and read-access data (I5). **Optional, fully local AI** (I6, I7) comes last (I8). It classifies photos (so unlabelled receipts are found by searching `receipts`) and groups faces. Results are stored in the sidecars, so search never runs a model.
 
-**Staged approach.** The work is divided into 15 stages. Each stage is split into substages and, just in time, into tasks (section 9). Every stage ends with a working, tested, demonstrable system (section 2b).
+**Staged approach.** The work is divided into 12 stages. Each stage is split into substages and, just in time, into tasks (section 9). Every stage ends with a working, tested, demonstrable system (section 2b).
 
 | Stage | Name | Origin |
 |---|---|---|
@@ -66,11 +65,8 @@ The system grows into a **multi-user** NAS: each user has private files and phot
 | S08 | Data protection and recovery | Planner-proposed |
 | S09 | Network file access and external change sync | Planner-proposed |
 | S10 | Administration, monitoring, and quotas | Planner-proposed |
-| S11 | Duplicate and look-alike management (photo duplicates, look-alike stacks and bursts, file duplicates and shortcuts) | User-defined (P005, S007) |
-| S12 | Storage optimization (smaller photos and videos, now and on upload) | User-defined (P005) |
-| S13 | Packaging, deployment, and pre-AI release (was S11) | Planner-proposed |
-| S14 | Multi-drive storage pools: RAID 0 and RAID 1 (complex RAID deferred, 11a) | User-defined (P005; scope and position set by the user in S007) |
-| S15 | AI features (always last; was S12) | User-defined |
+| S11 | Packaging, deployment, and pre-AI release | Planner-proposed |
+| S12 | AI features (always last) | User-defined |
 
 ---
 
@@ -84,24 +80,21 @@ The system grows into a **multi-user** NAS: each user has private files and phot
 - **G5:** Fast, forgiving search across both areas, with word forms, synonyms, typo tolerance, and operators (S06).
 - **G6:** Multiple users with private data by default and explicit sharing, enforced on every access path (S07).
 - **G7:** Protection against data loss (trash, integrity checks, backups, recovery), network-drive access, and admin control (S08–S10).
-- **G8:** Easy deployment for anyone, and a stable pre-AI release (S13).
-- **G9:** Optional local AI for auto-classification and face grouping on CPU-only hardware, with results persisted to sidecars (S15).
+- **G8:** Easy deployment for anyone, and a stable pre-AI release (S11).
+- **G9:** Optional local AI for auto-classification and face grouping on CPU-only hardware, with results persisted to sidecars (S12).
 - **G10:** Privacy by design at every stage: no telemetry, no cloud, no runtime network calls unless the user enables a feature that needs one.
-- **G11:** _New in 1.4.0 (P005):_ duplicate and look-alike photos, bursts, and duplicate files are found in each user's own library and resolved safely (preview, confirmation, trash), and the library can be shrunk on request with its metadata intact (S11, S12).
-- **G12:** _New in 1.4.0 (P005, S007):_ several drives combined into RAID 0 or RAID 1 pools from the GUI, with honest capacity and fault-tolerance figures (S14). Parity layouts and combined drives are planned for later (11a).
 
 ### Non-goals (at least for now)
 - **NG1:** Cloud sync, cloud backup, or any hosted/SaaS component.
 - **NG2:** Native mobile apps and automatic phone backup. Listed as a not-scheduled candidate (11a).
 - **NG3:** Photo editing, and writing metadata back into original media files (Q19).
-- **NG4:** _Changed in 0.4.0:_ video transcoding **for streaming quality levels** is now in scope (S04.8, ADR-0020, the user's request in S004). _Changed in 1.4.0 (P005):_ the app never re-encodes or converts original files **on its own**. The only exception is storage optimization (S12), which the user starts or enables explicitly: it replaces originals only after a preview and a confirmation, and keeps them for an undo window (I10).
+- **NG4:** _Changed in 0.4.0:_ video transcoding **for streaming quality levels** is now in scope (S04.8, ADR-0020, the user's request in S004). Re-encoding or converting the original files remains out of scope, because originals are never modified.
 - **NG5:** Remote access from outside the LAN and public share links. Both are not-scheduled candidates (11a).
 - **NG6:** _Withdrawn in 0.2.0._ The v0.1.0 non-goal "no app-provided SMB/WebDAV" is reversed by stage S09.
 - **NG7:** Running AI at search time, and any cloud AI API.
-- **NG8:** _Changed in 1.4.0 (P005, the user's decision in S007):_ drive pools are in scope as **RAID 0 and RAID 1** (S14), built by orchestrating mature Linux tools (never RAID written in the app). Parity layouts, combined (virtual) drives, and nesting are planned for later (11a). Snapshots and general volume management remain out of scope.
-- **NG9:** Generative AI features. (OCR and semantic search are optional S15.10 extensions, pending Q36.)
+- **NG8:** RAID, volume management, and snapshots. These belong to the host OS. (S10 monitors disk health but does not manage disks.)
+- **NG9:** Generative AI features. (OCR and semantic search are optional S12.10 extensions, pending Q36.)
 - **NG10:** Any automatic or implicit syncing between `files/` and `photos/` (I1).
-- **NG11:** _New in 1.4.0 (P005):_ near-duplicate **documents** (e.g. two versions of a report). File duplicates are exact content matches only (S11.5).
 
 ---
 
@@ -118,7 +111,6 @@ These invariants also live in `RULES.md` ("Project invariants"). **No code or pl
 - **I7:** AI is optional and opt-in. The NAS must be fully functional with AI disabled.
 - **I8:** AI work is always the last stage of the roadmap. Any stage added in the future is inserted before it, and the AI stage is renumbered.
 - **I9:** Only the core server writes sidecar files and the search index. Other processes, including the AI worker, submit results to the core server, which validates and writes them. _(Added in 0.3.0, P003.)_
-- **I10:** Destructive bulk operations (deleting duplicates, reducing media resolution or quality, creating or changing drive pools) always show a preview of what will change, require explicit confirmation, and keep an undo window wherever technically possible. Where undo is impossible (e.g. erasing drives to create a pool), the confirmation says so plainly. _(Added in 1.4.0, pre-approved by the user in P005.)_
 
 ---
 
@@ -130,11 +122,10 @@ Every stage must follow these:
 2. **Forward compatibility.** Design each stage with later stages in mind so they plug in without rewrites. Examples:
    - The storage layout in S01 allows per-user namespaces for S07.
    - The API has a central authorization hook from S03 that S07 extends.
-   - The sidecar schema in S05 reserves sections for ownership and access (S07), AI results (S15), and, since 1.4.0 (P005), hashes, stacks, duplicate decisions, merged-metadata provenance, and optimization history (S11, S12).
-   - The search index in S06 reserves fields for owner, access list, AI tags, and face groups, and since 1.4.0 for stack and shortcut flags (S11).
-   - Content hashes are stored at upload and perceptual hashes with thumbnails (P005), so duplicate detection (S11) needs no extra reads.
+   - The sidecar schema in S05 reserves sections for ownership and access (S07) and AI results (S12).
+   - The search index in S06 reserves fields for owner, access list, AI tags, and face groups.
 3. **Secure-by-default baseline from S01**, even though the dedicated security stage is S03. The server binds to localhost only by default, path traversal is impossible, and all input is validated. The NAS must not be exposed on the network without authentication.
-4. **Shared infrastructure is built once**, in the first stage that needs it, and reused later. Examples: the background job system (S04.3) is reused by S05, S06, S08, S09, S11, S12, and S15. The disk health collector (S10.3) is reused by the pools (S14). The authorization policy check (S03.5) is extended by S07.
+4. **Shared infrastructure is built once**, in the first stage that needs it, and reused later. Examples: the background job system (S04.3) is reused by S05, S06, S08, S09, and S12. The authorization policy check (S03.5) is extended by S07.
 5. **S01 is API-only and S02 is the GUI stage.** From S03 onward, any stage that adds user-facing features includes its own GUI substage.
 6. **The last substage of every stage** writes and runs the stage's tests (unit, integration, and system/application; S006), then covers documentation updates, the completion record, and user sign-off.
 
@@ -207,7 +198,7 @@ Priorities: **Must** (required for its stage to be Done), **Should** (important;
 | FR-019 | Videos in the photos area: catalog, metadata, poster frame, and playback (HLS streaming with live quality switching, FR-144). | Must | Priority Should → Must and text updated in 0.4.0 (the user's request, S004 E005). |
 | FR-020 | RAW image formats. | Could | Pending Q26. |
 | FR-021 | Multi-select and bulk actions (add to album, transfer, download, delete). | Should | |
-| FR-022 | Duplicate detection by content hash at ingest. | Must | Priority Could → Must in 0.2.0 (P002 S04.2). _1.4.0 (P005):_ the default at ingest is "Skip and report"; the full per-user policy is FR-154 (S11.2). |
+| FR-022 | Duplicate detection by content hash at ingest. | Must | Priority Could → Must in 0.2.0 (P002 S04.2). |
 | FR-092 | The photos area accepts only supported media types (detected from file content, not only the extension) and is managed through a separate photos API namespace. | Must | New. |
 | FR-093 | Media is organized on disk inside `photos/` according to an approved layout ADR. | Must | New. Q40. |
 | FR-094 | Import batches. Corrupt or unreadable media is detected and reported without failing the rest of the batch. | Must | New. |
@@ -239,7 +230,7 @@ Priorities: **Must** (required for its stage to be Done), **Should** (important;
 | FR-062 | Offline reverse geocoding: GPS coordinates → city, region, country, using a bundled dataset, stored in the sidecar. | Must | |
 | FR-098 | XMP and IPTC metadata for images. Video metadata: duration, codec, creation date, GPS where present. | Must | New. |
 | FR-099 | User corrections of date/time and location, written to the sidecar. The original extracted values are kept. | Must | New. |
-| FR-100 | The sidecar schema reserves sections for ownership and access (S07) and AI results (S15). | Must | New. |
+| FR-100 | The sidecar schema reserves sections for ownership and access (S07) and AI results (S12). | Must | New. |
 | FR-101 | Recovery from corrupt sidecars: detect, quarantine, rebuild from media, never silently discard user data. | Must | New. |
 | FR-102 | A reconciliation scan finds media without sidecars, orphaned sidecars, and stale metadata, and offers repair actions. Migrations support backups and dry-run mode. | Must | New. |
 | FR-103 | Defined sidecar behavior when a photo is transferred between areas. | Must | New. Pending Q27. |
@@ -248,7 +239,7 @@ Priorities: **Must** (required for its stage to be Done), **Should** (important;
 
 | ID | Requirement | Priority | Notes |
 |---|---|---|---|
-| FR-047 | Free-text search across both areas. Files: name, path, type, metadata. Photos: name, description, place, date/time, user tags, and (from S15) AI tags and face group names. | Must | Reworded in 0.2.0. |
+| FR-047 | Free-text search across both areas. Files: name, path, type, metadata. Photos: name, description, place, date/time, user tags, and (from S12) AI tags and face group names. | Must | Reworded in 0.2.0. |
 | FR-048 | Word-form normalization (stemming, plurals). | Must | |
 | FR-049 | Typo tolerance. | Must | |
 | FR-050 | Synonym and related-term expansion from a local, user-extendable dictionary. | Must | |
@@ -256,7 +247,7 @@ Priorities: **Must** (required for its stage to be Done), **Should** (important;
 | FR-052 | Search works with AI disabled or absent. | Must | |
 | FR-053 | Results: photos shown as thumbnails and files as a list, paginated, opening in the viewer or preview. | Must | |
 | FR-055 | Operator hints and autocomplete. | Must | Priority Could → Must in 0.2.0 (P002 S06.7). |
-| FR-056 | Operators `before:`, `after:`, `on:`, `place:`, `tag:`, `type:`. `face:` is reserved in S06 and activated in S15. | Must | Reworded in 0.2.0. |
+| FR-056 | Operators `before:`, `after:`, `on:`, `place:`, `tag:`, `type:`. `face:` is reserved in S06 and activated in S12. | Must | Reworded in 0.2.0. |
 | FR-057 | Date operators accept `YYYY`, `YYYY-MM`, `YYYY-MM-DD` with documented semantics. | Must | Q14. |
 | FR-058 | Operators combine with free text. Quoted values are supported, and operator names are case-insensitive. | Must | |
 | FR-059 | Malformed queries produce clear errors or hints, never a server error. | Must | Priority Should → Must in 0.2.0. |
@@ -285,7 +276,7 @@ Priorities: **Must** (required for its stage to be Done), **Should** (important;
 | FR-117 | Write-access sharing, and sharing with groups of users. | Could | New. Pending Q30. |
 | FR-118 | Multi-user GUI: admin user-management page, share dialog, shared views, owner and access details per item. | Must | New. |
 
-#### Data protection, network access, administration, packaging (S08–S10, S13)
+#### Data protection, network access, administration, packaging (S08–S11)
 
 | ID | Requirement | Priority | Notes |
 |---|---|---|---|
@@ -304,107 +295,14 @@ Priorities: **Must** (required for its stage to be Done), **Should** (important;
 | FR-128 | Per-user storage quotas enforced on upload, copy, and copying shared items. | Should | New (S10.2). |
 | FR-129 | Disk health (SMART where available), with low-space and failure warnings. | Should | New (S10.3). |
 | FR-130 | Viewer for application logs and the audit log (admin only). | Should | New (S10.5). |
-| FR-131 | Container packaging: Docker image and Docker Compose setup. | Must | New (S13.1). |
-| FR-132 | Native installation as a system service on the platforms the user chooses. | Should | New (S13.2). Q5. |
-| FR-149 | **Per-platform setup scripts**: a separate setup script for each supported platform (Linux x86-64, Raspberry Pi, Windows 11) that, when run, deploys the NAS automatically: it installs or verifies every prerequisite, installs the NAS, creates the configuration and storage root, and starts the service. | Must | New in 1.1.0 (user, S005 E015). S13.2. |
-| FR-133 | An update mechanism with automatic data and schema migrations and a backup before every update. | Should | New (S13.3). |
-| FR-134 | Install guide, admin guide, user guide, and published hardware requirements. | Must | New (S13.4). |
-| FR-135 | A release process: versioning, changelog, tagged releases. | Should | New (S13.7). |
+| FR-131 | Container packaging: Docker image and Docker Compose setup. | Must | New (S11.1). |
+| FR-132 | Native installation as a system service on the platforms the user chooses. | Should | New (S11.2). Q5. |
+| FR-149 | **Per-platform setup scripts**: a separate setup script for each supported platform (Linux x86-64, Raspberry Pi, Windows 11) that, when run, deploys the NAS automatically: it installs or verifies every prerequisite, installs the NAS, creates the configuration and storage root, and starts the service. | Must | New in 1.1.0 (user, S005 E015). S11.2. |
+| FR-133 | An update mechanism with automatic data and schema migrations and a backup before every update. | Should | New (S11.3). |
+| FR-134 | Install guide, admin guide, user guide, and published hardware requirements. | Must | New (S11.4). |
+| FR-135 | A release process: versioning, changelog, tagged releases. | Should | New (S11.7). |
 
-#### Duplicates, look-alike stacks, and bursts (S11) — new in 1.4.0 (P005)
-
-Labels: **[User requirement]** comes from the user (P005, or the user's chat messages in S007, quoted in the log); **[Planner addition]** was added by the planner and can be removed by the user; **[Specification]** details the user's requirements (P005). Photo duplicates, stacks, and file duplicates are always found **within one user's own items** (I5).
-
-| ID | Requirement | Priority | Notes |
-|---|---|---|---|
-| FR-150 | **[User requirement]** Detect exact duplicate photos (byte-identical content) by content hash, whatever their names or folders. | Must | S11.2. Hashes stored at upload (FR-211). |
-| FR-151 | **[User requirement]** Detect **resolution variants**: the same picture at another resolution, compression, or format (e.g. a copy re-saved by a messaging app, or a JPEG and a HEIC export of one shot), by perceptual-hash distance under a strict threshold, a matching aspect ratio, and a matching date taken when both have one. | Must | S11.2. Thresholds configurable, calibrated on a labelled fixture set (NFR-034). |
-| FR-152 | **[User requirement]** For each duplicate group the user chooses which item or items to keep, comparing thumbnail, resolution, size, format, date taken, place, camera, albums, favorite and sharing status, and whether EXIF is present. A recommended pick is highlighted (highest resolution, then most complete metadata, then earliest upload). | Must | S11.3. |
-| FR-153 | **[Planner addition]** Detection runs only within one user's own photos and files. Items are never compared across users, and shared items are never deletion candidates for the user they are shared with (I5). | Must | S11.2, S11.5. |
-| FR-154 | **[Planner addition]** A per-user policy for exact duplicate photos at upload: "Skip and report" (default), "Keep both", or "Ask". Resolution variants are never blocked at upload; they are flagged for review. | Should | S11.2. Default pending Q45. |
-| FR-155 | **[Planner addition]** Bulk resolution: apply a rule to all groups (e.g. keep the highest resolution, keep the earliest upload), with a preview of every group's result before applying (I10). | Should | S11.3. |
-| FR-156 | **[Planner addition]** Metadata merge before removal: album memberships, favorite flag, user tags, descriptions, and sharing grants are copied to the kept item, and date taken and GPS when the kept item lacks them. The kept item's sidecar records where merged data came from. | Should | S11.3. |
-| FR-157 | **[Planner addition]** "Not duplicates": a group the user marks is saved and never suggested again. | Should | S11.3, S11.6. |
-| FR-158 | **[Planner addition]** Reclaimable space shown per group and in total. | Should | S11.3, S11.7. |
-| FR-159 | **[Specification]** Removed duplicates go to the owner's trash (S08.1) and can be restored. Scans run incrementally on every new upload, on a schedule, and on demand, as background jobs. Videos: exact duplicates only (resolution variants for video are a Could, 11a). | Must | S11.2, S11.3. |
-| FR-160 | **[User requirement]** Group photos that are almost the same but differ slightly (burst shots, several attempts at a pose, slightly edited or cropped versions) into **stacks**, automatically: perceptual-hash distance within a looser threshold than for resolution variants, date taken within a short configurable window, and the same camera when known. Exact duplicates and resolution variants go to the duplicates flow, not into stacks. Stacking never deletes anything. | Must | S11.4. |
-| FR-161 | **[User requirement]** Show that a photo is a stack: the grid shows one cover with a badge counting the photos; opening the stack shows all of them. Timeline and albums show the cover with its badge; search matches any member and shows it with a stack badge. | Must | S11.4, S11.7. |
-| FR-162 | **[User requirement]** The user chooses which photo of a stack is shown on the grid. By default the first photo is shown: the earliest date taken, then the earliest upload (to be confirmed, Q42). | Must | S11.4. |
-| FR-163 | **[User requirement]** "Keep one, delete the rest" for a stack: the rest go to the trash after a confirmation (I10). | Must | S11.4. |
-| FR-164 | **[User requirement]** AI may be used to find near-identical photos: image-embedding similarity finds look-alikes that were not shot in a burst, and **[Planner addition]** a smart cover suggestion (sharpest, eyes open, best exposure) that never overrides a cover the user chose. | Could | S15.11 (optional AI, I7). |
-| FR-165 | **[User requirement]** _(the user in S007 E004: "you also need to add auto grouping of burst photos")_ **Automatic grouping of burst photos.** A burst is found first from the camera's burst identifier (verified: Apple maker note `BurstUUID`; Google XMP `GCamera:BurstID`, with `GCamera:BurstPrimary` marking the camera's chosen shot), then, for cameras without one, from the shot sequence: the same camera, consecutive shots within a short configurable interval (sub-second times where present). A burst is shown as a stack with the same controls; the camera's primary shot, when marked, is the default cover. | Must | S05.3 extracts the identifiers; S11.4 groups. |
-| FR-166 | **[Planner addition]** Manual stacks from selected photos. Every user decision (chosen cover, removal from a stack, unstacking, merging stacks, manual stacks) is saved and never overridden by automatic regrouping. | Should | S11.4. |
-| FR-167 | **[Planner addition]** Stacks are visible only to the owner. Users a photo is shared with see it as an individual photo. | Must | S11.4. |
-| FR-168 | **[Specification]** Stack settings: automatic stacking on or off, sensitivity (strict, normal, loose), time window. Stack membership, cover flag, and user decisions are stored in each member's sidecar, so stacks survive index rebuilds (I3). | Should | S11.4, S05.1. |
-
-#### File duplicates and shortcuts (S11) — new in 1.4.0 (P005)
-
-| ID | Requirement | Priority | Notes |
-|---|---|---|---|
-| FR-169 | **[User requirement]** Find duplicate files in the files area: identical content, whatever the name or folder (grouped by size, then a partial hash of the first and last blocks, then the full hash). Empty files are excluded. Files added outside the app get their hashes from the watcher and reconciliation (S09.4, S05.7). | Must | S11.5. Near-duplicate documents are out of scope (NG11). |
-| FR-170 | **[User requirement]** For each group the user chooses to keep all (the group is marked "not duplicates" and never suggested again) or to keep one, choosing which by full path, name, modified and created dates, and folder. The others go to the trash. | Must | S11.6. |
-| FR-171 | **[User requirement]** For each removed copy, the user can place a **shortcut** at its old location, pointing to the kept file. | Must | S11.6. Representation per ADR-0024. |
-| FR-172 | **[Planner addition]** A folder ignore list for folders where duplicates are intentional (e.g. project folders). | Should | S11.5. |
-| FR-173 | **[Planner addition]** Upload-time check: when an upload matches an existing file of the same user, show where it already is and offer keep both, skip the upload, or save a shortcut to the existing file instead. | Should | S11.5. |
-| FR-174 | **[Planner addition]** Bulk rules with a preview: keep the oldest, the newest, the shortest path, or the copy in a preferred folder. | Should | S11.6. |
-| FR-175 | **[Specification]** Shortcut behavior (if ADR-0024 chooses app-level shortcuts): opening or downloading serves the target; it shows the target's current path and follows moves and renames; a target in the trash shows "target missing" with a restore option; deleting a shortcut never deletes its target; deleting a target warns how many shortcuts point to it; shortcuts use no quota and cannot be shared (share the target); access checks on the target always apply (I5); listings show a shortcut icon; search shows the target once and notes its shortcuts. Behavior over network shares per ADR-0024 (Q46). | Must | S11.6, S09.2, S10.2. |
-
-#### Storage optimization (S12) — new in 1.4.0 (P005)
-
-| ID | Requirement | Priority | Notes |
-|---|---|---|---|
-| FR-176 | **[User requirement]** Reduce the resolution and/or the quality of existing photos and videos to save storage. | Must | S12.1, S12.2, S12.5. |
-| FR-177 | **[User requirement]** Choose the scope: all media, selected items, photos only, videos only, or media in an album, a look-alike stack, a face group, or an AI classification (the last two once S15 exists). Filters combine, so compression can be limited to certain types or groups. | Must | S12.3; face-group and classification filters activated in S15.11. |
-| FR-178 | **[Planner addition]** More scope filters: date range, minimum resolution (e.g. photos above 12 megapixels, videos above 1080p), minimum file size, file format. | Should | S12.3. |
-| FR-179 | **[User requirement]** Reduce future uploads automatically: per-user **upload policies**, each a set of conditions (media type, target album, minimum resolution; face group and AI classification once S15 exists) and an action (the same settings as bulk optimization), each switchable on and off. They run at ingest, after the upload completes and before the item appears in the library. | Must | S12.6. AI conditions run as a follow-up job after AI processing (hook defined in S12.6, activated in S15.11). |
-| FR-180 | **[User requirement]** The user chooses how much quality reduction to apply: a format-specific quality slider for images (e.g. 1–100 for JPEG and WebP, default 85), and a constant-quality (CRF) slider for video. | Must | S12.1, S12.2. |
-| FR-181 | **[User requirement]** A **live preview** of one sample shows the result before anything changes: the user picks a sample from the scope or gets a random one ("next sample"); side by side and a slider overlay, zoom to 100%, original and resulting dimensions and sizes; for video, a few seconds of clip and a still frame with an estimated size. Rendered on the server, debounced, never saved. | Must | S12.4, S12.7. |
-| FR-182 | **[User requirement]** Reduce to a fixed resolution W×H; when the aspect ratio differs, the user chooses whether the **width** or the **height** is matched. Example: 1920×1080 to a 1024×768 target gives 1024×576 (match width) or 1365×768 (match height). | Must | S12.1. |
-| FR-183 | **[User requirement]** Percentage scaling instead: each dimension scaled by the percentage (50% turns 4000×3000 into 2000×1500, a quarter of the pixels); the GUI says the percentage applies per dimension. | Must | S12.1. |
-| FR-184 | **[Planner addition]** "Fit within target": both dimensions end at or below the target, keeping the aspect ratio (1920×1080 within 1024×768 gives 1024×576). | Should | S12.1. |
-| FR-185 | **[Planner addition]** Orientation-aware targets (on by default): for portrait photos the target's width and height are swapped. | Should | S12.1. |
-| FR-186 | **[Planner addition]** Never upscale: items at or below the target are not resized (quality reduction can still apply if selected). The aspect ratio is always kept; images are never stretched or cropped. Dimensions are rounded by a defined, tested rule (round half up; even dimensions where a format requires it). | Must | S12.1. |
-| FR-187 | **[Planner addition]** RAW files and animated images are excluded by default. Including RAW converts it to JPEG or HEIC, with a clear warning that the raw sensor data is lost. | Must | S12.1. |
-| FR-188 | **[Planner addition]** Before running, an estimate for the whole scope: items that will change, items skipped with reasons (already small enough, RAW, …), and the space saved, from sampling. | Should | S12.3. |
-| FR-189 | **[Planner addition]** Replaced originals are kept for a retention period (default 30 days, configurable; Q44) and can be reverted per item or per job. Optionally the originals are deleted at once, with a clear warning that this cannot be undone; the GUI explains that space is freed only once the originals are gone. | Must | S12.5, ADR-0026. |
-| FR-190 | **[Specification]** Metadata is preserved: EXIF, XMP, and IPTC copied to the new file with ExifTool; orientation handled one way only (pixels rotated upright, tag reset); video creation time, GPS, and rotation kept; the sidecar updated (new dimensions, size, content hash, perceptual hash) with an `optimizationHistory` entry (date, original dimensions, size, and hash, settings). Face boxes are normalized (0–1), so they stay valid. Thumbnails, the index, and the exact-duplicate check are refreshed. | Must | S12.1, S12.2, S12.5. |
-| FR-191 | **[Specification]** Bulk optimization runs as a job: dry run; a confirmation with counts and the estimate (I10); progress, pause, resume, cancel; failed items skipped and reported; each item replaced atomically (written to a temp file, verified to decode and to carry its metadata, then swapped in); items already optimized with the same or stronger settings skipped unless forced; quota updated once the originals are removed. Only the owner can optimize their items; people an item is shared with see the new version. | Must | S12.5. |
-| FR-192 | **[Specification]** Video settings: the same resize modes plus presets (2160p, 1440p, 1080p, 720p, 480p), never upscaling; CRF quality; codec per ADR-0025 (H.264 by default; HEVC or AV1 optional, Q48); audio kept (re-encoding at a set bitrate optional); hardware encoding optional per ADR-0025. | Must | S12.2. |
-| FR-193 | **[Specification]** Converting to another format (e.g. WebP, AVIF, HEIC). | Could | S12.1. |
-| FR-194 | **[Planner addition]** A storage report: space saved over time and space reclaimable from duplicates. | Could | S12.7, S10.1. |
-
-#### Multi-drive storage pools (S14) — new in 1.4.0 (P005; scope and position set by the user in S007)
-
-The user in S007 (E008): "if working with raids is a complex problem, just do raid 0 and 1 implementation and that too in the end, and leave complex raid for later as planned non implemented work". So S14 builds RAID 0 and RAID 1; the other layouts stay recorded here as **Deferred** (planned, not implemented; section 11a).
-
-| ID | Requirement | Priority | Notes |
-|---|---|---|---|
-| FR-195 | **[User requirement]** Combine several drives, RAID style: **RAID 0** (striping; capacity = members × the smallest; no redundancy, one failed drive loses all data, and the GUI says so) and **RAID 1** (mirroring; capacity = the smallest member; survives all but one member failing). | Must | S14. |
-| FR-196 | **[User requirement]** In striped (and later parity) layouts, every member contributes only the size of the smallest member; extra space on larger members is shown as unused. | Must | S14.4. |
-| FR-197 | **[User requirement]** Parity layout, "RAID 4 style": data split across a set of drives and one drive holds parity, so data survives one drive failing. | Deferred | The user's decision (S007 E008). 11a. |
-| FR-198 | **[User requirement]** Combine smaller drives into one larger **virtual drive** (end to end) that can be a member of a striped or parity pool. The user's example: 2, 1, 1, 2, 2, 2 TB; the two 1 TB drives form a 2 TB virtual drive; data across four 2 TB members and the fifth 2 TB drive holds parity: 8 TB usable, surviving one member failure. | Deferred | The user's decision (S007 E008). 11a, with the example as its acceptance test. |
-| FR-199 | **[Planner addition]** Distributed parity (RAID 5) and double parity (RAID 6). | Deferred | 11a. |
-| FR-200 | **[Planner addition]** A live calculator while designing a pool: usable capacity, unused space per drive, fault tolerance ("survives 1 drive failure"), warnings, and suggestions that waste less space. | Should | S14.4, S14.9. |
-| FR-201 | **[Planner addition]** Unused space on larger members offered as a separate, unprotected volume. | Could | S14.4 (design only), 11a. |
-| FR-202 | **[Specification]** Drive discovery: model, serial number, size, type (HDD, SSD, NVMe), SMART health, partitions, mount status, and whether the drive holds the operating system or current NAS data. | Must | S14.3, S10.3. |
-| FR-203 | **[Specification]** Creation safety (I10): creating a pool erases every member; each drive is listed with model and serial; the user types a confirmation phrase; the OS drive and drives holding NAS data are refused (except through migration); a SMART check runs first, with warnings. | Must | S14.5. |
-| FR-204 | **[Specification]** The pool is formatted (filesystem per ADR-0028), mounted, and set as the storage root. | Must | S14.5. |
-| FR-205 | **[Planner addition]** Data migration: move an existing storage root onto a new pool in a maintenance mode, verify with checksums, and switch paths only after the verification succeeds (rollback otherwise). | Should | S14.6. |
-| FR-206 | **[Specification]** Monitoring and failures: pool state (healthy, degraded, rebuilding, failed) and per-drive SMART (S10.3) with alerts; a degraded RAID 1 keeps serving data; a replace-drive wizard; rebuild with progress; clear guidance when more drives failed than the layout protects against; "RAID is not a backup", linking to external backup (S08.6). | Must | S14.7. |
-| FR-207 | **[Planner addition]** Scheduled consistency checks (scrubs) with mismatch reports. | Should | S14.7. |
-| FR-208 | **[Planner addition]** Expansion: add drives, or replace drives with larger ones and grow the pool, where the tool supports it. | Could | S14.8. |
-| FR-209 | **[Planner addition]** Import: detect existing pools after a reinstall or on a new machine (the pool's configuration lives on the drives). | Should | S14.8. |
-| FR-210 | **[Specification]** A **privileged storage helper**: the core stays unprivileged; disk operations go through a small separate host service running as root, with a narrow allow-listed set of operations over an authenticated local Unix socket, every request audit-logged; in Docker the helper runs on the host. Linux only; elsewhere the pool feature is hidden and single-path storage works as before. | Must | S14.2, ADR-0029, S03.1. |
-
-#### Hashing foundation (S01 follow-up, S04) — new in 1.4.0 (P005)
-
-| ID | Requirement | Priority | Notes |
-|---|---|---|---|
-| FR-211 | **[Specification]** A **content hash** for every file uploaded to either area, computed while it streams (resumable uploads keep the hash state between chunks), stored with the item. Algorithm per ADR-0021 (SHA-256 unless benchmarks justify BLAKE3). Files from before are covered by the S11.1 backfill. | Must | S01 follow-up tasks (`stages/S01-basic-nas.md`, scheduling Q50), S04.2. |
-| FR-212 | **[Specification]** A **perceptual hash** for every image, computed with its thumbnails and stored (sidecar and index). | Must | S04.4, ADR-0022. |
-| FR-213 | **[Specification]** Look-alike and duplicate lookups use a similarity index (e.g. a BK-tree or multi-index hashing), so detection scales to 100,000+ photos without comparing every pair. | Must | S11.1, ADR-0022. |
-
-#### AI (S15)
+#### AI (S12)
 
 | ID | Requirement | Priority | Notes |
 |---|---|---|---|
@@ -431,18 +329,18 @@ The user in S007 (E008): "if working with raids is a complex problem, just do ra
 | FR-139 | AI GUI: an Explore view (People, Things, Places), face group management, and an AI settings page (opt-in, status, progress, model information, pause). | Must | New. |
 | FR-140 | Classifications and face groups are per user and follow S07 access rules. The handling of faces in shared photos is defined. | Must | New. |
 | FR-141 | OCR so the text of receipts and documents is searchable. | Could | New. Pending Q36. |
-| FR-142 | Similar-photo (near-duplicate) detection. | Could | New. _Changed in 1.4.0 (P005):_ the baseline is now in S11 (FR-151, FR-160), and the AI enhancement in S15.11 (FR-164). No longer part of Q36. |
+| FR-142 | Similar-photo (near-duplicate) detection. | Could | New. Pending Q36. |
 
 ### 3.2 Non-functional requirements
 
 | ID | Requirement | Priority | Notes |
 |---|---|---|---|
 | NFR-001 | **Local-only and private** (I6): no telemetry, no cloud dependencies, no runtime network calls unless the user explicitly enables a feature that needs one. The GUI and API docs load no remote assets. | Must | All stages. |
-| NFR-002 | **AI optional and isolated** (I7): AI runs as a separate optional process/container, and the NAS is fully functional without it. AI failures cannot affect the core. | Must | S15. |
-| NFR-003 | **Performance** (measured on the Q1 platforms, see Q1; library size confirmed by Q18: 100,000 photos + 100,000 files): S01, listing a 10,000-entry folder p95 ≤ 500 ms and transfer throughput ≥ 80% of raw disk/network. S04, timeline page p95 ≤ 500 ms at 50,000 photos. S06, search p95 ≤ 300 ms and full index rebuild ≤ 15 min at 100,000 photos + 100,000 files. S13, targets met under the target user count. | Must | Priority Should → Must and targets updated in 0.2.0. |
+| NFR-002 | **AI optional and isolated** (I7): AI runs as a separate optional process/container, and the NAS is fully functional without it. AI failures cannot affect the core. | Must | S12. |
+| NFR-003 | **Performance** (measured on the Q1 platforms, see Q1; library size confirmed by Q18: 100,000 photos + 100,000 files): S01, listing a 10,000-entry folder p95 ≤ 500 ms and transfer throughput ≥ 80% of raw disk/network. S04, timeline page p95 ≤ 500 ms at 50,000 photos. S06, search p95 ≤ 300 ms and full index rebuild ≤ 15 min at 100,000 photos + 100,000 files. S11, targets met under the target user count. | Must | Priority Should → Must and targets updated in 0.2.0. |
 | NFR-004 | **Modest hardware**: the core runs on a 4-core CPU with 4 GB RAM. AI runs CPU-only by default with bounded memory. | Must | |
 | NFR-005 | Optional GPU acceleration for AI. | Could | |
-| NFR-006 | **Data integrity**: originals are never altered by background work. File and sidecar writes are atomic, so a crash never leaves partial files. | Must | _1.4.0 (P005):_ the one exception is storage optimization the user starts or enables (S12): it replaces an original only after verifying the new file, and keeps the original for the retention period (I10, FR-189). |
+| NFR-006 | **Data integrity**: originals are never altered by background work. File and sidecar writes are atomic, so a crash never leaves partial files. | Must | |
 | NFR-007 | **Metadata portability**: UTF-8 JSON sidecars with a published schema, readable without the app. | Must | |
 | NFR-008 | **Ease of deployment**: one-command start (Docker Compose) with sensible defaults. A development environment exists from S01. | Must | |
 | NFR-009 | **Platforms**: Linux x86-64/ARM64 via containers (Must). Native platforms per Q5 (Should). CI runs on Linux and Windows from S01. Windows 11 is a required development and test platform, and the server runs natively there (Q1). | Must | Updated in 0.5.0 (Q1, S005). |
@@ -468,13 +366,6 @@ The user in S007 (E008): "if working with raids is a complex problem, just do ra
 | NFR-029 | **License policy**: every dependency, external tool, dataset, and AI model has a license that allows **anyone to deploy and use** the project. Nothing is restricted to non-commercial or research-only use. Each is recorded in `dependencies.md` with its license. | Must | New in 0.3.0 (P003). |
 | NFR-030 | **Multi-architecture**: the core and its images build and run on **linux/amd64 and linux/arm64** (e.g. Raspberry Pi), via pure-Go builds and multi-arch container images. | Must | New in 0.3.0 (P003). |
 | NFR-031 | **Streaming start-up and resource bounds** (measured on the Q1 platforms, see Q1). A newly requested level starts playing within ≤ 4 s with a hardware encoder, or ≤ 8 s for 720p on CPU-only reference hardware. Transcoding never starves the core: sessions are bounded, and interactive API latency stays within NFR-003. | Should | New in 0.4.0 (ADR-0020). |
-| NFR-033 | **Safe destructive bulk operations** (invariant I10): deleting duplicates, reducing media, and creating or changing pools always show a preview, need explicit confirmation, and keep an undo window where technically possible; where undo is impossible, the confirmation says so plainly. | Must | New in 1.4.0 (P005). S11, S12, S14. |
-| NFR-034 | **Duplicate and look-alike accuracy**: on the labelled fixture set, exact-duplicate detection has no false positives, resolution-variant detection stays under a false-positive target set in S11.1 (strict by default, since a false positive leads to a deletion proposal), and detection at 100,000 photos runs incrementally without comparing every pair. | Must | New in 1.4.0 (P005). S11.1, S11.8. |
-| NFR-035 | **Preview responsiveness**: an optimization preview of a typical photo renders within a bound set in S12.4 on reference hardware, and previews are rate-limited so they never overload the server. | Should | New in 1.4.0 (P005). S12.4. |
-| NFR-036 | **Portable storage root**: the storage root assumes no single physical disk and can be moved onto a pool (S14.6); upload temp and trash always follow the root's filesystem (A18). | Must | New in 1.4.0 (P005, S01.2 follow-up). |
-| NFR-037 | **Privileged operations isolated**: the core never runs as root; disk operations go only through the storage helper's allow-listed, authenticated, audited interface, covered by the threat model. | Must | New in 1.4.0 (P005). S03.1, S14.2. |
-| NFR-038 | **No real disks in tests**: pool tests use loop devices or virtual disks in a VM; a documented manual test on real hardware precedes release. | Must | New in 1.4.0 (P005). S14.10. |
-| NFR-039 | **Metadata preservation in optimization**: across JPEG, HEIC, PNG, and video formats, every EXIF, XMP, and IPTC field of the fixture set survives optimization, and orientation is applied exactly once. | Must | New in 1.4.0 (P005). S12.8. |
 | NFR-032 | **Dependency record for deployment**: every dependency needed to build or deploy the NAS is recorded in `dependencies.md` in the same commit that introduces it (R6), and every **runtime prerequisite** also gets a per-platform entry (minimum version and install method for Linux x86-64, Raspberry Pi, Windows 11, and the Docker image) in section 12. The setup scripts (FR-149) are checked against this record. | Must | New in 1.1.0 (user, S005 E015). All stages from S01. |
 
 ---
@@ -495,17 +386,15 @@ Assumptions are numbered permanently. Ones overturned by the 0.2.0 design are ma
 - **A10:** English for the UI, the taxonomy, and the synonym dictionary in the first releases (Q15).
 - **A11:** AI model weights are either bundled in the optional AI image or downloaded once at opt-in with explicit consent, and are checksum-verified (FR-032, ADR-0017). They are never fetched at runtime otherwise.
 - **A12:** Performance planning targets 100,000 photos + 100,000 files per installation. **Confirmed by the user (Q18, S005).**
-- **A13:** The primary deployment target is containers on Linux (x86-64, ARM64). Native installs come in S13.2 (Q5). Windows 11 is a supported development and test platform, and the server must run natively there (Q1, S005).
+- **A13:** The primary deployment target is containers on Linux (x86-64, ARM64). Native installs come in S11.2 (Q5). Windows 11 is a supported development and test platform, and the server must run natively there (Q1, S005).
 - **A14:** The README sidecar draft is a starting point. The schema is finalized by ADR in S05.1.
 - **A15:** The project lives on GitHub (`origin`: `KhizirFarrukh/local-ai-nas`), with CI on GitHub Actions (Q24).
 - **A16:** Development happens on Windows 11, so all tooling must work on Windows and on Linux CI.
 - **A17:** Until S03 is Done, the NAS is used only on the machine it runs on (localhost, no authentication).
-- **A18:** The storage root, including internal temp uploads and trash, sits on a single filesystem, so atomic renames work between them. The startup health check verifies this. _Changed in 1.4.0 (P005):_ several disks can be pooled by the host OS, or, on Linux, by the NAS itself as RAID 0 or RAID 1 (S14); a pool is still one filesystem, so this assumption holds.
+- **A18:** The storage root, including internal temp uploads and trash, sits on a single filesystem, so atomic renames work between them. Multi-disk setups are pooled by the host OS (NG8). The startup health check verifies this.
 - **A19:** Internal app data defaults to `<storage root>/.local-ai-nas/`, with an optional separate location for the database, index, and caches (ADR-0003, Accepted in S005). The configuration file lives outside the storage root, because it is what tells the app where the root is.
 - **A20:** Within a stage, the task execution order may differ from substage numbering when dependencies require it. The stage document records the order.
 - **A21:** The target browsers play HLS natively or through Media Source Extensions / ManagedMediaSource (hls.js). Where only native HLS is available, the quality menu offers Auto only (ADR-0020).
-- **A22:** _(1.4.0, P005)_ Drive pools are **Linux only** (they need root and Linux tools). On Windows 11 and in any setup without the storage helper, the pool feature is hidden, and single-path storage works as before (Q47).
-- **A23:** _(1.4.0, P005)_ Content hashes use SHA-256 from the Go standard library unless benchmarks in ADR-0021 justify BLAKE3. Perceptual hashes are 64-bit (ADR-0022).
 
 ---
 
@@ -518,7 +407,7 @@ Questions keep their numbers permanently. **★ = needed for S01**: none left (Q
 - Q16 (closed).
 - Q22 (**AGPL-3.0-or-later**).
 - Q37 (no candidates added).
-- Q38 (first usable release = **S01–S11** in the IDs of that time, i.e. through the pre-AI release; since 1.4.0 the pre-AI release is **S13**, so M3 is S01–S13: see section 11 and Q51).
+- Q38 (first usable release = **S01–S11**).
 - Q18 (library size: **100,000 photos + 100,000 files** per installation, confirming A12; before the S01.7 baseline).
 
 **Answered by P003 (0.3.0):**
@@ -534,7 +423,7 @@ Questions keep their numbers permanently. **★ = needed for S01**: none left (Q
 
 **Remaining ★ for S01:** none. ADR-0003 was Accepted in S005 (D-01).
 
-**Needed for plan baseline approval (1.0.0)** (grouped by audit A001, F-016): all items were resolved in S005: Q38, Q37, the 10.17 flags (D-02), ADR-0003 (D-01), and the other A001 decisions. **What remains is the user's explicit approval of this plan as the 1.0.0 baseline** (R4).
+**Needed for plan baseline approval (1.0.0)** (grouped by audit A001, F-016): all items were resolved in S005: Q38, Q37, the 10.14 flags (D-02), ADR-0003 (D-01), and the other A001 decisions. **What remains is the user's explicit approval of this plan as the 1.0.0 baseline** (R4).
 
 ### New in 0.2.0
 
@@ -548,26 +437,13 @@ Questions keep their numbers permanently. **★ = needed for S01**: none left (Q
 32. **Network shares.** _Partly answered (P003, ADR-0015):_ **WebDAV first**. SMB via Samba later, Linux-only, optional (ADR-0019, Proposed). **Still open:** should the photos area be exposed over network shares, and if so, read-only? _Needed by: S09.3._ _Recommendation: photos read-only over shares._
 33. **Two-factor authentication.** Wanted? _Needed by: S03.7._
 34. **File versioning.** Wanted? _Needed by: S08.5._
-35. **AI opt-in scope.** Per installation or per user? _Needed by: S15.1._
-36. **Optional AI extensions.** Which are wanted: OCR for receipts and documents, semantic search? _Needed by: S15.10._ _(1.4.0, P005: duplicate and similar-photo detection is no longer an option here; its baseline is S11 and its AI enhancement S15.11.)_
-37. _Answered (S005, D-08):_ **none added now**. Mobile auto-backup, public share links, and remote access stay unscheduled (11a). Any later addition goes before S15 (I8).
-38. _Answered (S005, D-08):_ the first usable release is **S01–S11** (milestone M3 in section 11), in the stage IDs of that time: through the pre-AI release. _Since 1.4.0 (P005)_ the pre-AI release is S13, and the new stages S11 and S12 come before it, so M3 is **S01–S13**; the user is asked to confirm this in Q51.
+35. **AI opt-in scope.** Per installation or per user? _Needed by: S12.1._
+36. **Optional AI extensions.** Which are wanted: OCR for receipts and documents, semantic search, duplicate/similar-photo detection? _Needed by: S12.10._
+37. _Answered (S005, D-08):_ **none added now**. Mobile auto-backup, public share links, and remote access stay unscheduled (11a). Any later addition goes before S12 (I8).
+38. _Answered (S005, D-08):_ the first usable release is **S01–S11** (milestone M3 in section 11).
 39. _(Planner-added)_ **Importing an existing collection.** Besides browser upload, should the admin be able to import a folder already on the host into `photos/` or `files/` (server-side copy or move)? _Needed by: S04.2._
 40. _(Planner-added)_ **Organization inside `photos/`.** Store media by date taken (`photos/<user>/YYYY/MM/`), by import batch, or in user-created folders? _Needed by: S04.1 (layout ADR)._
-41. _(Planner-added, 1.1.0)_ **Setup script default mode on Linux** (x86-64 and Raspberry Pi): should the setup script deploy with **Docker Compose** (installs Docker if missing, then starts the stack; ADR-0006 primary) or as a **native service** (binary + systemd + distribution packages)? _Needed by: S13.2._ _Recommendation: offer both; Docker Compose by default on Linux, native service on Windows 11._
-
-### New in 1.4.0 (P005)
-
-42. **Stack cover.** Is the "first photo" of a look-alike stack the one with the **earliest date taken** (proposed), or the earliest upload? _Needed by: S11.4._
-43. **Cross-area duplicates.** Should the same photo in both `files/` and `photos/` be reported as a duplicate, or ignored? _Needed by: S11.2._ _Recommendation: report it for information only, never resolve it automatically, since the areas are separate by design (I1)._
-44. **Retention of replaced originals** after optimization: how long (proposed: **30 days**)? _Needed by: S12.5._
-45. **Exact duplicate photos at upload:** "Skip and report" (proposed), "Keep both", or "Ask"? _Needed by: S04.2 (default), S11.2 (policy)._
-46. **File shortcuts over network shares:** shown as a read-only view of the target (proposed in ADR-0024), or hidden? _Needed by: S11.6, S09.2._
-47. **Pools:** is mdadm acceptable for RAID 0 and RAID 1 (recommended, ADR-0027), and is **Linux-only** acceptable for pools (A22)? _Needed by: S14.1._ _(SnapRAID with mergerfs and parity layouts are deferred with the complex RAID, 11a; RAID 5 and RAID 6 are answered by the user's decision in S007: later.)_
-48. **Video codec for optimization:** H.264 only (most compatible, recommended default), or also H.265/HEVC and AV1 (smaller files; slower encoding and weaker browser support)? _Needed by: S12.2 (ADR-0025)._
-49. **Who applies optimization policies:** only each user to their own media (proposed), or can an admin apply policies to all users? _Needed by: S12.6._
-50. _Answered (S007, E010): now, with the current stage ("make sure to work on the new stuff too if they were meant to be part of current or previous stages"); the content hash still waits for ADR-0021 to be Accepted._ _(Planner-added, from fixing P005)_ **When are the S01 follow-up tasks done** (content hash at upload in both areas; storage-root checks), now that S01 is Done? _Recommendation:_ at the start of S04, before S04.2 needs the hashes; files uploaded before then are covered by the S11.1 backfill. The content-hash ADR (ADR-0021) must be decided first. _Needed by: S04._
-51. _(Planner-added)_ **Confirm the first usable release (M3)** as S01–S13, which now includes duplicates and look-alikes (S11) and storage optimization (S12), with drive pools (S14) after the release (section 11). _Needed by: S13._
+41. _(Planner-added, 1.1.0)_ **Setup script default mode on Linux** (x86-64 and Raspberry Pi): should the setup script deploy with **Docker Compose** (installs Docker if missing, then starts the stack; ADR-0006 primary) or as a **native service** (binary + systemd + distribution packages)? _Needed by: S11.2._ _Recommendation: offer both; Docker Compose by default on Linux, native service on Windows 11._
 
 ### Carried over from 0.1.0
 
@@ -575,17 +451,17 @@ Questions keep their numbers permanently. **★ = needed for S01**: none left (Q
 2. _Resolved by P002:_ single admin account from S03; multi-user in S07.
 3. _Superseded by Q37_ (remote access is a not-scheduled candidate).
 4. _Answered by P003:_ Go for the core (ADR-0001), REST + OpenAPI (ADR-0002), SvelteKit + TypeScript for the UI (ADR-0009), Python for the AI worker only (ADR-0017).
-5. **Deployment method.** _Partly answered (P003, ADR-0006):_ Docker Compose primary (linux/amd64 + arm64); native Linux secondary (binary + systemd). _Informed by Q1 (S005):_ the server must run natively on Windows 11 for testing (already required by CI and S01.1). _Partly answered by the user (S005 E015):_ **a separate setup script for each platform** that deploys the NAS automatically (FR-149): Linux x86-64, Raspberry Pi, and Windows 11. **Still open:** macOS; and the default mode of the Linux scripts (Q41). _Needed by: S13.2._
-6. **AI hardware and speed expectations.** _Partly answered (P003):_ CPU by default, optional GPU. **Still open:** what minimum machine and processing speed are acceptable (e.g. "backfill 50,000 photos overnight")? _Needed by: S15.1._
-7. _Answered (P003, ADR-0017):_ CPU by default. Optional GPU acceleration through ONNX Runtime execution providers (e.g. CUDA, OpenVINO); which ones are supported is evaluated in S15.1.
+5. **Deployment method.** _Partly answered (P003, ADR-0006):_ Docker Compose primary (linux/amd64 + arm64); native Linux secondary (binary + systemd). _Informed by Q1 (S005):_ the server must run natively on Windows 11 for testing (already required by CI and S01.1). _Partly answered by the user (S005 E015):_ **a separate setup script for each platform** that deploys the NAS automatically (FR-149): Linux x86-64, Raspberry Pi, and Windows 11. **Still open:** macOS; and the default mode of the Linux scripts (Q41). _Needed by: S11.2._
+6. **AI hardware and speed expectations.** _Partly answered (P003):_ CPU by default, optional GPU. **Still open:** what minimum machine and processing speed are acceptable (e.g. "backfill 50,000 photos overnight")? _Needed by: S12.1._
+7. _Answered (P003, ADR-0017):_ CPU by default. Optional GPU acceleration through ONNX Runtime execution providers (e.g. CUDA, OpenVINO); which ones are supported is evaluated in S12.1.
 8. _Superseded by Q26._
 9. _Superseded by Q39_ (the "in place" library model was replaced by the two-area layout).
 10. **External changes**: policy for files changed outside the app (re-associate by hash; orphaned sidecars quarantined, never deleted silently)? _Needed by: S05.7, S09.4._
 11. **Sidecar naming vs. other tools** (e.g. Google Takeout also writes `<name>.json`). The risk is much lower now, because `photos/` accepts only media through the app. It remains for network shares (S09.3) and server-side import (Q39). Keep README naming plus an identifying marker (**recommended**)? Import Takeout metadata? _Needed by: S05.1._
 12. _Resolved by P002:_ the files area has no photo sidecars and is searchable by name and file metadata in S06. Content search is Q31.
-13. **Albums and face-group storage.** Under I2 they cannot live inside `photos/`. Options: (a) the internal database, backed up by S08.3; (b) JSON documents in internal app data, easy to back up and export (**recommended**). Also: keep `groupName` in each sidecar (README draft) or only a `groupId`? _Needed by: S04.5, S15.5._
+13. **Albums and face-group storage.** Under I2 they cannot live inside `photos/`. Options: (a) the internal database, backed up by S08.3; (b) JSON documents in internal app data, easy to back up and export (**recommended**). Also: keep `groupName` in each sidecar (README draft) or only a `groupId`? _Needed by: S04.5, S12.5._
 14. **Date operator semantics.** Does `after:2025` mean "from 2026" (**recommended**) or include 2025? Compare on the photo's local capture time (**recommended**)? _Needed by: S06.3._
-15. **Languages** for search, synonyms, and taxonomy: English only, or Urdu too? _Needed by: S06.5, S15.3._
+15. **Languages** for search, synonyms, and taxonomy: English only, or Urdu too? _Needed by: S06.5, S12.3._
 16. _Closed (confirmed by the user in S005, D-11). Answered by implication of P003 (NFR-029, ADR-0018):_ only models whose licenses let anyone deploy and use the project. **InsightFace pretrained weights are excluded.** YuNet (MIT) + SFace (Apache-2.0) are chosen.
 17. _Superseded by Q38._
 18. ★ **Library size**: current and expected number of photos, files, and GB? _Needed by: S01.7 baseline, S04.9, S06.8 targets._
@@ -629,13 +505,7 @@ Questions keep their numbers permanently. **★ = needed for S01**: none left (Q
 | **Trash, integrity, and backup** | S08 | Per-user trash, checksums, metadata backup, external backup jobs. |
 | **Share gateway** | S09 | WebDAV (in-app) and/or SMB (Samba) mapped to NAS users and permissions. |
 | **Admin and monitoring** | S10 | Dashboard, quotas, disk health, job monitor, settings, log viewer. |
-| **Hashing and similarity** | S01 follow-up, S04.4, S11.1 | Content hash computed while an upload streams (FR-211); perceptual hash computed with thumbnails (FR-212); an in-memory similarity index (BK-tree or multi-index hashing, ADR-0022) rebuilt from the stored hashes. |
-| **Duplicates and stacks service** | S11 | Per-user duplicate groups (exact, resolution variants, files), look-alike stacks and bursts, "not duplicates" marks, metadata merge, resolution through the trash. Writes photo decisions through the sidecar manager (I9). |
-| **Shortcut service** | S11.6 | App-level shortcuts (ADR-0024) referencing a target by its stable file ID; followed by listings, downloads, search, quotas, and network shares. |
-| **Optimization service** | S12 | Resize and re-encode engines (libvips, FFmpeg, ExifTool as subprocesses), live preview renderer, bulk jobs, upload policies, originals retention and revert (ADR-0025, ADR-0026). |
-| **Storage helper (host, root)** | S14.2 | A small separate service on the Linux host (systemd). Allow-listed disk operations (discover, create RAID 0/1, format, mount, check, replace) over an authenticated local Unix socket, audit-logged (ADR-0029). The core stays unprivileged. |
-| **Pool manager** | S14 | Pool designer and capacity engine (RAID 0/1, built to take parity later), creation and migration wizards, monitoring and rebuilds, through the storage helper (ADR-0027, ADR-0028). |
-| **AI worker (optional)** | S15 | A separate process/container. Pulls AI jobs, reads media read-only, returns results. The core writes the results to sidecars and the index. |
+| **AI worker (optional)** | S12 | A separate process/container. Pulls AI jobs, reads media read-only, returns results. The core writes the results to sidecars and the index. |
 
 ### 6.2 Diagram (concrete components, 0.3.0)
 
@@ -665,13 +535,7 @@ flowchart TB
         DAV["WebDAV: x/net/webdav custom FileSystem (ADR-0015)"]
         WATCH["fsnotify watcher + reconciler (ADR-0016)"]
         INTAPI["Internal AI job API: local-only, token (ADR-0017)"]
-        DUPS["Duplicates, stacks, shortcuts (S11)"]
-        OPT["Optimization: preview, jobs, policies (S12)"]
-        POOLS["Pool manager (S14)"]
     end
-
-    HELPER["Storage helper on the Linux host, root, Unix socket (S14.2, ADR-0029)"]
-    POOL[("Optional pool: mdadm RAID 0/1, ext4 or XFS, mounted as the storage root (S14)")]
 
     DB[("SQLite WAL: users, sessions, settings, jobs, audit, share mirror (ADR-0007)")]
     TOOLS["External tools as subprocesses: ExifTool (Perl), libvips + libheif, FFmpeg / ffprobe"]
@@ -725,16 +589,6 @@ flowchart TB
     INTAPI --> JOBS
     INTAPI -->|"validated results; core writes (I9)"| SIDE
     AIW -.->|"read-only mount"| PHOTOS
-    POLICY --> DUPS
-    POLICY --> OPT
-    DUPS --> JOBS
-    DUPS --> SIDE
-    OPT --> JOBS
-    OPT --> MEDIA
-    POLICY --> POOLS
-    POOLS -->|"allow-listed requests"| HELPER
-    HELPER --> POOL
-    POOL -.->|"holds"| Root
 ```
 
 ### 6.3 Storage layout (ADR-0003, Accepted)
@@ -747,28 +601,23 @@ flowchart TB
 │   └── <user-namespace>/…            media + <name>.json sidecars (S04, S05); layout inside per Q40
 └── .local-ai-nas/                    internal app data (I2), default location (A19)
     ├── tmp/uploads/                  resumable upload sessions (S01.4), same filesystem for atomic rename
-    ├── trash/<user-namespace>/       per-user trash (S08.1); also restores removed duplicates (S11)
-    ├── originals/<user-namespace>/   originals replaced by optimization, kept for the retention period (S12.5, ADR-0026)
+    ├── trash/<user-namespace>/       per-user trash (S08.1)
     ├── db/nas.db                     SQLite (WAL) internal database, from S01 (ADR-0007)
     ├── index/                        Bleve search index (S06, ADR-0014)
     ├── thumbnails/                   renditions keyed by content hash (S04.4)
     ├── transcode-cache/              HLS quality levels, created on demand, size-capped with LRU eviction (S04.8, ADR-0020)
     ├── metadata/                     albums, face-group registry, transferred-out sidecars (Q13, Q27)
-    ├── ai/                           models, embeddings (S15)
+    ├── ai/                           models, embeddings (S12)
     └── logs/                         application log files (JSON, size-rotated; D-07, S005); the audit log lives in SQLite (ADR-0007)
 Configuration file: outside the storage root (CLI flag / env var / OS default path).
-Optional pool (S14, Linux): drives → mdadm RAID 0/1 → ext4 or XFS → mounted and used as <storage root>.
 ```
 
 ### 6.4 Key flows
 
 - **File upload (S01):** client → API (validation) → [from S03: auth + policy] → upload manager writes to `.local-ai-nas/tmp/uploads/` → on completion, atomic rename into `files/<ns>/…` → post-operation hook (S06+: index job; S10+: quota accounting).
-- **Photo ingest (S04–S06):** upload into photos → media-type check by content → hash and duplicate check → atomic finalize into `photos/<ns>/…` → jobs: thumbnails (S04.4), metadata extraction + sidecar (S05), geocoding (S05.4), indexing (S06), AI (S15, if opted in).
+- **Photo ingest (S04–S06):** upload into photos → media-type check by content → hash and duplicate check → atomic finalize into `photos/<ns>/…` → jobs: thumbnails (S04.4), metadata extraction + sidecar (S05), geocoding (S05.4), indexing (S06), AI (S12, if opted in).
 - **Cross-area transfer (S04.6):** explicit request → policy check → Transfer service validates (only media into `photos/`) → copy or move → sidecar handled per Q27 → index updated → audit event.
 - **Search (S06–S07):** query → parser (text + operator filters) → permission filter (owner/ACL fields, S07) → normalization, stemming, synonyms, typo tolerance → ranking → paginated results. The index only (I4), no AI.
-- **Duplicate detection (S11):** upload or scan → stored content hash (exact) and perceptual hash (variants, look-alikes) → per-user similarity lookup → groups and stacks with reasons → the user resolves with a preview (I10) → removed items to the trash, metadata merged onto the kept item, shortcuts for files.
-- **Storage optimization (S12):** scope and settings → live preview of a sample → estimate → confirmation (I10) → job per item: write a temp file, copy metadata, verify, swap in atomically, original to `originals/` → sidecar, thumbnails, index, and duplicate check refreshed → revert possible until the retention ends.
-- **Pool creation (S14):** discovery → design and live calculator → SMART check → typed confirmation (I10) → the helper creates the RAID 0/1 array, formats, and mounts → migration of the storage root onto the pool, verified by checksums → monitoring.
 - **External change (S05.7, S09.4):** watcher event or scheduled scan → reconcile (re-ingest, update sidecar, re-associate by hash, quarantine orphan) → index job.
 
 ### 6.5 Data ownership
@@ -777,15 +626,11 @@ Optional pool (S14, Linux): drives → mdadm RAID 0/1 → ext4 or XFS → mounte
 |---|---|---|
 | User files | `files/<ns>/` | No (user data) |
 | Media | `photos/<ns>/` | No (user data) |
-| Photo metadata, including access section (S07) and AI results (S15) | Sidecar next to the media | No: **source of truth** (I3) |
+| Photo metadata, including access section (S07) and AI results (S12) | Sidecar next to the media | No: **source of truth** (I3) |
 | Access data for shared items in `files/` | Per ADR in S07.3 (Q28) | No: source of truth |
 | Albums, face-group registry | `.local-ai-nas/metadata/` (Q13) | No: backed up (S08.3) |
 | Users, sessions, tokens, settings, audit log | Internal DB / config | No: backed up (S08.3) |
-| Content hash, perceptual hash, stack membership and cover, duplicate decisions, merged-metadata provenance, optimization history of photos | Sidecar (reserved in S05.1; P005) | No: **source of truth** (I3) |
-| "Not duplicates" marks and ignore list for files; shortcuts | Internal DB (S11) | No: backed up (S08.3) |
-| Replaced originals after optimization | `.local-ai-nas/originals/` (S12.5) | No, while kept: user data until the retention ends |
-| Pool layout | On the member drives (mdadm metadata) and in the internal DB | Re-importable from the drives (S14.8) |
-| Search index, job queue, thumbnails, embeddings, similarity index | Internal app data | Yes (from disk, sidecars, media, or AI re-run) |
+| Search index, job queue, thumbnails, embeddings | Internal app data | Yes (from disk, sidecars, media, or AI re-run) |
 
 ---
 
@@ -814,31 +659,20 @@ Optional pool (S14, Linux): drives → mdadm RAID 0/1 → ext4 or XFS → mounte
 | SMB | Samba, Linux-only, optional | [ADR-0019](decisions/ADR-0019-smb-via-samba.md) | **Proposed** (deferred to S09.1) |
 | File watching | fsnotify v1.10.1 + periodic reconciliation; inotify watch-limit guidance | [ADR-0016](decisions/ADR-0016-file-watching.md) | Accepted |
 | AI worker | Python 3.14 + ONNX Runtime 1.30.0 in a separate optional container; uv, Ruff, pytest; pulls jobs from a local-only internal API (token); media read-only; core validates and writes results (I9); no internet at runtime | [ADR-0017](decisions/ADR-0017-ai-worker-architecture.md) | Accepted |
-| Content hash (P005) | SHA-256 (Go standard library) at upload, BLAKE3 only if benchmarks justify it | [ADR-0021](decisions/ADR-0021-content-hash-algorithm.md) | **Proposed** (needed before the S01 follow-up and S04.2) |
-| Perceptual hash and similarity index (P005) | 64-bit dHash/pHash from a small rendition; BK-tree or multi-index hashing; goimagehash (BSD-2-Clause) or an in-house implementation | [ADR-0022](decisions/ADR-0022-perceptual-hash-and-similarity-index.md) | **Proposed** (S04.4, S11.1) |
-| Look-alike stacks and bursts (P005) | Stack data in each member's sidecar; cover and user-lock rules; burst identifiers first | [ADR-0023](decisions/ADR-0023-look-alike-stacks.md) | **Proposed** (S11.4) |
-| File shortcuts (P005) | App-level shortcut records by stable file ID (not symlinks or hard links); read-only view over shares | [ADR-0024](decisions/ADR-0024-file-shortcuts.md) | **Proposed** (S11.6) |
-| Video optimization codec (P005) | H.264 (libx264/CRF) by default; HEVC and AV1 optional | [ADR-0025](decisions/ADR-0025-video-optimization-codec.md) | **Proposed** (S12.2) |
-| Originals retention and revert (P005) | Own `originals/` store beside the trash, 30-day default; versioning (S08.5) used only if approved | [ADR-0026](decisions/ADR-0026-originals-retention-and-revert.md) | **Proposed** (S12.5) |
-| Drive pools (P005, S007) | mdadm (RAID 0 and RAID 1) orchestrated through the storage helper; parity and combined drives deferred (11a) | [ADR-0027](decisions/ADR-0027-drive-pool-approach.md) | **Proposed** (S14.1) |
-| Pool filesystem (P005) | ext4 (recommended) or XFS | [ADR-0028](decisions/ADR-0028-pool-filesystem.md) | **Proposed** (S14.1) |
-| Privileged storage helper (P005) | Separate Go service on the host as root; allow-listed operations over an authenticated Unix socket; audit log | [ADR-0029](decisions/ADR-0029-privileged-storage-helper.md) | **Proposed** (S14.2) |
-| AI models | CLIP-family zero-shot (e.g. SigLIP, Apache-2.0); YuNet (MIT); SFace (Apache-2.0); HDBSCAN (scikit-learn); RapidOCR if S15.10 is approved; InsightFace excluded | [ADR-0018](decisions/ADR-0018-ai-models.md) | Accepted direction (variants deferred to S15) |
+| AI models | CLIP-family zero-shot (e.g. SigLIP, Apache-2.0); YuNet (MIT); SFace (Apache-2.0); HDBSCAN (scikit-learn); RapidOCR if S12.10 is approved; InsightFace excluded | [ADR-0018](decisions/ADR-0018-ai-models.md) | Accepted direction (variants deferred to S12) |
 
 ### 7.1 Deferred items
 - **Native Windows and macOS installs** (ADR-0006). Pending user decision (Q5).
 - **SMB via Samba** (ADR-0019, Proposed). Design in S09.1.
 - **Full RAW conversion** (e.g. LibRaw) (ADR-0012). _Video transcoding for streaming quality levels is in scope since 0.4.0 (ADR-0020)._
-- **Exact AI model variants**, **GPU execution providers**, and **embedding storage** (ADR-0017/0018). Chosen in S15 by benchmark.
+- **Exact AI model variants**, **GPU execution providers**, and **embedding storage** (ADR-0017/0018). Chosen in S12 by benchmark.
 - **Semantic search** needs a text model at query time. That is an **exception to I4** and needs explicit user approval before it is built (ADR-0018, FR-054). _Default decided in S005 (D-06): precomputed forms only; revisit with Q36._
 - ~~Storage layout (ADR-0003)~~: accepted in S005 (D-01), no longer pending.
-- **P005 decisions, all Proposed:** ADR-0021 to ADR-0029 (the table above). ADR-0021 (content hash) is needed first, before the S01 follow-up tasks and S04.2.
-- **Complex RAID** (parity, combined drives, nesting, SnapRAID with mergerfs) is deferred by the user's decision in S007 (section 11a).
 - Implementation-time confirmations recorded as tasks:
   - Node.js LTS and TypeScript 7 / svelte-check compatibility (S02.1).
   - @tanstack/svelte-virtual on Svelte 5 (S02.3 prototype).
-  - Debian FFmpeg build flags (S13.1).
-  - ONNX Runtime on Python 3.14 (S15.1).
+  - Debian FFmpeg build flags (S11.1).
+  - ONNX Runtime on Python 3.14 (S12.1).
   - The synonym dictionary source and license (S06.5).
 
 ---
@@ -856,16 +690,9 @@ Each stage leaves defined hook points so later stages extend rather than rewrite
 | S01.5 | `/api/v1/photos` reserved; stable error codes | S04 |
 | S03.5 | `authorize(subject, action, resource)` with default deny | Extended by S07.4 (ownership, ACL, shares) and S09 (network shares) |
 | S03.6 | Extensible audit event schema | S04.6 transfers, S07 sharing, S10 admin actions |
-| S04.3 | Generic job system with per-user job context | S05, S06, S08, S09, S15 |
-| S05.1 | Sidecar sections `access` and `ai` reserved | S07.3, S15.7 |
-| S06.1 | Index fields `owner`, `acl`, `ai_tags`, `face_groups`; `face:` reserved | S07.4, S15.7 |
-| S01 follow-up, S04.2 | Content hash stored for every uploaded file (P005) | S11 duplicates, S12 re-check, S05.7 re-association |
-| S04.4 | Perceptual hash stored with thumbnails (P005) | S11.1–S11.4 |
-| S05.1 | Sidecar sections `hashes`, `stack`, `duplicates`, `mergedFrom`, `optimizationHistory` reserved (P005) | S11, S12 |
-| S06.1 | Index fields `stack_id`, `stack_cover`, `is_shortcut` reserved (P005) | S11 |
-| S08.1, S08.5 | Trash (and versioning, if approved) able to hold removed duplicates and replaced originals (P005) | S11.3, S12.5 |
-| S09.2 | WebDAV FileSystem with room for app-level shortcuts (P005) | S11.6 |
-| S10.1–S10.3 | Dashboard panel for reclaimable and saved space; quotas (shortcuts free, originals counted until removed); reusable disk health collector (P005) | S11, S12, S14 |
+| S04.3 | Generic job system with per-user job context | S05, S06, S08, S09, S12 |
+| S05.1 | Sidecar sections `access` and `ai` reserved | S07.3, S12.7 |
+| S06.1 | Index fields `owner`, `acl`, `ai_tags`, `face_groups`; `face:` reserved | S07.4, S12.7 |
 
 ### 8.2 Enforcing area separation (I1) (new in 0.2.0)
 - **Separate services, separate roots:** the Files service can only resolve paths under `files/<ns>/`, and the Photos service only under `photos/<ns>/`. Each has its own resolver, so there is no shared "write anywhere" helper.
@@ -913,7 +740,7 @@ Sidecars are hidden in the photos GUI.
 
 ### 8.7 `schemaVersion` and migrations
 - JSON Schema files are versioned in the repository. Migrations are pure, idempotent `vN → vN+1` functions, run lazily on read and in bulk as jobs, with **backups and dry-run mode** (FR-102). A newer-than-supported sidecar is treated as read-only.
-- **Reserved sections** in v1 (FR-100): `access` (owner, read ACL: S07) and `ai` (`classification` and `faces` with per-part model@version: S15). This way S07 and S15 need no schema bump for their base data. _Since 1.4.0 (P005)_ v1 also reserves `hashes` (content and perceptual), `stack` (stack ID, cover flag, user-locked decisions, burst identifier), `duplicates` ("not a duplicate of" list), `mergedFrom` (merged-metadata provenance), and `optimizationHistory` (S11, S12). Face boxes are stored in **normalized coordinates (0–1)**, so they stay valid when a photo is resized (S12).
+- **Reserved sections** in v1 (FR-100): `access` (owner, read ACL: S07) and `ai` (`classification` and `faces` with per-part model@version: S12). This way S07 and S12 need no schema bump for their base data.
 
 ### 8.8 Storage of ownership and access data (new in 0.2.0, decided in S07.3)
 - **Photos:** in the sidecar `access` section (reserved in S05.1), as the user specified.
@@ -947,14 +774,14 @@ Pipeline:
 5. Ranking: exact > stem > synonym > typo, with field weights and recency.
 6. Autocomplete and "did you mean" suggestions use **permission-scoped** terms only (8.9).
 
-AI labels feed the dictionary in S15.3 (FR-138).
+AI labels feed the dictionary in S12.3 (FR-138).
 
 ### 8.12 Query language parsing
 A hand-written tokenizer and recursive-descent parser with a formal EBNF grammar (FR-106).
 - Operators compile to structured filters, and free text compiles to index queries.
 - Partial dates define periods (Q14). Comparison uses local capture time.
 - `in:` and `type:` filter area and media type. `size:` accepts comparisons (`size:>10MB`). `ext:` matches extensions.
-- `face:` is parsed from S06 but returns a hint until S15.
+- `face:` is parsed from S06 but returns a hint until S12.
 - Go native fuzzing (`go test -fuzz`) and table-driven tests guarantee no crash on arbitrary input.
 - The parser output compiles to Bleve `BooleanQuery` / `DateRangeQuery` / `NumericRangeQuery` / `TermQuery` (ADR-0014).
 
@@ -962,14 +789,14 @@ A hand-written tokenizer and recursive-descent parser with a formal EBNF grammar
 Bundled GeoNames data (CC BY 4.0), nearest-place lookup with a k-d tree, structured fields plus the dataset version in the sidecar, alternate names for matching. No network calls (I6). Known limitation: nearest-place is not boundary-accurate. Natural Earth polygons are optional.
 
 ### 8.14 Privacy of face data
-A separate opt-in. Embeddings are stored only in internal app data, never in sidecars (sidecars hold boxes and group references). Everything is deletable on opt-out (FR-046). Per-user and access-controlled (FR-140). Faces detected in photos shared with others remain the owner's data (policy in S15.9).
+A separate opt-in. Embeddings are stored only in internal app data, never in sidecars (sidecars hold boxes and group references). Everything is deletable on opt-out (FR-046). Per-user and access-controlled (FR-140). Faces detected in photos shared with others remain the owner's data (policy in S12.9).
 
 ### 8.15 Large libraries
 - Thumbnails are pre-generated and keyed by content hash, with long-lived caching headers.
 - Keyset pagination and virtualized lists in the GUI.
 - Job priorities: interactive work > ingest > indexing > integrity/backup > AI.
 - Streaming I/O everywhere (NFR-021).
-- Benchmarks at 50k (S04.9) and 100k+100k (S06.8), and full-system tests (S13.5).
+- Benchmarks at 50k (S04.9) and 100k+100k (S06.8), and full-system tests (S11.5).
 
 ### 8.16 Other cross-cutting concerns
 - **Security:** a single path resolver per area; strict name validation for Windows, macOS, and Linux; symlinks never followed out of an area; localhost binding until S03 (NFR-020); no default credentials; CSP; safe previews (NFR-022).
@@ -990,13 +817,13 @@ A separate opt-in. Embeddings are stored only in internal app data, never in sid
 
 ### 8.19 inotify watch limits (new in 0.3.0)
 - On Linux, fsnotify uses inotify, which is **not recursive**. One watch is needed per directory, capped by `fs.inotify.max_user_watches` (often 8,192–65,536 by default, depending on the distribution).
-- Large libraries need a higher limit. The install guide (S13.4) shows how to check and raise it (sysctl), and the Docker docs cover the host setting.
+- Large libraries need a higher limit. The install guide (S11.4) shows how to check and raise it (sysctl), and the Docker docs cover the host setting.
 - When a watch cannot be added, the watcher **degrades gracefully** to reconciliation-only for that subtree and reports it (health and admin UI). The periodic reconciliation scan (S05.7) remains the correctness backstop.
 
 ### 8.20 External-tool dependency for native installs (new in 0.3.0)
 - The Docker image bundles ExifTool (with Perl), libvips with libheif, and FFmpeg (ADR-0006/0012). **Native installs do not.**
-- The S13.2 native Linux install and the install guide (S13.4) must list the distribution packages and the minimum versions.
-- _Since 1.1.0 (user, S005 E015):_ every prerequisite is recorded **per platform** in `dependencies.md` section 12 at the time it is introduced (NFR-032), and the S13.2 setup scripts (FR-149) install or check exactly that list.
+- The S11.2 native Linux install and the install guide (S11.4) must list the distribution packages and the minimum versions.
+- _Since 1.1.0 (user, S005 E015):_ every prerequisite is recorded **per platform** in `dependencies.md` section 12 at the time it is introduced (NFR-032), and the S11.2 setup scripts (FR-149) install or check exactly that list.
 - The core **detects the tools at startup** (path and version) and reports missing or too-old tools in health.
 - Features that need a missing tool are **disabled with a clear message** rather than failing silently. For example, without FFmpeg, video poster frames and metadata are unavailable.
 - S01–S03 need **no** external tools. They are first used in S04.4 and S05.3.
@@ -1009,29 +836,6 @@ A separate opt-in. Embeddings are stored only in internal app data, never in sid
 - **Cache:** content-hash keys (no duplicates across users and areas), a size cap with LRU eviction by a job (S04.3), fully rebuildable (I2). Originals are never modified.
 - **Security:** every playlist and segment request is authenticated and authorized like a download (I5). Responses use `Cache-Control: private`. The cache is not exposed through WebDAV or the files API.
 
-### 8.22 Perceptual-hash thresholds and false positives (new in 1.4.0, P005)
-- A false positive becomes a **deletion proposal**, so the defaults are strict: resolution variants need a small Hamming distance **and** a matching aspect ratio (within a small tolerance), and a matching date taken when both items have one. Look-alike stacks use a looser threshold plus a time window; nothing is ever deleted by grouping.
-- Thresholds are calibrated on a **labelled fixture set** (exact copies, re-saved copies, crops, bursts, and "similar but different" pairs) and recorded with their measured false-positive rates (NFR-034). They are configurable.
-- Matching runs per user through a similarity index (BK-tree or multi-index hashing), so it never compares all pairs, and never across users (I5).
-
-### 8.23 Metadata preservation during re-encoding (new in 1.4.0, P005)
-- libvips resizes (keeping ICC; `keep` flags control what libvips copies), and **ExifTool** copies EXIF, XMP, and IPTC from the original (`-tagsfromfile SRC -all:all`, plus `-icc_profile` and, where needed, `-unsafe`). ExifTool 13.59 writes every format involved (JPEG, PNG, WebP, HEIC, AVIF, TIFF, GIF, MP4, MOV).
-- **Orientation, one rule:** the pixels are rotated upright and the orientation tag is reset (libvips `autorot` removes the tag). Never both, never neither.
-- The new file is verified before the swap: it decodes, and its date taken, GPS, and camera fields match the original's. The sidecar records the original's dimensions, size, and hash (`optimizationHistory`).
-
-### 8.24 Privileged disk operations (new in 1.4.0, P005)
-- Creating, formatting, and mounting arrays needs root. The **core never runs as root**: a separate storage helper (ADR-0029) does only allow-listed operations, each validated against the drive inventory (never the OS drive, never a drive holding NAS data outside the migration flow), authenticated over a local Unix socket, and written to the audit log.
-- In Docker, the helper runs on the host, not inside a privileged container. The threat model (S03.1) lists it as an attack surface from the start.
-
-### 8.25 Array consistency and the parity write hole (new in 1.4.0, P005)
-- **RAID 1** (built in S14) uses mdadm's write-intent **bitmap**, so a crash needs only a partial resync, and scheduled checks (scrubs) report mismatches.
-- **Parity layouts** (deferred, 11a) add the **write hole**: a crash during a stripe update can leave parity inconsistent. mdadm offers a write journal (`--write-journal`, RAID 4/5/6) against it; the future candidate must evaluate it.
-- Nested arrays (the combined drives of 11a) must be assembled inner arrays first at boot; this is a known pitfall and part of that candidate's tests.
-
-### 8.26 Hashing resumable uploads (new in 1.4.0, P005 fix)
-- A tus upload spans many requests and may resume after a restart. The content hash is computed as bytes arrive, and its state is saved with the upload between chunks (Go's SHA-256 state can be serialized), so no extra read is needed. If the saved state is lost, the hash is computed with one read at finalize.
-- WebDAV writes (S09) and files added outside the app are hashed by the watcher and reconciliation; files from before FR-211 are hashed by the S11.1 backfill.
-
 ---
 
 ## 9. Development methodology
@@ -1039,7 +843,7 @@ A separate opt-in. Embeddings are stored only in internal app data, never in sid
 Work is **stage-gated** and governed by `code-agent-docs/RULES.md`.
 
 - **Hierarchy (R3): Stage → Substage → Task.**
-  - **Stages** (`S01`…`S15`) and **substages** (`S01.1`…) are defined in this plan for the whole roadmap, with goal, scope, deliverables, dependencies, requirements, acceptance criteria, risks, and status.
+  - **Stages** (`S01`…`S12`) and **substages** (`S01.1`…) are defined in this plan for the whole roadmap, with goal, scope, deliverables, dependencies, requirements, acceptance criteria, risks, and status.
   - **Tasks** (`S01.3-T02` = task 2 of substage S01.3) are defined in the stage document `stages/S<NN>-<slug>.md`. It is written **just in time**, before the stage starts, and must be approved by the user before any code for that stage is written.
 - **Lifecycle:** `Planned → Approved → In Progress → Testing → Review → Done` (or `Blocked`). Substages and tasks use the same values, plus `Not started`.
 - **Decisions** become ADRs (R5), Accepted only with user approval. Stage documents list the ADRs they depend on. Tasks that depend on unaccepted ADRs say so.
@@ -1072,11 +876,8 @@ Work is **stage-gated** and governed by `code-agent-docs/RULES.md`.
 | S08 | Data protection and recovery | Planner-proposed | Recovery paths for accidental deletion and corruption: trash, integrity, backups, disaster recovery. | S07 | Not started |
 | S09 | Network file access and external change sync | Planner-proposed | The NAS as a network drive with per-user permissions, and live sync of external changes. | S07 (S08 recommended first) | Not started |
 | S10 | Administration, monitoring, and quotas | Planner-proposed | Admin visibility and control over storage, health, and background work. | S07 | Not started |
-| S11 | Duplicate and look-alike management | User-defined (P005; burst grouping added by the user in S007) | Exact and resolution-variant photo duplicates, look-alike stacks and bursts, and duplicate files with shortcuts, found within each user's library and resolved safely. | S08, S09, S10 | Not started |
-| S12 | Storage optimization | User-defined (P005) | Users shrink existing and future photos and videos by resolution and quality, with a live preview, metadata kept, and an undo window. | S11 | Not started |
-| S13 | Packaging, deployment, and pre-AI release (was S11) | Planner-proposed | Hardened, packaged, documented, stable release without AI. | S08–S12 | Not started |
-| S14 | Multi-drive storage pools: RAID 0 and RAID 1 | User-defined (P005; scope and position set by the user in S007) | RAID 0 and RAID 1 pools built from the GUI on Linux, with exact capacity figures and safe failure handling. Complex RAID is deferred (11a). | S13 | Not started |
-| S15 | AI features (was S12) | User-defined (always last, I8) | Optional, fully local AI that classifies photos and groups faces, stored in sidecars and used by search. | S14 | Not started |
+| S11 | Packaging, deployment, and pre-AI release | Planner-proposed | Hardened, packaged, documented, stable release without AI. | S08, S09, S10 | Not started |
+| S12 | AI features | User-defined (always last, I8) | Optional, fully local AI that classifies photos and groups faces, stored in sidecars and used by search. | S11 | Not started |
 
 ```mermaid
 flowchart LR
@@ -1084,10 +885,10 @@ flowchart LR
     S07 --> S08 --> S11
     S07 --> S09 --> S11
     S07 --> S10 --> S11
-    S11 --> S12 --> S13 --> S14 --> S15
+    S11 --> S12
 ```
 
-**Substage count:** S01: 7 · S02: 8 · S03: 9 · S04: 9 · S05: 8 · S06: 8 · S07: 7 · S08: 7 · S09: 6 · S10: 6 · S11: 8 · S12: 8 · S13: 7 · S14: 10 · S15: 12. That makes **120 substages** (S04.8 added in 0.4.0; S11, S12, S14, and S15.11 added in 1.4.0, P005). S01 is Done and S02 is In Progress; all others are Not started. No listed substage was removed or merged. Stage IDs changed in 1.4.0 (table in 10.18). Additions and flags are listed in 10.17.
+**Substage count:** S01: 7 · S02: 8 · S03: 9 · S04: 9 · S05: 8 · S06: 8 · S07: 7 · S08: 7 · S09: 6 · S10: 6 · S11: 7 · S12: 11. That makes **93 substages** (S04.8 added in 0.4.0), all with status "Not started". No listed substage was removed, merged, or reordered. Additions and flags are listed in 10.14.
 
 **Field legend for substages:** Goal · Scope · Deliverables · Depends on · Requirements · Acceptance criteria · Risks/notes · Status.
 
@@ -1145,14 +946,13 @@ flowchart LR
   4. Writes that would push free space below the configured reserve are refused with a clear error.
   5. The health endpoint reports each startup check: root writable, temp and areas on one filesystem, free space, config valid.
 - **Risks/notes:** The layout affects S07.2 and S09. ADR-0003 avoids a later data move by creating namespaces now.
-- **P005 follow-up (1.4.0):** the storage root must not assume a single physical disk and must be relocatable, so it can later move onto a pool (S14.6, NFR-036). The upload temp folder and the trash always follow the root's filesystem (A18). Recorded as a follow-up task in `stages/S01-basic-nas.md`; S01 stays Done, and the timing is Q50.
 - **Status:** Done (S005, 2026-09-24; details in `stages/S01-basic-nas.md`)
 
 #### S01.3: Core file operations
 - **Goal:** A service layer and API that perform every basic file operation on the files area, confined to it.
 - **Scope:** list directory with pagination and sorting; item details (size, modified time, type); create folder; upload (single request); download with HTTP range support; rename; move; copy; delete. All confined to the files area.
 - **Deliverables:** `FilesService` interface and local-filesystem implementation with before/after operation hooks; `/api/v1/files` endpoints.
-- **Depends on:** S01.2. Also uses the path resolver and name validation from S01.6 and the API conventions from S01.5, which are therefore built first in the stage's execution order (see the stage document and 10.17).
+- **Depends on:** S01.2. Also uses the path resolver and name validation from S01.6 and the API conventions from S01.5, which are therefore built first in the stage's execution order (see the stage document and 10.14).
 - **Requirements:** FR-003, FR-005, FR-007, FR-073.
 - **Acceptance criteria:**
   1. Every operation works over HTTP against a real temporary filesystem and has integration tests.
@@ -1161,7 +961,6 @@ flowchart LR
   4. No operation can read or write outside the caller's files namespace (tested).
   5. Endpoints reach the filesystem only through the service interface (architecture test).
 - **Risks/notes:** Copying large folders is synchronous in S01, with limits. It moves onto the job system in S04.3.
-- **P005 follow-up (1.4.0):** simple uploads compute a content hash while the file streams, with no extra read, and store it with the item (FR-211). The algorithm is decided in ADR-0021 (Proposed: standard-library SHA-256 unless benchmarks justify BLAKE3), which must be Accepted before the follow-up is built. Timing: Q50.
 - **Status:** Done (S005, 2026-09-24; details in `stages/S01-basic-nas.md`)
 
 #### S01.4: Large file handling
@@ -1180,7 +979,6 @@ flowchart LR
   4. Uploads over the configured limit are refused before data is stored.
   5. Abandoned uploads are deleted after the configured expiry.
 - **Risks/notes:** Atomic rename requires one filesystem (A18), which S01.2 checks.
-- **P005 follow-up (1.4.0):** resumable uploads also store a content hash (FR-211). The hash state is serialized between chunks so the file is still read only once; if a resume cannot restore the state, the assembled file is hashed once before the atomic rename (8.26). Needs ADR-0021 first. Timing: Q50.
 - **Status:** Done (S005, 2026-09-24; details in `stages/S01-basic-nas.md`)
 
 #### S01.5: API layer
@@ -1374,7 +1172,7 @@ flowchart LR
 
 **Design notes (S02):**
 - The GUI uses only the public API, so S03 adds authentication without GUI rewrites.
-- The component library and API client are reused by every later GUI substage (S03.8, S04.7, S05.5, S06.7, S07.6, S08.7, S09.5, S10, S15.8).
+- The component library and API client are reused by every later GUI substage (S03.8, S04.7, S05.5, S06.7, S07.6, S08.7, S09.5, S10, S12.8).
 - The app is still localhost-only.
 
 **Exit criteria (quoted):** "A non-technical user can do everything from S01 through the GUI."
@@ -1403,8 +1201,7 @@ flowchart LR
   1. The document lists assets, attackers, surfaces, and numbered threats.
   2. Every threat maps to an S03 substage or is marked as an accepted-risk candidate.
   3. The user has reviewed it.
-- **Risks/notes:** It is revisited in S07 (multi-user), S09 (shares), S13.6, and S15 (AI worker).
-- **P005 change (1.4.0):** the threat model lists the future privileged storage helper (S14.2) as an attack surface: a root service on the host, reached over a Unix socket (ADR-0029, NFR-037).
+- **Risks/notes:** It is revisited in S07 (multi-user), S09 (shares), S11.6, and S12 (AI worker).
 - **Status:** Not started
 
 #### S03.2: First-run setup and authentication
@@ -1576,14 +1373,13 @@ flowchart LR
   3. A batch with some corrupt files stores the valid ones and reports the corrupt ones.
   4. Ingested items appear in the photos API with hash, size, type, and file timestamps.
 - **Risks/notes:** Post-processing (thumbnails) is queued through S04.3, which is built before S04.4 in the stage's execution order.
-- **P005 change (1.4.0):** exact-duplicate detection at ingest uses the stored content hash (FR-211), with the default "Skip and report" (FR-022, Q45). The full per-user policy arrives in S11.2 (FR-154). Resolution variants are never blocked at upload.
 - **Status:** Not started
 
 #### S04.3: Background job system
 - **Goal:** One reliable background-work system for the whole project.
 - **Scope:**
   - A persistent job queue with retries, progress reporting, concurrency limits, and survival across restarts.
-  - Built here and reused by S05, S06, S08, S09, and S15.
+  - Built here and reused by S05, S06, S08, S09, and S12.
   - It also replaces the S01.4 and S03.6 simple schedulers.
 - **Deliverables:** custom SQLite-backed queue per ADR-0011 (leases, backoff, priorities); worker pool; priorities; per-user job context; internal progress API.
 - **Depends on:** S03.2 (internal DB).
@@ -1610,7 +1406,6 @@ flowchart LR
   4. Videos get a poster frame (if videos are supported per Q26).
   5. Thumbnails are served only after the same authorization check as the original.
 - **Risks/notes:** None.
-- **P005 change (1.4.0):** a 64-bit perceptual hash is computed for every image from a small rendition produced with the thumbnails, and stored in the sidecar and the index (FR-212, ADR-0022). (libvips runs as a separate process, so the core has no decoded image to reuse; the small rendition costs no extra read of the original.)
 - **Status:** Not started
 
 #### S04.5: Library organization
@@ -1722,17 +1517,16 @@ flowchart LR
 - **Goal:** A stable, versioned, forward-compatible sidecar format.
 - **Scope:**
   - Proposed ADR for the JSON schema; naming convention (`IMG_0001.jpg.json`); `schemaVersion`.
-  - Reserved sections for ownership and access (S07) and AI results (S15), so later stages need no breaking changes.
+  - Reserved sections for ownership and access (S07) and AI results (S12), so later stages need no breaking changes.
   - A machine-readable JSON Schema file for validation; an identifying marker (Q11).
 - **Deliverables:** schema ADR; `schema/sidecar/v1.json`; typed models; example sidecars.
 - **Depends on:** S04.1.
 - **Requirements:** FR-023, FR-024, FR-100, NFR-007.
 - **Acceptance criteria:**
   1. The JSON Schema validates the examples and rejects malformed sidecars.
-  2. The `access` and `ai` sections are defined, so S07 and S15 need no `schemaVersion` bump for their base data.
+  2. The `access` and `ai` sections are defined, so S07 and S12 need no `schemaVersion` bump for their base data.
   3. Every sidecar carries `schemaVersion` and the identifying marker.
 - **Risks/notes:** Schema churn (RK-14): review carefully before acceptance.
-- **P005 change (1.4.0):** schema v1 also reserves the sections `hashes` (content and perceptual hash), `stack` (stack ID, cover flag, user-locked decisions), `duplicates` (the "not duplicate of" list), `mergedFrom` (merged-metadata provenance), and `optimizationHistory` (8.7). Face boxes in the `ai` section use normalized coordinates (0–1), so resizing in S12 keeps them valid.
 - **Status:** Not started
 
 #### S05.2: Sidecar manager
@@ -1764,7 +1558,6 @@ flowchart LR
   3. Items without a capture date get a fallback date with its source recorded.
   4. Unreadable metadata is recorded as such without failing the item.
 - **Risks/notes:** External tool licenses and availability on native installs (ADR-0012, plan 8.20).
-- **P005 change (1.4.0, the user's burst request in S007):** extraction also records burst identifiers where present (Apple `BurstUUID` in the maker notes; Google `XMP-GCamera:BurstID` and `BurstPrimary`) and sub-second capture times, for burst grouping (FR-165, S11.4).
 - **Status:** Not started
 
 #### S05.4: Offline reverse geocoding
@@ -1837,7 +1630,7 @@ flowchart LR
 - **Status:** Not started
 
 **Design notes (S05):**
-- The reserved `access` and `ai` sections avoid breaking changes in S07 and S15.
+- The reserved `access` and `ai` sections avoid breaking changes in S07 and S12.
 - The sidecar manager is the single writer.
 - S04's timestamp fallback is replaced here.
 - The geocoding dataset is versioned so places can be re-geocoded later.
@@ -1860,7 +1653,7 @@ flowchart LR
 
 #### S06.1: Search architecture and engine
 - **Goal:** One embedded, rebuildable search index for both areas, ready for access control and AI fields.
-- **Scope:** engine decided in 0.3.0: **Bleve** embedded (ADR-0014). S06.1 designs the index mapping; the index is a rebuildable cache (I3); one query path covering both areas; an index schema with reserved fields for owner and access list (S07) and AI tags and face groups (S15).
+- **Scope:** engine decided in 0.3.0: **Bleve** embedded (ADR-0014). S06.1 designs the index mapping; the index is a rebuildable cache (I3); one query path covering both areas; an index schema with reserved fields for owner and access list (S07) and AI tags and face groups (S12).
 - **Deliverables:** Bleve index mapping (analyzers, keyword, date, and numeric fields); `SearchEngine` interface; query API skeleton.
 - **Depends on:** S05 (Done).
 - **Requirements:** FR-025, FR-047, FR-052, FR-104, FR-109.
@@ -1870,7 +1663,6 @@ flowchart LR
   3. One query API searches files, photos, or both.
   4. The reserved fields exist: `owner` populated now, `acl` and AI fields later.
 - **Risks/notes:** Performance risk if the embedded engine underperforms. The interface allows a swap.
-- **P005 change (1.4.0):** the index schema reserves fields for the stack ID, the cover flag, and a shortcut flag. Search behavior for stacks and shortcuts is defined in S11.
 - **Status:** Not started
 
 #### S06.2: Indexing pipeline
@@ -1893,7 +1685,7 @@ flowchart LR
 - **Goal:** A precise, documented query language that never fails badly.
 - **Scope:**
   - Free text plus operators. Baseline set: `before:`, `after:`, `on:`, `place:`, `tag:`, `type:`, `in:files`, `in:photos`, `ext:`, `size:`.
-  - Quoting and combinations; `face:` reserved for S15.
+  - Quoting and combinations; `face:` reserved for S12.
   - Clear errors for malformed queries; a documented formal grammar.
 - **Deliverables:** EBNF grammar document; tokenizer and parser; operator semantics (Q14); error and hint messages.
 - **Depends on:** S06.1.
@@ -2122,7 +1914,6 @@ flowchart LR
   3. Items past retention are purged by a job.
   4. Trash contents are visible only to their owner.
 - **Risks/notes:** Trash must be on the storage root's filesystem so delete and restore are atomic renames (A18).
-- **P005 change (1.4.0):** the trash restores items removed through duplicate resolution (S11.3, S11.6) with their sidecars and memberships, and can hold originals replaced by optimization (S12.5) so they can be reverted within the retention period (ADR-0026).
 - **Status:** Not started
 
 #### S08.2: Integrity verification
@@ -2175,7 +1966,6 @@ flowchart LR
   2. Users can list and restore versions.
   3. Versions count toward quotas (S10.2).
 - **Risks/notes:** If Q34 is "no", this is marked Done as "not required".
-- **P005 change (1.4.0):** if approved, versioning can also hold originals replaced in S12 and revert them. S12 does not depend on it: without versioning, the trash or the originals store of ADR-0026 is used.
 - **Status:** Not started
 
 #### S08.6: External backup
@@ -2244,7 +2034,6 @@ flowchart LR
   2. Read-only shares cannot be written over the network.
   3. Network logins use NAS accounts and are audit-logged.
 - **Risks/notes:** None.
-- **P005 change (1.4.0):** the WebDAV FileSystem design leaves room for representing app-level shortcuts (S11.6, ADR-0024, Q46).
 - **Status:** Not started
 
 #### S09.3: Photos area exposure policy
@@ -2323,7 +2112,6 @@ flowchart LR
   1. The dashboard shows total and per-user usage, free space, and system status.
   2. Usage figures match the filesystem within a documented tolerance.
 - **Risks/notes:** None.
-- **P005 change (1.4.0):** the dashboard reserves a panel for reclaimable duplicate space and optimization savings (FR-194).
 - **Status:** Not started
 
 #### S10.2: Storage quotas
@@ -2337,7 +2125,6 @@ flowchart LR
   2. Usage updates immediately after each operation.
   3. The admin can set, change, and remove quotas.
 - **Risks/notes:** Trash and versions count toward quotas (documented).
-- **P005 change (1.4.0):** shortcuts count as zero toward quotas, and quotas update when optimization originals are removed (S11.6, S12.5).
 - **Status:** Not started
 
 #### S10.3: Disk health and alerts
@@ -2350,7 +2137,6 @@ flowchart LR
   1. SMART data is shown where available, and "not available" otherwise.
   2. Low-space and disk-failure warnings appear in the GUI and the logs.
 - **Risks/notes:** SMART access needs privileges and differs by OS and container (RK-24).
-- **P005 change (1.4.0):** disk health monitoring is designed to be reused by the drive pools (S14.3, S14.7).
 - **Status:** Not started
 
 #### S10.4: Background jobs monitor
@@ -2395,263 +2181,19 @@ flowchart LR
 
 ---
 
-### 10.12 S11: Duplicate and look-alike management
-
-- **Origin:** User-defined features (P005), placed by the planner; burst grouping added by the user in S007 (E004).
-- **Goal:** Find exact and resolution-variant duplicates of photos, find duplicate files, group look-alike photos and bursts into stacks, and let the user resolve all of these safely.
-- **User requirements (quoted from P005 and S007):**
-  > "Detect literal duplicate photos using hashing." "Detect duplicates that are the same photo at different resolutions." "For different-resolution duplicates, the user chooses which one to keep."
-  > "Group photos that are almost the same but have minor differences." "Show the user that it is a grouped photo." "The user chooses which photo in the group is displayed on the grid. By default, the first photo is displayed." "The user can choose to keep one photo and delete the rest." "AI may be used to detect near-identical photos."
-  > "Handle duplicate files in the files area." "The user chooses whether to keep both, or keep one and which one." "The user chooses whether to put a shortcut to the kept file in the deleted file's place."
-  > "you also need to add auto grouping of burst photos" (S007)
-- **Placement (P005):** after S10. It needs metadata (S05), per-user ownership (S07), the trash (S08.1) for safe deletion and undo, and network access (S09), because shortcuts must also work over shares.
-- **Status:** Not started
-
-#### S11.1: Hashing foundation and backfill
-- **Goal:** Every item has the hashes that detection needs, and lookups scale.
-- **Scope:** confirm that content hashes (stored from the S01 follow-up and S04.2) and perceptual hashes (S04.4) exist for every item; a backfill job for missing ones (including files uploaded before FR-211 and files added outside the app); the similarity index (ADR-0022); threshold calibration on a labelled fixture set.
-- **Deliverables:** backfill job with progress; similarity index built from stored hashes; labelled fixture set (exact copies, re-saved and re-encoded copies, crops, bursts, "similar but different" pairs); calibration report with the chosen thresholds.
-- **Depends on:** S04.2, S04.4, S05.1, S04.3; ADR-0021, ADR-0022 Accepted.
-- **Requirements:** FR-211, FR-212, FR-213, NFR-034.
-- **Acceptance criteria:**
-  1. After the backfill, every item in both areas has its content hash, and every image its perceptual hash.
-  2. A lookup in a 100,000-photo library returns candidates without comparing all pairs (benchmark recorded).
-  3. The thresholds and their measured false-positive rates on the fixture set are recorded, and exact duplicates have no false positives.
-- **Risks/notes:** RK-32 (wrong matches). Hashes of HEIC and RAW depend on the formats supported (Q26).
-- **Status:** Not started
-
-#### S11.2: Photo duplicate detection
-- **Goal:** Exact duplicates and resolution variants are found within each user's photos.
-- **Scope:** exact duplicates by content hash; resolution variants by perceptual hash, aspect ratio, and date taken (FR-151); per-user scope only (I5); incremental scans on every upload, scheduled scans, and on-demand scans as background jobs; the per-user upload-time policy for exact duplicates (Skip and report, Keep both, Ask); videos: exact duplicates only.
-- **Deliverables:** detection jobs; duplicate groups with a type ("Exact", "Resolution variant") and the evidence; upload-time policy setting; cross-area handling per Q43.
-- **Depends on:** S11.1, S07.
-- **Requirements:** FR-150, FR-151, FR-153, FR-154, FR-159, FR-022.
-- **Acceptance criteria:**
-  1. Exact duplicates and resolution variants in the fixture set are grouped with the right type, and "similar but different" pairs are not.
-  2. No group ever contains items of two users (tested with two users and identical files).
-  3. A new upload is checked incrementally; the upload policy behaves as set (skip and report, keep both, ask).
-- **Risks/notes:** Q43 (the same photo in both areas), Q45 (upload default).
-- **Status:** Not started
-
-#### S11.3: Photo duplicate review and resolution
-- **Goal:** The user resolves photo duplicates with full information and nothing is lost by mistake.
-- **Scope:** side-by-side comparison (FR-152); the recommended pick; bulk rules with a preview of every group (I10); metadata merge onto the kept item with provenance; removal to the trash; "not duplicates" marks; reclaimable space per group and total.
-- **Deliverables:** resolution API; metadata-merge routine (through the sidecar manager, I9); bulk-rule engine with a preview; "not duplicates" store in sidecars.
-- **Depends on:** S11.2, S08.1, S05.5, S07.5.
-- **Requirements:** FR-152, FR-155, FR-156, FR-157, FR-158, FR-159, NFR-033.
-- **Acceptance criteria:**
-  1. Keeping one item moves the others to the trash; restoring them brings back the items, their sidecars, and their album and share memberships.
-  2. Albums, favorites, tags, descriptions, and shares of removed items appear on the kept item, and the sidecar records their origin.
-  3. A bulk rule shows every group's result before it applies, and nothing changes without confirmation.
-  4. A group marked "not duplicates" never comes back, even after a rescan.
-- **Risks/notes:** Merging shares must keep I5 (a share granted on a removed item moves to the kept item only for the same owner).
-- **Status:** Not started
-
-#### S11.4: Look-alike stacks and bursts
-- **Goal:** Near-identical photos and bursts are grouped into stacks the user controls.
-- **Scope:** detection per FR-160 (looser perceptual threshold, time window, same camera) and bursts per FR-165 (camera burst identifier first, then the shot sequence); automatic stacking (never deletes); the cover (default: the camera's burst primary, else the first photo per Q42); user actions (choose the cover, remove a photo, unstack, merge stacks, "keep one, delete the rest", manual stacks); user decisions locked against regrouping; settings (on/off, sensitivity, time window); stacks visible only to the owner; persistence in each member's sidecar (I3); behavior in timeline, albums, and search.
-- **Deliverables:** stack detector and burst grouper; stack API; sidecar `stack` section writer; search index fields filled (`stack_id`, `stack_cover`); ADR-0023 decided.
-- **Depends on:** S11.1, S05.3 (burst identifiers, date taken), S06.2.
-- **Requirements:** FR-160, FR-161, FR-162, FR-163, FR-165, FR-166, FR-167, FR-168.
-- **Acceptance criteria:**
-  1. Burst fixtures with Apple `BurstUUID` and Google `GCamera:BurstID` form one stack each; bursts without identifiers are grouped by the shot sequence; the camera's primary shot is the cover.
-  2. Look-alike fixtures form stacks at the default sensitivity, and "similar but different" pairs do not.
-  3. A chosen cover, a removal, an unstack, and a manual stack survive a rescan and an index rebuild from sidecars.
-  4. People a stacked photo is shared with see it as an individual photo.
-  5. "Keep one, delete the rest" asks first and moves the rest to the trash.
-- **Risks/notes:** RK-32. Q42 (cover definition). The AI enhancement is S15.11 (FR-164).
-- **Status:** Not started
-
-#### S11.5: File duplicate detection
-- **Goal:** Identical files in the files area are found cheaply.
-- **Scope:** grouping by size, then a partial hash (first and last blocks), then the full hash (stored hashes are reused, so unchanged files are never re-read); files added outside the app hashed by the watcher and reconciliation; per-user scope, shared files never deletion candidates; empty files excluded; incremental, scheduled, and on-demand scans; folder ignore list; upload-time check with keep both, skip, or shortcut.
-- **Deliverables:** file duplicate job; ignore-list setting; upload-time check in the upload flow (tus hook and simple upload).
-- **Depends on:** S11.1, S09.4, S07.
-- **Requirements:** FR-169, FR-172, FR-173, FR-153.
-- **Acceptance criteria:**
-  1. Identical files under different names and folders are grouped; files of equal size but different content are not; empty files never are.
-  2. Files in an ignored folder are never suggested.
-  3. An upload matching an existing file offers keep both, skip, or a shortcut, and each choice gives the matching result.
-- **Risks/notes:** None beyond RK-32 (exact matches only, so the risk is low).
-- **Status:** Not started
-
-#### S11.6: File duplicate resolution and shortcuts
-- **Goal:** The user keeps one copy and, if wanted, leaves shortcuts that behave correctly in every case.
-- **Scope:** resolution options (keep all as "not duplicates"; keep one; bulk rules with a preview); shortcuts at the removed copies' locations; the representation chosen in ADR-0024 (recommended: app-level shortcut records by stable file ID); every behavior rule in FR-175; how shortcuts appear over network shares (Q46).
-- **Deliverables:** shortcut records and API; listing, download, search, and quota integration; WebDAV representation; ADR-0024 decided.
-- **Depends on:** S11.5, S08.1, S09.2, S10.2.
-- **Requirements:** FR-170, FR-171, FR-174, FR-175, NFR-033.
-- **Acceptance criteria:**
-  1. Opening or downloading a shortcut serves the target; moving or renaming the target keeps the shortcut working.
-  2. Trashing the target shows "target missing" with a restore option; restoring it brings the shortcut back to life; deleting a shortcut never deletes the target; deleting a target warns how many shortcuts point to it.
-  3. Shortcuts use no quota, cannot be shared, and never grant access to a target the user cannot read (I5).
-  4. Over WebDAV, shortcuts appear as ADR-0024 decides.
-- **Risks/notes:** Q46. Symlinks and hard links are rejected in ADR-0024 (the S01.6 symlink policy; hard links free no space and edit both copies).
-- **Status:** Not started
-
-#### S11.7: Duplicates and stacks GUI
-- **Goal:** Everything above is usable from the GUI.
-- **Scope:** a Duplicates view for photos and for files (groups, comparison, recommended pick, bulk rules, reclaimable space); stack badges in the grid, timeline, albums, and search results; the stack viewer and its actions; shortcut items in file listings; related settings (upload policy, stacking, ignore list).
-- **Deliverables:** Duplicates view; stack viewer; badges; settings pages.
-- **Depends on:** S11.3, S11.4, S11.6, S04.7.
-- **Requirements:** FR-152, FR-158, FR-161, FR-166, FR-175.
-- **Acceptance criteria:**
-  1. Every S11 action can be done from the GUI, by mouse, touch, and keyboard.
-  2. Each destructive action shows a preview and asks first (I10).
-- **Risks/notes:** None.
-- **Status:** Not started
-
-#### S11.8: Testing, audit, and stage review
-- **Goal:** Prove accuracy, safety, and privacy, then close the stage.
-- **Scope:** false-positive tests on the fixture set; large-library performance; metadata-merge tests; shortcut edge cases (target moved, trashed, restored, deleted); privacy tests proving no cross-user matches; burst tests; the stage's unit, integration, and system tests (S006); the R12 documentation audit; completion record; user sign-off.
-- **Deliverables:** test suites; accuracy and performance report; audit report; completion record.
-- **Depends on:** S11.1–S11.7.
-- **Requirements:** NFR-034, NFR-033, NFR-024; verification of every S11 requirement.
-- **Acceptance criteria:**
-  1. The accuracy targets of S11.1 hold on the fixture set, and exact duplicates have no false positives.
-  2. No test finds a cross-user match or leak (results, counts, timing).
-  3. The shortcut edge cases pass.
-  4. Coverage and the audit meet the stage-end rules; the completion record is written and the user's sign-off is recorded.
-- **Risks/notes:** The fixture set must be license-clean and generated or consented (12.3).
-- **Status:** Not started
-
-**Design notes (S11):** Duplicate groups are recomputed from stored hashes; the durable data is the user's decisions (sidecars for photos, the internal DB for files, both backed up). Nothing is deleted except through the trash after confirmation (I10). Matching never crosses users (I5).
-
-**Exit criteria (P005):** "Duplicates and look-alikes are found accurately within each user's own library. Every removal goes through preview, confirmation, and trash. Shortcuts behave correctly in every edge case." _(1.4.0: and bursts are grouped automatically, S007.)_
-
----
-
-### 10.13 S12: Storage optimization
-
-- **Origin:** User-defined feature (P005), placed by the planner.
-- **Goal:** Let users reduce the resolution and quality of existing and future media, with a live preview, full metadata preservation, and an undo window.
-- **User requirements (quoted from P005):**
-  > "Let the user reduce the resolution of existing photos and videos to save storage." "Scope choices: all media, selected items, photos only, videos only, or media in a certain group or classification." "An option to reduce the resolution of future uploads automatically." "The user chooses how much quality reduction to apply." "A live preview of one sample photo shows what it will look like after reduction."
-  > "Reduction to a fixed resolution: when the aspect ratio does not match the target, the user chooses whether the width or the height is matched." "Alternatively, the user can choose percentage scaling." "The user can limit compression to certain types or groups of media."
-- **Placement:** after S11, which provides look-alike stacks as a scope filter; it uses the trash (S08.1) for undo.
-- **Status:** Not started
-
-#### S12.1: Image optimization engine
-- **Goal:** Resize and re-encode an image exactly as asked, keeping all its metadata.
-- **Scope:** resize modes (match width, match height, fit within, percentage); orientation-aware targets; never upscale; the rounding rule; quality; keeping the format (conversion is a Could); RAW and animated images excluded by default; metadata preservation (8.23); atomic replacement with verification.
-- **Deliverables:** resize arithmetic module (pure, heavily unit-tested); libvips and ExifTool pipeline; verification step.
-- **Depends on:** S04.4, S05.3, ADR-0012.
-- **Requirements:** FR-176, FR-180, FR-182, FR-183, FR-184, FR-185, FR-186, FR-187, FR-190, FR-193, NFR-039.
-- **Acceptance criteria:**
-  1. The user's examples hold: 1920×1080 to a 1024×768 target gives 1024×576 (match width), 1365×768 (match height), and 1024×576 (fit within); 50% turns 4000×3000 into 2000×1500.
-  2. Items at or below the target are not resized; nothing is stretched or cropped.
-  3. EXIF, XMP, and IPTC survive for JPEG, HEIC, and PNG fixtures, and orientation is applied exactly once.
-- **Risks/notes:** HEIC output needs an HEVC encoder in libheif (x265 is GPL; kvazaar is BSD), recorded in the register. RK-33.
-- **Status:** Not started
-
-#### S12.2: Video optimization engine
-- **Goal:** Re-encode videos smaller with predictable quality and their metadata intact.
-- **Scope:** FFmpeg transcoding with the resize modes and presets (2160p, 1440p, 1080p, 720p, 480p), never upscaling; CRF quality; the codec policy (ADR-0025, Q48); audio kept (optional re-encode); creation time, GPS, and rotation preserved; hardware acceleration evaluated.
-- **Deliverables:** video pipeline; ADR-0025 decided; metadata checks for MP4 and MOV.
-- **Depends on:** S04.8 (FFmpeg setup), S12.1 (shared arithmetic).
-- **Requirements:** FR-176, FR-180, FR-190, FR-192.
-- **Acceptance criteria:**
-  1. Output plays in the target browsers (per the codec policy) and in the S04.8 player.
-  2. Creation time, GPS, and rotation survive for MP4 and MOV fixtures.
-  3. Resolution presets never upscale.
-- **Risks/notes:** CPU cost on weak hardware (RK-29); encoder licenses (RK-36).
-- **Status:** Not started
-
-#### S12.3: Scope selection and estimation
-- **Goal:** The user selects exactly the media to change and knows the effect first.
-- **Scope:** all scope filters (FR-177, FR-178), combinable; the face-group and classification filters exist as hooks, activated in S15.11; item counts; skip reasons; a sampling-based estimate of the space saved.
-- **Deliverables:** scope query builder over the index; estimator.
-- **Depends on:** S06, S11.4, S12.1, S12.2.
-- **Requirements:** FR-177, FR-178, FR-188.
-- **Acceptance criteria:**
-  1. Each filter, alone and combined, selects exactly the expected fixture items.
-  2. The estimate is within a documented tolerance of the actual savings on the fixture library.
-- **Risks/notes:** None.
-- **Status:** Not started
-
-#### S12.4: Live preview service
-- **Goal:** The result of any setting can be seen in seconds, without harming the server.
-- **Scope:** on-the-fly preview rendering for images and short video clips; a cache; limits (concurrency, size, rate) so previews stay responsive and never overload the server; never saved.
-- **Deliverables:** preview endpoint and renderer; limits; cache in internal data (I2).
-- **Depends on:** S12.1, S12.2.
-- **Requirements:** FR-181, NFR-035.
-- **Acceptance criteria:**
-  1. A typical photo preview renders within the bound set here on reference hardware.
-  2. Rapid setting changes are debounced, and a flood of preview requests is limited without affecting other users.
-- **Risks/notes:** RK-29 on weak hardware.
-- **Status:** Not started
-
-#### S12.5: Bulk optimization jobs and safety
-- **Goal:** Optimizing many items is safe, visible, and reversible.
-- **Scope:** dry run; confirmation with counts and the estimate (I10); jobs with progress, pause, resume, cancel; failed items skipped and reported; originals kept for the retention period and revertible per item or per job (ADR-0026, Q44); the delete-at-once option with its warning; quota updates; `optimizationHistory` in sidecars; skipping items already optimized.
-- **Deliverables:** optimization job; originals store; revert API; ADR-0026 decided.
-- **Depends on:** S12.1–S12.4, S08.1 (S08.5 only if approved), S10.2.
-- **Requirements:** FR-189, FR-191, FR-190, NFR-033, NFR-006.
-- **Acceptance criteria:**
-  1. A dry run changes nothing and reports what would change.
-  2. Killing the server mid-job never leaves a broken or missing item (fault injection).
-  3. Reverting an item or a job restores the originals byte-identical, with their sidecar data.
-  4. Space is freed only when originals are removed, and quotas follow.
-- **Risks/notes:** RK-33.
-- **Status:** Not started
-
-#### S12.6: Upload policies
-- **Goal:** Future uploads are optimized automatically, as the user set.
-- **Scope:** per-user policies (conditions and actions, on/off); applied at ingest after the upload completes and before the item appears; the original kept for the retention period or discarded at once, as chosen; items marked, with the original resolution in the info panel; preview while creating a policy; the post-AI follow-up hook for classification conditions (activated in S15.11); who may apply policies (Q49).
-- **Deliverables:** policy model and ingest hook; policy editor API.
-- **Depends on:** S12.5, S04.2.
-- **Requirements:** FR-179, FR-190.
-- **Acceptance criteria:**
-  1. An upload matching a policy is stored optimized, with metadata intact and the original kept or discarded as set.
-  2. Uploads not matching any policy are untouched.
-- **Risks/notes:** Q49.
-- **Status:** Not started
-
-#### S12.7: Storage optimization GUI
-- **Goal:** A clear, step-by-step way to shrink the library.
-- **Scope:** a wizard (scope, settings, preview, estimate, confirm); job progress; revert; the upload policy editor; the storage report.
-- **Deliverables:** wizard; job view; policy editor; storage report.
-- **Depends on:** S12.3–S12.6.
-- **Requirements:** FR-181, FR-194, FR-183.
-- **Acceptance criteria:**
-  1. The whole flow works by mouse, touch, and keyboard, and the percentage mode says it applies per dimension.
-  2. Nothing changes before the confirmation step, which shows the counts and the estimate.
-- **Risks/notes:** None.
-- **Status:** Not started
-
-#### S12.8: Testing, audit, and stage review
-- **Goal:** Prove correct arithmetic, preserved metadata, and safe reverts, then close the stage.
-- **Scope:** resize arithmetic tests including the user's examples; metadata preservation across JPEG, HEIC, PNG, and video formats; orientation tests; revert tests; performance; the stage's unit, integration, and system tests; the R12 documentation audit; completion record; user sign-off.
-- **Deliverables:** test suites; report; audit; completion record.
-- **Depends on:** S12.1–S12.7.
-- **Requirements:** NFR-039, NFR-033, NFR-035; verification of every S12 requirement.
-- **Acceptance criteria:**
-  1. All arithmetic and metadata tests pass on every supported format.
-  2. Revert restores byte-identical originals.
-  3. Coverage and the audit meet the stage-end rules; the completion record is written and the user's sign-off is recorded.
-- **Risks/notes:** None.
-- **Status:** Not started
-
-**Design notes (S12):** The app never replaces an original on its own (NG4, NFR-006): only an optimization the user starts or a policy the user enables does, after verification, keeping the original for the retention period. Face boxes are normalized, so AI data stays valid.
-
-**Exit criteria (P005):** "Users can safely shrink their library with exactly the scope and settings they choose, see the result before committing, keep all metadata, and undo within the retention period."
-
----
-
-### 10.14 S13: Packaging, deployment, and pre-AI release
+### 10.12 S11: Packaging, deployment, and pre-AI release
 
 - **Origin:** Planner-proposed
-- **Stage ID:** S13 since 1.4.0 (was S11; see 10.18).
 - **Reason added (quoted from P002):** "The project's goal is that anyone can deploy it. Hardening and packaging here produce a stable release before AI is added, so the AI stage builds on a proven base."
 - **Goal:** A hardened, packaged, documented, stable release without AI.
 - **User requirements:** none (planner-proposed).
 - **Status:** Not started
 
-#### S13.1: Container packaging
+#### S11.1: Container packaging
 - **Goal:** One-command deployment.
 - **Scope:** Docker image and Docker Compose setup.
 - **Deliverables:** multi-arch images (amd64, arm64); Compose file; volume layout documentation.
-- **Depends on:** S08–S12 (Done).
+- **Depends on:** S08, S09, S10 (Done).
 - **Requirements:** FR-131, NFR-008, NFR-009, NFR-030.
 - **Acceptance criteria:**
   1. `docker compose up` starts a working NAS from the published images on amd64 and arm64.
@@ -2659,25 +2201,24 @@ flowchart LR
 - **Risks/notes:** The image registry choice is the user's.
 - **Status:** Not started
 
-#### S13.2: Native installation
+#### S11.2: Native installation
 - **Goal:** Deploy the NAS on each supported platform by running one setup script (user requirement, S005 E015).
 - **Scope:**
   - A **separate setup script for each platform** (FR-149): Linux x86-64 (mini-PC or old PC; Debian/Ubuntu), Raspberry Pi (Raspberry Pi OS 64-bit, ARM64), and Windows 11 (Q1, Q5). macOS only if Q5 adds it.
   - Each script checks the platform, installs or verifies every prerequisite listed for it in `dependencies.md` section 12 (NFR-032), installs the NAS, creates the configuration and the storage root, registers and starts the system service (systemd; Windows service), and finishes with a health check.
   - The default mode of the Linux scripts (Docker Compose or native service) is decided by Q41.
-- **Deliverables:** one setup script per platform (e.g. `deploy/setup/setup-linux-x86_64.sh`, `deploy/setup/setup-raspberry-pi.sh`, `deploy/setup/setup-windows.ps1`; names fixed in the S13 stage document); service definitions; a matching uninstall path; a CI check that each script's prerequisite list matches `dependencies.md` section 12.
-- **Depends on:** S13.1.
+- **Deliverables:** one setup script per platform (e.g. `deploy/setup/setup-linux-x86_64.sh`, `deploy/setup/setup-raspberry-pi.sh`, `deploy/setup/setup-windows.ps1`; names fixed in the S11 stage document); service definitions; a matching uninstall path; a CI check that each script's prerequisite list matches `dependencies.md` section 12.
+- **Depends on:** S11.1.
 - **Requirements:** FR-132, FR-149, NFR-009, NFR-032.
 - **Acceptance criteria:**
   1. On a clean machine of each platform, running only its setup script gives a running NAS that passes the health check, runs as a service, and survives a reboot.
   2. The script installs or verifies every prerequisite listed for its platform in `dependencies.md` section 12, and stops with a clear message when one cannot be installed.
   3. Running the script again is safe (idempotent) and never touches user data.
   4. Uninstalling leaves user data untouched.
-- **Risks/notes:** Package sources and names differ per platform (ExifTool, libvips, FFmpeg); the Windows sources are verified in S13.2. Scripts run with administrator rights, so they are reviewed in S13.6.
-- **P005 change (1.4.0):** the Linux setup scripts accept optional components; the storage helper is added as one in S14.2, with the pool documentation in S14.10.
+- **Risks/notes:** Package sources and names differ per platform (ExifTool, libvips, FFmpeg); the Windows sources are verified in S11.2. Scripts run with administrator rights, so they are reviewed in S11.6.
 - **Status:** Not started
 
-#### S13.3: Updates and migrations
+#### S11.3: Updates and migrations
 - **Goal:** Safe upgrades.
 - **Scope:** an update mechanism with automatic data and schema migrations and a backup before every update.
 - **Deliverables:** upgrade procedure; pre-update backup; migration runner; rollback.
@@ -2690,11 +2231,11 @@ flowchart LR
 - **Risks/notes:** There is no automatic update download (I6). Updates are user-initiated.
 - **Status:** Not started
 
-#### S13.4: First-run polish and documentation
+#### S11.4: First-run polish and documentation
 - **Goal:** A new user can succeed without help.
-- **Scope:** polished first-run experience; install guide (built around the S13.2 setup scripts), admin guide, user guide, hardware requirements.
+- **Scope:** polished first-run experience; install guide (built around the S11.2 setup scripts), admin guide, user guide, hardware requirements.
 - **Deliverables:** guides; improved first-run wizard.
-- **Depends on:** S13.1.
+- **Depends on:** S11.1.
 - **Requirements:** FR-134.
 - **Acceptance criteria:**
   1. A new user goes from install to first upload using only the docs.
@@ -2702,11 +2243,11 @@ flowchart LR
 - **Risks/notes:** None.
 - **Status:** Not started
 
-#### S13.5: Full-system performance testing
+#### S11.5: Full-system performance testing
 - **Goal:** Confirm performance at target scale.
 - **Scope:** load and performance tests at target library sizes and user counts.
 - **Deliverables:** load test suite; performance report on reference hardware.
-- **Depends on:** S13.1.
+- **Depends on:** S11.1.
 - **Requirements:** NFR-003, NFR-004.
 - **Acceptance criteria:**
   1. At the target library sizes and user counts (Q1, Q18), NFR-003 targets are met on reference hardware.
@@ -2714,182 +2255,43 @@ flowchart LR
 - **Risks/notes:** None.
 - **Status:** Not started
 
-#### S13.6: Final security review
+#### S11.6: Final security review
 - **Goal:** No known high-risk issues ship.
 - **Scope:** re-review of the threat model and a full dependency audit.
 - **Deliverables:** updated threat model; audit report (vulnerabilities and licenses).
-- **Depends on:** S13.1–S13.5.
+- **Depends on:** S11.1–S11.5.
 - **Requirements:** FR-084, NFR-013, NFR-023, NFR-029.
 - **Acceptance criteria:**
-  1. The threat model is re-reviewed, including the S07–S12 additions. (The storage helper is reviewed in S14.2 and S14.10.)
+  1. The threat model is re-reviewed, including the S07–S10 additions.
   2. The dependency audit has no unresolved high-severity vulnerability or license finding.
 - **Risks/notes:** None.
 - **Status:** Not started
 
-#### S13.7: Release
+#### S11.7: Release
 - **Goal:** Publish the first stable release without AI, and close the stage.
 - **Scope:**
   - Release process (versioning, changelog, tagged release) and the first stable release without AI. The version label is the user's decision.
   - _Added scope (planner):_ the stage review. Final integration test run, documentation updates, completion record, and user sign-off, because every stage must end with testing and review (section 2b).
 - **Deliverables:** release process document; changelog; tagged release; completion record.
-- **Depends on:** S13.1–S13.6.
+- **Depends on:** S11.1–S11.6.
 - **Requirements:** FR-135.
 - **Acceptance criteria:**
   1. The release process is documented and followed.
   2. The first stable pre-AI release is tagged with the user-chosen version label.
   3. A final integration test run passes on the release artifacts.
   4. The completion record is written and the user's sign-off is recorded.
-- **Risks/notes:** Flagged in 10.17: scope extended to include the stage review.
+- **Risks/notes:** Flagged in 10.14: scope extended to include the stage review.
 - **Status:** Not started
 
-**Design notes (S13):** The Compose file reserves an optional `ai` profile for S15.12. Update and migration machinery reuses S05.7 and S08.3.
+**Design notes (S11):** The Compose file reserves an optional `ai` profile for S12.11. Update and migration machinery reuses S05.7 and S08.3.
 
 **Exit criteria (planner-proposed):** Anyone can install the NAS with the documentation, upgrade it safely, and it meets performance and security targets. A stable pre-AI release is tagged.
 
 ---
 
-### 10.15 S14: Multi-drive storage pools (RAID 0 and RAID 1)
-
-- **Origin:** User-defined feature (P005), placed by the planner; **scope and position set by the user in S007** (E008): "just do raid 0 and 1 implementation and that too in the end, and leave complex raid for later as planned non implemented work".
-- **Goal:** Let users combine several drives into RAID 0 (striped) or RAID 1 (mirrored) pools from the GUI, see exact capacity and fault tolerance first, and handle failures and rebuilds safely.
-- **User requirements (quoted from P005):**
-  > "Handle multiple drives, RAID style." "The user can configure custom layouts: RAID 0, RAID 1, or parity style …" "Smaller drives can be combined into one larger virtual drive." "When data is split across drives with a parity drive, the smallest member's size becomes the size used on every member."
-  > _Parity style and combined drives are deferred to 11a by the user's decision in S007._
-- **Placement:** the last stage before AI (I8), after the pre-AI release (S13), as the user asked ("in the end"). It uses the security model (S03), data protection (S08), and disk health (S10.3), and extends the S13 setup scripts with the optional helper.
-- **Status:** Not started
-
-#### S14.1: Approach, platform scope, and filesystem
-- **Goal:** Decide how pools are built, where, and on which filesystem.
-- **Scope:** the pool approach ADR (ADR-0027: mdadm for RAID 0 and 1, recommended; ZFS or Btrfs mirrors considered; SnapRAID with mergerfs deferred with parity), its verified capabilities; the Linux-only scope (A22, Q47); the filesystem ADR (ADR-0028: ext4 or XFS).
-- **Deliverables:** ADR-0027 and ADR-0028 decided; capability notes from the official documentation.
-- **Depends on:** S13, S10.3.
-- **Requirements:** FR-195, FR-204.
-- **Acceptance criteria:**
-  1. Both ADRs are Accepted by the user, with every capability they rely on verified against official documentation.
-  2. The design leaves room for the deferred parity layouts (11a) without a data migration.
-- **Risks/notes:** RK-34.
-- **Status:** Not started
-
-#### S14.2: Privileged storage helper
-- **Goal:** Disk operations run with the least privilege possible.
-- **Scope:** design (ADR-0029); allow-listed operations (discover, create RAID 0/1, format, mount, set up monitoring, check, replace a member, stop); Unix-socket authentication; audit logging; systemd installation, added to the Linux setup scripts of S13.2 as an optional component; Docker deployments run the helper on the host; the threat model update (S03.1).
-- **Deliverables:** helper service; allow list; setup-script component; threat model entries.
-- **Depends on:** S14.1, S03.1, S03.6, S13.2.
-- **Requirements:** FR-210, NFR-037.
-- **Acceptance criteria:**
-  1. The core runs without root; every disk operation goes through the helper and is audit-logged.
-  2. Requests outside the allow list, or from an unauthenticated client, are refused (tested).
-  3. The helper refuses the OS drive and drives holding NAS data outside the migration flow.
-- **Risks/notes:** RK-35.
-- **Status:** Not started
-
-#### S14.3: Drive discovery and health
-- **Goal:** The user sees every drive and its state before designing a pool.
-- **Scope:** drive listing with model, serial, size, type, SMART health, partitions, mount status, and whether it holds the OS or NAS data; integrated with the S10.3 health collector.
-- **Deliverables:** discovery through the helper (lsblk, smartctl); drive model in the API.
-- **Depends on:** S14.2, S10.3.
-- **Requirements:** FR-202.
-- **Acceptance criteria:**
-  1. Loop-device and virtual-disk fixtures are listed with every field, and the OS and NAS-data drives are flagged.
-  2. SMART data appears where available and "not available" otherwise.
-- **Risks/notes:** SMART in containers (RK-24).
-- **Status:** Not started
-
-#### S14.4: Layout and capacity engine
-- **Goal:** Correct capacity and fault-tolerance figures before anything is erased.
-- **Scope:** the layout model (physical drives, members, roles, layout), built so the deferred virtual drives and parity layouts fit later; capacity rules (RAID 0: members × the smallest, RAID 1: the smallest; the rest shown as unused); fault tolerance; validation; suggestions; the live calculator's data. Pure logic, heavily unit-tested.
-- **Deliverables:** capacity engine with tests.
-- **Depends on:** S14.1.
-- **Requirements:** FR-195, FR-196, FR-200, FR-201 (design only).
-- **Acceptance criteria:**
-  1. For RAID 0 and RAID 1 with equal and unequal drives, capacity, unused space, and fault tolerance match hand-worked examples.
-  2. The model can express the deferred layouts; the user's 2+1+1+2+2+2 TB example is kept as a pending test for the 11a candidate.
-- **Risks/notes:** mdadm RAID 0 would use unequal members fully; the helper sizes members to the smallest so the user's rule holds.
-- **Status:** Not started
-
-#### S14.5: Pool creation and mounting
-- **Goal:** A pool is created only when the user clearly means it.
-- **Scope:** creation safety (FR-203, I10: model and serial list, typed phrase, OS and NAS-data drives refused, SMART check first); creation through the helper; filesystem creation; mounting; registering the pool as the storage root.
-- **Deliverables:** creation wizard API; mount and registration.
-- **Depends on:** S14.2, S14.3, S14.4.
-- **Requirements:** FR-203, FR-204, NFR-033.
-- **Acceptance criteria:**
-  1. On loop devices, RAID 0 and RAID 1 pools are created, formatted, mounted, and used as the storage root.
-  2. Without the typed phrase, or with a refused drive, nothing is erased.
-- **Risks/notes:** RK-34.
-- **Status:** Not started
-
-#### S14.6: Data migration onto a pool
-- **Goal:** An existing library moves onto a new pool without loss.
-- **Scope:** maintenance mode; copying with checksum verification; switching paths only after the verification succeeds; rollback if it fails.
-- **Deliverables:** migration job and wizard API.
-- **Depends on:** S14.5, S08.2.
-- **Requirements:** FR-205, NFR-036.
-- **Acceptance criteria:**
-  1. A fixture library migrates with every file, sidecar, and internal data intact (checksums).
-  2. An injected failure during migration leaves the old root in use and unchanged.
-- **Risks/notes:** None beyond RK-34.
-- **Status:** Not started
-
-#### S14.7: Monitoring, checks, failures, and rebuilds
-- **Goal:** Problems are seen early, and a mirror survives a failed drive.
-- **Scope:** pool states (healthy, degraded, rebuilding, failed) and per-drive SMART with alerts; scheduled consistency checks (scrubs) with mismatch reports; a degraded RAID 1 keeps serving data; the replace-drive wizard; rebuild with progress; clear guidance when a RAID 0 member or both mirrors fail; "RAID is not a backup" (S08.6).
-- **Deliverables:** monitor; check schedule; replace and rebuild flow.
-- **Depends on:** S14.5, S10.3.
-- **Requirements:** FR-206, FR-207.
-- **Acceptance criteria:**
-  1. On loop devices, failing one RAID 1 member keeps the data readable; replacing it rebuilds with progress and ends healthy.
-  2. A RAID 0 member failure is reported plainly as data loss, with backup guidance.
-- **Risks/notes:** RK-34.
-- **Status:** Not started
-
-#### S14.8: Expansion and import
-- **Goal:** Pools can grow and survive a reinstall.
-- **Scope:** adding drives or replacing them with larger ones and growing, where mdadm supports it for RAID 0 and 1; detecting existing pools after a reinstall or on a new machine.
-- **Deliverables:** grow and import flows.
-- **Depends on:** S14.7.
-- **Requirements:** FR-208, FR-209.
-- **Acceptance criteria:**
-  1. A pool created on loop devices is found and imported after the helper and core are reinstalled.
-  2. Supported growth operations work on loop devices; unsupported ones are explained.
-- **Risks/notes:** None.
-- **Status:** Not started
-
-#### S14.9: Storage GUI
-- **Goal:** Everything above from the GUI.
-- **Scope:** a storage page; the pool designer with the live calculator; pool status; the creation, migration, and replacement wizards.
-- **Deliverables:** storage pages and wizards.
-- **Depends on:** S14.4–S14.8.
-- **Requirements:** FR-200, FR-203, FR-206.
-- **Acceptance criteria:**
-  1. A user builds, migrates to, and repairs a RAID 1 pool from the GUI on a test machine.
-  2. Every erasing step shows the drives and asks for the typed phrase.
-- **Risks/notes:** The page is hidden where the helper is not available (A22).
-- **Status:** Not started
-
-#### S14.10: Testing, audit, and stage review
-- **Goal:** Prove safe pool handling without real disks in CI, then close the stage.
-- **Scope:** simulated-disk tests (loop devices or VM disks): creation, failure, degraded mode, rebuild, expansion, import, and re-assembly after a reboot; the manual real-hardware test plan; a documented recovery drill; "RAID is not a backup" documentation; the stage's unit, integration, and system tests; the R12 documentation audit; completion record; user sign-off.
-- **Deliverables:** test suites; manual test plan and recovery drill; documentation; audit; completion record.
-- **Depends on:** S14.1–S14.9.
-- **Requirements:** NFR-038; verification of every S14 requirement.
-- **Acceptance criteria:**
-  1. The simulated-disk suite passes; no test touches a real disk.
-  2. The manual real-hardware test and the recovery drill are documented and run once before release.
-  3. Coverage and the audit meet the stage-end rules; the completion record is written and the user's sign-off is recorded.
-- **Risks/notes:** Loop devices need root on the test machine (CI runs at stage completion only, per the user's CI preference).
-- **Status:** Not started
-
-**Design notes (S14):** The app orchestrates mdadm through the storage helper and never implements striping or mirroring itself. The layout model already knows members and roles, so the deferred parity layouts and virtual drives (11a) can be added without migrating existing pools.
-
-**Exit criteria (adapted from P005 to the user's S007 scope):** A user can build a RAID 0 or RAID 1 pool from their own drives through the GUI, see exact capacity and fault tolerance first, survive a simulated drive failure in a mirror, and rebuild without data loss.
-
----
-
-### 10.16 S15: AI features
+### 10.13 S12: AI features
 
 - **Origin:** User-defined
-- **Stage ID:** S15 since 1.4.0 (was S12; see 10.18).
 - **Position rule:** always the last stage (invariant I8).
 - **Goal:** Optional, fully local AI that classifies photos and groups faces, with results stored in sidecars and used by search.
 - **User requirements (quoted):**
@@ -2901,16 +2303,16 @@ flowchart LR
   > "It includes an auto photo classification system."
 - **Status:** Not started
 
-#### S15.1: AI architecture and opt-in
+#### S12.1: AI architecture and opt-in
 - **Goal:** A safe, optional, offline AI foundation.
 - **Scope:**
   - A separate, optional worker process or container, with the NAS fully functional when it is off (I7).
   - Opt-in toggle (per install or per user: Q35).
   - Hardware detection (CPU, GPU); resource limits and scheduling (throttling, running when idle).
-  - Model direction decided in 0.3.0 (ADR-0018). S15.1 selects exact variants by benchmark (license, size, accuracy, CPU performance), GPU execution providers, and embedding storage.
+  - Model direction decided in 0.3.0 (ADR-0018). S12.1 selects exact variants by benchmark (license, size, accuracy, CPU performance), GPU execution providers, and embedding storage.
   - Models obtained once with explicit user consent (bundled or downloaded), then run fully offline.
 - **Deliverables:** ADR-0018 updated with the chosen variants; AI worker skeleton (ADR-0017); internal job API; model manager with checksums and license display; opt-in settings.
-- **Depends on:** S13 and S14 (Done); AI is always last (I8).
+- **Depends on:** S11 (Done).
 - **Requirements:** FR-031, FR-032, FR-136, NFR-002, NFR-004, NFR-005.
 - **Acceptance criteria:**
   1. With the worker stopped or not installed, every non-AI test passes.
@@ -2921,11 +2323,11 @@ flowchart LR
 - **Risks/notes:** Training-data note on permissive face models (ADR-0018); ONNX Runtime wheels for Python 3.14 unverified (ADR-0017); CPU performance (RK-06).
 - **Status:** Not started
 
-#### S15.2: AI processing pipeline
+#### S12.2: AI processing pipeline
 - **Goal:** Every photo is processed once, reliably, and reprocessed only when needed.
 - **Scope:** jobs on the S04.3 job system; processing new photos on ingest; backfilling the existing library with progress, pause, and resume; idempotent processing; model name and version recorded in the sidecar; reprocessing when the model changes.
 - **Deliverables:** AI job types; backfill controller; staleness tracking.
-- **Depends on:** S15.1, S04.3.
+- **Depends on:** S12.1, S04.3.
 - **Requirements:** FR-035, FR-036, FR-037, NFR-018.
 - **Acceptance criteria:**
   1. New photos are processed automatically after ingest (when opted in).
@@ -2934,41 +2336,41 @@ flowchart LR
 - **Risks/notes:** None.
 - **Status:** Not started
 
-#### S15.3: Auto photo classification
+#### S12.3: Auto photo classification
 - **Goal:** Photos are classified automatically and found by meaning.
 - **Scope:**
   - A category taxonomy (e.g. documents, receipts, screenshots, food, pets, landscapes, people, vehicles) that users can extend.
   - Multiple labels per photo with confidence scores; confidence thresholds.
   - Mapping labels into the S06.5 synonym dictionary, so `receipts` also matches `invoice` and `voucher`.
 - **Deliverables:** classifier integration; taxonomy file; thresholds; dictionary mapping.
-- **Depends on:** S15.2, S06.5.
+- **Depends on:** S12.2, S06.5.
 - **Requirements:** FR-033, FR-034, FR-138.
 - **Acceptance criteria:**
   1. The taxonomy includes at least the listed categories, and users can add categories.
   2. Each photo can carry several labels with confidence, and thresholds are configurable.
   3. Searching `receipts` finds unlabelled receipt photos through AI labels and synonyms.
-  4. Classification meets the S15.12 evaluation targets.
+  4. Classification meets the S12.11 evaluation targets.
 - **Risks/notes:** Quality on hard categories (RK-07).
 - **Status:** Not started
 
-#### S15.4: Face detection
+#### S12.4: Face detection
 - **Goal:** Find every usable face.
 - **Scope:** detection of every face in a photo, with bounding boxes and quality scores; thresholds to ignore tiny or blurry faces.
 - **Deliverables:** detector integration; quality scoring; thresholds.
-- **Depends on:** S15.2.
+- **Depends on:** S12.2.
 - **Requirements:** FR-039, FR-137.
 - **Acceptance criteria:**
   1. Faces above the thresholds are detected with a box and a quality score.
   2. Faces below the thresholds are ignored.
-  3. Detection meets the S15.12 evaluation targets.
+  3. Detection meets the S12.11 evaluation targets.
 - **Risks/notes:** None.
 - **Status:** Not started
 
-#### S15.5: Face recognition and grouping
+#### S12.5: Face recognition and grouping
 - **Goal:** Photos of the same person are grouped.
-- **Scope:** face embeddings; clustering of similar faces into groups; incremental assignment of new faces to existing groups; one photo belonging to several face groups. Where embeddings are stored is decided by the agent at S15 per ADR-0018 (likely SQLite blobs with brute-force cosine); the sidecar holds group references and boxes, per the README.
+- **Scope:** face embeddings; clustering of similar faces into groups; incremental assignment of new faces to existing groups; one photo belonging to several face groups. Where embeddings are stored is decided by the agent at S12 per ADR-0018 (likely SQLite blobs with brute-force cosine); the sidecar holds group references and boxes, per the README.
 - **Deliverables:** embedding storage decision recorded in ADR-0018 (internal data, 8.14); clustering; incremental assignment; face-group registry (Q13).
-- **Depends on:** S15.4.
+- **Depends on:** S12.4.
 - **Requirements:** FR-040.
 - **Acceptance criteria:**
   1. Embeddings are stored as the ADR defines, and sidecars hold boxes and group references.
@@ -2977,11 +2379,11 @@ flowchart LR
 - **Risks/notes:** None.
 - **Status:** Not started
 
-#### S15.6: User corrections
+#### S12.6: User corrections
 - **Goal:** Users fix mistakes, and the fixes stick.
 - **Scope:** name a group; merge and split groups; remove a wrongly assigned face; "not this person"; hide a group; reject AI tags. Corrections persist and are never overwritten by reprocessing.
 - **Deliverables:** correction API; constraint store used by clustering.
-- **Depends on:** S15.5.
+- **Depends on:** S12.5.
 - **Requirements:** FR-038, FR-042, FR-043, FR-044, FR-045.
 - **Acceptance criteria:**
   1. Users can name, merge, split, and hide groups, remove faces, and mark "not this person".
@@ -2989,11 +2391,11 @@ flowchart LR
 - **Risks/notes:** None.
 - **Status:** Not started
 
-#### S15.7: Sidecar writing and search integration
+#### S12.7: Sidecar writing and search integration
 - **Goal:** AI results are searchable like any other metadata.
 - **Scope:** writing tags and faces to the sidecar's `ai` section (schema from S05.1); updating the index; activating the `face:` operator and AI tags in `tag:` and free-text search.
 - **Deliverables:** AI result writer (via the sidecar manager); index mapping; `face:` activation.
-- **Depends on:** S15.3, S15.5, S06.
+- **Depends on:** S12.3, S12.5, S06.
 - **Requirements:** FR-033, FR-047, FR-056.
 - **Acceptance criteria:**
   1. Tags and faces are written to the sidecar `ai` section through the sidecar manager.
@@ -3002,11 +2404,11 @@ flowchart LR
 - **Risks/notes:** None.
 - **Status:** Not started
 
-#### S15.8: AI GUI
+#### S12.8: AI GUI
 - **Goal:** AI features are usable and controllable from the GUI.
 - **Scope:** an Explore view for browsing auto-classifications (People, Things, Places); face group management; an AI settings page with the opt-in toggle, status, progress, model information, and pause.
 - **Deliverables:** Explore view; people management UI; AI settings page.
-- **Depends on:** S15.6, S15.7.
+- **Depends on:** S12.6, S12.7.
 - **Requirements:** FR-036, FR-041, FR-139.
 - **Acceptance criteria:**
   1. Explore shows People, Things, and Places.
@@ -3015,11 +2417,11 @@ flowchart LR
 - **Risks/notes:** None.
 - **Status:** Not started
 
-#### S15.9: AI privacy and multi-user rules
+#### S12.9: AI privacy and multi-user rules
 - **Goal:** AI respects privacy and access rules.
 - **Scope:** classifications and face groups are per user and follow S07 access rules; the handling of faces in shared photos is defined; opting out deletes all AI-derived data (sidecar `ai` sections and embeddings) on request.
 - **Deliverables:** per-user AI data model; shared-photo face policy; opt-out deletion job.
-- **Depends on:** S15.5, S07.
+- **Depends on:** S12.5, S07.
 - **Requirements:** FR-046, FR-140, NFR-011, NFR-024.
 - **Acceptance criteria:**
   1. AI data is per user and access-checked like the photos it describes.
@@ -3028,12 +2430,12 @@ flowchart LR
 - **Risks/notes:** Biometric privacy (RK-09).
 - **Status:** Not started
 
-#### S15.10: Optional AI extensions
+#### S12.10: Optional AI extensions
 - **Goal:** Extra AI capabilities, if the user wants them.
-- **Scope:** priority "Could", pending the user's decision (Q36): OCR so the text of receipts and documents is searchable; local semantic search using embeddings. _(1.4.0, P005: duplicate and similar-photo detection moved out; the baseline is S11 and the AI enhancement S15.11.)_ _Semantic search (S005, D-06): precomputed forms only by default (e.g. tag-vocabulary embeddings computed offline). A query-time text model is an I4 exception that needs separate approval._
+- **Scope:** priority "Could", pending the user's decision (Q36): OCR so the text of receipts and documents is searchable; local semantic search using embeddings; duplicate and similar-photo detection. _Semantic search (S005, D-06): precomputed forms only by default (e.g. tag-vocabulary embeddings computed offline). A query-time text model is an I4 exception that needs separate approval._
 - **Deliverables:** only the approved extensions.
-- **Depends on:** S15.2, S15.7.
-- **Requirements:** FR-054, FR-141.
+- **Depends on:** S12.2, S12.7.
+- **Requirements:** FR-054, FR-141, FR-142.
 - **Acceptance criteria (per approved extension):**
   1. It runs locally with no network calls.
   2. Results are stored and searched through the index, never computed at query time.
@@ -3041,24 +2443,11 @@ flowchart LR
 - **Risks/notes:** Items not approved are marked "not required".
 - **Status:** Not started
 
-#### S15.11: AI-assisted library cleanup (new in 1.4.0, P005)
-- **Goal:** AI improves look-alike grouping and unlocks AI-based scopes for optimization.
-- **Scope:** embedding-based look-alike grouping (finds look-alikes not taken in a burst); smart cover suggestions (sharpest, eyes open, best exposure) that never override a user's choice; activation of the face-group and classification filters for storage optimization (S12.3) and upload policies (S12.6, post-AI follow-up hook).
-- **Deliverables:** embedding-similarity grouping feeding the S11.4 stacks; cover suggester; filters activated.
-- **Depends on:** S15.2, S15.3, S15.5, S11.4, S12.3, S12.6.
-- **Requirements:** FR-164, FR-177, FR-179.
-- **Acceptance criteria:**
-  1. On the look-alike fixture set, AI grouping finds more true look-alikes than the S11 baseline at an equal or lower false-positive rate.
-  2. A cover the user chose is never replaced by a suggestion.
-  3. Face-group and classification scopes select the expected items; with AI off, S11 and S12 work unchanged (I7).
-- **Risks/notes:** Optional like all AI (I7). The previous evaluation substage becomes S15.12 and stays last.
-- **Status:** Not started
-
-#### S15.12: Evaluation, packaging, and stage review
+#### S12.11: Evaluation, packaging, and stage review
 - **Goal:** Prove AI quality and performance, package it as optional, and close the stage.
 - **Scope:** a labelled evaluation set with accuracy targets; throughput benchmarks on CPU-only hardware; packaging the AI worker as an optional component (e.g. a Compose profile); documentation; completion record; user sign-off.
 - **Deliverables:** evaluation set and report; benchmark report; `ai` Compose profile; AI documentation; completion record.
-- **Depends on:** S15.1–S15.11.
+- **Depends on:** S12.1–S12.10.
 - **Requirements:** NFR-028, NFR-004, NFR-002.
 - **Acceptance criteria:**
   1. Classification and face grouping meet the accuracy targets on the evaluation set.
@@ -3068,7 +2457,7 @@ flowchart LR
 - **Risks/notes:** Evaluation data must be license-clean or consented and kept out of the repository.
 - **Status:** Not started
 
-**Design notes (S15):**
+**Design notes (S12):**
 - A separate worker process, with results written by the core's sidecar manager (single writer).
 - Embeddings live in internal data, not in sidecars.
 - Only permissively licensed models are used (NFR-029, ADR-0018). Non-commercial or research-only weights such as InsightFace are excluded.
@@ -3078,60 +2467,32 @@ flowchart LR
 
 ---
 
-### 10.17 Changes to the listed substages (flagged for user approval)
+### 10.14 Changes to the listed substages (flagged for user approval)
 
 **Approved by the user in S005 (decision D-02, "Accept all (Recommended)"): items 1–7 below.**
 
-No listed substage was removed or merged away. (Renumbering: item 7 below, and the 1.4.0 changes in 10.18.) The planner made these additions and flags:
+No listed substage was removed, merged away, or renumbered. The planner made these additions and flags:
 
 1. **Execution order in S01:** S01.6 (path resolver, name validation) and S01.5 (API conventions) are built **before** S01.3 in the task order, because S01.3 uses them. The substage numbering is unchanged. The order is recorded in `stages/S01-basic-nas.md`.
 2. **Execution order in S04:** S04.3 (job system) is built before S04.4 and in parallel with S04.2. The numbering is unchanged.
 3. **S03.2 added scope:** a CLI admin password reset. (0.3.0: the internal-database ADR originally added here was superseded, because SQLite exists from S01 per ADR-0007. S03.2 now adds user and session tables via migrations and benchmarks the Argon2id parameters.)
 4. **S04.2 added scope (pending Q39):** server-side import from a host folder.
-5. **S13.7 added scope** _(S11.7 when approved)_**:** the stage review (final integration tests, documentation, completion record, sign-off), because P002 requires every stage to end with a testing and review substage and the listed S13.7 covered only the release.
-6. **S15.6 added scope** _(S12.6 when approved)_**:** rejecting AI tags (existing FR-038), alongside the face corrections.
+5. **S11.7 added scope:** the stage review (final integration tests, documentation, completion record, sign-off), because P002 requires every stage to end with a testing and review substage and the listed S11.7 covered only the release.
+6. **S12.6 added scope:** rejecting AI tags (existing FR-038), alongside the face corrections.
 7. **S04.8 added (0.4.0):** video streaming and quality levels, at the user's request (S004 E005/E008, ADR-0020). The listed testing substage was **renumbered from S04.8 to S04.9** so that it stays last. Approval of the renumbering goes with the baseline.
-
-**Added in 1.4.0 (P005, S007): flagged for the user's review with the P005 report.**
-
-8. **New stages S11, S12, and S14** (the user's features from P005; burst grouping added by the user in S007, E004). Planner additions inside them are labelled **[Planner addition]** in section 3 and listed in the P005 report, for the user to accept or remove.
-9. **Pool scope and position (the user's decision in S007, E008):** S14 builds RAID 0 and RAID 1 only and comes last before AI. Parity layouts, virtual drives, nesting, and SnapRAID with mergerfs are deferred to 11a with their full specification.
-10. **Renumbering:** packaging S11 → S13, AI S12 → S15, the AI evaluation substage S12.11 → S15.12 (table in 10.18). P005 proposed S11 → S14; the user's S007 order puts packaging before the pools, so the final mapping is S11 → S13.
-11. **S15.11 added:** AI-assisted library cleanup (P005). Duplicate and similar-photo detection removed from S15.10 (FR-142 moved to S11 and S15.11).
-12. **P005 notes on existing substages:** S01.2, S01.3, S01.4 (follow-up tasks in a Done stage, timing per Q50), S03.1, S04.2, S04.4, S05.1, S05.3 (burst identifiers, planner fix), S06.1, S08.1, S08.5, S09.2, S10.1, S10.2, S10.3, and S13.2. Each is labelled "P005" in its substage.
-
-### 10.18 Stage ID changes
-
-Documents written before a change keep the IDs of their time. Session logs, prompts, archived plans, completion records, and ADR history are records and are **not rewritten** (R2, R5); read them through this table. Current documents use the new IDs.
-
-| Old ID | New ID | Changed | Reason and reference |
-|---|---|---|---|
-| S04.8 (testing and stage review) | S04.9 | 0.4.0 (S004) | S04.8 became video streaming; 10.17 item 7. |
-| S11 (packaging, deployment, and pre-AI release) | S13 | 1.4.0 (2026-09-28, S007) | New stages S11 and S12 come first (P005); the user's order in S007 (E008). |
-| S11.1–S11.7 | S13.1–S13.7 | 1.4.0 | Same substages, same order. |
-| S12 (AI features) | S15 | 1.4.0 | AI stays last (I8). |
-| S12.1–S12.10 | S15.1–S15.10 | 1.4.0 | Same substages, same order. |
-| S12.11 (evaluation, packaging, and stage review) | S15.12 | 1.4.0 | S15.11 (AI-assisted library cleanup) inserted before it (P005). |
-| none | S11, S12, S14, S15.11 | 1.4.0 | New (P005; S14 scope per the user in S007). |
-| Plan sections 10.12, 10.13, 10.14 | 10.14, 10.16, 10.17 | 1.4.0 | New sections 10.12 (S11), 10.13 (S12), 10.15 (S14), and 10.18 (this table). |
-
-**Watch for reused IDs:** before 2026-09-28, "S11" meant packaging and "S12" meant AI. Since 1.4.0 they mean duplicates and storage optimization. Audit group K checks that current documents never use an old ID in its old meaning.
 
 ---
 
 ## 11. MVP definition
 
-**Decided by the user in S005 (Q38, D-08): the first usable release is milestone M3, then stages S01–S11 (through the pre-AI release). No not-scheduled candidates were added (Q37).**
-
-**Re-evaluated in 1.4.0 (P005):** the pre-AI release is now S13, and the new stages S11 (duplicates and look-alikes) and S12 (storage optimization) come before it, so M3 is **S01–S13**. Drive pools (S14) come after the release, as the user placed them "in the end" (S007), so M3 does not wait for them. The user is asked to confirm this in **Q51**.
+**Decided by the user in S005 (Q38, D-08): the first usable release is milestone M3, stages S01–S11. No not-scheduled candidates were added (Q37).**
 
 | Milestone | Stages | What the user gets | Reasoning |
 |---|---|---|---|
 | **M1: Secure single-admin NAS** | S01–S03 | Files area over a GUI, secure on the LAN | First point where the NAS may leave localhost (NFR-020). Useful, but it is only a file store. |
 | **M2: First usable release (recommended MVP)** | S01–S06 | Files + photos library (timeline, albums, viewer, sidecar metadata, places) + forgiving search with operators; single admin | Delivers the README's core non-AI value, the user's first six stages, and a complete single-user experience. Deployable with the S01.1 Docker setup and documentation. |
-| **M3: Stable pre-AI release (chosen as the first usable release, S005)** | S01–S13 | Multi-user, sharing, trash and backups, network drives, admin, duplicates and look-alike stacks, storage optimization, packaging | The release the user's roadmap defines (S13.7). _1.4.0:_ includes S11 and S12 (to be confirmed, Q51). |
-| **M4: Drive pools** _(1.4.0, P005)_ | S01–S14 | RAID 0 and RAID 1 pools from the GUI (Linux) | An update to the stable release; the complex RAID follows later (11a). |
-| **M5: AI release** | S01–S15 | Auto-classification, face grouping, AI-assisted cleanup | Always last (I8). |
+| **M3: Stable pre-AI release (chosen as the first usable release, S005)** | S01–S11 | Multi-user, sharing, trash and backups, network drives, admin, packaging | The release the user's roadmap defines (S11.7). |
+| **M4: AI release** | S01–S12 | Auto-classification and face grouping | Always last (I8). |
 
 **Caveat on M2:** there is **no trash until S08**, so deletes in M2 are permanent (the GUI warns about this). If M2 will hold real data, options are: (a) keep external backups (documented), or (b) move S08.1 (trash) before S07. Option (b) is a reorder that needs approval, and the trash would first be single-user and then extended in S07.
 
@@ -3139,15 +2500,13 @@ Documents written before a change keep the IDs of their time. Session logs, prom
 
 ## 11a. Not scheduled / future candidates
 
-Not stages. If any is approved later, it is inserted **before** the AI stage and S15 is renumbered (I8). The user is asked in Q37.
+Not stages. If any is approved later, it is inserted **before** the AI stage and S12 is renumbered (I8). The user is asked in Q37.
 
 | Candidate | Notes |
 |---|---|
 | Mobile app with automatic photo backup from phones | Would add a mobile client and a background upload protocol (tus fits). Photos go into the user's `photos/` namespace. |
 | Public share links for people without an account | Needs expiring, revocable tokens and a hardened unauthenticated surface. It weakens the LAN-only posture, so a threat model update is needed. |
 | Secure remote access from outside the local network | Options: documented VPN (Tailscale/WireGuard), or a reverse proxy with HTTPS. Must not require any cloud service by default (I6). |
-| **Advanced drive pools ("complex RAID")** _(1.4.0; deferred by the user in S007: "leave complex raid for later as planned non implemented work")_ | **Planned, not implemented.** Specification kept from P005: dedicated parity, "RAID 4 style" (FR-197); distributed and double parity, RAID 5 and RAID 6 (FR-199); combining smaller drives end to end into a **virtual drive** that can be a member of a striped or parity pool (FR-198); nesting (e.g. RAID 10, parity over virtual drives); the unused space of larger members as a separate volume (FR-201); SnapRAID with mergerfs as the option for mixed-size media drives. **The user's example is the acceptance test:** drives of 2, 1, 1, 2, 2, 2 TB; the two 1 TB drives combined into a 2 TB virtual drive; the members 2, 2, 2, 2, 2 TB in a parity layout give 8 TB usable and survive one failed member. **Before building:** mdadm's parity write hole (a journal or the partial parity log, 8.25), nesting md arrays and their assembly at boot (only partly verified in S007), and whether SnapRAID fits. The S14 layout model is built so this candidate needs no migration of existing pools. If approved, it is inserted before the AI stage (I8). |
-| Video resolution variants as duplicates _(1.4.0, P005)_ | Finding the same video at another resolution (S11 covers exact video duplicates only). Needs a video fingerprint (e.g. perceptual hashes of sampled frames). |
 
 ---
 
@@ -3167,11 +2526,8 @@ Not stages. If any is approved later, it is inserted **before** the AI stage and
 | S08 | S08.7 | Trash and restore; integrity detection; disaster recovery from disk plus backup |
 | S09 | S09.6 | Real clients (Windows/macOS/Linux) over WebDAV/SMB; permissions over the network; watcher and rename tests |
 | S10 | S10.6 | Quota enforcement on every write path |
-| S11 | S11.8 | Labelled duplicate and look-alike fixture set (false positives, exact duplicates never wrong); burst fixtures; large-library lookups; metadata merge; shortcut edge cases; no cross-user matches |
-| S12 | S12.8 | Resize arithmetic (the user's examples); visual checks of previews; metadata preservation across JPEG, HEIC, PNG, and video; orientation; byte-identical revert; fault injection mid-job |
-| S13 | S13.5–S13.7 | Full-system load tests; upgrade and rollback tests; release artifact tests |
-| S14 | S14.10 | Simulated disks only (loop devices or VM disks): creation, failure, degraded mode, rebuild, growth, import, reboot re-assembly; a documented manual test on real hardware; the recovery drill |
-| S15 | S15.12 | Evaluation set accuracy; CPU throughput; AI-off regression (the whole non-AI suite passes with the worker stopped) |
+| S11 | S11.5–S11.7 | Full-system load tests; upgrade and rollback tests; release artifact tests |
+| S12 | S12.11 | Evaluation set accuracy; CPU throughput; AI-off regression (the whole non-AI suite passes with the worker stopped) |
 
 Each final substage above **writes the stage's tests** (S006): unit, integration, and system/application tests for everything the stage built, plus the regression tests for bugs recorded during the stage. Tests named in the deliverables or acceptance criteria of earlier substages are written and checked there. The stage's code is written first, to be testable. Coverage of at least 80% (Go: `internal/...`) is an exit criterion.
 
@@ -3187,7 +2543,7 @@ Each final review substage above also runs a **documentation audit** (R12, `temp
 | Security | From S01.6; formalized in S03.9 |
 | Performance | At the scales named in NFR-003 |
 
-CI runs on Linux and Windows from S01.1. _Since S007 (the user's preference):_ CI runs **at the completion of each stage**, not on every commit or push. Plan wording such as "on every PR" (NFR-023) or "passes in CI" means the stage-completion run.
+CI runs on Linux and Windows from S01.1.
 
 ### 12.3 Fixture sets
 - **Files (S01):**
@@ -3199,11 +2555,8 @@ CI runs on Linux and Windows from S01.1. _Since S007 (the user's preference):_ C
   - GPS: Karachi, Lahore, southern/western hemispheres, borders, antimeridian, 0,0, missing.
   - Formats: JPEG/PNG/WebP/GIF/HEIC, MP4/MOV, corrupt and zero-byte files.
   - Naming: same basename with different extensions; Google Takeout–style foreign `.json`.
-- **Scale:** a synthetic generator for 50k photos (S04.9) and 100k photos + 100k files (S06.8, S13.5). It is not committed.
-- **Duplicates and look-alikes (S11), 1.4.0:** generated by script from license-clean sources: exact copies under other names; re-saved, re-encoded, resized, and format-converted copies; crops and small edits; bursts with and without camera burst identifiers (Apple `BurstUUID`, Google `GCamera:BurstID`); "similar but different" pairs as negatives; identical files in two users' libraries (privacy tests).
-- **Optimization (S12), 1.4.0:** images and videos with full EXIF, XMP, IPTC, ICC, GPS, and every orientation, in each supported format, with expected dimensions for each resize mode.
-- **Pools (S14), 1.4.0:** loop-device or VM-disk sets of equal and unequal sizes. No test touches a real disk (NFR-038).
-- **AI (S15):** a labelled, license-clean or consented evaluation set kept outside the repository, with versioned reports.
+- **Scale:** a synthetic generator for 50k photos (S04.9) and 100k photos + 100k files (S06.8, S11.5). It is not committed.
+- **AI (S12):** a labelled, license-clean or consented evaluation set kept outside the repository, with versioned reports.
 
 ### 12.4 AI evaluation
 - **Classification:** precision and recall per label at the chosen thresholds, CPU time per image.
@@ -3216,15 +2569,15 @@ CI runs on Linux and Windows from S01.1. _Since S007 (the user's preference):_ C
 
 | # | Risk | Type | Mitigation |
 |---|---|---|---|
-| RK-01 | The scope is very large (15 stages, 120 substages since 1.4.0), so the project never reaches a usable state. | Scope | Stage gating; milestones (section 11); Could items pending user decisions; planner-proposed stages removable. |
+| RK-01 | The scope is very large (12 stages, 93 substages), so the project never reaches a usable state. | Scope | Stage gating; milestones (section 11); Could items pending user decisions; planner-proposed stages removable. |
 | RK-02 | Sidecar corruption or metadata loss. | Data | Atomic writes, single writer, locks, crash-injection tests, quarantine and recovery (S05.2). |
 | RK-03 | Foreign `<name>.json` files are overwritten. | Data | Media-only photos area; identifying marker; foreign-file detection (FR-030). |
 | RK-04 | The watcher misses external changes. | Technical | Periodic reconciliation is the correctness mechanism (S05.7); WebDAV is in-app (ADR-0015). |
-| RK-05 | ~~Python performance is insufficient at 100k+100k items.~~ | Performance | **Retired in 0.3.0:** the core is Go (ADR-0001). General performance is covered by the benchmarks in S01.7, S04.9, S06.8, and S13.5, and by RK-25. |
-| RK-06 | **AI speed on CPU-only hardware** is too slow for backfilling large libraries. | Performance | _Updated in 0.3.0 (P003):_ AI runs as an **idle-time, low-priority background job** (ADR-0011/0017) with pause and resume. Small ONNX models (ADR-0018), batching, and optional GPU execution providers (S15.1). Throughput is measured on CPU-only reference hardware (S15.12). |
+| RK-05 | ~~Python performance is insufficient at 100k+100k items.~~ | Performance | **Retired in 0.3.0:** the core is Go (ADR-0001). General performance is covered by the benchmarks in S01.7, S04.9, S06.8, and S11.5, and by RK-25. |
+| RK-06 | **AI speed on CPU-only hardware** is too slow for backfilling large libraries. | Performance | _Updated in 0.3.0 (P003):_ AI runs as an **idle-time, low-priority background job** (ADR-0011/0017) with pause and resume. Small ONNX models (ADR-0018), batching, and optional GPU execution providers (S12.1). Throughput is measured on CPU-only reference hardware (S12.11). |
 | RK-07 | Classification quality is poor. | Technical | Evaluation set, thresholds, user corrections, reprocessing on model change. |
-| RK-08 | Incompatible dependency or model licenses. | Legal | Project license **AGPL-3.0-or-later** (Q22, decided in S005). Policy: `docs/licensing.md`. License policy NFR-029. `dependencies.md` register. go-licenses and `pnpm licenses` checks in CI (ADR-0005). Audit in S13.6. GPL/LGPL external tools (FFmpeg build flags, ExifTool, libvips, libheif) run as separate programs and are recorded for the user's attention. The GPL-3.0 go-exiftool wrapper was rejected. |
-| RK-09 | Face data privacy (biometrics). | Privacy | Separate opt-in, embeddings only in internal data, per-user, full deletion (S15.9). |
+| RK-08 | Incompatible dependency or model licenses. | Legal | Project license **AGPL-3.0-or-later** (Q22, decided in S005). Policy: `docs/licensing.md`. License policy NFR-029. `dependencies.md` register. go-licenses and `pnpm licenses` checks in CI (ADR-0005). Audit in S11.6. GPL/LGPL external tools (FFmpeg build flags, ExifTool, libvips, libheif) run as separate programs and are recorded for the user's attention. The GPL-3.0 go-exiftool wrapper was rejected. |
+| RK-09 | Face data privacy (biometrics). | Privacy | Separate opt-in, embeddings only in internal data, per-user, full deletion (S12.9). |
 | RK-10 | Synonym over-expansion adds noise. | UX | Lower weights, curated and editable dictionary, golden query set. |
 | RK-11 | Cross-platform filesystem differences. | Technical | One resolver per area, Windows CI from S01, name validation for all OSes. |
 | RK-12 | Network exposure before security is ready. | Security | Localhost binding enforced until S03 is Done (NFR-020); HTTPS required for LAN binding. |
@@ -3235,23 +2588,18 @@ CI runs on Linux and Windows from S01.1. _Since S007 (the user's preference):_ C
 | RK-17 | **Cross-user data leaks** (search counts, autocomplete, thumbnails, jobs, timing). | Security / privacy | Owner in the model from S01; reserved index fields; default-deny policy; permission pre-filtering; leak tests (S07.7). |
 | RK-18 | **Sync conflicts from network shares** (edits via SMB and via the app at the same time). | Technical / data | Prefer in-app WebDAV (single writer); optimistic concurrency; the watcher treats disk as truth and never overwrites newer external content; conflicts reported. |
 | RK-19 | **No trash before S08**, so accidental permanent deletes in early milestones. | Data | Explicit GUI warnings; backup guidance; option to move S08.1 earlier (section 11). |
-| RK-20 | The long road to AI (the headline feature arrives last) reduces motivation or perceived value. | Scope | Useful milestones M1–M3; the AI design is prepared early (reserved fields) so S15 is smooth. |
+| RK-20 | The long road to AI (the headline feature arrives last) reduces motivation or perceived value. | Scope | Useful milestones M1–M3; the AI design is prepared early (reserved fields) so S12 is smooth. |
 | RK-21 | Per-user namespace retrofit forces a data migration in S07. | Technical | ADR-0003: namespace directories from S01. |
 | RK-22 | SMB via Samba is unavailable on Windows hosts, and Samba permission mapping is complex. | Platform | WebDAV first; SMB optional per host (S09.1). |
 | RK-23 | WebDAV client quirks (e.g. Windows WebDAV redirector file-size limits and HTTPS/auth requirements). | Platform | Documented client settings (S09.5); client test matrix (S09.6). |
 | RK-24 | Disk health (SMART) inaccessible in containers or without privileges. | Platform | Degrade gracefully to "not available"; document the privileges needed (S10.3). |
 | RK-25 | **Bleve performance at scale** (100k photos + 100k files, fuzzy and synonym queries) misses the NFR-003 latency targets. | Performance | Benchmarks in S06.8 on reference hardware; tuning fuzziness, prefix, and synonym expansion; per-field analyzers. **Fallback:** revisit the engine via a new ADR (ADR-0014). The `SearchEngine` interface keeps the swap contained. |
-| RK-26 | **External tool availability on native installs** (ExifTool + Perl, libvips + libheif, FFmpeg missing or too old). | Platform | Bundled in the Docker image (ADR-0006). Startup tool detection with versions in health. Affected features are disabled with a clear message. The install guide lists the packages (S13.2, S13.4, plan 8.20). |
+| RK-26 | **External tool availability on native installs** (ExifTool + Perl, libvips + libheif, FFmpeg missing or too old). | Platform | Bundled in the Docker image (ADR-0006). Startup tool detection with versions in health. Affected features are disabled with a clear message. The install guide lists the packages (S11.2, S11.4, plan 8.20). |
 | RK-27 | **Model license changes**: an upstream model (SigLIP, YuNet, SFace, OCR models) is relicensed or withdrawn. | Legal | Pin exact model files by checksum. Record the license at the time of adoption in `dependencies.md` and ADR-0018. Re-verify licenses when upgrading models. Keep the model choice swappable through the ONNX contract (ADR-0017). |
 | RK-29 | **Transcoding load on weak hardware**: live transcoding saturates a CPU-only board, so playback stutters and the NAS slows down. | Performance | Hardware encoder when present; concurrency cap (default 1 on CPU); a maximum-level setting (e.g. 720p on weak CPUs); cache reuse; background jobs yield (ADR-0020, NFR-031). |
-| RK-30 | **H.264 encoding licensing**: libx264 is GPL-2.0-or-later (part of Debian's GPL FFmpeg build), plus possible codec-patent questions depending on the jurisdiction. | Legal | Run as a separate program; recorded in `dependencies.md`. D-04 decided in S005: Debian's GPL FFmpeg is accepted as a separate program for now (source offer in third-party notices), revisited at S13.1. Hardware encoders are an alternative. |
+| RK-30 | **H.264 encoding licensing**: libx264 is GPL-2.0-or-later (part of Debian's GPL FFmpeg build), plus possible codec-patent questions depending on the jurisdiction. | Legal | Run as a separate program; recorded in `dependencies.md`. D-04 decided in S005: Debian's GPL FFmpeg is accepted as a separate program for now (source offer in third-party notices), revisited at S11.1. Hardware encoders are an alternative. |
 | RK-31 | **HLS player compatibility**: manual quality selection needs hls.js (MSE/ManagedMediaSource). Where only native HLS works, Auto only. | UX | Cross-browser tests in S04.9, including iOS; the documented limitation in A21. |
 | RK-28 | Distribution package versions lag upstream (e.g. Debian trixie ExifTool 13.25 vs 13.59, FFmpeg 7.1.5 vs 9.0.2), missing format support. | Platform | Fixture tests catch gaps. Upgrade the base image or build specific tools from source via a new ADR if a needed feature is missing (ADR-0006, ADR-0012). |
-| RK-32 | **Wrong duplicate or look-alike matches** lead the user to delete a photo that was not a duplicate. _(1.4.0, P005)_ | Data | Exact duplicates by content hash only; conservative default thresholds calibrated on the labelled fixture set (NFR-034); side-by-side comparison; preview and confirmation (I10); removal only to the trash; "not duplicates" marks; stacking never deletes. |
-| RK-33 | **Quality or metadata loss from optimization.** _(1.4.0, P005)_ | Data | Live preview; never upscale; metadata copied with ExifTool and verified (NFR-039); orientation applied once; originals kept for the retention period and revertible (ADR-0026); dry run; defaults that keep quality high. |
-| RK-34 | **Disk-level data loss during pool operations** (erasing the wrong drive, a failed rebuild, RAID 0 member loss). _(1.4.0, P005)_ | Data | The helper refuses the OS drive and drives with NAS data; model and serial list plus a typed phrase (I10); SMART check first; migration verified before switching; simulated-disk tests (NFR-038); recovery drill; "RAID is not a backup" in the GUI and docs (S08.6). |
-| RK-35 | **Security of the privileged storage helper** (a root service is a high-value target). _(1.4.0, P005)_ | Security | Narrow allow list; Unix-socket authentication; audit log; the core never runs as root (NFR-037); threat model entries (S03.1, S14.2); review in S14.10. |
-| RK-36 | **Encoder licenses in optimization**: x264 and x265 are GPL (a GPL FFmpeg build), HEIC output needs an HEVC encoder in libheif (x265 GPL, or kvazaar BSD), AV1 encoders carry the AOMedia patent license. _(1.4.0, P005)_ | Legal | All run as separate programs, never linked (as D-04); recorded in `dependencies.md`; H.264 by default (ADR-0025, Q48); the user decides any other encoder. |
 
 ---
 
@@ -3273,4 +2621,3 @@ CI runs on Linux and Windows from S01.1. _Since S007 (the user's preference):_ C
 | 1.1.4 | 2026-09-24 | Status (PATCH): **S01 Done**, signed off by the user. S01.7 is Done. The S01.7 throughput deviation is accepted as recorded, and it is measured on the Raspberry Pi and the mini-PC when they are available. No requirement or target changes. (Substage status updates were not versioned; a whole stage's completion is.) | The user's sign-off and decisions (S005 E126) | `logs/sessions/2026-09-24_S005.md`; `stages/S01-basic-nas.md` section 13 |
 | 1.2.0 | 2026-09-25 | Methodology (MINOR): **code first, tests at the end of each stage.** Code is written to be testable. Each stage's final testing substage writes its unit, integration, and system/application tests, including those named by earlier substages and the regression tests for recorded bugs. Coverage of 80% is enforced at the stage end, and CI reports it without blocking during the stage. Changed: 2b principle 6, section 9, 12.1, and 12.2 ("System / application" replaces "End-to-end"). No requirement or target changes. | The user's instruction (S006 E001) and answers (S006 E003) | `logs/sessions/2026-09-25_S006.md` |
 | 1.3.0 | 2026-09-25 | Stage change (MINOR): **S02 approved**. At the user's decision, S02.8 acceptance criterion 2 checks Chrome, Edge, and Firefox; Safari is not checked in S02. NFR-027 and the Safari checks of later stages are unchanged. S02 status is Approved. | The user's approval and answer "Skip Safari" (S006 E009) | `logs/sessions/2026-09-25_S006.md`; `stages/S02-nas-gui.md` |
-| 1.4.0 | 2026-09-28 | **Feature additions** (MINOR, R4). New stages **S11** duplicate and look-alike management (with automatic burst grouping), **S12** storage optimization, and **S14** multi-drive storage pools (**RAID 0 and RAID 1 only**; parity, virtual drives, and nesting deferred to 11a). **Renumbering:** packaging S11 → **S13**, AI S12 → **S15**, S12.11 → S15.12, with the new S15.11 (AI-assisted library cleanup); "Stage ID changes" table in 10.18. Invariant **I10** (preview, confirmation, undo for destructive bulk operations). Goals G11, G12; NG4 and NG8 revised; NG11 added. FR-150–FR-213 and NFR-033–NFR-039 added; FR-022, FR-142, and NFR-006 amended. A18 revised; A22, A23 added. Q36 and Q38 updated; Q42–Q51 added (Q50 answered in S007). Architecture 6.1–6.5, section 7 (ADR-0021–ADR-0029 Proposed), 7.1, 8.1, 8.7, and concerns 8.22–8.26. P005 notes on existing substages (10.17 item 12). Milestones: M3 = S01–S13 (Q51), M4 pools, M5 AI. Testing, fixtures, and risks RK-32–RK-36. Fixes to the prompt are listed in the session log (E006). | Plan change request #5 (`code-agent-docs/prompts/P005-feature-additions.json`) and the user's messages in S007 (E004: burst grouping; E005: fix the prompt's issues; E008: RAID 0 and 1 only, at the end) | `logs/sessions/2026-09-28_S007.md` |

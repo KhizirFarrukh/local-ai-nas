@@ -47,9 +47,9 @@
 ## Consequences
 
 - **Easier:** broad format coverage; license separation; a pure-Go build.
-- **Harder:** native installs need these tools installed (install guide, S11.4). Process lifecycle and timeout handling. Distribution versions lag upstream.
+- **Harder:** native installs need these tools installed (install guide, S13.4). Process lifecycle and timeout handling. Distribution versions lag upstream.
 - **Required:**
-  - Third-party notices (`docs/third-party-notices.md`), including **FFmpeg's build configuration**. Debian's build is likely GPL-enabled; check it in S11.1 (flagged for the user, Q22).
+  - Third-party notices (`docs/third-party-notices.md`), including **FFmpeg's build configuration**. Debian's build is likely GPL-enabled; check it in S13.1 (flagged for the user, Q22).
   - Health check reporting tool availability and versions (S04/S05).
 
 ## Approval record
