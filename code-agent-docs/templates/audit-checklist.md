@@ -4,6 +4,7 @@
 Template for documentation audits under RULES.md R12.
 Created in audit A001 (session S004) from P004. Written generally so that every later audit (A002, A003, ...) can reuse it.
 Updated in audit A002 (session S005): checks for the product documentation (docs/, scripts/, README sections owned by stages) in groups A, E, and K.
+Updated in session S007 (P005, pre-approved): group K checks historical documents against the plan's "Stage ID changes" table (plan.md 10.18).
 UPDATE THIS CHECKLIST whenever a new document type, folder, rule, or invariant is added (R12 / P004).
 
 How to use:
@@ -128,6 +129,7 @@ How to use:
 
 ### K. Cross-document consistency
 - [ ] Stage, substage, task, requirement, ADR, and invariant IDs are identical everywhere.
+- [ ] **Stage ID changes** (plan.md 10.18): documents written before a renumbering (session logs, prompts, archived plans, completion records, ADR history, changelog and revision-history rows) keep the old IDs and are **not** findings; check that their IDs are correct for their date by translating through the table. Current documents must use the new IDs, and no current document may use a reused ID (e.g. S11, S12 before and after 1.4.0) in its old meaning. Every current document that mentions a renumbered stage uses its current ID.
 - [ ] Terminology is consistent (areas, sidecar naming, operators, component names).
 - [ ] All relative links and backticked `code-agent-docs/…` paths resolve.
 - [ ] Product documentation (`docs/`, `scripts/README.md`, the README's Development section): links and anchors resolve, and every command it shows was run as written (for example by extracting its code blocks into a script), or the report says which were not.

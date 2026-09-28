@@ -52,8 +52,8 @@ local-ai-nas/
 │   └── admin/  quota/                                                    (S10)
 ├── api/openapi.yaml                the API contract (ADR-0002)
 ├── web/                            SvelteKit UI (S02) + web/embed.go (package web, //go:embed all:build)
-├── ai-worker/                      Python AI worker (S12): pyproject.toml, uv.lock, src/, tests/
-├── deploy/                         Dockerfile(s), compose.yaml, compose.dev.yaml, systemd unit (S11), dev files from S01.1
+├── ai-worker/                      Python AI worker (S15): pyproject.toml, uv.lock, src/, tests/
+├── deploy/                         Dockerfile(s), compose.yaml, compose.dev.yaml, systemd unit (S13), dev files from S01.1
 ├── testdata/                       test fixtures + testdata/SOURCES.md (origin and license of every fixture)
 ├── docs/                           user, admin, install documentation (+ third-party notices)
 ├── scripts/                        development helper scripts (cross-platform: Go or POSIX shell + PowerShell pairs)
@@ -76,7 +76,7 @@ local-ai-nas/
 ## Consequences
 
 - **Easier:** a single CI and clone; embedding the UI; clear per-stage package creation.
-- **Harder:** three toolchains in one repository (Go always; pnpm from S02; uv from S12).
+- **Harder:** three toolchains in one repository (Go always; pnpm from S02; uv from S15).
 - **Required:** the depguard/architecture rule (S01.1-T05); `.gitattributes` for line endings (S001 finding).
 
 ## Approval record

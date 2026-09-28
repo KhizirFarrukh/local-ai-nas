@@ -29,7 +29,7 @@
 - **Primary deployment: Docker Compose** with **multi-architecture images for linux/amd64 and linux/arm64** (built with Docker buildx).
 - **Core image** bundles ExifTool (with Perl), libvips with libheif, and FFmpeg. The Go binary is built with `CGO_ENABLED=0`.
 - **AI worker:** a separate image, enabled with a Compose profile: `docker compose --profile ai up` (ADR-0017).
-- **Secondary: native Linux install**, meaning the static binary plus a **systemd unit**. The external tools are installed from distribution packages, and the install guide covers them (S11.2, S11.4).
+- **Secondary: native Linux install**, meaning the static binary plus a **systemd unit**. The external tools are installed from distribution packages, and the install guide covers them (S13.2, S13.4).
 - **Deferred:** native **Windows and macOS** installs, pending the user's decision (Q5).
 - **Development environment (S01.1):**
   - (a) Native: Go toolchain on Windows or Linux. This is enough for S01, which needs no external tools.
@@ -48,8 +48,8 @@
 - **Easier:** consistent environments; tools bundled; arm64 support; the optional AI profile.
 - **Harder:** multi-arch builds in CI (QEMU emulation for arm64 is slower); keeping Debian tool versions current.
 - **Required:**
-  - Third-party notices for bundled tools, including FFmpeg's build configuration (GPL or LGPL, checked in S11.1).
-  - The install guide for native Linux (S11.4) must cover the tools and `fs.inotify.max_user_watches` (ADR-0016).
+  - Third-party notices for bundled tools, including FFmpeg's build configuration (GPL or LGPL, checked in S13.1).
+  - The install guide for native Linux (S13.4) must cover the tools and `fs.inotify.max_user_watches` (ADR-0016).
 
 ## Approval record
 
@@ -60,5 +60,5 @@
 
 - **Related requirements:** NFR-008, NFR-009, NFR-030, FR-131, FR-132
 - **Related ADRs:** ADR-0001, ADR-0004, ADR-0005, ADR-0012, ADR-0016, ADR-0017
-- **Related stages:** S01.1 (dev environment), S11.1, S11.2, S12.11
+- **Related stages:** S01.1 (dev environment), S13.1, S13.2, S15.12
 - **Plan version:** 0.3.0

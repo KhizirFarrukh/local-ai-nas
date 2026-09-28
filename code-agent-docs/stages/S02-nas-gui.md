@@ -104,7 +104,7 @@ flowchart LR
   - The Node.js 24 LTS line (`engines`: `>=24.19`) with pnpm 12.6.0 and a committed `pnpm-lock.yaml`.
 - **Embedding (ADR-0004):**
   - `web/embed.go` (package `web`) embeds `//go:embed all:build`. `web/build/` holds a committed `.gitkeep` and is otherwise git-ignored. So `go build` and `go run` still work without Node.js, as in the README quick start and the CI quick-start step.
-  - A binary built without the UI serves a short notice at `/` that says how to build it. CI's build job and later release builds (S11) build the UI first.
+  - A binary built without the UI serves a short notice at `/` that says how to build it. CI's build job and later release builds (S13) build the UI first.
 - **Serving the app** (new handler in the core):
   - `GET /` and every other non-API path returns the file from `web/build`, or `index.html` for app routes (SPA fallback). Anything under `/api/` never falls back, so unknown API paths stay `404` problems.
   - **Caching:** `/_app/immutable/*` (hashed names) is cached for a year; `index.html` gets `no-cache`.
