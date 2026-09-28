@@ -1,18 +1,19 @@
 # CURRENT_STATE
 
-**Last updated:** 2026-09-28 13:25 +0500 (session S007)
+**Last updated:** 2026-09-28 19:23 +0500 (session S007)
 **Plan version:** 1.4.2 (`code-agent-docs/plan.md`), **Approved baseline** 1.0.0 (S005); 1.4.0 adds P005 (15 stages, 120 substages; packaging is now S13 and AI S15, table in plan 10.18)
-**Current phase:** **S01 (Basic NAS) Done** (signed off, S005 E126; P005 follow-up tasks done in S007). **S02 (NAS GUI) In Progress** (approved S006 E009); S02.1–S02.7 Done; S02.8 In Progress (T01–T04 done)
+**Current phase:** **S01 (Basic NAS) Done** (signed off, S005 E126; P005 follow-up tasks done in S007). **S02 (NAS GUI) In Progress** (approved S006 E009); S02.1–S02.7 Done; S02.8 In Progress (T01–T04 done; T05 waits for the sign-off)
 
 ## Active stage and task
 - **Active stage:** **S02: NAS GUI**, **In Progress** (`stages/S02-nas-gui.md`; approved in S006 E009, with "Skip Safari": S02 checks Chrome, Edge, and Firefox). S01 is **Done** (`stages/S01-basic-nas.md`, completion record in section 13).
-- **Active task:** none. Next: **S02.8-T05** (completion record, the `S02-done` tag for CI, the user's sign-off with a walkthrough). The P005 follow-up tasks of S01 are all done.
+- **Active task:** **S02.8-T05**, waiting for the user's sign-off (completion record written; stage-end CI green). The P005 follow-up tasks of S01 are all done.
 - **The user's instruction (S007 E010):** after P005, resume S02 and work until the stage is complete, and also build the P005 items that belong to the current or earlier stages (the S01 follow-up tasks).
 
 ## In progress (write-ahead)
-- **S02.8-T05: completion record and sign-off** (started 2026-09-28 13:26, branch `docs/S02.8-T05-completion` from `develop` 61062c1). Steps: local system tests; the tag `S02-done` on `develop` 61062c1 and its CI run (watch through the public REST API); the completion record (stage document section 13) with the CI results; merge; then the user's sign-off (walkthrough, Narrator check, README proposals R-13–R-15, S01 re-confirmation).
+- **S02.8-T05: waiting for the user's sign-off** (branch `docs/S02.8-T05-completion`). Done: completion record (stage document section 13); the stage-end CI run 36433983279 is green on the tag `S02-done` (`develop` 494e616). Left: the user's walkthrough and answers, then S02 Done in the plan, the stage document, and here.
 
 ## Last completed
+- **Stage-end CI green** (S007 E027–E028): run 36433983279, 15 of 15 jobs, on the tag `S02-done` (`develop` 494e616). The first run had failed in the Linux system tests because of two test races, fixed in `fix/S02.8-T05-e2e-resume-race`; the tag was moved with the user's permission.
 - **S02.8-T04 done** (S007 E024): documentation audit A003: 8 findings, no Critical; 6 fixed (plan 1.4.2), 1 accepted, 1 for the user (README proposals R-13–R-15, asked at the S02 sign-off).
 - **S02.8-T03 done** (S007 E023): user guide `docs/guide/web-interface.md`; cross-browser report `docs/reports/S02-cross-browser.md` (Edge, Chromium, Firefox locally; Google Chrome in CI through `E2E_CHROME=1`); README Development section; register (test browsers, fixture tool).
 - **S02.8-T02 done** (S007 E022): 42 Playwright system tests per browser (125 passed, 1 skipped in Chromium, Firefox, Edge), listing and ZIP64 integration tests, axe 0 violations in both themes; bug S02-B11 (a renamed item was no longer selected) fixed.
@@ -33,7 +34,7 @@
 - **S01 Done** (S005 E126), plan 1.1.4: every task, CI run, and decision is in `stages/S01-basic-nas.md` (sections 12 and 13) and the S005 log.
 
 ## Next steps
-1. **S02.8-T05** (`stages/S02-nas-gui.md`, section 5): write the completion record (section 13); create and push the tag `S02-done` on `develop` so CI runs; watch the run and fix any failure; then ask the user for the sign-off with a hands-on walkthrough on this PC (including the Narrator listening check of S02.7-T02), README proposals R-13–R-15 (`audits/A003-readme-proposal.md`), and the re-confirmation of S01 with its follow-ups.
+1. **S02.8-T05** (`stages/S02-nas-gui.md`, section 5): completion record written; CI run 36433983279 green on the tag `S02-done`. Remaining: the user's sign-off with a hands-on walkthrough on this PC (including the Narrator listening check of S02.7-T02), README proposals R-13–R-15 (`audits/A003-readme-proposal.md`), and the re-confirmation of S01 with its follow-ups.
 2. **Still open from the P005 report** (not blocking S02): Q42–Q49 and Q51; accepting or removing the planner additions (labelled in plan section 3); ADR-0022–ADR-0029 (Proposed); the RAID 0/1 reading of E008. ADR-0021 and the CI trigger were decided in E013. The S01 follow-ups are done (S007 E017–E019).
 3. Follow-up from S01 (the user's decision): run `scripts/perf-baseline.sh` on the Raspberry Pi and the mini-PC when available; also measure SHA-256 there (ADR-0021).
 4. **Endpoint workflow (spec-first):** spec → `go generate ./internal/api` → strict operation; an error case in `errorCases`/`bodyErrorCases`; a review row in `docs/api/conventions.md`; a fake-service test that invalid input never reaches the service.

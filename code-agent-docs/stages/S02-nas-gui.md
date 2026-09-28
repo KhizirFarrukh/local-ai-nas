@@ -363,7 +363,7 @@ Its tests are written in S02.8.
 | S02.8-T02 | **Integration and system tests:** <br>• **Go integration:** archives over HTTP (large trees, ZIP64, memory bound in the `memory` job), the app handler, and the listing additions over the real server. <br>• **Playwright system tests** against the real binary with the embedded UI, in Chromium and Firefox, in CI on Linux and Windows, plus Edge (the `msedge` channel) on Windows: <br>&nbsp;&nbsp;– browse (a 50,000-item folder), upload (large, with pause, offline, reload and re-add), folder upload, single and ZIP downloads; <br>&nbsp;&nbsp;– rename, move, copy, and delete with each conflict choice; <br>&nbsp;&nbsp;– previews (image, text truncation, PDF, audio and video seeking by `206`) and the active-content cases; <br>&nbsp;&nbsp;– keyboard-only flows, phone and tablet viewports, and axe checks in both themes. | **Done** (S007 E022) | All pass in CI on Linux and Windows. Axe reports no serious violation on the main screens. |
 | S02.8-T03 | **Cross-browser and user guide:** the cross-browser report (Chrome, Edge through Playwright's `msedge` channel on Windows, and Firefox; Safari not checked, E009); `docs/guide/web-interface.md` (the GUI user guide section); the README Development section brought up to date; plan status; CURRENT_STATE; the register. | **Done** (S007 E023) | The report is in `docs/`. The guide covers every S02 flow. The documents match what was built. |
 | S02.8-T04 | **Documentation audit A003 (R12)** using `templates/audit-checklist.md`. | **Done** (S007 E024) | Audit complete; no Critical finding open. |
-| S02.8-T05 | **Completion record and user sign-off**, including a hands-on walkthrough by the user on this PC. | Not started | Section 13 is filled in. The user's sign-off is quoted in the session log. |
+| S02.8-T05 | **Completion record and user sign-off**, including a hands-on walkthrough by the user on this PC. | **In Progress** (S007 E025; completion record written and CI green, E028; the user's sign-off pending) | Section 13 is filled in. The user's sign-off is quoted in the session log. |
 
 ## 6. Files and modules expected to be created or changed
 
@@ -436,13 +436,13 @@ cd web && pnpm install --frozen-lockfile && pnpm lint && pnpm check && pnpm buil
 
 ## 9. Stage acceptance criteria
 
-- [ ] Every S02 substage acceptance criterion in plan.md (S02.1 to S02.8) is met.
+- [x] Every S02 substage acceptance criterion in plan.md (S02.1 to S02.8) is met. (S02.8 criterion 4, the sign-off, is the last step.)
 - [ ] A non-technical user can do everything from S01 through the GUI on this PC (the user's walkthrough, S02.8-T05).
-- [ ] The GUI loads nothing from other hosts, and active content never runs in the app's origin.
-- [ ] The stage's unit, integration, and system tests are written and pass in CI on Linux and Windows; coverage ≥ 80% (Go `internal/...`, `web/src/lib`). Linter, formatter, and type checks are clean.
-- [ ] Cross-browser report done for Chrome, Edge, and Firefox (Safari not checked in S02, E009).
-- [ ] Documentation and `dependencies.md` updated: the GUI guide, README Development section, API docs, plan and CURRENT_STATE status.
-- [ ] Documentation audit (R12, S02.8-T04) done; no Critical finding open.
+- [x] The GUI loads nothing from other hosts, and active content never runs in the app's origin.
+- [x] The stage's unit, integration, and system tests are written and pass in CI on Linux and Windows; coverage ≥ 80% (Go `internal/...`, `web/src/lib`). Linter, formatter, and type checks are clean.
+- [x] Cross-browser report done for Chrome, Edge, and Firefox (Safari not checked in S02, E009).
+- [x] Documentation and `dependencies.md` updated: the GUI guide, README Development section, API docs, plan and CURRENT_STATE status.
+- [x] Documentation audit (R12, S02.8-T04) done; no Critical finding open.
 
 ## 10. Risks and rollback approach
 
@@ -494,9 +494,48 @@ Every task is on its own branch and merged only with CI green. The GUI is additi
 
 ## 13. Completion record
 
-- **Completed on:**
-- **What was built:**
+- **Completed on:** 2026-09-28 (session S007): every task of S02.1–S02.8 is done and the stage-end CI run is green. **The user's sign-off is pending** (S02.8-T05: a hands-on walkthrough on this PC, with the Narrator listening check of S02.7-T02).
+- **What was built:** a web interface for the Files area, embedded in the server binary and served at `/` on the same computer.
+  - **S02.1 foundations:**
+    - SvelteKit with Svelte 5 and the static adapter in `web/`, embedded with `//go:embed` (`web/embed.go`); `internal/webapp` serves it (app fallback, caching, security headers and CSP; a short notice when the binary was built without it);
+    - the API client generated from `api/openapi.yaml`; the design system (Tailwind, light and dark themes, bundled icons);
+    - the CI `web` job and the npm license check (`scripts/check-web-licenses.mjs`).
+  - **S02.2 shell:** layout and navigation (a side bar, a bottom bar on phones), the Files, Photos, and Settings routes, loading and error states, notifications, and a connection banner that reconnects by itself. Settings has the theme and About (version, license, components).
+  - **S02.3 browsing:** list and grid views, virtualized for folders of 50,000 items; sorting; the path bar. The server adds `total` and `offset` to listings.
+  - **S02.4 uploads and downloads:** an upload manager over tus (pause, resume, retry, cancel; continuing after a reload by adding the same file again), folder uploads and drag and drop; streamed ZIP archives (ZIP64) of folders and selections through short-lived tickets; download actions.
+  - **S02.5 file operations:** the selection model (mouse, keyboard, touch), new folder, rename, move, copy, delete, cut and paste, the conflict dialog with "do the same for the other files", context menus, shortcuts, and the "?" list.
+  - **S02.6 previews:** images, audio and video with seeking by byte ranges, text and code up to 256 KB, PDF with pdf.js, and a fallback card. Active content never runs in the app's origin (HTML shown as text, SVG as an image, a sandbox CSP on downloads).
+  - **S02.7 responsiveness and accessibility:** phone and tablet layouts with 44 px touch targets, tap to open and long press to select, an ARIA grid, live regions, focus return and focus rings, and WCAG 2.1 AA contrast in both themes.
+  - **S02.8 tests and review:** web unit and component tests, Go tests for archives, the app handler, and listings, Playwright system tests with axe in real browsers, the user guide (`docs/guide/web-interface.md`), the cross-browser report (`docs/reports/S02-cross-browser.md`), and audit A003.
+  - **Also built in S02:** the S01 follow-ups from P005, at the user's instruction (S007 E010): a portable storage root (S01.2-T07), and SHA-256 content hashes for simple and resumable uploads (S01.3-T10, S01.4-T07).
+  - **Size:** about 7,800 lines of TypeScript and Svelte in `web/src` (without generated code and tests) and 4,500 lines of web tests. Go since S02 began, with the S01 follow-ups: about 1,350 lines of code and 1,600 lines of tests.
 - **Deviations from plan:**
+  1. **Safari is not checked** (the user's decision, S006 E009), so NFR-027 is met only in part: Chrome, Edge, and Firefox on desktop, and phone layouts by emulation.
+  2. **Google Chrome** is not installed on this PC. It runs in the CI system-test job; locally, Chromium (the same engine) stands in for it.
+  3. **Design changes**, each recorded in section 12: Shift+N for a new folder (Chromium browsers keep Ctrl+Shift+N); pdf.js instead of the browser's PDF viewer; `aria-activedescendant` instead of a roving tab index; tap to open on touch screens.
+  4. **More than planned:** the S01 follow-ups of P005 (above), and continuing an upload after a reload.
+  5. **Less than planned:** the folder-button test is skipped in Firefox, because Playwright can fill a folder picker only in Chromium-based browsers. Folder upload was checked by hand in Firefox (S02.4-T02).
+  6. **Moved:** the Narrator listening check of S02.7-T02 goes to the user's walkthrough.
+  7. **Versions:** vitest 5.0.2 instead of the planned 5.0.1 (a patch, S007 E020).
 - **Known issues:**
+  1. A folder picker lists files only, so empty subfolders arrive only by drag and drop (a browser limit, documented in the guide and the report).
+  2. Which video and audio formats play depends on the browser; the others show the fallback card with a Download button.
+  3. Each page of a listing reads and sorts the whole folder (section 10). At 50,000 items the first page and a jump to the end each come within 5 s.
+  4. By design until later stages:
+     - no login or HTTPS, so the server answers on this computer only (S03);
+     - Photos is a placeholder (S04.7), and Settings has only the theme and About (S10.5);
+     - delete is permanent until the trash (S08.1);
+     - copies are synchronous and limited to 1,000 items or 1 GiB (background jobs in S04.3).
+  5. Test output only: Vite warns that the config imports the fake tus server without a file extension, and Vite logs an SSR evaluation error for SvelteKit's server module while the tests start. All tests pass.
 - **Follow-ups:**
+  1. Check Safari and real phones once the NAS can be reached over the network (after S03), for NFR-027.
+  2. When login and HTTPS arrive (S03): update `docs/api/usage.md`, the demo scripts, and the system tests' server, and run them again.
+  3. From S01: run `scripts/perf-baseline.sh` on the Raspberry Pi and the mini-PC, and measure SHA-256 there (ADR-0021).
+  4. Apply README proposals R-13–R-15 if the user approves them (audit A003).
+  5. Next stage: write the S03 (Security) stage document (R3) and get the user's approval before any S03 code.
 - **Final test results:**
+  - **CI run 36433983279** (the tag `S02-done` on `develop` 494e616): **all 15 jobs green**. They cover lint and format; Go tests on Linux (race) and Windows with the coverage gate; the memory bound (10 GiB Linux, 1 GiB Windows); the demo on Linux and Windows; vulnerabilities, licenses, and generated code; the web job (format, lint, types, the API client, licenses, audit, the unit and component tests with coverage, the build); **system tests on Linux** (Chromium, Firefox, Google Chrome) **and Windows** (Chromium, Firefox, Edge, Google Chrome); builds for linux/amd64, linux/arm64, and windows/amd64; and the dev image with its scan. The first run, on 61062c1 (36426410026), failed only in the Linux system tests, because of two test races fixed in S02.8-T05 (section 12); the tag was moved to the fixed commit with the user's permission.
+  - **Locally (this PC, 2026-09-28):**
+    - web: 198 unit and component tests; coverage of `web/src/lib` 95.4% statements, 82.9% branches, 93.6% functions, 96.4% lines (threshold 80%); format, lint, and type checks clean;
+    - Go: `go test ./...` passes; coverage of `internal/...` 89.9% (S02.8-T01); golangci-lint 0 issues;
+    - system tests: 125 passed, 1 skipped in Chromium, Firefox, and Edge; axe found no violation in either theme.
