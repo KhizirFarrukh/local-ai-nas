@@ -242,6 +242,8 @@ jobs:
         run: pnpm exec playwright install --with-deps chromium firefox
       - name: Build the interface and run the system tests
         run: pnpm test:e2e
+        env:
+          E2E_CHROME: '1' # GitHub's machines have Google Chrome
       - uses: actions/upload-artifact@v7.0.1
         if: failure()
         with:

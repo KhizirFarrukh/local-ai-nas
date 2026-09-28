@@ -10,6 +10,8 @@ Project documentation for users and developers.
 - `api/versioning.md`: versioning and deprecation policy (S01.5-T02).
 - `perf/`: performance baselines against NFR-003 (`S01-baseline.md`, S01.7-T04).
 - `storage-root.md`: moving the storage root to another folder or disk (S01.2-T07, NFR-036).
-- Install, admin, and user guides follow in S13.4.
+- `guide/web-interface.md`: using the web interface: browsing, uploads, downloads, organizing, previews, shortcuts, accessibility (S02.8-T03).
+- `reports/S02-cross-browser.md`: the cross-browser check of the web interface in Chrome, Edge, and Firefox (S02.8-T03).
+- Install and admin guides, and the rest of the user guide, follow in S13.4.
 
 The agent's working documents (plan, rules, stage documents, logs) live in [`code-agent-docs/`](../code-agent-docs/).
