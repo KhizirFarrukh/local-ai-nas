@@ -1370,7 +1370,7 @@ flowchart LR
   3. The GUI user guide section is written.
   4. The completion record is written and the user's sign-off is recorded.
 - **Risks/notes:** Safari testing may need a Mac or a cloud device service. That is a local tooling question, not a runtime dependency.
-- **Status:** Not started
+- **Status:** In Progress (S007, 2026-09-28; T01–T03 done, details in `stages/S02-nas-gui.md`)
 
 **Design notes (S02):**
 - The GUI uses only the public API, so S03 adds authentication without GUI rewrites.

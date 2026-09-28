@@ -1,7 +1,9 @@
 // System tests (S02.8-T02): the real binary with the embedded interface,
 // driven in real browsers. Run `pnpm build` first (`pnpm test:e2e` does).
-// Chromium and Firefox everywhere; Edge (the msedge channel) on Windows.
-// Safari is not checked in S02 (the user's decision, S006 E009).
+// Chromium and Firefox everywhere; Edge (the msedge channel) on Windows;
+// Google Chrome (the chrome channel) when E2E_CHROME=1, as in CI, whose
+// machines have it. Safari is not checked in S02 (the user's decision,
+// S006 E009).
 import { defineConfig, devices } from '@playwright/test';
 import { prepare } from './tests/e2e/setup';
 
@@ -31,6 +33,9 @@ export default defineConfig({
     { name: 'firefox', use: { ...devices['Desktop Firefox'] } },
     ...(process.platform === 'win32'
       ? [{ name: 'edge', use: { ...devices['Desktop Edge'], channel: 'msedge' } }]
+      : []),
+    ...(process.env.E2E_CHROME === '1'
+      ? [{ name: 'chrome', use: { ...devices['Desktop Chrome'], channel: 'chrome' } }]
       : [])
   ]
 });

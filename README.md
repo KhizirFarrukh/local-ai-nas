@@ -151,7 +151,7 @@ Planned deployment options:
 
 ## 🛠️ Development
 
-The project is in its first stage: the NAS core, a REST API on this computer only, with no web interface or login yet. To run it from source:
+The project has its NAS core (a REST API) and a web interface (stage 2), both on this computer only, with no login yet. To run it from source:
 
 **You need** Git and Go 1.27 or newer. The exact Go version the project pins (go1.27.1) is downloaded automatically on the first build. Docker is optional.
 
@@ -178,7 +178,7 @@ Other commands: `migrate up` and `migrate status` (database migrations; `serve` 
 
 ### The web interface
 
-The server includes the web interface (stage 2, being built) when the interface is built first. For that you need Node.js 24 LTS and pnpm 12.6.0 (`npm install -g pnpm@12.6.0`):
+The server includes the web interface (stage 2) when the interface is built first. For that you need Node.js 24 LTS and pnpm 12.6.0 (`npm install -g pnpm@12.6.0`):
 
 ```sh
 cd web
@@ -188,7 +188,7 @@ cd ..
 go run ./cmd/local-ai-nas serve --storage-root "$PWD/dev/data"
 ```
 
-Then open `http://127.0.0.1:8080/` in a browser on this computer. Without the build, the server shows a short notice there, and the API works as before.
+Then open `http://127.0.0.1:8080/` in a browser on this computer (current Chrome, Edge, or Firefox). Without the build, the server shows a short notice there, and the API works as before. How to use the interface, with every shortcut, is in the guide [docs/guide/web-interface.md](docs/guide/web-interface.md).
 
 To work on the interface, run the server as above, and in a second terminal run `cd web` and `pnpm dev`. The development server at `http://localhost:5173/` reloads on every change and passes `/api` requests on to the server.
 
@@ -230,9 +230,11 @@ The container runs your working copy with `go run` and keeps its data in a Docke
 | Dependency licenses | `scripts/check-licenses.sh` |
 | Performance baseline | `scripts/perf-baseline.sh` (results in [docs/perf/](docs/perf/)) |
 | Web interface: format, lint, type checks | in `web/`: `pnpm format:check`, `pnpm lint`, `pnpm check` |
+| Web interface: unit and component tests | in `web/`: `pnpm exec playwright install chromium firefox` once, then `pnpm test` (`pnpm coverage` adds coverage, minimum 80%) |
+| Web interface: system tests in real browsers | in `web/`: `pnpm test:e2e` (builds the interface and the server first; Chromium and Firefox, plus Edge on Windows) |
 | Web interface licenses | `node scripts/check-web-licenses.mjs` |
 
-On Windows, run the `scripts/*.sh` files from Git Bash. More in [docs/testing.md](docs/testing.md). CI runs all of these except the performance baseline, on Linux and Windows (the web interface checks on Linux), when a stage is complete (a tag `S<NN>-done`) or when started by hand from the Actions tab.
+On Windows, run the `scripts/*.sh` files from Git Bash. More in [docs/testing.md](docs/testing.md). CI runs all of these except the performance baseline, on Linux and Windows (the web interface checks and unit tests on Linux; its system tests on both, adding Google Chrome), when a stage is complete (a tag `S<NN>-done`) or when started by hand from the Actions tab.
 
 ---
 
