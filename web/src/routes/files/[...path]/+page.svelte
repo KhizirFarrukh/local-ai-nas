@@ -56,6 +56,7 @@
     type BulkKind
   } from '$lib/files/operations';
   import { Selection } from '$lib/files/selection.svelte';
+  import { FolderSizes } from '$lib/files/sizes.svelte';
   import PreviewFrame from '$lib/previews/PreviewFrame.svelte';
   import ShortcutsDialog from '$lib/files/ShortcutsDialog.svelte';
   import type { FileItem, SortKey, SortOrder } from '$lib/files/types';
@@ -65,7 +66,7 @@
   import { toasts } from '$lib/shell/toasts.svelte';
   import DropZone from '$lib/uploads/DropZone.svelte';
   import { pickedFromInput } from '$lib/uploads/plan';
-  import { startUpload } from '$lib/uploads/start';
+  import { startUpload, type UploadBatch } from '$lib/uploads/start';
   import { getUploader } from '$lib/uploads/state.svelte';
   import { formatCount } from '$lib/util/format';
   import { focusFor } from '$lib/util/modality';
@@ -74,13 +75,18 @@
 
   const path = $derived(pathFromParam(page.params.path));
 
-  const sortKeys: readonly SortKey[] = ['name', 'size', 'mod_time', 'kind'];
+  const sortKeys: readonly SortKey[] = ['name', 'size', 'mod_time', 'added_time', 'kind'];
   let mode = $state(readStored('view', ['list', 'grid'] as const, 'list'));
   let sort = $state(readStored('sort', sortKeys, 'name'));
   let order = $state(readStored('order', ['asc', 'desc'] as const, 'asc'));
   let attempt = $state(0);
 
   const load: PageLoader = (query) => unwrap(api.GET('/files/items', { params: { query } }));
+
+  // Folder sizes (S02.3-T05): the view asks for the folders on screen.
+  const sizes = new FolderSizes((path, signal) =>
+    unwrap(api.GET('/files/usage', { params: { query: { path } }, signal })).then((u) => u.size)
+  );
 
   const listing = $derived.by(() => {
     void attempt; // "Try again" starts over
@@ -454,7 +460,8 @@
   }
 
   // Uploads (S02.4-T01): each file goes to this folder. When one lands in
-  // the folder on screen, the list refreshes in place (at most every 400 ms).
+  // the folder on screen, or anywhere inside it (a folder upload; bug
+  // S02-B12), the list refreshes in place (at most every 400 ms).
   let fileInput: HTMLInputElement | undefined = $state();
   let folderInput: HTMLInputElement | undefined = $state();
   let refreshTimer: ReturnType<typeof setTimeout> | undefined;
@@ -462,9 +469,8 @@
 
   void getUploader().then((manager) => {
     stopListening = manager.onFinished((entry) => {
-      if (parent(entry.itemPath ?? entry.target) === path) {
-        clearTimeout(refreshTimer);
-        refreshTimer = setTimeout(() => void listing.refresh(), 400);
+      if (inside(entry.itemPath ?? entry.target, path)) {
+        refreshSoon();
       }
     });
   });
@@ -473,11 +479,51 @@
     clearTimeout(refreshTimer);
   });
 
+  function refreshSoon() {
+    clearTimeout(refreshTimer);
+    refreshTimer = setTimeout(() => void listing.refresh(), 400);
+  }
+
+  /** Whether the path is in the folder at any depth. */
+  function inside(p: string, folder: string): boolean {
+    return p.startsWith(folder === '/' ? '/' : `${folder}/`);
+  }
+
+  // What an upload added (S02.4-T05, FR-216): its folders show at once
+  // (bug S02-B12), and when every file of an upload of one item is in
+  // place, the list scrolls to that item and it blinks twice.
+  let view: FileView | undefined = $state();
+
+  function follow(started: Promise<UploadBatch | undefined>) {
+    void started.then((batch) => {
+      if (!batch) {
+        return;
+      }
+      if (batch.folders > 0 && batch.base === path) {
+        refreshSoon();
+      }
+      void batch.done.then((items) => {
+        if (items.length === 1 && batch.base === path) {
+          void reveal(items[0]);
+        }
+      });
+    });
+  }
+
+  async function reveal(itemPath: string) {
+    clearTimeout(refreshTimer);
+    await listing.refresh();
+    const at = listing.indexOf(itemPath) ?? (await listing.locate(basename(itemPath)));
+    if (at !== undefined) {
+      await view?.reveal(at, itemPath);
+    }
+  }
+
   // Files and folders (S02.4-T02): folders are created first, then the files
   // follow into them.
   function upload(files: File[]) {
     if (files.length > 0) {
-      void startUpload(pickedFromInput(files), path);
+      follow(startUpload(pickedFromInput(files), path));
     }
   }
 
@@ -544,6 +590,8 @@
     { value: 'size:asc', label: 'Size, smallest first' },
     { value: 'mod_time:desc', label: 'Modified, newest first' },
     { value: 'mod_time:asc', label: 'Modified, oldest first' },
+    { value: 'added_time:desc', label: 'Added, newest first' },
+    { value: 'added_time:asc', label: 'Added, oldest first' },
     { value: 'kind:asc', label: 'Type' }
   ];
 
@@ -757,7 +805,9 @@
       onmenu={showMenu}
       dimmed={(p) => clipboard.isCut(p)}
       autofocus={focusView}
+      {sizes}
       bind:focused={focusedIndex}
+      bind:this={view}
     >
       {#snippet actions(item)}
         <DownloadAction {item} />
@@ -814,5 +864,5 @@
 
 <DropZone
   target={path === '/' ? 'Files' : basename(path)}
-  ondrop={(dropped) => void startUpload(dropped.files, path, dropped.emptyFolders)}
+  ondrop={(dropped) => follow(startUpload(dropped.files, path, dropped.emptyFolders))}
 />

@@ -18,13 +18,22 @@ export function formatSize(bytes: number, locale?: string): string {
   return unit === 0 && bytes === 1 ? `${number} byte` : `${number} ${units[unit]}`;
 }
 
-/** A modification time: "Sep 25, 2026, 7:15 AM" (the format follows the locale). */
+/** A date and time: "Sep 25, 2026, 7:15 AM" (the format follows the locale). */
 export function formatDate(iso: string, locale?: string): string {
   const date = new Date(iso);
   if (Number.isNaN(date.getTime())) {
     return '';
   }
   return new Intl.DateTimeFormat(locale, { dateStyle: 'medium', timeStyle: 'short' }).format(date);
+}
+
+/** A day only, for tight spaces such as grid tiles: "Sep 25, 2026". */
+export function formatDay(iso: string, locale?: string): string {
+  const date = new Date(iso);
+  if (Number.isNaN(date.getTime())) {
+    return '';
+  }
+  return new Intl.DateTimeFormat(locale, { dateStyle: 'medium' }).format(date);
 }
 
 /** A number with the locale's grouping: 50000 → "50,000". */

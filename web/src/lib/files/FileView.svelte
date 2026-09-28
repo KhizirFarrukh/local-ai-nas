@@ -17,19 +17,29 @@
   An item not yet selected becomes the selection first, as in Explorer.
 
   Screen readers (S02.7-T02): each item is one cell whose name says all of
-  it ("notes.txt, TXT file, 2 KB, modified …"), whatever columns the width
-  shows; the list has one column, the grid as many as fit.
+  it ("notes.txt, TXT file, 2 KB, added …, modified …"), whatever columns
+  the width shows; the list has one column, the grid as many as fit.
+
+  Sizes and dates (S02.3-T05, FR-214, FR-215): the list shows Size,
+  Added, Modified, and Type as its own width allows (the row height
+  follows the same width); where Added does not fit, a second line under
+  the name has the size and the added date, as the grid's tiles do.
+  Folders show their size once the server has added it up.
+
+  reveal() scrolls to an item and blinks it twice (S02.4-T05, FR-216),
+  such as a finished upload; with reduced motion it is lit steadily.
 -->
 <script lang="ts">
   import ArrowDown from '@lucide/svelte/icons/arrow-down';
   import ArrowUp from '@lucide/svelte/icons/arrow-up';
   import { createVirtualizer } from '@tanstack/svelte-virtual';
   import { untrack, type Snippet } from 'svelte';
-  import { formatDate, formatSize } from '$lib/util/format';
+  import { formatDate, formatDay, formatSize } from '$lib/util/format';
   import { focusFor } from '$lib/util/modality';
   import { iconFor, kindLabel } from './icons';
   import type { FolderListing } from './listing.svelte';
   import type { PickMode, Selection } from './selection.svelte';
+  import type { FolderSizes } from './sizes.svelte';
   import type { FileItem, SortKey, SortOrder } from './types';
 
   interface Props {
@@ -52,6 +62,8 @@
     dimmed?: (path: string) => boolean;
     /** Take the focus when shown, as after opening a folder from the view. */
     autofocus?: boolean;
+    /** Folder sizes, asked for the folders on screen (S02.3-T05). */
+    sizes?: FolderSizes;
   }
 
   let {
@@ -66,16 +78,22 @@
     actions,
     onmenu,
     dimmed,
-    autofocus = false
+    autofocus = false,
+    sizes
   }: Props = $props();
 
   const uid = $props.id();
-  const rowHeight = 44;
   const tileWidth = 150;
-  const tileHeight = 136;
+  const tileHeight = 156;
 
   let scroller: HTMLDivElement | undefined = $state();
   let width = $state(800);
+
+  // What fits in the list's own width (not the window's, which also
+  // holds the navigation), so the columns and the row height agree.
+  const show = $derived({ added: width >= 560, modified: width >= 760, kind: width >= 900 });
+  const compact = $derived(!show.added); // size and added date under the name
+  const rowHeight = $derived(compact ? 56 : 44);
 
   const total = $derived(listing.total ?? 0);
   const columns = $derived(mode === 'grid' ? Math.max(1, Math.floor(width / tileWidth)) : 1);
@@ -90,9 +108,10 @@
 
   // setOptions() writes the store, so it runs untracked (S02.3-T01).
   $effect(() => {
+    const size = mode === 'grid' ? tileHeight : rowHeight; // read here, so a change re-runs this
     const options = {
       count: rows,
-      estimateSize: () => (mode === 'grid' ? tileHeight : rowHeight),
+      estimateSize: () => size,
       getScrollElement: () => scroller ?? null
     };
     if (scroller) {
@@ -131,12 +150,69 @@
     });
   });
 
-  const columnsDef: { key: SortKey; label: string; class: string }[] = [
-    { key: 'name', label: 'Name', class: 'flex-1 min-w-0' },
-    { key: 'size', label: 'Size', class: 'w-28 text-right hidden sm:block' },
-    { key: 'mod_time', label: 'Modified', class: 'w-48 hidden md:block' },
-    { key: 'kind', label: 'Type', class: 'w-32 hidden lg:block' }
-  ];
+  const columnsDef = $derived(
+    [
+      { key: 'name', label: 'Name', class: 'flex-1 min-w-0', shown: true },
+      { key: 'size', label: 'Size', class: 'w-24 shrink-0 text-right', shown: !compact },
+      { key: 'added_time', label: 'Added', class: 'w-44 shrink-0', shown: show.added },
+      { key: 'mod_time', label: 'Modified', class: 'w-44 shrink-0', shown: show.modified },
+      { key: 'kind', label: 'Type', class: 'w-28 shrink-0', shown: show.kind }
+    ].filter((col) => col.shown) as { key: SortKey; label: string; class: string }[]
+  );
+
+  // Ask for the sizes of the folders on screen; again after the folder
+  // is loaded anew. The store's answers are never read here, so asking
+  // cannot make this run again.
+  $effect(() => {
+    if (!sizes) {
+      return;
+    }
+    const visible = $virtualizer.getVirtualItems();
+    const stamp = listing.loads;
+    const folders: string[] = [];
+    for (const row of visible) {
+      for (let c = 0; c < columns; c++) {
+        const item = listing.at(row.index * columns + c);
+        if (item?.kind === 'dir') {
+          folders.push(item.path);
+        }
+      }
+    }
+    untrack(() => sizes.want(folders, stamp));
+  });
+
+  /** The size to show: a file's, a folder's once added up, or nothing. */
+  function sizeText(item: FileItem): string {
+    if (item.kind === 'file') {
+      return formatSize(item.size);
+    }
+    if (item.kind === 'dir' && sizes) {
+      const size = sizes.get(item.path);
+      return size === undefined ? '…' : size === null ? '' : formatSize(size);
+    }
+    return '';
+  }
+
+  // reveal(): the item blinking now, and when it stops.
+  let flashing: string | undefined = $state();
+  let flashTimer: ReturnType<typeof setTimeout> | undefined;
+
+  /**
+   * Scrolls the item at index (with path) into view and blinks it twice,
+   * once its page is loaded, so the user sees where it is (FR-216).
+   */
+  export async function reveal(index: number, path: string): Promise<void> {
+    await listing.loadRange(index, index);
+    if (listing.at(index)?.path !== path) {
+      return; // the folder changed meanwhile
+    }
+    $virtualizer.scrollToIndex(Math.floor(index / columns), { align: 'center' });
+    clearTimeout(flashTimer);
+    flashing = undefined;
+    await Promise.resolve(); // a new blink starts from the beginning
+    flashing = path;
+    flashTimer = setTimeout(() => (flashing = undefined), 1500);
+  }
 
   /** How a click or a key with these modifiers changes the selection. */
   function pickMode(event: MouseEvent | KeyboardEvent, key: boolean): PickMode | undefined {
@@ -361,7 +437,8 @@
         : '';
     const item = listing.at(index);
     const dim = item && dimmed?.(item.path) ? 'opacity-50' : '';
-    return `${selected ? 'bg-accent-soft' : 'hover:bg-surface-2'} ${ring} ${dim}`;
+    const flash = item && item.path === flashing ? 'flash' : '';
+    return `${selected ? 'bg-accent-soft' : 'hover:bg-surface-2'} ${ring} ${dim} ${flash}`;
   }
 
   /** What a screen reader says for the item at a position. */
@@ -370,10 +447,11 @@
       return 'Loading';
     }
     const parts = [item.name, kindLabel(item)];
-    if (item.kind === 'file') {
-      parts.push(formatSize(item.size));
+    const size = sizeText(item);
+    if (size && size !== '…') {
+      parts.push(size);
     }
-    parts.push(`modified ${formatDate(item.mod_time)}`);
+    parts.push(`added ${formatDate(item.added_time)}`, `modified ${formatDate(item.mod_time)}`);
     if (dimmed?.(item.path)) {
       parts.push('cut, waiting to be pasted');
     }
@@ -381,12 +459,16 @@
   }
 </script>
 
-{#snippet name(item: FileItem)}
+{#snippet icon(item: FileItem)}
   {@const Icon = iconFor(item)}
   <Icon
     class="size-5 shrink-0 {item.kind === 'dir' ? 'text-accent' : 'text-fg-muted'}"
     aria-hidden="true"
   />
+{/snippet}
+
+{#snippet name(item: FileItem)}
+  {@render icon(item)}
   <span class="truncate">{item.name}</span>
 {/snippet}
 
@@ -472,16 +554,36 @@
                   onkeydown={undefined}
                 >
                   {#if item}
-                    <span class="flex min-w-0 flex-1 items-center gap-3">{@render name(item)}</span>
-                    <span class="hidden w-28 text-right text-fg-muted tabular-nums sm:block"
-                      >{item.kind === 'file' ? formatSize(item.size) : ''}</span
-                    >
-                    <span class="hidden w-48 text-fg-muted md:block"
-                      >{formatDate(item.mod_time)}</span
-                    >
-                    <span class="hidden w-32 truncate text-fg-muted lg:block"
-                      >{kindLabel(item)}</span
-                    >
+                    {#if compact}
+                      <span class="flex min-w-0 flex-1 items-center gap-3">
+                        {@render icon(item)}
+                        <span class="flex min-w-0 flex-col">
+                          <span class="truncate">{item.name}</span>
+                          <span class="truncate text-xs text-fg-muted" data-testid="item-details"
+                            >{[sizeText(item), `Added ${formatDate(item.added_time)}`]
+                              .filter(Boolean)
+                              .join(' · ')}</span
+                          >
+                        </span>
+                      </span>
+                    {:else}
+                      <span class="flex min-w-0 flex-1 items-center gap-3"
+                        >{@render name(item)}</span
+                      >
+                      <span
+                        class="w-24 shrink-0 text-right text-fg-muted tabular-nums"
+                        data-testid="item-size">{sizeText(item)}</span
+                      >
+                      <span class="w-44 shrink-0 text-fg-muted" data-testid="item-added"
+                        >{formatDate(item.added_time)}</span
+                      >
+                      {#if show.modified}
+                        <span class="w-44 shrink-0 text-fg-muted">{formatDate(item.mod_time)}</span>
+                      {/if}
+                      {#if show.kind}
+                        <span class="w-28 shrink-0 truncate text-fg-muted">{kindLabel(item)}</span>
+                      {/if}
+                    {/if}
                     {#if actions}
                       <span class="flex w-8 shrink-0 justify-end {actionsClass(selected)}"
                         >{@render actions(item)}</span
@@ -516,6 +618,14 @@
                       aria-hidden="true"
                     />
                     <span class="line-clamp-2 w-full break-words">{item.name}</span>
+                    <span
+                      class="w-full truncate text-xs text-fg-muted"
+                      title="Added {formatDate(item.added_time)}"
+                      data-testid="item-details"
+                      >{[sizeText(item), formatDay(item.added_time)]
+                        .filter(Boolean)
+                        .join(' · ')}</span
+                    >
                     {#if actions}
                       <span class="absolute top-1 right-1 {actionsClass(selected)}"
                         >{@render actions(item)}</span

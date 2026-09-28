@@ -10,17 +10,26 @@ function folder(n: number, options: { fail?: (offset: number) => boolean } = {})
     name: String(i).padStart(6, '0'),
     kind: 'file',
     size: i,
-    mod_time: '2026-09-28T00:00:00Z'
+    mod_time: '2026-09-28T00:00:00Z',
+    added_time: '2026-09-28T00:00:00Z'
   }));
-  const load: PageLoader = async ({ offset, limit }) => {
+  const load: PageLoader = async ({ offset, limit, locate }) => {
     requests.push(offset);
     if (options.fail?.(offset)) {
       throw new Error(`page at ${offset} failed`);
     }
     return {
-      item: { path: '/f', name: 'f', kind: 'dir', size: 0, mod_time: '2026-09-28T00:00:00Z' },
+      item: {
+        path: '/f',
+        name: 'f',
+        kind: 'dir',
+        size: 0,
+        mod_time: '2026-09-28T00:00:00Z',
+        added_time: '2026-09-28T00:00:00Z'
+      },
       items: items.slice(offset, offset + limit),
-      total: n
+      total: n,
+      position: locate ? items.findIndex((it) => it.name === locate) : undefined
     };
   };
   return { load, requests, items };
@@ -136,7 +145,7 @@ describe('FolderListing', () => {
       async (q) => {
         seen.push(`${q.path} ${q.sort} ${q.order} ${q.offset} ${q.limit}`);
         return {
-          item: { path: '/x', name: 'x', kind: 'dir', size: 0, mod_time: '' },
+          item: { path: '/x', name: 'x', kind: 'dir', size: 0, mod_time: '', added_time: '' },
           items: [],
           total: 0
         };
@@ -148,5 +157,28 @@ describe('FolderListing', () => {
     await listing.start();
     expect(seen).toEqual([`/x size desc 0 ${pageSize}`]);
     expect(listing.total).toBe(0);
+  });
+
+  it('asks the server where an item is, for one not loaded (S02.4-T05)', async () => {
+    const f = folder(2 * pageSize);
+    const listing = new FolderListing(f.load, '/f');
+    await listing.start();
+    expect(await listing.locate(String(pageSize + 3).padStart(6, '0'))).toBe(pageSize + 3);
+    expect(await listing.locate('000001')).toBe(1);
+    const broken = new FolderListing(async () => {
+      throw new Error('offline');
+    }, '/f');
+    expect(await broken.locate('000001')).toBeUndefined();
+  });
+
+  it('counts the loads of the folder, not the pages (S02.3-T05)', async () => {
+    const f = folder(2 * pageSize);
+    const listing = new FolderListing(f.load, '/f');
+    await listing.start();
+    expect(listing.loads).toBe(1);
+    await listing.loadRange(pageSize, pageSize);
+    expect(listing.loads).toBe(1);
+    await listing.refresh();
+    expect(listing.loads).toBe(2);
   });
 });

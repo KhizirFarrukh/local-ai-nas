@@ -16,7 +16,8 @@ const item = (path: string): FileItem => ({
   name: path.slice(1),
   kind: 'file',
   size: 1,
-  mod_time: ''
+  mod_time: '',
+  added_time: ''
 });
 
 /** A timer that runs callbacks when the test says so. */

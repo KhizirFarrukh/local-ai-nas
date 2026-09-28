@@ -12,6 +12,8 @@ export type PageLoader = (query: {
   limit: number;
   sort: SortKey;
   order: SortOrder;
+  /** A name whose position the answer gives (S02.4-T05). */
+  locate?: string;
 }) => Promise<ItemsResponse>;
 
 export const pageSize = 500;
@@ -25,6 +27,12 @@ export class FolderListing {
   error = $state.raw<unknown>(undefined);
   /** Changes whenever a page arrives, so views read it to update. */
   version = $state(0);
+  /**
+   * Changes when the folder is loaded again (a start or a refresh), so
+   * what views computed from its items, such as folder sizes, is asked for
+   * again (S02.3-T05).
+   */
+  loads = $state(0);
 
   // Plain collections on purpose: deep reactivity over tens of thousands
   // of items would cost more than it gives; `version` tells the views.
@@ -47,6 +55,7 @@ export class FolderListing {
     this.pages.clear();
     this.loading.clear();
     this.error = undefined;
+    this.loads++;
     await this.fetch(0, true);
   }
 
@@ -78,6 +87,7 @@ export class FolderListing {
       this.folder = results[0].item;
       this.total = results[0].total ?? results[0].items?.length ?? 0;
       this.error = undefined;
+      this.loads++;
       this.version++;
     } catch {
       // Keep what is shown; the next change or a reload tries again.
@@ -102,6 +112,27 @@ export class FolderListing {
       }
     }
     return undefined;
+  }
+
+  /**
+   * The position of the item named name in this folder and sort, asked
+   * of the server: for an item whose page is not loaded (S02.4-T05).
+   * Undefined when it is not there or the request failed.
+   */
+  async locate(name: string): Promise<number | undefined> {
+    try {
+      const result = await this.load({
+        path: this.path,
+        offset: 0,
+        limit: 1,
+        sort: this.sort,
+        order: this.order,
+        locate: name
+      });
+      return result.position;
+    } catch {
+      return undefined;
+    }
   }
 
   /** Makes sure the pages that hold positions first..last are loading. */
