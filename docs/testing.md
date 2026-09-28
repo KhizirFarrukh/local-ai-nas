@@ -14,8 +14,10 @@ How tests are written and run (ADR-0005, S01.1-T04). On Windows, run the `script
 | Dependency licenses | `scripts/check-licenses.sh` |
 | Memory bound of large transfers (writes the size several times) | `LOCALAINAS_MEMTEST_SIZE=1GiB go test -run TestMemoryBound -v ./internal/api` |
 | Performance baseline (NFR-003; see `docs/perf/`) | `scripts/perf-baseline.sh 1GiB` |
+| Web unit and component tests (in `web/`) | `pnpm test`; with the coverage of `web/src/lib` (80% required): `pnpm coverage`. The component tests need Playwright's Chromium once: `pnpm exec playwright install chromium` |
+| One web test file, or by name | `pnpm exec vitest run src/lib/files/selection.svelte.test.ts`, `pnpm exec vitest run -t "select all"` |
 
-CI runs the tests on Linux (with `-race`) and Windows, plus the coverage report (it does not block during a stage; 80% is required at the stage end), and a separate memory job: `TestMemoryBound` with 10 GiB on Linux and 1 GiB on Windows (S01.4-T04; without `LOCALAINAS_MEMTEST_SIZE` the test is skipped). The demo job starts a fresh server and runs `scripts/demo.sh` on Linux and `scripts/demo.ps1` in Windows PowerShell 5.1, and fails if the server logged an error (S01.7-T06).
+CI runs the tests on Linux (with `-race`) and Windows, the web unit and component tests with the coverage threshold of `web/src/lib` (web job), plus the coverage report (it does not block during a stage; 80% is required at the stage end), and a separate memory job: `TestMemoryBound` with 10 GiB on Linux and 1 GiB on Windows (S01.4-T04; without `LOCALAINAS_MEMTEST_SIZE` the test is skipped). The demo job starts a fresh server and runs `scripts/demo.sh` on Linux and `scripts/demo.ps1` in Windows PowerShell 5.1, and fails if the server logged an error (S01.7-T06).
 
 ## Conventions
 
@@ -45,6 +47,14 @@ Imported only from `_test.go` files.
 ## Integration tests
 
 Integration tests use a real temporary storage root and, from S01.3 on, the real HTTP stack through `NewServer`. They live next to the code (`*_test.go`) and run with `go test ./...`. No external services are needed.
+
+## Web unit and component tests (S02.8-T01)
+
+- **Two projects** (`web/vite.config.ts`): `*.test.ts` runs in Node (plain modules: paths, formats, the keyboard map, the upload planner); `*.svelte.test.ts` runs in Chromium through Playwright, for components and for the modules that use runes, whose reactivity only works as in the app in a browser.
+- **Components** are rendered with `vitest-browser-svelte` and queried by role and name (`page.getByRole('button', { name: 'Delete' })`), as users and screen readers find them. Assertions on the page wait (`await expect.element(...)`); state that changes after an `await` in the code is waited for with `vi.waitFor`.
+- **Fakes, not mocks:** `src/lib/testing/fake-api.ts` gives an API client whose requests go to a handler; `src/lib/testing/tus-fake.ts` is an in-memory tus server that Vite serves at the upload path while Vitest runs, and it acts out the server's refusals by name (`taken`, `CON.`, `nospace`, `flaky`). Operations take their dependencies (`api`, `tasks`) as parameters, so tests pass their own.
+- **Regression tests** of recorded bugs carry the bug's ID in their name (`S02-B04`, `TestPlanArchiveLargeTreeIsFast` for B09). Each was checked to fail with the bug put back.
+- `src/lib/testing/` holds test helpers only and is left out of the coverage figure.
 
 ## System/application tests
 

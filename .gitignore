@@ -23,6 +23,11 @@ node_modules/
 /web/build/*
 !/web/build/.gitkeep
 /web/src/lib/generated/
+# Test output (S02.8): Vitest's failure screenshots and coverage, Playwright's results.
+/web/.vitest/
+/web/coverage/
+/web/test-results/
+/web/playwright-report/
 # Copied from pdfjs-dist by web/scripts/pdfjs-assets.mjs before dev and build (S02.6-T04).
 /web/static/pdfjs/
 

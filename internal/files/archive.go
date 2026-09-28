@@ -19,6 +19,9 @@ import (
 // size the project plans for (100,000 files, Q18).
 const MaxArchiveItems = 100_000
 
+// archiveLimit is MaxArchiveItems; tests lower it.
+var archiveLimit = MaxArchiveItems
+
 // ArchiveEntry is one file or folder of an archive.
 type ArchiveEntry struct {
 	// Name is the path inside the archive, "/" between names.
@@ -106,7 +109,7 @@ func planTree(root *os.Root, rel, name string, info fs.FileInfo, plan *ArchivePl
 		return apperr.Newf(apperr.InvalidRequest, "/%s is a %s; only files and folders can be archived (links are never followed)",
 			rel, NewItem("", rel, info).Kind)
 	}
-	if len(plan.Entries) > MaxArchiveItems {
+	if len(plan.Entries) > archiveLimit {
 		return apperr.Newf(apperr.TooLargeForSync, "the archive has more than %d files and folders, the most one archive holds", MaxArchiveItems)
 	}
 	if !info.IsDir() {
