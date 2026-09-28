@@ -1,6 +1,6 @@
 # CURRENT_STATE
 
-**Last updated:** 2026-09-28 20:54 +0500 (session S007)
+**Last updated:** 2026-09-28 21:34 +0500 (session S007)
 **Plan version:** 1.5.0 (`code-agent-docs/plan.md`), **Approved baseline** 1.0.0 (S005); 1.4.0 adds P005 (15 stages, 120 substages; packaging is now S13 and AI S15, table in plan 10.18)
 **Current phase:** **S01 (Basic NAS) Done** (signed off, S005 E126; P005 follow-up tasks done in S007). **S02 (NAS GUI) In Progress** (approved S006 E009); S02.1–S02.7 Done; S02.8 In Progress (T01–T04 done; T05 waits for the sign-off)
 
@@ -10,6 +10,9 @@
 - **The user's instruction (S007 E010):** after P005, resume S02 and work until the stage is complete, and also build the P005 items that belong to the current or earlier stages (the S01 follow-up tasks).
 
 ## In progress (write-ahead)
+- **Applying plan change request #6 (competitor research, MVP additions, post-MVP release roadmap)** — **CHECKPOINT (S007 E037)**, branch `docs/P006-release-roadmap` (stacked on `feat/S02-walkthrough-fixes`; pushed, not merged). Documentation only.
+  - **Done:** step 1 (prompt archived as `prompts/P006-competitor-research-release-roadmap.json`, USER entries E034); step 2 (impact analysis E035: plan 1.5.0 is the base, new FRs from **FR-217**, NFRs from NFR-040, Q52–Q66; no MVP addition touches S01 or S02); step 3 (verification, E036); step 4 (`research/R001-2026-09-28-cloud-storage-feature-research.md`).
+  - **Next (P006 steps 5–12, in the prompt's `execution_steps`):** 5 archive plan 1.5.0; 6 pre-approved changes (RULES: R13 releases and `research/` in the documentation map, changelog citing P006; audit checklist group D; plan G13, NG5, sections 3.3, 11b, 11c); 7 plan 1.6.0 with every `plan_md_updates` item and the MVP additions (P006 labels in S03.1, S03.3, S04.1, S04.2, S04.6, S04.7, S04.9, S05.1, S05.3, S05.8, S08.1, S09.2, S09.3, S09.5, S09.6, S10.3, S10.5, S10.6, S11.2, S12.3; S15.10 extensions); 8 register (a separate candidates section with the licenses of E036); 9 CURRENT_STATE; 10 consistency check (groups D, F, G, I, K); 11 commit; 12 report (Q54 and Q34 first, then Q52, Q53). Then merge this branch into `feat/S02-walkthrough-fixes` and resume the S02 checkpoint below.
 - **CHECKPOINT (S007 E033, the user's request):** S02.3-T05 and S02.4-T05 are **half done** on branch `feat/S02-walkthrough-fixes` (pushed, **not merged**: web tests still fail). Plan 1.5.0 and the stage document tasks are committed on it.
   - **Done:** server (`storage.BirthTime*`, `Item.AddedTime`, sort `added_time`, `GET /files/usage`, `locate`/`position`; spec and client regenerated; guard tests; Go tests pass on Windows and in WSL Linux); web: `FolderSizes` store, `FolderListing.locate`/`loads`, `startUpload` batch (`done`), page refresh fix (B12) and `reveal`, FileView columns by width, second line, grid line, blink CSS; unit tests for plan, batch, sizes, listing.
   - **Open:** 3 failing FileView component tests: (1) the 900 px case shows Type too, use 850 px; (2) sizes were asked for all 100 folders instead of the ones on screen (a debug run did not reproduce it alone; find why in `fileview.svelte.test.ts`); (3) after `reveal()` the cell has no `flash` class. Then: e2e tests (B12 regression, reveal in a folder of 700+ items with `locate`, sizes and dates, sort by Added), docs (`docs/api/conventions.md` review row, `usage.md`, guide, register x/sys purpose), stage document T05 rows Done, format/lint/check/go checks, merge, stage-end CI again (moving the tag `S02-done` needs the user's permission), the S02 sign-off.
