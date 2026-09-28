@@ -2,7 +2,9 @@ package main
 
 import (
 	"bytes"
+	"crypto/sha256"
 	"encoding/base64"
+	"encoding/hex"
 	"io"
 	"io/fs"
 	"net/http"
@@ -48,6 +50,12 @@ func TestRelocatedRoot(t *testing.T) {
 		if got := get(t, second.url, path); !bytes.Equal(got, want) {
 			t.Errorf("%s in the moved root: %d bytes, want %d", path, len(got), len(want))
 		}
+	}
+	// The hash state saved by the first process carried over with the
+	// root: the finished upload has the hash of all its bytes (S01.4-T07).
+	sum := sha256.Sum256(data)
+	if got, want := contentHash(t, second.url, "/docs/big.bin"), "sha256:"+hex.EncodeToString(sum[:]); got != want {
+		t.Errorf("content_hash of the resumed upload %q, want %q", got, want)
 	}
 
 	// The old place is untouched: the half upload and its info are still

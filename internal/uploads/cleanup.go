@@ -41,7 +41,7 @@ func (s *Server) Cleanup(ctx context.Context) (int, error) {
 	orphans := map[string]bool{}
 	for _, e := range entries {
 		id := e.Name()
-		for _, ext := range []string{".info", ".lock", ".stop"} {
+		for _, ext := range []string{".info", ".hash", ".lock", ".stop"} {
 			id = strings.TrimSuffix(id, ext)
 		}
 		if orphans[id] {
@@ -67,7 +67,7 @@ func (s *Server) Cleanup(ctx context.Context) (int, error) {
 // .stop files of the file locker used before bug S01-B01.
 func (s *Server) removeFiles(ctx context.Context, id string) {
 	base := filepath.Join(s.o.Dir, id)
-	for _, p := range []string{base, base + ".info", base + ".lock", base + ".stop"} {
+	for _, p := range []string{base, base + ".info", base + ".hash", base + ".lock", base + ".stop"} {
 		if err := os.Remove(p); err != nil && !errors.Is(err, os.ErrNotExist) {
 			s.o.Logger.WarnContext(ctx, "removing an abandoned upload failed", "upload", id, "error", err.Error())
 		}
