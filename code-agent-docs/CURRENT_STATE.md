@@ -1,18 +1,19 @@
 # CURRENT_STATE
 
-**Last updated:** 2026-09-28 11:53 +0500 (session S007)
+**Last updated:** 2026-09-28 11:59 +0500 (session S007)
 **Plan version:** 1.4.1 (`code-agent-docs/plan.md`), **Approved baseline** 1.0.0 (S005); 1.4.0 adds P005 (15 stages, 120 substages; packaging is now S13 and AI S15, table in plan 10.18)
-**Current phase:** **S01 (Basic NAS) Done** (signed off, S005 E126; P005 follow-up tasks open). **S02 (NAS GUI) In Progress** (approved S006 E009); S02.1–S02.7 Done; S02.8 remains (after the S01 follow-ups)
+**Current phase:** **S01 (Basic NAS) Done** (signed off, S005 E126; P005 follow-up tasks done in S007). **S02 (NAS GUI) In Progress** (approved S006 E009); S02.1–S02.7 Done; S02.8 remains
 
 ## Active stage and task
 - **Active stage:** **S02: NAS GUI**, **In Progress** (`stages/S02-nas-gui.md`; approved in S006 E009, with "Skip Safari": S02 checks Chrome, Edge, and Firefox). S01 is **Done** (`stages/S01-basic-nas.md`, completion record in section 13).
-- **Active task:** none. Next: the last **S01 follow-up task** S01.4-T07 (content hash for resumable uploads; S01.2-T07 and S01.3-T10 are done), then **S02.8**.
+- **Active task:** none. Next: **S02.8** (testing and stage review). The P005 follow-up tasks of S01 are all done.
 - **The user's instruction (S007 E010):** after P005, resume S02 and work until the stage is complete, and also build the P005 items that belong to the current or earlier stages (the S01 follow-up tasks).
 
 ## In progress (write-ahead)
 - none.
 
 ## Last completed
+- **S01.4-T07 done; S01 follow-ups complete** (S007 E019): resumable uploads are hashed chunk by chunk (state saved per chunk, one full read only as a fallback); the client checksum no longer reads the file again.
 - **S01.3-T10 done** (P005 follow-up; S007 E018): simple uploads and copies store a SHA-256 content hash (`content_hash` in item details), kept through rename, move, and delete, never reported for a file changed outside the NAS.
 - **S01.2-T07 done** (P005 follow-up; S007 E017): the storage root can be copied or moved (`docs/storage-root.md`); unfinished uploads are repaired at start-up; bug S01-B01 (uploads locked for good on Windows) fixed with tusd's memory locker.
 - **S02.7-T03 done; S02.7 closed** (S007 E016): token contrast computed for both themes (dark `danger` now #fa8585; preview arrows black/60); axe `color-contrast` clean on 11 screens × 2 themes × 2 widths in Edge and Firefox.
@@ -29,8 +30,8 @@
 
 ## Next steps
 1. **Still open from the P005 report** (not blocking S02): Q42–Q49 and Q51; accepting or removing the planner additions (labelled in plan section 3); ADR-0022–ADR-0029 (Proposed); re-confirmation of S01 with its follow-ups; the RAID 0/1 reading of E008. ADR-0021 and the CI trigger were decided in E013.
-2. **S02.8** (`stages/S02-nas-gui.md`, section 5), after the S01 follow-ups: (tests, including the regression tests for bugs S02-B01 to B10; the cross-browser report; the guide; audit A003; CI at stage completion; the user's sign-off with a hands-on walkthrough).
-3. **S01 follow-ups** (P005, Q50: now): S01.2-T07 portable storage root (no ADR needed); S01.3-T10 and S01.4-T07 content hash (ADR-0021 Accepted: SHA-256). Each writes its own tests (S01's testing substage is closed).
+2. **S02.8** (`stages/S02-nas-gui.md`, section 5): (tests, including the regression tests for bugs S02-B01 to B10; the cross-browser report; the guide; audit A003; CI at stage completion; the user's sign-off with a hands-on walkthrough).
+3. **S01 follow-ups:** done (S01.2-T07, S01.3-T10, S01.4-T07; S007 E017–E019). The user re-confirms S01 with them (P005 report).
 4. Follow-up from S01 (the user's decision): run `scripts/perf-baseline.sh` on the Raspberry Pi and the mini-PC when available; also measure SHA-256 there (ADR-0021).
 5. **Endpoint workflow (spec-first):** spec → `go generate ./internal/api` → strict operation; an error case in `errorCases`/`bodyErrorCases`; a review row in `docs/api/conventions.md`; a fake-service test that invalid input never reaches the service.
 6. **CI (the user's preference, S007 E002, E013):** CI runs only when a stage-completion tag `S<NN>-done` is pushed (create it on `develop` after the stage's testing substage, before sign-off) or by hand. Run the checks locally before each commit and merge. For the stage-end run: `gh` is not installed; watch a run through the public REST API (`/repos/KhizirFarrukh/local-ai-nas/actions/runs?head_sha=<sha>`, then `/jobs`) or its web page. Reproduce Linux failures with `GOOS=linux go test -c` binaries in WSL.

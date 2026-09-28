@@ -279,6 +279,8 @@ curl.exe -s -o got.bin "$API/files/content?path=/docs/big.bin"
 (Get-FileHash big.bin).Hash; (Get-FileHash got.bin).Hash
 ```
 
+The NAS computed the same SHA-256 while the parts arrived: `curl -s "$API/files/items?path=/docs/big.bin"` shows it as `content_hash`, without downloading the file.
+
 To cancel an unfinished upload, send `curl -s -X DELETE "$LOC" -H 'Tus-Resumable: 1.0.0'` (`204`). An upload that nobody continues is removed after `uploads.expiry` (24 hours by default).
 
 ## Errors

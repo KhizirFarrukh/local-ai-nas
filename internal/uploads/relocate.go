@@ -67,14 +67,19 @@ func repairInfoPaths(ctx context.Context, dir string, log *slog.Logger) (int, er
 	return changed, nil
 }
 
-// writeInfo replaces an .info file in one step: a temporary file in the
-// same directory, flushed, then renamed over it.
-func writeInfo(path string, info tus.FileInfo) (err error) {
+// writeInfo replaces an .info file in one step.
+func writeInfo(path string, info tus.FileInfo) error {
 	data, err := json.Marshal(info)
 	if err != nil {
 		return err
 	}
-	tmp, err := os.CreateTemp(filepath.Dir(path), ".info-*")
+	return replaceFile(path, data)
+}
+
+// replaceFile replaces the file at path with data in one step: a
+// temporary file in the same directory, flushed, then renamed over it.
+func replaceFile(path string, data []byte) (err error) {
+	tmp, err := os.CreateTemp(filepath.Dir(path), ".tmp-*")
 	if err != nil {
 		return err
 	}

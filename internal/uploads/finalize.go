@@ -2,11 +2,9 @@ package uploads
 
 import (
 	"context"
-	"crypto/sha256"
-	"encoding/hex"
 	"errors"
-	"io"
 	"os"
+	"strings"
 
 	tus "github.com/tus/tusd/v2/pkg/handler"
 
@@ -43,13 +41,17 @@ func (s *Server) finalize(ctx context.Context, up tus.FileInfo) (files.Item, err
 		return files.Item{}, apperr.Wrap(apperr.Internal, "the upload has no session", err)
 	}
 	data := s.dataPath(up.ID) // not up.Storage["Path"]: see relocate.go
-	if err := syncAndVerify(data, sess.SHA256); err != nil {
+	sum, err := s.contentHash(up.ID, data, up.Size)
+	if err != nil {
+		return files.Item{}, err
+	}
+	if err := syncAndVerify(data, sess.SHA256, sum); err != nil {
 		return files.Item{}, err
 	}
 	if err := finalizeFault("verified"); err != nil {
 		return files.Item{}, err
 	}
-	opts := files.UploadOptions{OnConflict: files.OnConflict(sess.OnConflict)}
+	opts := files.UploadOptions{OnConflict: files.OnConflict(sess.OnConflict), ContentHash: sum}
 	it, _, err := s.o.Files.CommitUpload(ctx, sess.Namespace, sess.TargetPath, data, opts)
 	if errors.Is(err, files.ErrNotSameDevice) {
 		// The upload directory is on another file system than the area
@@ -67,8 +69,9 @@ func (s *Server) finalize(ctx context.Context, up tus.FileInfo) (files.Item, err
 }
 
 // syncAndVerify makes the upload's data durable and, when the metadata
-// gave one, checks its SHA-256.
-func syncAndVerify(path, wantSHA256 string) (err error) {
+// gave one, checks its SHA-256 against sum, the content hash computed
+// while the upload arrived (so the file is not read again).
+func syncAndVerify(path, wantSHA256, sum string) (err error) {
 	f, err := os.OpenFile(path, os.O_RDWR, 0) // #nosec G304 -- the path of the upload in tusd's store
 	if err != nil {
 		return apperr.Wrap(apperr.Internal, "opening the upload failed", err)
@@ -84,11 +87,7 @@ func syncAndVerify(path, wantSHA256 string) (err error) {
 	if wantSHA256 == "" {
 		return nil
 	}
-	h := sha256.New()
-	if _, err := io.Copy(h, f); err != nil {
-		return apperr.Wrap(apperr.Internal, "reading the upload failed", err)
-	}
-	if got := hex.EncodeToString(h.Sum(nil)); got != wantSHA256 {
+	if got := strings.TrimPrefix(sum, files.HashPrefix); got != wantSHA256 {
 		return apperr.Newf(apperr.InvalidRequest, "the upload's SHA-256 is %s, but its metadata says %s; the upload was removed", got, wantSHA256)
 	}
 	return nil
@@ -110,7 +109,7 @@ func (s *Server) copyIn(ctx context.Context, sess Session, data string, opts fil
 // Leftovers after a failure here are removed by the expiry cleanup
 // (S01.4-T06).
 func (s *Server) remove(ctx context.Context, up tus.FileInfo) {
-	for _, p := range []string{s.dataPath(up.ID), s.infoPath(up.ID)} {
+	for _, p := range []string{s.dataPath(up.ID), s.infoPath(up.ID), s.hashPath(up.ID)} {
 		if err := os.Remove(p); err != nil && !errors.Is(err, os.ErrNotExist) {
 			s.o.Logger.WarnContext(ctx, "removing an upload file failed", "upload", up.ID, "error", err.Error())
 		}

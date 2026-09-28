@@ -105,7 +105,8 @@ func New(o Options) (*Server, error) {
 		o.Logger.Info("unfinished uploads now point at the current storage root", "uploads", n)
 	}
 	composer := tus.NewStoreComposer()
-	filestore.New(o.Dir).UseIn(composer)
+	// The file store, with each upload hashed as it arrives (hashing.go).
+	hashingStore{FileStore: filestore.New(o.Dir), s: s}.useIn(composer)
 	// Locks live in memory: the NAS is one process, and tusd's file locker
 	// could leave an upload locked for good on Windows, where a lock file
 	// cannot be deleted while another request reads it (bug S01-B01).
@@ -211,6 +212,7 @@ func (s *Server) beforeTerminate(ev tus.HookEvent) (tus.HTTPResponse, error) {
 	if err := s.index.Remove(ev.Context, ev.Upload.ID); err != nil {
 		return tus.HTTPResponse{}, refuse(ev.Context, s.o.Logger, err)
 	}
+	s.dropHash(ev.Upload.ID) // tusd removes the data and .info files
 	return tus.HTTPResponse{}, nil
 }
 
