@@ -68,7 +68,7 @@ test('a large upload pauses and resumes from where it stopped', async ({ page, r
   await page.getByTestId('file-input').setInputFiles(file.path);
   const pause = page.getByRole('button', { name: 'Pause big.bin' });
   await expect(pause).toBeVisible();
-  await expect.poll(() => offsets.length).toBeGreaterThan(2);
+  await expect.poll(() => offsets.length, { intervals: [50] }).toBeGreaterThan(2);
   await pause.click();
   await expect(page.getByTestId('upload-status')).toContainText('Paused at');
   const pausedAt = offsets.length;
@@ -93,7 +93,7 @@ test('an upload continues by itself after the network comes back', async ({
   await openFolder(page, folder);
   const offsets = await slowChunks(page, 150);
   await page.getByTestId('file-input').setInputFiles(file.path);
-  await expect.poll(() => offsets.length).toBeGreaterThan(2);
+  await expect.poll(() => offsets.length, { intervals: [50] }).toBeGreaterThan(2);
   await context.setOffline(true);
   await page.waitForTimeout(1500);
   await context.setOffline(false);
@@ -108,9 +108,9 @@ test('after a reload, adding the same file again continues the upload', async ({
   const folder = await folderWith(request);
   const file = bigFile(10 << 20, 'again.bin');
   await openFolder(page, folder);
-  let offsets = await slowChunks(page, 150);
+  const offsets = await slowChunks(page, 150);
   await page.getByTestId('file-input').setInputFiles(file.path);
-  await expect.poll(() => offsets.length).toBeGreaterThan(3);
+  await expect.poll(() => offsets.length, { intervals: [50] }).toBeGreaterThan(3);
   await page.getByRole('button', { name: 'Pause again.bin' }).click();
   await expect(page.getByTestId('upload-status')).toContainText('Paused at');
   await page.reload();
@@ -118,10 +118,19 @@ test('after a reload, adding the same file again continues the upload', async ({
     page.getByTestId('file-view').or(page.getByText('This folder is empty'))
   ).toBeVisible();
   await page.unrouteAll({ behavior: 'wait' });
-  offsets = await slowChunks(page, 0);
+  // After the reload the chunks are seen by a request listener, not by a
+  // new route: a route added again after unrouteAll sometimes missed them
+  // in Chromium on Linux (the S02 stage-end CI run), although the upload
+  // itself continued correctly.
+  const resumed: number[] = [];
+  page.on('request', (req) => {
+    if (req.method() === 'PATCH' && req.url().includes('/api/v1/files/uploads/')) {
+      resumed.push(Number(req.headers()['upload-offset']));
+    }
+  });
   await page.getByTestId('file-input').setInputFiles(file.path);
   await expect(page.getByTestId('upload-status')).toHaveText('Done', { timeout: 30_000 });
-  expect(offsets[0]).toBeGreaterThan(0); // continued, not started over
+  expect(resumed[0]).toBeGreaterThan(0); // continued, not started over
   expect((await details(page, `${folder}/again.bin`)).content_hash).toBe(file.sha);
 });
 

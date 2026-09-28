@@ -85,6 +85,9 @@ test('never runs active content: HTML is shown as text, an SVG as an image', asy
   expect(await page.locator('#injected').count()).toBe(0);
   expect(await page.evaluate(() => (window as unknown as { ran?: boolean }).ran)).toBeUndefined();
   await page.keyboard.press('Escape');
+  // Closing goes back in history; navigating before that lands made
+  // Chromium abort the next page.goto (net::ERR_ABORTED, seen on Linux).
+  await expect(page.getByTestId('preview')).toBeHidden();
 
   const title = await page.title();
   await preview(page, 'active.svg');
