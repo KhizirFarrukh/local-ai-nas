@@ -1,18 +1,18 @@
 # CURRENT_STATE
 
-**Last updated:** 2026-09-25 13:21 +0500 (session S006)
+**Last updated:** 2026-09-28 06:42 +0500 (session S006, resumed)
 **Plan version:** 1.3.0 (`code-agent-docs/plan.md`), **Approved baseline** 1.0.0 (S005) + the setup-script requirement (1.1.0, S005 E015)
-**Current phase:** **S01 (Basic NAS) Done**, signed off by the user (S005 E126). **S02 (NAS GUI) In Progress** (approved S006 E009); S02.7-T01 done
+**Current phase:** **S01 (Basic NAS) Done**, signed off by the user (S005 E126). **S02 (NAS GUI) In Progress** (approved S006 E009); S02.1–S02.6 Done, S02.7-T01 done; **paused at a checkpoint** (S006 E041)
 
 ## Active stage and task
 - **Active stage:** **S02: NAS GUI**, **In Progress** (`stages/S02-nas-gui.md`; approved in S006 E009, with "Skip Safari": S02 checks Chrome, Edge, and Firefox). S01 is **Done** (`stages/S01-basic-nas.md`, completion record in section 13).
-- **Active task:** **S02.7-T01** (branch `feat/S02.7-T01-responsive`): done, waiting for CI and the merge; next S02.7-T02 (keyboard and screen readers).
+- **Active task:** none. **Checkpoint (S006 E041):** the user asked to stop to tell changes and updates. Next in the plan: S02.7-T02 (keyboard and screen readers), not started; its local branch `feat/S02.7-T02-a11y` exists with no commits of its own.
 
 ## In progress (write-ahead)
-- S02.7-T01: committed on `feat/S02.7-T01-responsive`; push, CI, merge into `develop` (branches may be stacked while CI runs).
+- Nothing in progress: every task branch up to S02.7-T01 is merged (`develop` 04ab2b4).
 
 ## Last completed
-- **S02.7-T01 done** (S006 E040): phone and tablet layouts; CI and the merge follow.
+- **S02.7-T01 done and merged** (CI run 36112486230 green; `develop` 04ab2b4; S006 E040): phone and tablet layouts, 44 px touch targets, tap-to-open on touch.
 - **S02.6-T05 done and merged; S02.6 closed** (CI run 36111632658 green; `develop` 617b1d9; S006 E039, E040): active-content safety.
 - **S02.6-T04 done and merged** (CI run 36111396132 green; `develop` 4d64054; S006 E038): PDF with pdf.js.
 - **S02.6-T03 done and merged** (CI run 36110347962 green; `develop` 2b0617f; S006 E036, E037): text and code.
@@ -96,18 +96,18 @@
 - Plan 1.1.0: the user's requirement to record every dependency and build a setup script per platform (FR-149, NFR-032, S11.2, Q41; `dependencies.md` section 12; RULES 1.5.0) (S005 E015–E016).
 
 ## Next steps
-1. **S02 in order** (`stages/S02-nas-gui.md`, section 5):
-   - S02.1-T01 toolchain and project (install pnpm 12.6.0; Node.js 24 LTS; create `web/`; register every package), on `feat/S02.1-T01-toolchain`;
-   - then T02 embedding and serving, T03 API client, T04 design system, T05 CI;
-   - then S02.2 to S02.7, and S02.8 (tests, report, guide, audit A003, sign-off).
+1. **Wait for the user's changes and updates** (checkpoint, S006 E041); apply them first (plan changes follow RULES R4).
+2. **Then S02 in order** (`stages/S02-nas-gui.md`, section 5):
+   - S02.7-T02 keyboard and screen readers (Windows Narrator's listening check goes to the user's walkthrough in S02.8), S02.7-T03 contrast and a manual axe check;
+   - then S02.8 (tests, including the regression tests for bugs S02-B01 to B10; the cross-browser report; the guide; audit A003; the user's sign-off with a hands-on walkthrough).
    - **Testing approach (R6, S006):** tasks in S02.1–S02.7 deliver testable code only, checked by running them. S02.8 writes the unit (Vitest), integration, and system (Playwright: Chromium, Firefox, Edge) tests, and the regression tests for bugs recorded during the stage (section 12).
-2. Follow-up from S01 (the user's decision): run `scripts/perf-baseline.sh` on the Raspberry Pi and the mini-PC, over gigabit Ethernet as well, when they are available (`docs/perf/S01-baseline.md`).
-3. **Endpoint workflow (spec-first), for later API work:** spec → `go generate ./internal/api` → strict operation; an error case in `errorCases`/`bodyErrorCases`; a review row in `docs/api/conventions.md`; a fake-service test that invalid input never reaches the service.
-4. CI: every push runs `.github/workflows/ci.yml`. `gh` is not installed; the repository is public. Watch a commit's run through the public REST API (`/repos/KhizirFarrukh/local-ai-nas/actions/runs?head_sha=<sha>`, then `/jobs`; 60 anonymous requests per hour) or the run's web page (its "Status" field). Step logs need sign-in: reproduce Linux failures with `GOOS=linux go test -c` binaries in the WSL Ubuntu distro, run from the package directory under /mnt/c when a test reads repo files.
-5. Every finished branch: merge it into `develop` myself and push (RULES User Preferences, S005).
+3. Follow-up from S01 (the user's decision): run `scripts/perf-baseline.sh` on the Raspberry Pi and the mini-PC, over gigabit Ethernet as well, when they are available (`docs/perf/S01-baseline.md`).
+4. **Endpoint workflow (spec-first), for later API work:** spec → `go generate ./internal/api` → strict operation; an error case in `errorCases`/`bodyErrorCases`; a review row in `docs/api/conventions.md`; a fake-service test that invalid input never reaches the service.
+5. CI: every push runs `.github/workflows/ci.yml`. `gh` is not installed; the repository is public. Watch a commit's run through the public REST API (`/repos/KhizirFarrukh/local-ai-nas/actions/runs?head_sha=<sha>`, then `/jobs`; 60 anonymous requests per hour) or the run's web page (its "Status" field). Step logs need sign-in: reproduce Linux failures with `GOOS=linux go test -c` binaries in the WSL Ubuntu distro, run from the package directory under /mnt/c when a test reads repo files.
+6. Every finished branch: merge it into `develop` myself and push (RULES User Preferences, S005).
 
 ## Blocked or waiting on user
-- Nothing.
+- **The user's changes and updates** (asked 2026-09-28): work stops at this checkpoint until they are given. A new file `prompts/5-feature-additions-prompt.json` appeared in the working tree (untracked, not written by the agent); it is left untouched until the user says what it is for.
 
 ## Open questions (short list; full text in plan.md section 5)
 - ★ **For S01:** none (Q18 answered in S005: 100k photos + 100k files)
