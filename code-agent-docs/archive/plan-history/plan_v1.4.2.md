@@ -2,11 +2,11 @@
 
 | Field | Value |
 |---|---|
-| **Version** | 1.5.0 |
+| **Version** | 1.4.2 |
 | **Status** | **Approved baseline** (approved by the user in S005, 2026-09-24); 1.1.0 adds the user's setup-script requirement (S005 E015) |
 | **Last updated** | 2026-09-28 (session S007) |
 | **Source of vision** | `README.md` (repository root), the user's staged roadmap (`code-agent-docs/prompts/P002-staged-development-roadmap.json`), the user's technology stack (`code-agent-docs/prompts/P003-technology-stack.json`), and the user's feature additions (`code-agent-docs/prompts/P005-feature-additions.json`, with the user's chat decisions in S007) |
-| **Previous version** | 1.4.2, archived at `code-agent-docs/archive/plan-history/plan_v1.4.2.md` (0.1.0–1.4.1 also archived there) |
+| **Previous version** | 1.4.1, archived at `code-agent-docs/archive/plan-history/plan_v1.4.1.md` (0.1.0–1.4.0 also archived there) |
 | **Stage IDs** | Changed in 1.4.0 (P005): the packaging stage is now **S13** (was S11) and AI is **S15** (was S12). Older documents use the old IDs; the table in **10.18** translates them. |
 
 > **This is a living document.** It changes as the user gives feedback. Every change follows `code-agent-docs/RULES.md` **R4**: the old version is archived, the version is bumped, and a revision entry is added. While the plan is a pre-1.0 draft, restructurings bump the MINOR version. **When the user approves this plan as the baseline, it becomes version 1.0.0.**
@@ -157,7 +157,7 @@ Priorities: **Must** (required for its stage to be Done), **Should** (important;
 | FR-005 | Download single files with HTTP range support (resumable downloads, media seeking). | Must | |
 | FR-006 | Download multiple items or a folder as a streamed ZIP archive. | Should | |
 | FR-007 | File operations: create folder, rename, move, copy, delete, confined to the area being operated on. | Must | |
-| FR-008 | Per-user trash for both areas with a retention period; restore to the original location with sidecar and metadata intact. **[User requirement, S007]** Everything in the trash is deleted automatically after **30 days**. | Should | Reworded in 0.2.0 (per-user, both areas; S08.1). 1.5.0: the 30-day retention, from the user's walkthrough of S02 (S007 E030, E031: the trash stays in S08.1). |
+| FR-008 | Per-user trash for both areas with a retention period; restore to the original location with sidecar and metadata intact. | Should | Reworded in 0.2.0 (per-user, both areas; S08.1). |
 | FR-009 | Network file access through WebDAV and/or SMB, protocol per ADR. | Should | Priority Could → Should in 0.2.0 (stage S09). |
 | FR-069 | A configurable **storage root** containing exactly two user-data areas, `files/` and `photos/`, created and validated at startup. They never intersect (I1). | Must | New in 0.2.0. |
 | FR-070 | Internal application data (database, index, caches, thumbnails, trash, temp uploads, configuration) is stored outside `files/` and `photos/`. Configurations that overlap the areas are rejected (I2). | Must | New. |
@@ -179,9 +179,6 @@ Priorities: **Must** (required for its stage to be Done), **Should** (important;
 | FR-081 | GUI file operations: create folder, rename, move, copy (folder picker), delete with confirmation, multi-select, context menus, keyboard shortcuts, name-conflict dialogs. | Must | New. |
 | FR-082 | File previews for images, text and code, PDF, audio, and video (streamed via range requests), with a clear fallback for unsupported types. | Must | New. |
 | FR-083 | A design system (typography, color, spacing, components, icons) with light and dark themes. | Should | New. |
-| FR-214 | **[User requirement, S007]** Every item shows its **size** with its name, folders too: a folder's size is the total of the files in it, at any depth (links not followed), computed by the server on request for the folders on screen. | Should | New in 1.5.0 (the user's walkthrough of S02, S007 E030). S02.3-T05. |
-| FR-215 | **[User requirement, S007]** Every item shows the date it was **added** to the NAS (uploaded, created, or copied; kept through renames, moves, and edits; from the file system's creation time, or the modification time where the file system has none) and its **modified** date. Wide lists show both as columns; phones and the grid show the size and the added date under the name. Listings sort by either. | Should | New in 1.5.0 (S007 E030; "Both", E032). S02.3-T05. |
-| FR-216 | **[User requirement, S007]** Finished uploads appear in the folder on screen at once, folders too. When an upload of a single item (one file, or one folder with its contents) finishes, the list scrolls to that item and highlights it with **two blinks**, then stops. | Should | New in 1.5.0 (S007 E030). The missing refresh after a folder upload was bug S02-B12. S02.4-T05. |
 
 #### Security (S03)
 
@@ -1296,14 +1293,13 @@ flowchart LR
 - **Scope:** list and grid views; breadcrumbs; folder navigation; sorting; virtualized lists for very large folders; empty states.
 - **Deliverables:** file browser views.
 - **Depends on:** S02.2, S01.3.
-- **Requirements:** FR-002; FR-214, FR-215 (1.5.0).
+- **Requirements:** FR-002.
 - **Acceptance criteria:**
   1. A folder of 50,000 items scrolls smoothly and loads pages on demand.
   2. Sorting by name, size, date, and type matches the API order.
   3. The URL reflects the current folder, and reloading restores it.
   4. Empty and error states show a clear next action.
 - **Risks/notes:** Includes a **prototype task** confirming that @tanstack/svelte-virtual works with Svelte 5 (ADR-0009), with a custom windowing fallback. Performance on low-end phones is tested in S02.7.
-- **Follow-up (1.5.0, the user's walkthrough in S007):** folder sizes (FR-214) and the added and modified dates (FR-215) in the list and the grid, with a new API endpoint for a folder's size and an `added_time` field and sort key. Task S02.3-T05 in `stages/S02-nas-gui.md`; the substage stays Done.
 - **Status:** Done (S006, 2026-09-25; details in `stages/S02-nas-gui.md`)
 
 #### S02.4: Uploads and downloads
@@ -1311,14 +1307,13 @@ flowchart LR
 - **Scope:** button and drag-and-drop upload of files and folders; upload queue with progress, pause, resume, and cancel (using S01.4); single and multi-item download (streamed zip).
 - **Deliverables:** upload manager (tus client); streamed ZIP endpoint (server addition); download actions.
 - **Depends on:** S02.3, S01.4.
-- **Requirements:** FR-003, FR-004, FR-006, FR-080; FR-216 (1.5.0).
+- **Requirements:** FR-003, FR-004, FR-006, FR-080.
 - **Acceptance criteria:**
   1. Dropping a folder tree uploads it with its structure.
   2. Pause, resume (including after a page reload or network drop), and cancel work for large files.
   3. Multi-item download streams a ZIP without the server buffering it in memory.
   4. Per-file errors (limit, conflict, disk full) are shown clearly.
 - **Risks/notes:** Browser support for folder drag-and-drop varies (checked in S02.8).
-- **Follow-up (1.5.0, the user's walkthrough in S007):** finished uploads refresh the folder on screen, folder uploads too (bug S02-B12), and a single uploaded item is scrolled into view and blinks twice (FR-216). Task S02.4-T05 in `stages/S02-nas-gui.md`; the substage stays Done.
 - **Status:** Done (S006, 2026-09-25; details in `stages/S02-nas-gui.md`)
 
 #### S02.5: File operations UI
@@ -2117,14 +2112,14 @@ flowchart LR
 
 #### S08.1: Trash
 - **Goal:** Deleted items can be recovered.
-- **Scope:** a per-user trash for both areas; retention period of 30 days (FR-008, the user's requirement in S007); restore to the original location with sidecar and metadata intact.
+- **Scope:** a per-user trash for both areas; retention period; restore to the original location with sidecar and metadata intact.
 - **Deliverables:** trash store in internal data (`.local-ai-nas/trash/<ns>/`); delete-to-trash hook; restore; purge job.
 - **Depends on:** S07 (Done), S05.6, S04.3.
 - **Requirements:** FR-008, FR-026.
 - **Acceptance criteria:**
   1. Deleting in either area moves the item (and sidecar) to its owner's trash in internal data (I2).
   2. Restore brings back the item, sidecar, album memberships, and shares, or explains what could not be restored.
-  3. Items older than 30 days in the trash are deleted automatically by a job (FR-008).
+  3. Items past retention are purged by a job.
   4. Trash contents are visible only to their owner.
 - **Risks/notes:** Trash must be on the storage root's filesystem so delete and restore are atomic renames (A18).
 - **P005 change (1.4.0):** the trash restores items removed through duplicate resolution (S11.3, S11.6) with their sidecars and memberships, and can hold originals replaced by optimization (S12.5) so they can be reverted within the retention period (ADR-0026).
@@ -3281,4 +3276,3 @@ CI runs on Linux and Windows from S01.1. _Since S007 (the user's preference):_ C
 | 1.4.0 | 2026-09-28 | **Feature additions** (MINOR, R4). New stages **S11** duplicate and look-alike management (with automatic burst grouping), **S12** storage optimization, and **S14** multi-drive storage pools (**RAID 0 and RAID 1 only**; parity, virtual drives, and nesting deferred to 11a). **Renumbering:** packaging S11 → **S13**, AI S12 → **S15**, S12.11 → S15.12, with the new S15.11 (AI-assisted library cleanup); "Stage ID changes" table in 10.18. Invariant **I10** (preview, confirmation, undo for destructive bulk operations). Goals G11, G12; NG4 and NG8 revised; NG11 added. FR-150–FR-213 and NFR-033–NFR-039 added; FR-022, FR-142, and NFR-006 amended. A18 revised; A22, A23 added. Q36 and Q38 updated; Q42–Q51 added (Q50 answered in S007). Architecture 6.1–6.5, section 7 (ADR-0021–ADR-0029 Proposed), 7.1, 8.1, 8.7, and concerns 8.22–8.26. P005 notes on existing substages (10.17 item 12). Milestones: M3 = S01–S13 (Q51), M4 pools, M5 AI. Testing, fixtures, and risks RK-32–RK-36. Fixes to the prompt are listed in the session log (E006). | Plan change request #5 (`code-agent-docs/prompts/P005-feature-additions.json`) and the user's messages in S007 (E004: burst grouping; E005: fix the prompt's issues; E008: RAID 0 and 1 only, at the end) | `logs/sessions/2026-09-28_S007.md` |
 | 1.4.1 | 2026-09-28 | Decisions (PATCH): **ADR-0021 Accepted** (SHA-256; section 7, 7.1, A23). 12.2 names the CI trigger: a stage-completion tag or a manual run. No requirement or scope change. | The user's answers in S007 (E013): "SHA-256 (Recommended)", "Stage tag + manual (Recommended)" | `logs/sessions/2026-09-28_S007.md` |
 | 1.4.2 | 2026-09-28 | Clarification (PATCH), documentation audit A003 (F-002): Q50 and the three P005 follow-up notes of S01.2, S01.3, and S01.4 no longer say that ADR-0021 must still be Accepted; they say the follow-ups were done in S007. No requirement, scope, or decision change. | Audit A003 (R12, the S02 final review, S02.8-T04) | `audits/A003-2026-09-28-documentation-audit.md`; `logs/sessions/2026-09-28_S007.md` |
-| 1.5.0 | 2026-09-28 | Requirements (MINOR), from the user's walkthrough of S02: **FR-008** gets the user's 30-day trash retention (S08.1 scope and criterion 3); the trash stays in S08.1, as the user decided. New **FR-214** (folder sizes), **FR-215** (added and modified dates, both shown), **FR-216** (finished uploads appear at once; a single uploaded item is scrolled into view and blinks twice). S02.3 and S02.4 get follow-up notes and requirements; their tasks S02.3-T05 and S02.4-T05 are in the stage document. | The user's messages in S007 (E030, E031) and answer "Both" (E032) | `logs/sessions/2026-09-28_S007.md`; `stages/S02-nas-gui.md` |
