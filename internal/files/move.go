@@ -96,7 +96,11 @@ func (s *Local) move(ctx context.Context, op Op, owner, fromAPI, toAPI string, o
 			if err != nil {
 				return fsError(err, toAPI)
 			}
+			_ = s.hashes.Moved(ctx, owner, from, final) // best effort (Hashes)
 			it, err = withDetails(root, NewItem(owner, final, info), "/"+final)
+			if err == nil && it.Kind == KindFile {
+				it.ContentHash, _ = s.hashes.Lookup(ctx, owner, final, it.ETag)
+			}
 			return err
 		})
 		return it, err

@@ -14,6 +14,7 @@ import (
 
 	"github.com/KhizirFarrukh/local-ai-nas/internal/api"
 	"github.com/KhizirFarrukh/local-ai-nas/internal/config"
+	"github.com/KhizirFarrukh/local-ai-nas/internal/contenthash"
 	"github.com/KhizirFarrukh/local-ai-nas/internal/db"
 	"github.com/KhizirFarrukh/local-ai-nas/internal/files"
 	"github.com/KhizirFarrukh/local-ai-nas/internal/health"
@@ -130,6 +131,7 @@ func cmdServe(ctx context.Context, args []string, stderr io.Writer) int {
 	fsvc := files.NewLocal(storage.NewResolver(a.layout), files.Options{
 		Space:      guard,
 		CopyLimits: files.CopyLimits{MaxItems: a.cfg.Copy.SyncMaxItems, MaxBytes: int64(a.cfg.Copy.SyncMaxBytes)},
+		Hashes:     contenthash.New(a.db),
 	})
 	tus, err := uploads.New(uploads.Options{
 		Dir:       a.layout.TmpUploads,

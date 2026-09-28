@@ -100,20 +100,27 @@ func (s *Local) Copy(ctx context.Context, owner, fromAPI, toAPI string, o CopyOp
 			}
 			lock := func() func() { return s.lockFolder(owner, path.Dir(to)) }
 			var final string
+			var hashed []hashedFile
 			if src.IsDir() {
-				final, err = copyFolder(ctx, root, from, to, entries, policy, toAPI, lock)
+				final, hashed, err = copyFolder(ctx, root, from, to, entries, policy, toAPI, lock)
 				r.created = true
 			} else {
-				final, r.created, err = copyOneFile(ctx, root, from, to, src, policy, toAPI, lock)
+				var one hashedFile
+				final, r.created, one, err = copyOneFile(ctx, root, from, to, src, policy, toAPI, lock)
+				hashed = []hashedFile{one}
 			}
 			if err != nil {
 				return err
 			}
+			s.recordAll(ctx, owner, final, hashed)
 			info, err := root.Lstat(filepath.FromSlash(final))
 			if err != nil {
 				return fsError(err, toAPI)
 			}
 			r.item, err = withDetails(root, NewItem(owner, final, info), "/"+final)
+			if err == nil && !src.IsDir() && hashed[0].etag == r.item.ETag {
+				r.item.ContentHash = hashed[0].hash
+			}
 			return err
 		})
 		return r, err
@@ -233,78 +240,88 @@ func checkCopiedName(dst, srcPath string) error {
 }
 
 // copyOneFile copies the regular file from to a temporary file next to
-// to, and commits it like an upload, holding lock during the commit.
-func copyOneFile(ctx context.Context, root *os.Root, from, to string, src fs.FileInfo, policy OnConflict, toAPI string, lock func() func()) (string, bool, error) {
+// to, and commits it like an upload, holding lock during the commit. The
+// hashed file's rel is ".": the copy itself.
+func copyOneFile(ctx context.Context, root *os.Root, from, to string, src fs.FileInfo, policy OnConflict, toAPI string, lock func() func()) (string, bool, hashedFile, error) {
 	if err := checkTarget(root, to, policy, toAPI); err != nil {
-		return "", false, err
+		return "", false, hashedFile{}, err
 	}
 	tmp := path.Join(path.Dir(to), storage.TempPrefix+rand.Text()+".part")
-	if err := copyFileTo(ctx, root, from, tmp, src, make([]byte, copyBufferSize)); err != nil {
+	hf, err := copyFileTo(ctx, root, from, tmp, src, make([]byte, copyBufferSize))
+	if err != nil {
 		_ = root.Remove(filepath.FromSlash(tmp))
-		return "", false, err
+		return "", false, hashedFile{}, err
 	}
 	unlock := lock()
 	final, created, err := commitFile(root, tmp, to, policy, toAPI)
 	unlock()
 	if err != nil {
 		_ = root.Remove(filepath.FromSlash(tmp))
-		return "", false, err
+		return "", false, hashedFile{}, err
 	}
 	syncFolder(root, path.Dir(to))
-	return final, created, nil
+	hf.rel = "."
+	return final, created, hf, nil
 }
 
 // copyFolder builds the copy of the tree under a temporary name next to
 // to, then gives it its name, holding lock during the commit. On any error
-// the temporary tree is removed.
-func copyFolder(ctx context.Context, root *os.Root, from, to string, entries []copyEntry, policy OnConflict, toAPI string, lock func() func()) (string, error) {
+// the temporary tree is removed. It returns the copied files with their
+// hashes, relative to the copy (renaming the tree keeps their versions).
+func copyFolder(ctx context.Context, root *os.Root, from, to string, entries []copyEntry, policy OnConflict, toAPI string, lock func() func()) (string, []hashedFile, error) {
 	switch _, err := root.Lstat(filepath.FromSlash(to)); {
 	case err == nil && policy != ConflictRename:
-		return "", apperr.Newf(apperr.Conflict, "an item already exists at %s; folders are never replaced or merged", toAPI)
+		return "", nil, apperr.Newf(apperr.Conflict, "an item already exists at %s; folders are never replaced or merged", toAPI)
 	case err != nil && !storage.IsNotFound(err):
-		return "", fsError(err, toAPI)
+		return "", nil, fsError(err, toAPI)
 	}
 	tmp := path.Join(path.Dir(to), storage.TempPrefix+rand.Text()+".part")
-	if err := buildTree(ctx, root, from, tmp, entries); err != nil {
+	hashed, err := buildTree(ctx, root, from, tmp, entries)
+	if err != nil {
 		_ = root.RemoveAll(filepath.FromSlash(tmp))
-		return "", err
+		return "", nil, err
 	}
 	unlock := lock()
 	final, err := commitFolder(root, tmp, to, entries[0].info, policy, toAPI)
 	unlock()
 	if err != nil {
 		_ = root.RemoveAll(filepath.FromSlash(tmp))
-		return "", err
+		return "", nil, err
 	}
 	syncFolder(root, path.Dir(to))
-	return final, nil
+	return final, hashed, nil
 }
 
 // buildTree creates the entries below dst: folders, then each file
 // synced, then the folders' modification times, deepest first, because
-// adding entries changes them.
-func buildTree(ctx context.Context, root *os.Root, from, dst string, entries []copyEntry) error {
+// adding entries changes them. It returns the files with their hashes,
+// relative to dst.
+func buildTree(ctx context.Context, root *os.Root, from, dst string, entries []copyEntry) ([]hashedFile, error) {
 	buf := make([]byte, copyBufferSize)
+	var hashed []hashedFile
 	for _, e := range entries {
 		target := path.Join(dst, e.rel)
 		if !e.info.IsDir() {
-			if err := copyFileTo(ctx, root, path.Join(from, e.rel), target, e.info, buf); err != nil {
-				return err
+			hf, err := copyFileTo(ctx, root, path.Join(from, e.rel), target, e.info, buf)
+			if err != nil {
+				return nil, err
 			}
+			hf.rel = e.rel
+			hashed = append(hashed, hf)
 			continue
 		}
 		if err := root.Mkdir(filepath.FromSlash(target), 0o750); err != nil {
-			return fsError(err, "/"+target)
+			return nil, fsError(err, "/"+target)
 		}
 	}
 	for i := len(entries) - 1; i >= 0; i-- {
 		if e := entries[i]; e.info.IsDir() {
 			if err := root.Chtimes(filepath.FromSlash(path.Join(dst, e.rel)), time.Time{}, e.info.ModTime()); err != nil {
-				return fsError(err, "/"+path.Join(dst, e.rel))
+				return nil, fsError(err, "/"+path.Join(dst, e.rel))
 			}
 		}
 	}
-	return nil
+	return hashed, nil
 }
 
 // commitFolder gives the complete temporary tree tmp its name. Folders
@@ -342,35 +359,44 @@ func commitFolder(root *os.Root, tmp, to string, info fs.FileInfo, policy OnConf
 
 // copyFileTo copies the regular file from to the new file dst, synced,
 // with the source's modification time. The opened source must be the file
-// that was scanned (info), so a link swapped in is never followed.
-func copyFileTo(ctx context.Context, root *os.Root, from, dst string, info fs.FileInfo, buf []byte) (err error) {
+// that was scanned (info), so a link swapped in is never followed. It
+// returns the copy's version and content hash, computed while the bytes
+// pass (the caller sets rel).
+func copyFileTo(ctx context.Context, root *os.Root, from, dst string, info fs.FileInfo, buf []byte) (hf hashedFile, err error) {
 	in, err := root.Open(filepath.FromSlash(from))
 	if err != nil {
-		return fsError(err, "/"+from)
+		return hf, fsError(err, "/"+from)
 	}
 	defer func() { _ = in.Close() }() // read-only
 	if opened, err := in.Stat(); err != nil || !os.SameFile(info, opened) {
-		return apperr.Newf(apperr.Conflict, "/%s changed during the copy; try again", from)
+		return hf, apperr.Newf(apperr.Conflict, "/%s changed during the copy; try again", from)
 	}
 	out, err := root.OpenFile(filepath.FromSlash(dst), os.O_WRONLY|os.O_CREATE|os.O_EXCL, 0o640)
 	if err != nil {
-		return fsError(err, "/"+dst)
+		return hf, fsError(err, "/"+dst)
 	}
 	defer func() {
 		if cerr := out.Close(); cerr != nil && err == nil {
 			err = apperr.Wrap(apperr.Internal, "closing the copy failed", cerr)
 		}
 	}()
-	if err := copyStream(ctx, out, in, buf); err != nil {
-		return err
+	h := newHash()
+	if err := copyStream(ctx, io.MultiWriter(out, h), in, buf); err != nil {
+		return hf, err
 	}
 	if err := out.Sync(); err != nil {
-		return apperr.Wrap(apperr.Internal, "syncing the copy failed", err)
+		return hf, apperr.Wrap(apperr.Internal, "syncing the copy failed", err)
 	}
 	if err := root.Chtimes(filepath.FromSlash(dst), time.Time{}, info.ModTime()); err != nil {
-		return fsError(err, "/"+dst)
+		return hf, fsError(err, "/"+dst)
 	}
-	return nil
+	hf.hash = hashString(h)
+	if st, err := out.Stat(); err == nil {
+		if id, err := storage.FileID(out); err == nil {
+			hf.etag = etag(st.Size(), st.ModTime(), id)
+		}
+	}
+	return hf, nil
 }
 
 // copyStream copies src to dst through buf, stopping when ctx is done.

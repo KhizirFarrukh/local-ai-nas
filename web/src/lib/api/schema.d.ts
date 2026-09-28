@@ -358,6 +358,15 @@ export interface components {
              *     written or replaced; the download sends the same value.
              */
             etag?: string;
+            /**
+             * @description The hash of the file's content, as `sha256:` and 64 lowercase
+             *     hexadecimal digits (only for a single file, not in listings). It
+             *     is present for files uploaded or copied through the NAS and
+             *     unchanged since; a file changed in another way has none until it
+             *     is hashed again (a later version). Two files with the same hash
+             *     have the same content.
+             */
+            content_hash?: string;
         };
         /**
          * @description A symbolic link is listed but never followed.

@@ -34,6 +34,9 @@ type Item struct {
 	ModTime time.Time // last modification
 	MIME    string    // media type, from S01.3-T03
 	ETag    string    // content version, from S01.3-T03
+	// ContentHash is "sha256:<hex>" when known for this version (S01.3-T10,
+	// ADR-0021): set by uploads, copies, and a file's details.
+	ContentHash string
 }
 
 // NewItem builds an Item from what Lstat returned for relPath in a
