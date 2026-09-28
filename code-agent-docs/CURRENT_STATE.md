@@ -1,18 +1,19 @@
 # CURRENT_STATE
 
-**Last updated:** 2026-09-28 13:15 +0500 (session S007)
-**Plan version:** 1.4.1 (`code-agent-docs/plan.md`), **Approved baseline** 1.0.0 (S005); 1.4.0 adds P005 (15 stages, 120 substages; packaging is now S13 and AI S15, table in plan 10.18)
-**Current phase:** **S01 (Basic NAS) Done** (signed off, S005 E126; P005 follow-up tasks done in S007). **S02 (NAS GUI) In Progress** (approved S006 E009); S02.1–S02.7 Done; S02.8 In Progress (T01–T03 done)
+**Last updated:** 2026-09-28 13:25 +0500 (session S007)
+**Plan version:** 1.4.2 (`code-agent-docs/plan.md`), **Approved baseline** 1.0.0 (S005); 1.4.0 adds P005 (15 stages, 120 substages; packaging is now S13 and AI S15, table in plan 10.18)
+**Current phase:** **S01 (Basic NAS) Done** (signed off, S005 E126; P005 follow-up tasks done in S007). **S02 (NAS GUI) In Progress** (approved S006 E009); S02.1–S02.7 Done; S02.8 In Progress (T01–T04 done)
 
 ## Active stage and task
 - **Active stage:** **S02: NAS GUI**, **In Progress** (`stages/S02-nas-gui.md`; approved in S006 E009, with "Skip Safari": S02 checks Chrome, Edge, and Firefox). S01 is **Done** (`stages/S01-basic-nas.md`, completion record in section 13).
-- **Active task:** none. Next: **S02.8-T04** (documentation audit A003, R12), then **S02.8-T05** (completion record, the `S02-done` tag for CI, the user's sign-off with a walkthrough). The P005 follow-up tasks of S01 are all done.
+- **Active task:** none. Next: **S02.8-T05** (completion record, the `S02-done` tag for CI, the user's sign-off with a walkthrough). The P005 follow-up tasks of S01 are all done.
 - **The user's instruction (S007 E010):** after P005, resume S02 and work until the stage is complete, and also build the P005 items that belong to the current or earlier stages (the S01 follow-up tasks).
 
 ## In progress (write-ahead)
 - none.
 
 ## Last completed
+- **S02.8-T04 done** (S007 E024): documentation audit A003: 8 findings, no Critical; 6 fixed (plan 1.4.2), 1 accepted, 1 for the user (README proposals R-13–R-15, asked at the S02 sign-off).
 - **S02.8-T03 done** (S007 E023): user guide `docs/guide/web-interface.md`; cross-browser report `docs/reports/S02-cross-browser.md` (Edge, Chromium, Firefox locally; Google Chrome in CI through `E2E_CHROME=1`); README Development section; register (test browsers, fixture tool).
 - **S02.8-T02 done** (S007 E022): 42 Playwright system tests per browser (125 passed, 1 skipped in Chromium, Firefox, Edge), listing and ZIP64 integration tests, axe 0 violations in both themes; bug S02-B11 (a renamed item was no longer selected) fixed.
 - **S02.8-T01 done** (S007 E021): 197 web unit and component tests (coverage of `web/src/lib` 95.4% statements, 82.9% branches), Go tests for archives and the web app (`internal/...` 89.9%), regression tests for S02-B01, B04, B07, B08, B09.
@@ -32,13 +33,12 @@
 - **S01 Done** (S005 E126), plan 1.1.4: every task, CI run, and decision is in `stages/S01-basic-nas.md` (sections 12 and 13) and the S005 log.
 
 ## Next steps
-1. **Still open from the P005 report** (not blocking S02): Q42–Q49 and Q51; accepting or removing the planner additions (labelled in plan section 3); ADR-0022–ADR-0029 (Proposed); re-confirmation of S01 with its follow-ups; the RAID 0/1 reading of E008. ADR-0021 and the CI trigger were decided in E013.
-2. **S02.8** (`stages/S02-nas-gui.md`, section 5): (tests, including the regression tests for bugs S02-B01 to B10; the cross-browser report; the guide; audit A003; CI at stage completion; the user's sign-off with a hands-on walkthrough).
-3. **S01 follow-ups:** done (S01.2-T07, S01.3-T10, S01.4-T07; S007 E017–E019). The user re-confirms S01 with them (P005 report).
-4. Follow-up from S01 (the user's decision): run `scripts/perf-baseline.sh` on the Raspberry Pi and the mini-PC when available; also measure SHA-256 there (ADR-0021).
-5. **Endpoint workflow (spec-first):** spec → `go generate ./internal/api` → strict operation; an error case in `errorCases`/`bodyErrorCases`; a review row in `docs/api/conventions.md`; a fake-service test that invalid input never reaches the service.
-6. **CI (the user's preference, S007 E002, E013):** CI runs only when a stage-completion tag `S<NN>-done` is pushed (create it on `develop` after the stage's testing substage, before sign-off) or by hand. Run the checks locally before each commit and merge. For the stage-end run: `gh` is not installed; watch a run through the public REST API (`/repos/KhizirFarrukh/local-ai-nas/actions/runs?head_sha=<sha>`, then `/jobs`) or its web page. Reproduce Linux failures with `GOOS=linux go test -c` binaries in WSL.
-7. Every finished branch: merge it into `develop` myself (`--no-ff`) and push (RULES User Preferences).
+1. **S02.8-T05** (`stages/S02-nas-gui.md`, section 5): write the completion record (section 13); create and push the tag `S02-done` on `develop` so CI runs; watch the run and fix any failure; then ask the user for the sign-off with a hands-on walkthrough on this PC (including the Narrator listening check of S02.7-T02), README proposals R-13–R-15 (`audits/A003-readme-proposal.md`), and the re-confirmation of S01 with its follow-ups.
+2. **Still open from the P005 report** (not blocking S02): Q42–Q49 and Q51; accepting or removing the planner additions (labelled in plan section 3); ADR-0022–ADR-0029 (Proposed); the RAID 0/1 reading of E008. ADR-0021 and the CI trigger were decided in E013. The S01 follow-ups are done (S007 E017–E019).
+3. Follow-up from S01 (the user's decision): run `scripts/perf-baseline.sh` on the Raspberry Pi and the mini-PC when available; also measure SHA-256 there (ADR-0021).
+4. **Endpoint workflow (spec-first):** spec → `go generate ./internal/api` → strict operation; an error case in `errorCases`/`bodyErrorCases`; a review row in `docs/api/conventions.md`; a fake-service test that invalid input never reaches the service.
+5. **CI (the user's preference, S007 E002, E013):** CI runs only when a stage-completion tag `S<NN>-done` is pushed (create it on `develop` after the stage's testing substage, before sign-off) or by hand. Run the checks locally before each commit and merge. For the stage-end run: `gh` is not installed; watch a run through the public REST API (`/repos/KhizirFarrukh/local-ai-nas/actions/runs?head_sha=<sha>`, then `/jobs`) or its web page. Reproduce Linux failures with `GOOS=linux go test -c` binaries in WSL.
+6. Every finished branch: merge it into `develop` myself (`--no-ff`) and push (RULES User Preferences).
 
 ## Blocked or waiting on user
 - **Stray folder `C:\c`** (holds only an empty `Users` tree, left by an S006 command): deleting it was blocked by a safety check, so the user deletes it.
@@ -52,7 +52,7 @@
 ## Pointers
 - Latest session log: `code-agent-docs/logs/sessions/2026-09-28_S007.md` (current); S006 is closed
 - Stage documents: `code-agent-docs/stages/S02-nas-gui.md` (**In Progress**); `code-agent-docs/stages/S01-basic-nas.md` (**Done**; P005 follow-up tasks at the end of section 5; completion record in section 13)
-- Audit reports: `code-agent-docs/audits/A002-2026-09-24-documentation-audit.md` (the S01 final review); `A001-2026-09-24-documentation-audit.md`
+- Audit reports: `code-agent-docs/audits/A003-2026-09-28-documentation-audit.md` (the S02 final review, with `A003-readme-proposal.md`); `A002-2026-09-24-documentation-audit.md` (the S01 final review); `A001-2026-09-24-documentation-audit.md`
 - ADRs: `code-agent-docs/decisions/ADR-0001` … `ADR-0029` (0019 and 0022–0029 Proposed; 0021 Accepted in S007; 0012 superseded in part by 0020; the rest Accepted)
 - Dependency register: `code-agent-docs/dependencies.md` (section 12: deployment prerequisites per platform, the input for the S13.2 setup scripts)
 - Rules: `code-agent-docs/RULES.md` (v1.7.1: invariant I10; CI only at stage completion, on a tag `S<NN>-done` or by hand) · Prompts: `code-agent-docs/prompts/` (P002–P005)

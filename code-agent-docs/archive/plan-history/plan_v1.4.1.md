@@ -2,11 +2,11 @@
 
 | Field | Value |
 |---|---|
-| **Version** | 1.4.2 |
+| **Version** | 1.4.1 |
 | **Status** | **Approved baseline** (approved by the user in S005, 2026-09-24); 1.1.0 adds the user's setup-script requirement (S005 E015) |
 | **Last updated** | 2026-09-28 (session S007) |
 | **Source of vision** | `README.md` (repository root), the user's staged roadmap (`code-agent-docs/prompts/P002-staged-development-roadmap.json`), the user's technology stack (`code-agent-docs/prompts/P003-technology-stack.json`), and the user's feature additions (`code-agent-docs/prompts/P005-feature-additions.json`, with the user's chat decisions in S007) |
-| **Previous version** | 1.4.1, archived at `code-agent-docs/archive/plan-history/plan_v1.4.1.md` (0.1.0–1.4.0 also archived there) |
+| **Previous version** | 1.4.0, archived at `code-agent-docs/archive/plan-history/plan_v1.4.0.md` (0.1.0–1.3.0 also archived there) |
 | **Stage IDs** | Changed in 1.4.0 (P005): the packaging stage is now **S13** (was S11) and AI is **S15** (was S12). Older documents use the old IDs; the table in **10.18** translates them. |
 
 > **This is a living document.** It changes as the user gives feedback. Every change follows `code-agent-docs/RULES.md` **R4**: the old version is archived, the version is bumped, and a revision entry is added. While the plan is a pre-1.0 draft, restructurings bump the MINOR version. **When the user approves this plan as the baseline, it becomes version 1.0.0.**
@@ -566,7 +566,7 @@ Questions keep their numbers permanently. **★ = needed for S01**: none left (Q
 47. **Pools:** is mdadm acceptable for RAID 0 and RAID 1 (recommended, ADR-0027), and is **Linux-only** acceptable for pools (A22)? _Needed by: S14.1._ _(SnapRAID with mergerfs and parity layouts are deferred with the complex RAID, 11a; RAID 5 and RAID 6 are answered by the user's decision in S007: later.)_
 48. **Video codec for optimization:** H.264 only (most compatible, recommended default), or also H.265/HEVC and AV1 (smaller files; slower encoding and weaker browser support)? _Needed by: S12.2 (ADR-0025)._
 49. **Who applies optimization policies:** only each user to their own media (proposed), or can an admin apply policies to all users? _Needed by: S12.6._
-50. _Answered (S007, E010): now, with the current stage ("make sure to work on the new stuff too if they were meant to be part of current or previous stages"). ADR-0021 was Accepted in E013, and the three follow-up tasks were done in S007 (E017–E019)._ _(Planner-added, from fixing P005)_ **When are the S01 follow-up tasks done** (content hash at upload in both areas; storage-root checks), now that S01 is Done? _Recommendation:_ at the start of S04, before S04.2 needs the hashes; files uploaded before then are covered by the S11.1 backfill. The content-hash ADR (ADR-0021) must be decided first. _Needed by: S04._
+50. _Answered (S007, E010): now, with the current stage ("make sure to work on the new stuff too if they were meant to be part of current or previous stages"); the content hash still waits for ADR-0021 to be Accepted._ _(Planner-added, from fixing P005)_ **When are the S01 follow-up tasks done** (content hash at upload in both areas; storage-root checks), now that S01 is Done? _Recommendation:_ at the start of S04, before S04.2 needs the hashes; files uploaded before then are covered by the S11.1 backfill. The content-hash ADR (ADR-0021) must be decided first. _Needed by: S04._
 51. _(Planner-added)_ **Confirm the first usable release (M3)** as S01–S13, which now includes duplicates and look-alikes (S11) and storage optimization (S12), with drive pools (S14) after the release (section 11). _Needed by: S13._
 
 ### Carried over from 0.1.0
@@ -1145,7 +1145,7 @@ flowchart LR
   4. Writes that would push free space below the configured reserve are refused with a clear error.
   5. The health endpoint reports each startup check: root writable, temp and areas on one filesystem, free space, config valid.
 - **Risks/notes:** The layout affects S07.2 and S09. ADR-0003 avoids a later data move by creating namespaces now.
-- **P005 follow-up (1.4.0):** the storage root must not assume a single physical disk and must be relocatable, so it can later move onto a pool (S14.6, NFR-036). The upload temp folder and the trash always follow the root's filesystem (A18). Recorded as a follow-up task in `stages/S01-basic-nas.md` (S01.2-T07); S01 stays Done. **Done in S007** (Q50: `docs/storage-root.md`).
+- **P005 follow-up (1.4.0):** the storage root must not assume a single physical disk and must be relocatable, so it can later move onto a pool (S14.6, NFR-036). The upload temp folder and the trash always follow the root's filesystem (A18). Recorded as a follow-up task in `stages/S01-basic-nas.md`; S01 stays Done, and the timing is Q50.
 - **Status:** Done (S005, 2026-09-24; details in `stages/S01-basic-nas.md`)
 
 #### S01.3: Core file operations
@@ -1161,7 +1161,7 @@ flowchart LR
   4. No operation can read or write outside the caller's files namespace (tested).
   5. Endpoints reach the filesystem only through the service interface (architecture test).
 - **Risks/notes:** Copying large folders is synchronous in S01, with limits. It moves onto the job system in S04.3.
-- **P005 follow-up (1.4.0):** simple uploads compute a content hash while the file streams, with no extra read, and store it with the item (FR-211). The algorithm is standard-library SHA-256 (ADR-0021, Accepted in S007). **Done in S007** (S01.3-T10, Q50).
+- **P005 follow-up (1.4.0):** simple uploads compute a content hash while the file streams, with no extra read, and store it with the item (FR-211). The algorithm is decided in ADR-0021 (Proposed: standard-library SHA-256 unless benchmarks justify BLAKE3), which must be Accepted before the follow-up is built. Timing: Q50.
 - **Status:** Done (S005, 2026-09-24; details in `stages/S01-basic-nas.md`)
 
 #### S01.4: Large file handling
@@ -1180,7 +1180,7 @@ flowchart LR
   4. Uploads over the configured limit are refused before data is stored.
   5. Abandoned uploads are deleted after the configured expiry.
 - **Risks/notes:** Atomic rename requires one filesystem (A18), which S01.2 checks.
-- **P005 follow-up (1.4.0):** resumable uploads also store a content hash (FR-211). The hash state is serialized between chunks so the file is still read only once; if a resume cannot restore the state, the assembled file is hashed once before the atomic rename (8.26). **Done in S007** (S01.4-T07, Q50).
+- **P005 follow-up (1.4.0):** resumable uploads also store a content hash (FR-211). The hash state is serialized between chunks so the file is still read only once; if a resume cannot restore the state, the assembled file is hashed once before the atomic rename (8.26). Needs ADR-0021 first. Timing: Q50.
 - **Status:** Done (S005, 2026-09-24; details in `stages/S01-basic-nas.md`)
 
 #### S01.5: API layer
@@ -1370,7 +1370,7 @@ flowchart LR
   3. The GUI user guide section is written.
   4. The completion record is written and the user's sign-off is recorded.
 - **Risks/notes:** Safari testing may need a Mac or a cloud device service. That is a local tooling question, not a runtime dependency.
-- **Status:** In Progress (S007, 2026-09-28; T01–T04 done, details in `stages/S02-nas-gui.md`)
+- **Status:** In Progress (S007, 2026-09-28; T01–T03 done, details in `stages/S02-nas-gui.md`)
 
 **Design notes (S02):**
 - The GUI uses only the public API, so S03 adds authentication without GUI rewrites.
@@ -3275,4 +3275,3 @@ CI runs on Linux and Windows from S01.1. _Since S007 (the user's preference):_ C
 | 1.3.0 | 2026-09-25 | Stage change (MINOR): **S02 approved**. At the user's decision, S02.8 acceptance criterion 2 checks Chrome, Edge, and Firefox; Safari is not checked in S02. NFR-027 and the Safari checks of later stages are unchanged. S02 status is Approved. | The user's approval and answer "Skip Safari" (S006 E009) | `logs/sessions/2026-09-25_S006.md`; `stages/S02-nas-gui.md` |
 | 1.4.0 | 2026-09-28 | **Feature additions** (MINOR, R4). New stages **S11** duplicate and look-alike management (with automatic burst grouping), **S12** storage optimization, and **S14** multi-drive storage pools (**RAID 0 and RAID 1 only**; parity, virtual drives, and nesting deferred to 11a). **Renumbering:** packaging S11 → **S13**, AI S12 → **S15**, S12.11 → S15.12, with the new S15.11 (AI-assisted library cleanup); "Stage ID changes" table in 10.18. Invariant **I10** (preview, confirmation, undo for destructive bulk operations). Goals G11, G12; NG4 and NG8 revised; NG11 added. FR-150–FR-213 and NFR-033–NFR-039 added; FR-022, FR-142, and NFR-006 amended. A18 revised; A22, A23 added. Q36 and Q38 updated; Q42–Q51 added (Q50 answered in S007). Architecture 6.1–6.5, section 7 (ADR-0021–ADR-0029 Proposed), 7.1, 8.1, 8.7, and concerns 8.22–8.26. P005 notes on existing substages (10.17 item 12). Milestones: M3 = S01–S13 (Q51), M4 pools, M5 AI. Testing, fixtures, and risks RK-32–RK-36. Fixes to the prompt are listed in the session log (E006). | Plan change request #5 (`code-agent-docs/prompts/P005-feature-additions.json`) and the user's messages in S007 (E004: burst grouping; E005: fix the prompt's issues; E008: RAID 0 and 1 only, at the end) | `logs/sessions/2026-09-28_S007.md` |
 | 1.4.1 | 2026-09-28 | Decisions (PATCH): **ADR-0021 Accepted** (SHA-256; section 7, 7.1, A23). 12.2 names the CI trigger: a stage-completion tag or a manual run. No requirement or scope change. | The user's answers in S007 (E013): "SHA-256 (Recommended)", "Stage tag + manual (Recommended)" | `logs/sessions/2026-09-28_S007.md` |
-| 1.4.2 | 2026-09-28 | Clarification (PATCH), documentation audit A003 (F-002): Q50 and the three P005 follow-up notes of S01.2, S01.3, and S01.4 no longer say that ADR-0021 must still be Accepted; they say the follow-ups were done in S007. No requirement, scope, or decision change. | Audit A003 (R12, the S02 final review, S02.8-T04) | `audits/A003-2026-09-28-documentation-audit.md`; `logs/sessions/2026-09-28_S007.md` |
