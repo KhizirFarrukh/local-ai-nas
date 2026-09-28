@@ -119,6 +119,17 @@ describe('FolderListing', () => {
     expect(listing.at(pageSize)).toBeUndefined();
   });
 
+  it('finds an item by path among the loaded pages (bug S02-B11)', async () => {
+    const f = folder(2 * pageSize);
+    const listing = new FolderListing(f.load, '/f');
+    await listing.start();
+    expect(listing.indexOf('/f/000007')).toBe(7);
+    expect(listing.indexOf(`/f/${String(pageSize + 3).padStart(6, '0')}`)).toBeUndefined(); // not loaded
+    await listing.loadRange(pageSize, pageSize);
+    expect(listing.indexOf(`/f/${String(pageSize + 3).padStart(6, '0')}`)).toBe(pageSize + 3);
+    expect(listing.indexOf('/f/missing')).toBeUndefined();
+  });
+
   it('passes the sort to every request', async () => {
     const seen: string[] = [];
     const listing = new FolderListing(

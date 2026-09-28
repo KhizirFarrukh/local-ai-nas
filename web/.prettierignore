@@ -8,3 +8,8 @@ src/lib/api/schema.d.ts
 src/lib/generated/
 # Copied from pdfjs-dist by scripts/pdfjs-assets.mjs.
 static/pdfjs/
+# Test output (S02.8): coverage, Vitest's failure screenshots, Playwright's results.
+coverage/
+.vitest/
+test-results/
+playwright-report/
