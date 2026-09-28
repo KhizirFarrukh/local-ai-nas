@@ -117,7 +117,9 @@ func (s *Local) Copy(ctx context.Context, owner, fromAPI, toAPI string, o CopyOp
 			if err != nil {
 				return fsError(err, toAPI)
 			}
-			r.item, err = withDetails(root, NewItem(owner, final, info), "/"+final)
+			r.item = NewItem(owner, final, info)
+			stampAdded(root, &r.item, info)
+			r.item, err = withDetails(root, r.item, "/"+final)
 			if err == nil && !src.IsDir() && hashed[0].etag == r.item.ETag {
 				r.item.ContentHash = hashed[0].hash
 			}

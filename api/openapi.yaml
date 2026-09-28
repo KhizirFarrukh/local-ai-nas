@@ -566,6 +566,15 @@ paths:
           in: query
           schema:
             $ref: "#/components/schemas/ListOrder"
+        - name: locate
+          in: query
+          description: |
+            The name of an item in the folder (not a path). The answer's
+            `position` says where it is in this sort order, so a client can
+            show it, such as a finished upload; the page itself does not
+            change.
+          schema:
+            type: string
       responses:
         "200":
           description: The item, and for a folder one page of its items.
@@ -611,6 +620,34 @@ paths:
           $ref: "#/components/responses/MethodNotAllowed"
         "409":
           $ref: "#/components/responses/Conflict"
+        "500":
+          $ref: "#/components/responses/InternalError"
+  /files/usage:
+    get:
+      tags: [files]
+      operationId: getUsage
+      summary: Add up the size of a folder
+      description: |
+        Adds up the files in the folder at `path`, at any depth: their
+        total size and how many files and folders it holds. Symbolic
+        links are neither followed nor counted. For a file, it is the
+        file's own size. The server reads the whole tree, so a large one
+        takes a while; the walk stops if the client goes away.
+      parameters:
+        - $ref: "#/components/parameters/Path"
+      responses:
+        "200":
+          description: What the folder holds.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Usage"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "405":
+          $ref: "#/components/responses/MethodNotAllowed"
         "500":
           $ref: "#/components/responses/InternalError"
   /system/health:
@@ -667,7 +704,7 @@ components:
     FileItem:
       type: object
       additionalProperties: false
-      required: [path, name, kind, size, mod_time]
+      required: [path, name, kind, size, mod_time, added_time]
       properties:
         path:
           type: string
@@ -685,6 +722,14 @@ components:
           type: string
           format: date-time
           description: The last modification time, in UTC.
+        added_time:
+          type: string
+          format: date-time
+          description: |
+            When the item was added to the NAS, in UTC: its creation time
+            on the file system, set by an upload, a new folder, or a copy,
+            and kept by renames, moves, and edits. Where the file system
+            records no creation time, it is the modification time.
         mime:
           type: string
           description: |
@@ -707,6 +752,24 @@ components:
             unchanged since; a file changed in another way has none until it
             is hashed again (a later version). Two files with the same hash
             have the same content.
+    Usage:
+      type: object
+      additionalProperties: false
+      required: [path, size, files, folders]
+      properties:
+        path:
+          type: string
+          description: The folder (or file) that was added up.
+        size:
+          type: integer
+          format: int64
+          description: The total size of the files, in bytes.
+        files:
+          type: integer
+          description: How many files it holds, at any depth.
+        folders:
+          type: integer
+          description: How many folders it holds, at any depth (not counting itself).
     ItemKind:
       type: string
       description: A symbolic link is listed but never followed.
@@ -730,6 +793,10 @@ components:
           type: integer
           minimum: 0
           description: For a folder, how many items it has in all pages.
+        position:
+          type: integer
+          minimum: 0
+          description: The position of the `locate` item in the sorted folder (0 is the first); absent when it is not there.
     ArchiveRequest:
       type: object
       additionalProperties: false
@@ -830,7 +897,7 @@ components:
       default: fail
     ListSort:
       type: string
-      enum: [name, size, mod_time, kind]
+      enum: [name, size, mod_time, added_time, kind]
       default: name
     ListOrder:
       type: string

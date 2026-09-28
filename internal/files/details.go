@@ -5,6 +5,7 @@ import (
 	"encoding/hex"
 	"fmt"
 	"io"
+	"io/fs"
 	"mime"
 	"net/http"
 	"os"
@@ -43,6 +44,15 @@ func withDetails(root *os.Root, it Item, apiPath string) (Item, error) {
 	}
 	defer func() { _ = f.Close() }() // read-only
 	return fileDetails(f, it, apiPath)
+}
+
+// stampAdded sets it.AddedTime to the creation time of the item on the
+// file system, when it records one (FR-215); NewItem left the
+// modification time there.
+func stampAdded(root *os.Root, it *Item, info fs.FileInfo) {
+	if t, ok := storage.BirthTimeAt(root, it.RelPath, info); ok {
+		it.AddedTime = t
+	}
 }
 
 // fileDetails adds the ETag and the media type of the open file f to it.

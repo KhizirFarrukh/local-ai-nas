@@ -112,6 +112,10 @@ func (f *failingServer) GetItems(context.Context, gen.GetItemsRequestObject) (ge
 	return nil, f.err
 }
 
+func (f *failingServer) GetUsage(context.Context, gen.GetUsageRequestObject) (gen.GetUsageResponseObject, error) {
+	return nil, f.err
+}
+
 func (f *failingServer) CreateFolder(context.Context, gen.CreateFolderRequestObject) (gen.CreateFolderResponseObject, error) {
 	return nil, f.err
 }
