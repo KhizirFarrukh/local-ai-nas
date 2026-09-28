@@ -10,7 +10,7 @@
 - **The user's instruction (S007 E010):** after P005, resume S02 and work until the stage is complete, and also build the P005 items that belong to the current or earlier stages (the S01 follow-up tasks).
 
 ## In progress (write-ahead)
-- none.
+- **S02.8-T05: completion record and sign-off** (started 2026-09-28 13:26, branch `docs/S02.8-T05-completion` from `develop` 61062c1). Steps: local system tests; the tag `S02-done` on `develop` 61062c1 and its CI run (watch through the public REST API); the completion record (stage document section 13) with the CI results; merge; then the user's sign-off (walkthrough, Narrator check, README proposals R-13–R-15, S01 re-confirmation).
 
 ## Last completed
 - **S02.8-T04 done** (S007 E024): documentation audit A003: 8 findings, no Critical; 6 fixed (plan 1.4.2), 1 accepted, 1 for the user (README proposals R-13–R-15, asked at the S02 sign-off).
