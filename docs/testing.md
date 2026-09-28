@@ -25,7 +25,7 @@ CI runs the tests on Linux (with `-race`) and Windows, plus the coverage report 
   - Tasks deliver code written to be testable: dependencies passed in, and time, randomness, the file system, and the network replaceable.
   - Each stage's final testing substage writes its unit, integration, and system/application tests.
   - A bug found while coding is recorded and fixed at once. Its regression test is written in that substage.
-  - Existing tests run on every push and must stay green.
+  - Existing tests must stay green: they are run locally before each commit, and CI runs them when a stage is complete.
 - **No shared state:** each test makes its own storage root and server, so tests can run in parallel.
 - **Loopback only:** test servers listen on `127.0.0.1:0` (NFR-020).
 - **Both platforms:** anything touching paths or files must pass on Linux and Windows. Windows-only cases go behind `filepath.Separator == '\\'` or `runtime.GOOS`.
@@ -58,7 +58,7 @@ These run the real program the way a user does. `TestIntegration` (`cmd/local-ai
 
 ## Coverage
 
-`scripts/coverage.sh` writes `coverage.out` (git-ignored), prints the per-function report, and fails when the total for `internal/...` is below 80%. In CI the step reports on every push but does not block (`continue-on-error`), because tests are written at the end of each stage. Passing it is an exit criterion of each stage's final testing substage. Generated code (`internal/api/gen`, from `api/openapi.yaml`) is left out of the figure; its behavior is tested through `internal/api`. Set `COVERAGE_MIN` to try another threshold. `cmd/` is covered by the smoke test (S01.1-T11), not by the threshold.
+`scripts/coverage.sh` writes `coverage.out` (git-ignored), prints the per-function report, and fails when the total for `internal/...` is below 80%. In CI (which runs when a stage is complete, or by hand) the step reports but does not block (`continue-on-error`), because tests are written at the end of each stage. Passing it is an exit criterion of each stage's final testing substage. Generated code (`internal/api/gen`, from `api/openapi.yaml`) is left out of the figure; its behavior is tested through `internal/api`. Set `COVERAGE_MIN` to try another threshold. `cmd/` is covered by the smoke test (S01.1-T11), not by the threshold.
 
 ## Test data
 

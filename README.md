@@ -232,7 +232,7 @@ The container runs your working copy with `go run` and keeps its data in a Docke
 | Web interface: format, lint, type checks | in `web/`: `pnpm format:check`, `pnpm lint`, `pnpm check` |
 | Web interface licenses | `node scripts/check-web-licenses.mjs` |
 
-On Windows, run the `scripts/*.sh` files from Git Bash. More in [docs/testing.md](docs/testing.md). CI runs all of these except the performance baseline for every push, on Linux and Windows (the web interface checks on Linux).
+On Windows, run the `scripts/*.sh` files from Git Bash. More in [docs/testing.md](docs/testing.md). CI runs all of these except the performance baseline, on Linux and Windows (the web interface checks on Linux), when a stage is complete (a tag `S<NN>-done`) or when started by hand from the Actions tab.
 
 ---
 
