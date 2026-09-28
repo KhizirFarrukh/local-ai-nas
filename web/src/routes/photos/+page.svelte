@@ -8,6 +8,7 @@
   <title>Photos · local-ai-nas</title>
 </svelte:head>
 
+<h1 class="sr-only">Photos</h1>
 <EmptyState
   icon={Images}
   title="Photos come with stage 4"

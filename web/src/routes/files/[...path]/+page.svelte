@@ -60,6 +60,7 @@
   import ShortcutsDialog from '$lib/files/ShortcutsDialog.svelte';
   import type { FileItem, SortKey, SortOrder } from '$lib/files/types';
   import { activity } from '$lib/shell/activity.svelte';
+  import { announcer } from '$lib/shell/announcer.svelte';
   import { ApiError } from '$lib/api/errors';
   import { toasts } from '$lib/shell/toasts.svelte';
   import DropZone from '$lib/uploads/DropZone.svelte';
@@ -67,6 +68,7 @@
   import { startUpload } from '$lib/uploads/start';
   import { getUploader } from '$lib/uploads/state.svelte';
   import { formatCount } from '$lib/util/format';
+  import { focusFor } from '$lib/util/modality';
   import { basename, child, crumbs, filesHref, parent, pathFromParam } from '$lib/util/paths';
   import { readStored, writeStored } from '$lib/util/stored';
 
@@ -98,6 +100,28 @@
     void path;
     untrack(() => selection.clear());
   });
+
+  // Screen readers hear the selection's size when it changes (S02.7-T02),
+  // once the keys stop. Moving with the arrows keeps it at one, and the
+  // focused item says "selected" itself; a new folder starts silently.
+  let heard = { path: '', count: 0 };
+  let countTimer: ReturnType<typeof setTimeout> | undefined;
+  $effect(() => {
+    const count = selected;
+    const at = path;
+    untrack(() => {
+      clearTimeout(countTimer);
+      countTimer = setTimeout(() => {
+        if (at !== heard.path) {
+          heard = { path: at, count };
+        } else if (count !== heard.count) {
+          heard.count = count;
+          announcer.say(count === 0 ? 'Nothing selected' : `${formatCount(count)} selected`);
+        }
+      }, 300);
+    });
+  });
+  onDestroy(() => clearTimeout(countTimer));
 
   // Shortcuts (S02.5-T04, keys.ts) work while the file view has the focus,
   // or the page itself (the body, or the main area a click on the
@@ -472,6 +496,24 @@
     return !!active?.closest('[role="grid"]');
   }
 
+  // A folder opened that way which shows no view (empty, an error, or a
+  // file's address) gives the focus to the main area instead (S02.7-T02),
+  // so the keys keep working (Backspace goes back up) and the next Tab
+  // starts in the page, not at the top; screen readers hear why.
+  $effect(() => {
+    const settled = listing.error !== undefined || listing.total !== undefined;
+    const noView =
+      listing.error !== undefined || listing.total === 0 || listing.folder?.kind !== 'dir';
+    if (focusView && settled && noView) {
+      untrack(() => {
+        focusFor(document.getElementById('main'));
+        if (!listing.error && listing.total === 0) {
+          announcer.say('This folder is empty.');
+        }
+      });
+    }
+  });
+
   function open(item: FileItem, index: number) {
     if (item.kind === 'dir') {
       focusView = fromView();
@@ -514,6 +556,7 @@
 <svelte:window onkeydown={pageKeys} />
 
 <div class="flex h-full flex-col">
+  <h1 class="sr-only">{path === '/' ? 'Files' : basename(path)}</h1>
   <div class="flex flex-wrap items-center gap-3 border-b border-border px-4 py-2">
     <Breadcrumbs crumbs={crumbs(path)} label="Folder" />
     {#if selected > 0}
@@ -523,7 +566,7 @@
         aria-label="Selected items"
         data-testid="selection-bar"
       >
-        <span class="text-sm font-medium" aria-live="polite">{formatCount(selected)} selected</span>
+        <span class="text-sm font-medium">{formatCount(selected)} selected</span>
         <Button
           size="sm"
           variant="primary"

@@ -1,18 +1,20 @@
 # CURRENT_STATE
 
-**Last updated:** 2026-09-28 11:05 +0500 (session S007)
+**Last updated:** 2026-09-28 11:21 +0500 (session S007)
 **Plan version:** 1.4.1 (`code-agent-docs/plan.md`), **Approved baseline** 1.0.0 (S005); 1.4.0 adds P005 (15 stages, 120 substages; packaging is now S13 and AI S15, table in plan 10.18)
 **Current phase:** **S01 (Basic NAS) Done** (signed off, S005 E126; P005 follow-up tasks open). **S02 (NAS GUI) In Progress** (approved S006 E009); S02.1–S02.6 Done, S02.7-T01 done; S02.7-T02 is next
 
 ## Active stage and task
 - **Active stage:** **S02: NAS GUI**, **In Progress** (`stages/S02-nas-gui.md`; approved in S006 E009, with "Skip Safari": S02 checks Chrome, Edge, and Firefox). S01 is **Done** (`stages/S01-basic-nas.md`, completion record in section 13).
-- **Active task:** none. Next: **S02.7-T02** (keyboard and screen readers); its local branch `feat/S02.7-T02-a11y` exists with no commits of its own.
+- **Active task:** none. Next: **S02.7-T03** (contrast and a manual axe check).
 - **The user's instruction (S007 E010):** after P005, resume S02 and work until the stage is complete, and also build the P005 items that belong to the current or earlier stages (the S01 follow-up tasks).
 
 ## In progress (write-ahead)
-- **The user's decisions of E013** on `chore/S007-ci-stage-end`: ADR-0021 Accepted (SHA-256); CI only on a stage tag `S<NN>-done` or by hand (workflow changed; RULES 1.7.1; plan 1.4.1). Commit and merge into `develop` follow.
+- none.
 
 ## Last completed
+- **S02.7-T02 done** (S007 E015; merged into `develop`, CI at stage end): screen-reader names for items, live regions (notifications, selection, uploads), focus to the main area for empty folders, focus rings kept in Firefox (`focusFor`), level-one headings; axe clean in Edge and Firefox, both themes.
+- **The user's decisions merged** (`develop` 2a371b3; S007 E013): ADR-0021 Accepted (SHA-256); CI only on a stage tag `S<NN>-done` or by hand (RULES 1.7.1; plan 1.4.1).
 - **Plan change request #5 applied and merged** (`develop` 366d6da; S007 E003–E012): plan 1.4.0, RULES 1.7.0 (invariant I10; CI only at stage completion), ADR-0021–ADR-0029 (all **Proposed**), dependency register, audit checklist group K, S01 follow-up tasks (`stages/S01-basic-nas.md` section 5, end). New stages: **S11** duplicates, look-alike stacks, and bursts; **S12** storage optimization; **S14** drive pools, RAID 0 and 1 only (complex RAID deferred to plan 11a, the user's decision in S007 E008).
 - **S02.7-T01 done and merged** (CI run 36112486230 green; `develop` 04ab2b4; S006 E040): phone and tablet layouts, 44 px touch targets, tap-to-open on touch.
 - **S02.6 closed** (`develop` 617b1d9; S006 E034–E040): preview frame; image, audio, video; text and code; PDF with pdf.js; active-content safety.
@@ -24,7 +26,7 @@
 
 ## Next steps
 1. **Still open from the P005 report** (not blocking S02): Q42–Q49 and Q51; accepting or removing the planner additions (labelled in plan section 3); ADR-0022–ADR-0029 (Proposed); re-confirmation of S01 with its follow-ups; the RAID 0/1 reading of E008. ADR-0021 and the CI trigger were decided in E013.
-2. **S02 in order** (`stages/S02-nas-gui.md`, section 5): S02.7-T02 keyboard and screen readers (Narrator's listening check goes to the user's walkthrough in S02.8), S02.7-T03 contrast and a manual axe check, then S02.8 (tests, including the regression tests for bugs S02-B01 to B10; the cross-browser report; the guide; audit A003; CI at stage completion; the user's sign-off with a hands-on walkthrough).
+2. **S02 in order** (`stages/S02-nas-gui.md`, section 5): S02.7-T03 contrast and a manual axe check, then S02.8 (tests, including the regression tests for bugs S02-B01 to B10; the cross-browser report; the guide; audit A003; CI at stage completion; the user's sign-off with a hands-on walkthrough).
 3. **S01 follow-ups** (P005, Q50: now): S01.2-T07 portable storage root (no ADR needed); S01.3-T10 and S01.4-T07 content hash (ADR-0021 Accepted: SHA-256). Each writes its own tests (S01's testing substage is closed).
 4. Follow-up from S01 (the user's decision): run `scripts/perf-baseline.sh` on the Raspberry Pi and the mini-PC when available; also measure SHA-256 there (ADR-0021).
 5. **Endpoint workflow (spec-first):** spec → `go generate ./internal/api` → strict operation; an error case in `errorCases`/`bodyErrorCases`; a review row in `docs/api/conventions.md`; a fake-service test that invalid input never reaches the service.

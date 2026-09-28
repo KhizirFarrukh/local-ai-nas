@@ -1,10 +1,12 @@
 <!--
   A modal dialog on the native <dialog> element: the browser keeps focus
   inside it, makes the rest of the page inert, closes it on Escape, and
-  returns focus to where it was when it closes.
+  returns focus to where it was when it closes (with its ring for keyboard
+  users, S02.7-T02).
 -->
 <script lang="ts">
   import type { Snippet } from 'svelte';
+  import { focusFor } from '$lib/util/modality';
 
   interface Props {
     open: boolean;
@@ -40,6 +42,7 @@
 
   const uid = $props.id();
   let dialog: HTMLDialogElement | undefined = $state();
+  let returnTo: Element | null = null;
 
   const widths = { sm: 'max-w-sm', md: 'max-w-md', lg: 'max-w-2xl' };
 
@@ -48,6 +51,7 @@
       return;
     }
     if (open && !dialog.open) {
+      returnTo = document.activeElement;
       dialog.showModal();
     } else if (!open && dialog.open) {
       dialog.close();
@@ -57,6 +61,7 @@
   function closed() {
     open = false;
     onclose?.();
+    focusFor(returnTo);
   }
 
   function backdrop(event: MouseEvent) {
