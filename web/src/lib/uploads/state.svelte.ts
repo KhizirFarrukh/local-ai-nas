@@ -1,5 +1,7 @@
 // The upload manager, once it exists, for the views (S02.4-T01). It is
 // created on first use, after the server has named its chunk limit.
+import { describe } from '$lib/api/messages';
+import { announcer } from '$lib/shell/announcer.svelte';
 import { toasts } from '$lib/shell/toasts.svelte';
 import { uploader, type Uploader } from './uploader.svelte';
 
@@ -28,6 +30,12 @@ export async function getUploader(): Promise<Uploader> {
         });
         finishedInBatch = 0;
       }
+    });
+    // A failed upload stays in the list with Retry; screen readers hear it
+    // at once (S02.7-T02).
+    manager.onFailed((entry) => {
+      const m = describe(entry.error);
+      announcer.say(`Upload of ${entry.name} failed: ${m.title}. ${m.message}`, true);
     });
   }
   return manager;

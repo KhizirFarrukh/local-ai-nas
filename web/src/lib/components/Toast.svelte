@@ -1,4 +1,8 @@
-<!-- One notification. The toaster (S02.2-T03) stacks them in a live region. -->
+<!--
+  One notification. The toaster (S02.2-T03) stacks them; screen readers
+  hear them through the app's live regions (S02.7-T02), so the toast itself
+  has no live role and is not read twice.
+-->
 <script lang="ts" module>
   export type ToastKind = 'info' | 'success' | 'error';
 </script>
@@ -25,7 +29,6 @@
 </script>
 
 <div
-  role={kind === 'error' ? 'alert' : 'status'}
   class="pointer-events-auto flex w-full max-w-sm items-start gap-3 rounded-lg border border-border bg-surface p-3 text-sm text-fg shadow-lg"
 >
   <Icon class="mt-0.5 size-5 shrink-0 {colors[kind]}" aria-hidden="true" />

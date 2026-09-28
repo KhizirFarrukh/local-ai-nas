@@ -71,6 +71,8 @@ export class Uploader {
   private readonly byId = new Map<string, UploadEntry>();
   // eslint-disable-next-line svelte/prefer-svelte-reactivity -- listeners only
   private readonly finished = new Set<(entry: UploadEntry) => void>();
+  // eslint-disable-next-line svelte/prefer-svelte-reactivity -- listeners only
+  private readonly failed = new Set<(entry: UploadEntry) => void>();
 
   constructor(
     chunkBytes: number,
@@ -157,6 +159,10 @@ export class Uploader {
       entry.error = uploadError(error, response);
       if (entry.error.code === 'conflict' && entry.policy === 'fail' && entry.batch) {
         void this.askConflict(entry, entry.batch);
+        return; // the conflict dialog asks; this is not a failure yet
+      }
+      for (const listener of this.failed) {
+        listener(entry);
       }
     });
   }
@@ -165,6 +171,12 @@ export class Uploader {
   onFinished(listener: (entry: UploadEntry) => void): () => void {
     this.finished.add(listener);
     return () => this.finished.delete(listener);
+  }
+
+  /** Calls `listener` whenever an upload fails (not for a name the conflict dialog asks about). */
+  onFailed(listener: (entry: UploadEntry) => void): () => void {
+    this.failed.add(listener);
+    return () => this.failed.delete(listener);
   }
 
   /**

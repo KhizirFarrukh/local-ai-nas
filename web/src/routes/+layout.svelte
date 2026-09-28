@@ -14,6 +14,7 @@
   import { activity } from '$lib/shell/activity.svelte';
   import ConnectionBanner from '$lib/shell/ConnectionBanner.svelte';
   import { connection } from '$lib/shell/connection.svelte';
+  import LiveRegions from '$lib/shell/LiveRegions.svelte';
   import Nav from '$lib/shell/Nav.svelte';
   import ProgressPanel from '$lib/shell/ProgressPanel.svelte';
   import Toaster from '$lib/shell/Toaster.svelte';
@@ -84,3 +85,4 @@
 <ProgressPanel />
 <Toaster />
 <ConflictDialog />
+<LiveRegions />

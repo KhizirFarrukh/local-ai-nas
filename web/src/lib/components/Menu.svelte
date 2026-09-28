@@ -22,6 +22,7 @@
 
 <script lang="ts">
   import { tick } from 'svelte';
+  import { focusFor } from '$lib/util/modality';
 
   interface Props {
     open: boolean;
@@ -70,7 +71,7 @@
     }
     open = false;
     onclose?.();
-    returnFocus?.focus();
+    focusFor(returnFocus);
   }
 
   function choose(item: MenuItem) {

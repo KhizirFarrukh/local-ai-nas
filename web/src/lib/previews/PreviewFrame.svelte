@@ -42,6 +42,7 @@
   import { kindLabel } from '$lib/files/icons';
   import type { FolderListing } from '$lib/files/listing.svelte';
   import { formatSize } from '$lib/util/format';
+  import { focusFor } from '$lib/util/modality';
   import FallbackCard from './FallbackCard.svelte';
   import { previewKind } from './kinds';
 
@@ -58,6 +59,7 @@
 
   let dialog: HTMLDialogElement | undefined = $state();
   let stepping = false;
+  let returnTo: Element | null = null;
 
   const item = $derived(listing.at(index));
   const total = $derived(listing.total ?? 0);
@@ -71,9 +73,16 @@
   // The dialog itself takes the focus, so a screen reader names the file
   // and Enter does not press the first button.
   $effect(() => {
+    returnTo = document.activeElement;
     dialog?.showModal();
     dialog?.focus();
   });
+
+  // Closing gives the focus back with its ring for keyboard users (S02.7-T02).
+  function closed() {
+    focusFor(returnTo);
+    onclose();
+  }
 
   // The file's page may not be loaded yet (a reload keeps the position).
   $effect(() => {
@@ -127,7 +136,7 @@
   class="m-0 h-dvh max-h-none w-screen max-w-none flex-col bg-neutral-950 p-0 text-white outline-none open:flex"
   tabindex="-1"
   data-testid="preview"
-  {onclose}
+  onclose={closed}
 >
   <header class="flex h-14 shrink-0 items-center gap-3 px-4">
     <div class="min-w-0 flex-1">

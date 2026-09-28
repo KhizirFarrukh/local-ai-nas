@@ -15,6 +15,10 @@
   menu key, or Shift+F10 asks the owner for the menu of the selection, or
   of the folder on empty space.
   An item not yet selected becomes the selection first, as in Explorer.
+
+  Screen readers (S02.7-T02): each item is one cell whose name says all of
+  it ("notes.txt, TXT file, 2 KB, modified …"), whatever columns the width
+  shows; the list has one column, the grid as many as fit.
 -->
 <script lang="ts">
   import ArrowDown from '@lucide/svelte/icons/arrow-down';
@@ -22,6 +26,7 @@
   import { createVirtualizer } from '@tanstack/svelte-virtual';
   import { untrack, type Snippet } from 'svelte';
   import { formatDate, formatSize } from '$lib/util/format';
+  import { focusFor } from '$lib/util/modality';
   import { iconFor, kindLabel } from './icons';
   import type { FolderListing } from './listing.svelte';
   import type { PickMode, Selection } from './selection.svelte';
@@ -102,7 +107,7 @@
   // in the view, so keyboard users do not start over from the top.
   $effect(() => {
     if (autofocus && scroller) {
-      untrack(() => scroller?.focus());
+      untrack(() => focusFor(scroller));
     }
   });
 
@@ -358,6 +363,22 @@
     const dim = item && dimmed?.(item.path) ? 'opacity-50' : '';
     return `${selected ? 'bg-accent-soft' : 'hover:bg-surface-2'} ${ring} ${dim}`;
   }
+
+  /** What a screen reader says for the item at a position. */
+  function cellLabel(item: FileItem | undefined): string {
+    if (!item) {
+      return 'Loading';
+    }
+    const parts = [item.name, kindLabel(item)];
+    if (item.kind === 'file') {
+      parts.push(formatSize(item.size));
+    }
+    parts.push(`modified ${formatDate(item.mod_time)}`);
+    if (dimmed?.(item.path)) {
+      parts.push('cut, waiting to be pasted');
+    }
+    return parts.join(', ');
+  }
 </script>
 
 {#snippet name(item: FileItem)}
@@ -408,7 +429,7 @@
     tabindex="0"
     aria-label="Items in {listing.folder?.name || 'Files'}"
     aria-rowcount={rows}
-    aria-colcount={mode === 'list' ? 4 : columns}
+    aria-colcount={columns}
     aria-multiselectable="true"
     aria-activedescendant={total > 0 ? cellId(focused) : undefined}
     data-testid="file-view"
@@ -439,6 +460,7 @@
                   id={cellId(index)}
                   role="gridcell"
                   aria-selected={selected}
+                  aria-label={cellLabel(item)}
                   class="group flex w-full cursor-default items-center gap-4 border-b border-border px-4 text-sm {cellClass(
                     index,
                     selected
@@ -466,7 +488,7 @@
                       >
                     {/if}
                   {:else}
-                    <span class="h-3 w-1/3 animate-pulse rounded bg-surface-2" aria-label="Loading"
+                    <span class="h-3 w-1/3 animate-pulse rounded bg-surface-2" aria-hidden="true"
                     ></span>
                   {/if}
                 </div>
@@ -475,6 +497,8 @@
                   id={cellId(index)}
                   role="gridcell"
                   aria-selected={selected}
+                  aria-colindex={index - row.index * columns + 1}
+                  aria-label={cellLabel(item)}
                   class="group relative flex min-w-0 flex-1 cursor-default flex-col items-center justify-center gap-2 rounded-lg p-2 text-center text-sm {cellClass(
                     index,
                     selected
@@ -498,7 +522,7 @@
                       >
                     {/if}
                   {:else}
-                    <span class="size-12 animate-pulse rounded bg-surface-2" aria-label="Loading"
+                    <span class="size-12 animate-pulse rounded bg-surface-2" aria-hidden="true"
                     ></span>
                   {/if}
                 </div>

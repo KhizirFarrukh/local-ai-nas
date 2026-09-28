@@ -5,7 +5,9 @@
 // conflict policy).
 import { api, unwrap } from '$lib/api/client';
 import { ConflictBatch, conflicts } from '$lib/files/conflicts.svelte';
+import { announcer } from '$lib/shell/announcer.svelte';
 import { tasks } from '$lib/shell/tasks.svelte';
+import { basename } from '$lib/util/paths';
 import { planUpload, type PickedFile } from './plan';
 import { getUploader } from './state.svelte';
 import type { ConflictPolicy } from './uploader.svelte';
@@ -41,5 +43,10 @@ export async function startUpload(
   const batch = new ConflictBatch(conflicts, plan.files.length);
   for (const { file, target } of plan.files) {
     manager.add(file, target, onConflict, batch);
+  }
+  if (plan.files.length > 0) {
+    const n = plan.files.length;
+    const into = base === '/' ? 'Files' : basename(base);
+    announcer.say(`Uploading ${n === 1 ? '1 file' : `${n} files`} to ${into}.`);
   }
 }

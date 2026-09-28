@@ -1,7 +1,7 @@
 <!--
   The notifications, stacked at the bottom right (above the bottom bar on
-  phones). Screen readers hear each one: Toast has the status or alert
-  role.
+  phones). Screen readers hear each one when it is pushed (toasts.push
+  speaks it through the live regions, S02.7-T02).
 -->
 <script lang="ts">
   import Toast from '$lib/components/Toast.svelte';
