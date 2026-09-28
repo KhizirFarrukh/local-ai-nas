@@ -1,6 +1,6 @@
 # CURRENT_STATE
 
-**Last updated:** 2026-09-28 19:23 +0500 (session S007)
+**Last updated:** 2026-09-28 20:27 +0500 (session S007)
 **Plan version:** 1.4.2 (`code-agent-docs/plan.md`), **Approved baseline** 1.0.0 (S005); 1.4.0 adds P005 (15 stages, 120 substages; packaging is now S13 and AI S15, table in plan 10.18)
 **Current phase:** **S01 (Basic NAS) Done** (signed off, S005 E126; P005 follow-up tasks done in S007). **S02 (NAS GUI) In Progress** (approved S006 E009); S02.1–S02.7 Done; S02.8 In Progress (T01–T04 done; T05 waits for the sign-off)
 
@@ -10,7 +10,7 @@
 - **The user's instruction (S007 E010):** after P005, resume S02 and work until the stage is complete, and also build the P005 items that belong to the current or earlier stages (the S01 follow-up tasks).
 
 ## In progress (write-ahead)
-- **S02.8-T05: waiting for the user's sign-off** (branch `docs/S02.8-T05-completion`). Done: completion record (stage document section 13); the stage-end CI run 36433983279 is green on the tag `S02-done` (`develop` 494e616). Left: the user's walkthrough and answers, then S02 Done in the plan, the stage document, and here.
+- **The user's walkthrough findings (S007 E030–E032)**, before the S02 sign-off: plan 1.5.0 (trash retention 30 days in S08.1; FR-214–FR-216); stage document tasks S02.3-T05 (folder sizes; Added and Modified dates) and S02.4-T05 (bug S02-B12: the list does not refresh after a folder upload; scroll to a single uploaded item and blink it twice), with tests; then the stage-end CI again (moving the tag `S02-done` needs the user's permission again) and the sign-off. S02.8-T05 stays In Progress.
 
 ## Last completed
 - **Stage-end CI green** (S007 E027–E028): run 36433983279, 15 of 15 jobs, on the tag `S02-done` (`develop` 494e616). The first run had failed in the Linux system tests because of two test races, fixed in `fix/S02.8-T05-e2e-resume-race`; the tag was moved with the user's permission.
