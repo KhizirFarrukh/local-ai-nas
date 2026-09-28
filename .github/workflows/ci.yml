@@ -157,11 +157,13 @@ jobs:
           test -z "$(git status --porcelain)"
 
   web:
-    # S02.1-T05: the web interface (web/). Its tests join this job in
-    # S02.8 (RULES R6). The build is uploaded for the build job to embed.
+    # S02.1-T05: the web interface (web/), with its unit and component
+    # tests (S02.8-T01; components in Chromium through Playwright) and the
+    # coverage threshold of web/src/lib (80%). The build is uploaded for the
+    # build job to embed.
     name: Web interface
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 20
     defaults:
       run:
         working-directory: web
@@ -192,8 +194,14 @@ jobs:
         run: node ../scripts/check-web-licenses.mjs
       - name: Known vulnerabilities (shipped packages)
         run: pnpm audit --prod
+      - name: Browser for the component tests
+        run: pnpm exec playwright install --with-deps chromium
+      - name: Unit and component tests, with coverage
+        run: pnpm coverage
       - name: Build
         run: pnpm build
+      - name: The build keeps web/build/.gitkeep (bug S02-B01)
+        run: test -f build/.gitkeep
       - uses: actions/upload-artifact@v7.0.1
         with:
           name: web-build
