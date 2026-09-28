@@ -12,8 +12,11 @@
  *
  * Contrast (WCAG 2.1 AA, NFR-015): `fg` and `fg-muted` on `bg`, `surface`,
  * and `surface-2` are at least 4.5:1, and so are `accent-fg` on `accent`
- * and `danger-fg` on `danger`. `border-strong` and `focus` are at least
- * 3:1 against the surfaces (UI components). `border` is decorative only.
+ * and `danger-fg` on `danger`. `accent` and `danger` as text are at least
+ * 4.5:1 on every surface, `accent-soft` (selected items) included; the dark
+ * `danger` is #fa8585, not red-400, for that (S02.7-T03). `border-strong`,
+ * `focus`, `accent`, `success`, and `warning` are at least 3:1 against the
+ * surfaces (UI components). `border` is decorative only.
  */
 @theme inline {
   --color-bg: var(--bg);
@@ -72,7 +75,7 @@
   --accent-hover: #93c5fd;
   --accent-fg: #0b1220;
   --accent-soft: #1e3a5f;
-  --danger: #f87171;
+  --danger: #fa8585;
   --danger-hover: #fca5a5;
   --danger-fg: #0b1220;
   --success: #4ade80;
@@ -95,7 +98,7 @@
     --accent-hover: #93c5fd;
     --accent-fg: #0b1220;
     --accent-soft: #1e3a5f;
-    --danger: #f87171;
+    --danger: #fa8585;
     --danger-hover: #fca5a5;
     --danger-fg: #0b1220;
     --success: #4ade80;

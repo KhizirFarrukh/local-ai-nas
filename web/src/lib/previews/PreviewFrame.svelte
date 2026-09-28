@@ -181,7 +181,7 @@
     {/if}
     <button
       type="button"
-      class="absolute top-1/2 left-2 inline-flex size-10 -translate-y-1/2 items-center justify-center rounded-full bg-black/40 hover:bg-white/25 disabled:opacity-30 pointer-coarse:size-11 sm:bg-white/10"
+      class="absolute top-1/2 left-2 inline-flex size-10 -translate-y-1/2 items-center justify-center rounded-full bg-black/60 hover:bg-white/25 disabled:opacity-30 pointer-coarse:size-11 sm:bg-white/10"
       aria-label="Previous file"
       title="Previous (←)"
       disabled={index <= 0}
@@ -191,7 +191,7 @@
     </button>
     <button
       type="button"
-      class="absolute top-1/2 right-2 inline-flex size-10 -translate-y-1/2 items-center justify-center rounded-full bg-black/40 hover:bg-white/25 disabled:opacity-30 pointer-coarse:size-11 sm:bg-white/10"
+      class="absolute top-1/2 right-2 inline-flex size-10 -translate-y-1/2 items-center justify-center rounded-full bg-black/60 hover:bg-white/25 disabled:opacity-30 pointer-coarse:size-11 sm:bg-white/10"
       aria-label="Next file"
       title="Next (→)"
       disabled={index >= total - 1}

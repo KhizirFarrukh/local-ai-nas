@@ -1,18 +1,19 @@
 # CURRENT_STATE
 
-**Last updated:** 2026-09-28 11:21 +0500 (session S007)
+**Last updated:** 2026-09-28 11:26 +0500 (session S007)
 **Plan version:** 1.4.1 (`code-agent-docs/plan.md`), **Approved baseline** 1.0.0 (S005); 1.4.0 adds P005 (15 stages, 120 substages; packaging is now S13 and AI S15, table in plan 10.18)
-**Current phase:** **S01 (Basic NAS) Done** (signed off, S005 E126; P005 follow-up tasks open). **S02 (NAS GUI) In Progress** (approved S006 E009); S02.1–S02.6 Done, S02.7-T01 done; S02.7-T02 is next
+**Current phase:** **S01 (Basic NAS) Done** (signed off, S005 E126; P005 follow-up tasks open). **S02 (NAS GUI) In Progress** (approved S006 E009); S02.1–S02.7 Done; S02.8 remains (after the S01 follow-ups)
 
 ## Active stage and task
 - **Active stage:** **S02: NAS GUI**, **In Progress** (`stages/S02-nas-gui.md`; approved in S006 E009, with "Skip Safari": S02 checks Chrome, Edge, and Firefox). S01 is **Done** (`stages/S01-basic-nas.md`, completion record in section 13).
-- **Active task:** none. Next: **S02.7-T03** (contrast and a manual axe check).
+- **Active task:** none. Next: the **S01 follow-up tasks** (S01.2-T07, S01.3-T10, S01.4-T07), then **S02.8**.
 - **The user's instruction (S007 E010):** after P005, resume S02 and work until the stage is complete, and also build the P005 items that belong to the current or earlier stages (the S01 follow-up tasks).
 
 ## In progress (write-ahead)
 - none.
 
 ## Last completed
+- **S02.7-T03 done; S02.7 closed** (S007 E016): token contrast computed for both themes (dark `danger` now #fa8585; preview arrows black/60); axe `color-contrast` clean on 11 screens × 2 themes × 2 widths in Edge and Firefox.
 - **S02.7-T02 done** (S007 E015; merged into `develop`, CI at stage end): screen-reader names for items, live regions (notifications, selection, uploads), focus to the main area for empty folders, focus rings kept in Firefox (`focusFor`), level-one headings; axe clean in Edge and Firefox, both themes.
 - **The user's decisions merged** (`develop` 2a371b3; S007 E013): ADR-0021 Accepted (SHA-256); CI only on a stage tag `S<NN>-done` or by hand (RULES 1.7.1; plan 1.4.1).
 - **Plan change request #5 applied and merged** (`develop` 366d6da; S007 E003–E012): plan 1.4.0, RULES 1.7.0 (invariant I10; CI only at stage completion), ADR-0021–ADR-0029 (all **Proposed**), dependency register, audit checklist group K, S01 follow-up tasks (`stages/S01-basic-nas.md` section 5, end). New stages: **S11** duplicates, look-alike stacks, and bursts; **S12** storage optimization; **S14** drive pools, RAID 0 and 1 only (complex RAID deferred to plan 11a, the user's decision in S007 E008).
@@ -26,7 +27,7 @@
 
 ## Next steps
 1. **Still open from the P005 report** (not blocking S02): Q42–Q49 and Q51; accepting or removing the planner additions (labelled in plan section 3); ADR-0022–ADR-0029 (Proposed); re-confirmation of S01 with its follow-ups; the RAID 0/1 reading of E008. ADR-0021 and the CI trigger were decided in E013.
-2. **S02 in order** (`stages/S02-nas-gui.md`, section 5): S02.7-T03 contrast and a manual axe check, then S02.8 (tests, including the regression tests for bugs S02-B01 to B10; the cross-browser report; the guide; audit A003; CI at stage completion; the user's sign-off with a hands-on walkthrough).
+2. **S02.8** (`stages/S02-nas-gui.md`, section 5), after the S01 follow-ups: (tests, including the regression tests for bugs S02-B01 to B10; the cross-browser report; the guide; audit A003; CI at stage completion; the user's sign-off with a hands-on walkthrough).
 3. **S01 follow-ups** (P005, Q50: now): S01.2-T07 portable storage root (no ADR needed); S01.3-T10 and S01.4-T07 content hash (ADR-0021 Accepted: SHA-256). Each writes its own tests (S01's testing substage is closed).
 4. Follow-up from S01 (the user's decision): run `scripts/perf-baseline.sh` on the Raspberry Pi and the mini-PC when available; also measure SHA-256 there (ADR-0021).
 5. **Endpoint workflow (spec-first):** spec → `go generate ./internal/api` → strict operation; an error case in `errorCases`/`bodyErrorCases`; a review row in `docs/api/conventions.md`; a fake-service test that invalid input never reaches the service.

@@ -1314,7 +1314,7 @@ flowchart LR
   3. Multi-item download streams a ZIP without the server buffering it in memory.
   4. Per-file errors (limit, conflict, disk full) are shown clearly.
 - **Risks/notes:** Browser support for folder drag-and-drop varies (checked in S02.8).
-- **Status:** In Progress (S006)
+- **Status:** Done (S006, 2026-09-25; details in `stages/S02-nas-gui.md`)
 
 #### S02.5: File operations UI
 - **Goal:** Every file operation available from the GUI, individually and in bulk.
@@ -1328,7 +1328,7 @@ flowchart LR
   3. Delete always asks for confirmation and states that deletion is permanent (no trash until S08).
   4. The main actions have keyboard shortcuts and context-menu entries.
 - **Risks/notes:** Permanent delete until S08 is a data-loss risk (RK-19).
-- **Status:** Not started
+- **Status:** Done (S006, 2026-09-25; details in `stages/S02-nas-gui.md`)
 
 #### S02.6: File previews
 - **Goal:** Preview common file types safely inside the GUI.
@@ -1342,7 +1342,7 @@ flowchart LR
   3. Large text files preview only a bounded first portion.
   4. Unsupported types show a fallback with a download action.
 - **Risks/notes:** The full CSP arrives in S03.5. S02 already serves active content as attachment or sandboxed. The video player is built so that S04.8 can add HLS playback and the quality menu without replacing it (ADR-0020).
-- **Status:** Not started
+- **Status:** Done (S006, 2026-09-25; details in `stages/S02-nas-gui.md`)
 
 #### S02.7: Responsiveness and accessibility
 - **Goal:** The GUI works well on phones and tablets and for keyboard and screen-reader users.
@@ -1356,7 +1356,7 @@ flowchart LR
   3. Automated accessibility checks report no serious violations on the main screens.
   4. Contrast meets WCAG 2.1 AA in both themes.
 - **Risks/notes:** None.
-- **Status:** Not started
+- **Status:** Done (S007, 2026-09-28; details in `stages/S02-nas-gui.md`)
 
 #### S02.8: Testing and stage review
 - **Goal:** Prove that a non-technical user can do everything from S01 through the GUI, then close the stage.
