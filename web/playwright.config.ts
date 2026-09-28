@@ -19,7 +19,11 @@ export default defineConfig({
   // but run one at a time so timings (the large folder) are not disturbed.
   workers: 1,
   retries: 0,
-  reporter: [['list'], ['html', { open: 'never' }]],
+  // In CI, the github reporter also turns failures into annotations on the
+  // run, which can be read without signing in (the logs cannot).
+  reporter: process.env.CI
+    ? [['list'], ['github'], ['html', { open: 'never' }]]
+    : [['list'], ['html', { open: 'never' }]],
   use: { baseURL: base, trace: 'retain-on-failure', acceptDownloads: true },
   webServer: {
     command: `"${server.binary}" serve --storage-root "${server.root}" --server-bind 127.0.0.1:${port} --uploads-max-chunk-size 1MiB`,
