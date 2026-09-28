@@ -11,15 +11,16 @@ import (
 	"crypto/rand"
 	"encoding/hex"
 	"encoding/json"
+	"fmt"
 	"io"
 	"log/slog"
 	"net/http"
 	"strings"
 	"time"
 
-	"github.com/tus/tusd/v2/pkg/filelocker"
 	"github.com/tus/tusd/v2/pkg/filestore"
 	tus "github.com/tus/tusd/v2/pkg/handler"
+	"github.com/tus/tusd/v2/pkg/memorylocker"
 
 	"github.com/KhizirFarrukh/local-ai-nas/internal/apperr"
 	"github.com/KhizirFarrukh/local-ai-nas/internal/db"
@@ -84,7 +85,7 @@ type Server struct {
 }
 
 // New returns the tus server. Unfinished uploads go to o.Dir through
-// tusd's file store and file locker.
+// tusd's file store; their locks are held in memory.
 func New(o Options) (*Server, error) {
 	if o.Expiry <= 0 {
 		o.Expiry = DefaultExpiry
@@ -96,9 +97,19 @@ func New(o Options) (*Server, error) {
 		o.Logger = slog.New(slog.DiscardHandler)
 	}
 	s := &Server{index: NewIndex(o.DB), o: o}
+	// Unfinished uploads from before a move of the storage root name the
+	// old place until they are repaired (relocate.go).
+	if n, err := repairInfoPaths(context.Background(), o.Dir, o.Logger); err != nil {
+		return nil, fmt.Errorf("uploads: repairing the upload files after a move: %w", err)
+	} else if n > 0 {
+		o.Logger.Info("unfinished uploads now point at the current storage root", "uploads", n)
+	}
 	composer := tus.NewStoreComposer()
 	filestore.New(o.Dir).UseIn(composer)
-	filelocker.New(o.Dir).UseIn(composer)
+	// Locks live in memory: the NAS is one process, and tusd's file locker
+	// could leave an upload locked for good on Windows, where a lock file
+	// cannot be deleted while another request reads it (bug S01-B01).
+	memorylocker.New().UseIn(composer)
 	h, err := tus.NewHandler(tus.Config{
 		StoreComposer:              composer,
 		BasePath:                   o.BasePath,

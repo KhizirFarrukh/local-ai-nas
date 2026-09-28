@@ -1,18 +1,19 @@
 # CURRENT_STATE
 
-**Last updated:** 2026-09-28 11:26 +0500 (session S007)
+**Last updated:** 2026-09-28 11:43 +0500 (session S007)
 **Plan version:** 1.4.1 (`code-agent-docs/plan.md`), **Approved baseline** 1.0.0 (S005); 1.4.0 adds P005 (15 stages, 120 substages; packaging is now S13 and AI S15, table in plan 10.18)
 **Current phase:** **S01 (Basic NAS) Done** (signed off, S005 E126; P005 follow-up tasks open). **S02 (NAS GUI) In Progress** (approved S006 E009); S02.1–S02.7 Done; S02.8 remains (after the S01 follow-ups)
 
 ## Active stage and task
 - **Active stage:** **S02: NAS GUI**, **In Progress** (`stages/S02-nas-gui.md`; approved in S006 E009, with "Skip Safari": S02 checks Chrome, Edge, and Firefox). S01 is **Done** (`stages/S01-basic-nas.md`, completion record in section 13).
-- **Active task:** none. Next: the **S01 follow-up tasks** (S01.2-T07, S01.3-T10, S01.4-T07), then **S02.8**.
+- **Active task:** none. Next: the **S01 follow-up tasks** S01.3-T10 and S01.4-T07 (content hash; S01.2-T07 is done), then **S02.8**.
 - **The user's instruction (S007 E010):** after P005, resume S02 and work until the stage is complete, and also build the P005 items that belong to the current or earlier stages (the S01 follow-up tasks).
 
 ## In progress (write-ahead)
 - none.
 
 ## Last completed
+- **S01.2-T07 done** (P005 follow-up; S007 E017): the storage root can be copied or moved (\`docs/storage-root.md\`); unfinished uploads are repaired at start-up; bug S01-B01 (uploads locked for good on Windows) fixed with tusd's memory locker.
 - **S02.7-T03 done; S02.7 closed** (S007 E016): token contrast computed for both themes (dark `danger` now #fa8585; preview arrows black/60); axe `color-contrast` clean on 11 screens × 2 themes × 2 widths in Edge and Firefox.
 - **S02.7-T02 done** (S007 E015; merged into `develop`, CI at stage end): screen-reader names for items, live regions (notifications, selection, uploads), focus to the main area for empty folders, focus rings kept in Firefox (`focusFor`), level-one headings; axe clean in Edge and Firefox, both themes.
 - **The user's decisions merged** (`develop` 2a371b3; S007 E013): ADR-0021 Accepted (SHA-256); CI only on a stage tag `S<NN>-done` or by hand (RULES 1.7.1; plan 1.4.1).

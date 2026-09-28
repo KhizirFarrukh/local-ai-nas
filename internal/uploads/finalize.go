@@ -42,7 +42,7 @@ func (s *Server) finalize(ctx context.Context, up tus.FileInfo) (files.Item, err
 	if err != nil {
 		return files.Item{}, apperr.Wrap(apperr.Internal, "the upload has no session", err)
 	}
-	data := up.Storage["Path"]
+	data := s.dataPath(up.ID) // not up.Storage["Path"]: see relocate.go
 	if err := syncAndVerify(data, sess.SHA256); err != nil {
 		return files.Item{}, err
 	}
@@ -110,7 +110,7 @@ func (s *Server) copyIn(ctx context.Context, sess Session, data string, opts fil
 // Leftovers after a failure here are removed by the expiry cleanup
 // (S01.4-T06).
 func (s *Server) remove(ctx context.Context, up tus.FileInfo) {
-	for _, p := range []string{up.Storage["Path"], up.Storage["InfoPath"]} {
+	for _, p := range []string{s.dataPath(up.ID), s.infoPath(up.ID)} {
 		if err := os.Remove(p); err != nil && !errors.Is(err, os.ErrNotExist) {
 			s.o.Logger.WarnContext(ctx, "removing an upload file failed", "upload", up.ID, "error", err.Error())
 		}

@@ -9,6 +9,7 @@ Project documentation for users and developers.
 - `api/conventions.md`: the rules every endpoint follows, with the review checklist (S01.5-T01).
 - `api/versioning.md`: versioning and deprecation policy (S01.5-T02).
 - `perf/`: performance baselines against NFR-003 (`S01-baseline.md`, S01.7-T04).
+- `storage-root.md`: moving the storage root to another folder or disk (S01.2-T07, NFR-036).
 - Install, admin, and user guides follow in S13.4.
 
 The agent's working documents (plan, rules, stage documents, logs) live in [`code-agent-docs/`](../code-agent-docs/).
