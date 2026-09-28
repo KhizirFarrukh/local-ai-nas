@@ -1,0 +1,543 @@
+{
+  "prompt_meta": {
+    "name": "local-ai-nas: Feature Additions: Duplicates, Look-alike Stacks, Storage Optimization, Multi-drive Pools (Plan Change Request #5)",
+    "prompt_version": "1.0",
+    "type": "Plan change request, handled under code-agent-docs/RULES.md R4 (plan changes) and R5 (decision records)",
+    "how_to_read_this": "Read this entire prompt before acting. Every field is an instruction. Items marked '[User requirement]' come directly from the user and must not be changed or dropped. Items marked '[Planner addition]' were added by the planner. Record them in the plan with that label so the user can accept or remove them individually."
+  },
+
+  "before_you_start": [
+    "Run the full session start protocol from code-agent-docs/RULES.md (R1) before acting on anything in this prompt.",
+    "Save this entire prompt, unchanged, to code-agent-docs/prompts/P005-feature-additions.json. In the session log, record the USER entry as: 'Plan change request #5 (duplicates, look-alike stacks, storage optimization, multi-drive pools), archived verbatim at code-agent-docs/prompts/P005-feature-additions.json'.",
+    "In CURRENT_STATE.md under 'In progress', write: 'Applying plan change request #5 (feature additions and stage renumbering)'.",
+    "If an Accepted ADR or a recorded user decision conflicts with this prompt, do not overwrite it. Mark it as 'CONFLICT: needs user decision' and list it in your report.",
+    "If implementation of any stage has already started, do not change any code in this session. List the impact on existing code in your report."
+  ],
+
+  "objective": "Add four user-requested feature areas to the plan (photo duplicates, look-alike photo stacks, storage optimization, file duplicates with shortcuts, and multi-drive storage pools) plus the planner additions. Place them as three new stages, renumber the packaging and AI stages so AI stays last, update the earlier stages that must prepare for these features, create the needed ADRs as 'Proposed', add invariant I10, then report to the user and stop.",
+
+  "out_of_scope": [
+    "Writing application source code, prototypes, or spikes",
+    "Installing dependencies or touching any real disks",
+    "Starting any stage",
+    "Deciding any 'Proposed' ADR on the user's behalf"
+  ],
+
+  "stage_layout": {
+    "placement_rationale": [
+      "The new features need earlier building blocks: metadata (S05), per-user ownership (S07), and trash for safe deletion and undo (S08).",
+      "File shortcuts must also work over network shares, so they come after network access (S09).",
+      "Drive pools rely on disk health monitoring (S10.3).",
+      "The new stages are inserted after S10, which keeps S01 to S10 unchanged and minimizes renumbering. AI stays last (invariant I8)."
+    ],
+    "final_order": [
+      "S01 Basic NAS implementation (unchanged ID)",
+      "S02 NAS GUI (unchanged ID)",
+      "S03 Security (unchanged ID)",
+      "S04 Media management (unchanged ID)",
+      "S05 Media metadata (unchanged ID)",
+      "S06 Search (unchanged ID)",
+      "S07 Multi-user and sharing (unchanged ID)",
+      "S08 Data protection and recovery (unchanged ID)",
+      "S09 Network file access and external change sync (unchanged ID)",
+      "S10 Administration, monitoring, and quotas (unchanged ID)",
+      "S11 Duplicate and look-alike management (NEW)",
+      "S12 Storage optimization (NEW)",
+      "S13 Multi-drive storage pools (NEW)",
+      "S14 Packaging, deployment, and pre-AI release (was S11)",
+      "S15 AI features (was S12, still last)"
+    ],
+    "renumbering": {
+      "mapping": {
+        "S11 (old) Packaging, deployment, and pre-AI release": "S14",
+        "S12 (old) AI features": "S15"
+      },
+      "rules": [
+        "All substage and task IDs of renumbered stages change with them (e.g. old S12.3 becomes S15.3).",
+        "Update every reference in current documents: plan.md, RULES.md, CURRENT_STATE.md, ADRs, the dependency register, stage documents, and templates.",
+        "Do not edit historical documents: archived prompts, past session logs, archived plan versions, and past audit reports. They keep their original IDs.",
+        "Add a 'Stage ID changes' table to plan.md (old ID, new ID, date, prompt reference) so historical documents can always be read correctly.",
+        "After renumbering, search all current documents for the old IDs (S11, S12 and their substages in their old meanings) and confirm that none remain with the old meaning."
+      ]
+    }
+  },
+
+  "new_invariant": {
+    "id": "I10",
+    "text": "Destructive bulk operations (deleting duplicates, reducing media resolution or quality, creating or changing drive pools) always show a preview of what will change, require explicit confirmation, and keep an undo window wherever technically possible. Where undo is impossible (e.g. erasing drives to create a pool), the confirmation says so plainly.",
+    "status": "Pre-approved by the user through this prompt. Add it to RULES.md and plan.md and record it in the RULES.md changelog, citing P005."
+  },
+
+  "feature_specifications": {
+
+    "photo_duplicates": {
+      "user_requirements": [
+        "[User requirement] Detect literal duplicate photos using hashing.",
+        "[User requirement] Detect duplicates that are the same photo at different resolutions.",
+        "[User requirement] For different-resolution duplicates, the user chooses which one to keep."
+      ],
+      "definitions": {
+        "exact_duplicate": "Byte-identical content (same content hash), regardless of file name or location.",
+        "resolution_variant": "The same picture at a different resolution, compression level, or format. Examples: an original and a copy re-saved by a messaging app, or a JPEG and a HEIC export of the same shot."
+      },
+      "detection": [
+        "Exact duplicates: compare content hashes. Hashes are computed during upload streaming (see changes_to_existing_stages for S01 and S04), so detection needs no extra file reads.",
+        "Resolution variants: compare perceptual hashes (e.g. a 64-bit pHash or dHash) computed when thumbnails are generated (S04.4). A match requires a hash distance at or below a strict threshold and a matching aspect ratio within a small tolerance. When both items have a date taken, a matching date strengthens the match.",
+        "Use a similarity lookup structure (e.g. a BK-tree or multi-index hashing) so detection scales to 100,000+ photos without comparing every pair.",
+        "Thresholds are configurable and calibrated on a labelled fixture set. The default is strict, because a false positive leads to a deletion proposal.",
+        "[Planner addition] Detection runs only within one user's own photos. Items are never compared across users (invariant I5).",
+        "Videos: exact duplicates by content hash. Resolution-variant detection for videos is deferred (priority 'Could').",
+        "Scans run incrementally on every new upload, on a schedule, and on demand, as background jobs."
+      ],
+      "upload_time_behavior": [
+        "[Planner addition] Per-user setting for exact duplicates at upload: 'Skip and report' (recommended default), 'Keep both', or 'Ask'.",
+        "Resolution variants are never blocked at upload. They are flagged for later review."
+      ],
+      "review_and_resolution": [
+        "A Duplicates view lists groups labelled 'Exact' or 'Resolution variant'.",
+        "Side-by-side comparison showing: thumbnail, resolution, file size, format, date taken, location, camera, albums, favorite status, sharing status, and whether EXIF data is present.",
+        "The user chooses which item or items to keep in each group.",
+        "A recommended pick is highlighted: highest resolution first, then most complete metadata, then earliest upload.",
+        "[Planner addition] Bulk resolution: apply a rule to all groups (e.g. 'keep highest resolution', 'keep earliest upload'), with a preview of every group's result before applying (invariant I10).",
+        "[Planner addition] Metadata merge: before removing items, copy their album memberships, favorite flag, user tags, descriptions, and sharing grants to the kept item. Also copy date taken and GPS if the kept item lacks them. The kept item's sidecar records where merged data came from.",
+        "Removed items go to the trash (S08.1) and can be restored.",
+        "[Planner addition] 'Not duplicates' marking: when the user says a group is not a duplicate, that decision is saved and the group is never suggested again.",
+        "[Planner addition] Show reclaimable space per group and in total."
+      ]
+    },
+
+    "look_alike_stacks": {
+      "user_requirements": [
+        "[User requirement] Group photos that are almost the same but have minor differences.",
+        "[User requirement] Show the user that it is a grouped photo.",
+        "[User requirement] The user chooses which photo in the group is displayed on the grid. By default, the first photo is displayed.",
+        "[User requirement] The user can choose to keep one photo and delete the rest.",
+        "[User requirement] AI may be used to detect near-identical photos."
+      ],
+      "definition": "Photos that are nearly the same with minor differences: burst shots, several attempts at the same pose, slightly edited or cropped versions. These are different photos, not duplicates.",
+      "detection": {
+        "baseline_without_AI (S11)": [
+          "Perceptual hash distance within a looser threshold than the one used for resolution variants.",
+          "Date taken within a short, configurable time window (seconds to a few minutes).",
+          "Same camera when known.",
+          "Items already grouped as exact duplicates or resolution variants go to the duplicates flow, not into stacks."
+        ],
+        "AI_enhancement (S15)": [
+          "Image-embedding similarity from the S15 classification model improves accuracy and finds look-alikes that were not taken in a burst.",
+          "[Planner addition] Smart cover suggestion: suggest the best photo in a stack (sharpest, eyes open, best exposure). The suggestion never overrides a cover the user chose."
+        ]
+      },
+      "behavior": [
+        "Stacks are created automatically. Grouping never deletes anything.",
+        "The grid shows one cover photo per stack, with a badge showing how many photos are in it. Opening the stack shows all members.",
+        "The default cover is the first photo, defined as the earliest date taken, falling back to earliest upload. This definition is an open question for the user to confirm.",
+        "The user can: choose the cover; remove a photo from a stack; unstack; merge stacks; 'keep one, delete the rest' (the rest go to trash after confirmation).",
+        "[Planner addition] The user can manually create a stack from selected photos.",
+        "User decisions (chosen cover, removals, unstacking, manual stacks) are saved and never overridden by automatic regrouping.",
+        "Settings: automatic stacking on or off; sensitivity (strict, normal, loose); time window.",
+        "Timeline and albums show the stack's cover with its badge. Search matches any member and shows the matching member with a stack badge.",
+        "[Planner addition] Stacks are visible only to the owner. Users a photo is shared with see it as an individual photo.",
+        "Stack membership, cover flag, and user decisions are stored in each member's sidecar (reserved in the S05.1 schema), so stacks survive index rebuilds (invariant I3)."
+      ]
+    },
+
+    "storage_optimization": {
+      "user_requirements": [
+        "[User requirement] Let the user reduce the resolution of existing photos and videos to save storage.",
+        "[User requirement] Scope choices: all media, selected items, photos only, videos only, or media in a certain group or classification.",
+        "[User requirement] An option to reduce the resolution of future uploads automatically.",
+        "[User requirement] The user chooses how much quality reduction to apply.",
+        "[User requirement] A live preview of one sample photo shows what it will look like after reduction.",
+        "[User requirement] Reduction to a fixed resolution: when the aspect ratio does not match the target, the user chooses whether the width or the height is matched. Example: a 1920x1080 image with a 1024x768 target scales either 1920 to 1024 or 1080 to 768.",
+        "[User requirement] Alternatively, the user can choose percentage scaling.",
+        "[User requirement] The user can limit compression to certain types or groups of media."
+      ],
+      "scope_filters": {
+        "note": "Filters can be combined.",
+        "filters": [
+          "All media",
+          "Selected items",
+          "Photos only",
+          "Videos only",
+          "By album",
+          "By look-alike stack",
+          "By face group (available once S15 exists)",
+          "By AI classification (available once S15 exists)",
+          "[Planner addition] By date range",
+          "[Planner addition] By minimum resolution (e.g. only photos above 12 megapixels, only videos above 1080p)",
+          "[Planner addition] By minimum file size",
+          "[Planner addition] By file format"
+        ]
+      },
+      "image_settings": {
+        "resize_modes": [
+          "Fixed target resolution W x H, match width [User requirement]: the width becomes W and the height follows the aspect ratio. Example: 1920x1080 with a 1024x768 target gives 1024x576.",
+          "Fixed target resolution W x H, match height [User requirement]: the height becomes H and the width follows the aspect ratio. Example: 1920x1080 with a 1024x768 target gives 1365x768.",
+          "[Planner addition] Fit within target: both dimensions end up at or below the target, keeping the aspect ratio. Example: 1920x1080 fitted within 1024x768 gives 1024x576.",
+          "Percentage [User requirement]: each dimension is scaled by the percentage. Example: 50% turns 4000x3000 into 2000x1500, which is a quarter of the pixels. The UI must make clear that the percentage applies per dimension."
+        ],
+        "rules": [
+          "The aspect ratio is always preserved. Images are never stretched or cropped.",
+          "[Planner addition] Orientation-aware targets (on by default): for portrait photos, the target's width and height are swapped, so a landscape target applies sensibly to portrait photos too.",
+          "[Planner addition] Never upscale: items already at or below the target size are not resized. Quality reduction can still apply if the user selected it.",
+          "Rounding: result dimensions are rounded to whole pixels. Define and test the rounding rule (e.g. round half up, and even dimensions where a format requires it)."
+        ],
+        "quality": "A quality slider (format-specific, e.g. 1 to 100 for JPEG and WebP, with a sensible default such as 85). It can be used with or without resizing.",
+        "format": "Keep the original format by default. Converting to another format (e.g. WebP, AVIF, HEIC) has priority 'Could'.",
+        "exclusions": [
+          "[Planner addition] RAW files are excluded by default. Including them means converting to JPEG or HEIC, and the UI must warn clearly that the raw sensor data will be lost.",
+          "[Planner addition] Animated images (e.g. animated GIF or WebP) are excluded by default."
+        ]
+      },
+      "video_settings": [
+        "Target resolution using the same modes, plus quick presets: 2160p, 1440p, 1080p, 720p, 480p. Never upscale.",
+        "Quality through a constant-quality setting (CRF) exposed as a slider.",
+        "Codec: keep H.264 by default for compatibility. H.265/HEVC or AV1 are optional for bigger savings, with trade-offs in compatibility and encoding speed (open question). The codec policy goes in an ADR.",
+        "Audio is kept. Re-encoding audio at a set bitrate is optional.",
+        "Hardware-accelerated encoding is optional. Evaluate it in the ADR."
+      ],
+      "metadata_preservation": [
+        "Copy all EXIF, XMP, and IPTC metadata (date taken, GPS, camera) to the new file with ExifTool.",
+        "Handle orientation consistently: either keep the orientation tag, or rotate the pixels and reset the tag. Never both, never neither.",
+        "For video, preserve creation time, GPS, and rotation metadata.",
+        "Update the sidecar: new dimensions, size, content hash, and perceptual hash. Add an optimizationHistory entry: date, original dimensions, original size, original hash, settings used.",
+        "Face bounding boxes are stored in normalized coordinates (0 to 1), so they remain valid after resizing. AI tags also remain valid.",
+        "Regenerate thumbnails, update the search index, and re-run the exact-duplicate check, because the content hash has changed."
+      ],
+      "live_preview": [
+        "The user picks a sample item from the chosen scope, or gets a random one with a 'next sample' button.",
+        "The preview updates live as settings change (debounced). It is rendered on the server and never saved.",
+        "Comparison view: side by side, and a slider overlay. Zoom to 100% to judge detail.",
+        "Shows the original and resulting dimensions and file sizes.",
+        "For video: a short preview clip of a few seconds plus a still frame, with an estimated file size.",
+        "[Planner addition] Before running, show an estimate for the whole scope: items that will change, items skipped with reasons (already small enough, RAW, etc.), and estimated space saved, based on sampling."
+      ],
+      "execution_and_safety": [
+        "Dry-run mode is available.",
+        "Explicit confirmation shows the counts and the estimate (invariant I10).",
+        "Runs as a background job with progress, pause, resume, and cancel. Items that fail are skipped and reported.",
+        "Each item is replaced atomically: write the new version to a temp file, verify that it decodes and that its metadata was copied, then swap it in.",
+        "[Planner addition] Originals are kept for a retention period (default e.g. 30 days, configurable) using the trash and versioning from S08. The user can revert per item or per job.",
+        "[Planner addition] Option to delete originals immediately, with a clear warning that this cannot be undone. The UI explains that space is only freed once the originals are gone.",
+        "Only the owner can optimize their items. Users an item is shared with see the updated version.",
+        "Items already optimized with the same or stronger settings are skipped unless the user forces reprocessing.",
+        "Quota usage is updated once the originals are removed."
+      ],
+      "upload_policies": [
+        "Per-user policies for future uploads, each made of conditions and an action. Conditions: media type, target album, minimum resolution; face group and AI classification once S15 exists. Action: the same settings as bulk optimization. Each policy can be switched on or off.",
+        "Policies are applied during ingest, after the upload completes and before the item appears in the library. Metadata is preserved in the same way.",
+        "For the original, the user chooses: keep it for the retention period, or discard it immediately.",
+        "Conditions based on AI classification cannot be evaluated at upload time. They run as a follow-up job after AI processing (a hook defined in S12 and activated in S15).",
+        "Items reduced by a policy are marked, and the info panel shows the original resolution.",
+        "A live preview is available while creating a policy, using a sample from the library or an uploaded sample."
+      ],
+      "reporting": [
+        "[Planner addition] A storage report showing space saved over time and reclaimable space from duplicates."
+      ]
+    },
+
+    "file_duplicates": {
+      "user_requirements": [
+        "[User requirement] Handle duplicate files in the files area.",
+        "[User requirement] The user chooses whether to keep both, or keep one and which one.",
+        "[User requirement] The user chooses whether to put a shortcut to the kept file in the deleted file's place."
+      ],
+      "definition": "Exact duplicates only (identical content), regardless of name or folder, within the files area. Near-duplicate documents (e.g. two versions of a report) are out of scope.",
+      "detection": [
+        "Content hashes are stored at upload from S01 onward, so unchanged files are never re-read.",
+        "Files added outside the app (network shares from S09, direct disk access) get their hashes from the watcher and reconciliation jobs.",
+        "Efficient scanning: group by size, then compare a partial hash (first and last blocks), then confirm with the full hash.",
+        "Scope: the user's own files only (invariant I5). Files shared with a user are never deletion candidates for that user.",
+        "Scans run incrementally on new files, on a schedule, and on demand.",
+        "Empty (0-byte) files are excluded.",
+        "[Planner addition] Folder ignore list, for folders where duplicates are intentional (e.g. project folders).",
+        "[Planner addition] Upload-time check: when an upload matches an existing file of the same user, show where that file already is and offer: keep both, skip the upload, or save a shortcut to the existing file instead."
+      ],
+      "resolution_options_per_group": [
+        "Keep all. The group is marked 'not duplicates' and never suggested again.",
+        "Keep one. The user chooses which, seeing full path, name, modified date, created date, and folder. The others go to the trash.",
+        "For each removed copy, optionally place a shortcut at its old location pointing to the kept file.",
+        "[Planner addition] Bulk rules with a preview: keep oldest, keep newest, keep shortest path, or keep the copy in a preferred folder."
+      ],
+      "shortcuts": {
+        "representation_options_for_ADR": [
+          "(a) App-level shortcut (recommended): a database record that references the target by its stable file ID, shown in the GUI as a shortcut item. It survives target moves and renames, works on every OS, and needs no filesystem privileges.",
+          "(b) Symbolic link: breaks when the target moves, needs special privileges on Windows, and conflicts with the S01.6 symlink policy.",
+          "(c) Hard link: transparent to every client and survives moves. But editing one copy edits both, it only works within one filesystem, and deleting the 'kept' file frees no space, which is confusing."
+        ],
+        "behavior_rules_if_option_a": [
+          "Opening or downloading a shortcut serves the target file.",
+          "A shortcut shows its target's current path.",
+          "When the target is moved or renamed, the shortcut follows it.",
+          "When the target is in the trash, the shortcut shows 'target missing' with an option to restore the target.",
+          "Deleting a shortcut never deletes its target.",
+          "Deleting a target warns how many shortcuts point to it.",
+          "Shortcuts use no storage quota.",
+          "Shortcuts cannot be shared. Share the target instead.",
+          "Access checks on the target always apply (invariant I5).",
+          "Shortcuts appear in folder listings with a shortcut icon. Search shows the target once and notes where its shortcuts are.",
+          "How shortcuts appear over network shares (S09) is decided in the ADR, e.g. as a read-only view of the target's content, or hidden. This is an open question."
+        ]
+      }
+    },
+
+    "multi_drive_pools": {
+      "user_requirements": [
+        "[User requirement] Handle multiple drives, RAID style.",
+        "[User requirement] The user can configure custom layouts: RAID 0, RAID 1, or parity style, where data is split across a set of drives and one final drive holds parity so the data can be recovered if one drive fails.",
+        "[User requirement] Smaller drives can be combined into one larger virtual drive. Example: drives of 2 TB, 1 TB, 1 TB, 2 TB, 2 TB, 2 TB. The two 1 TB drives combine into one 2 TB drive. Data is split across four 2 TB members (including the combined drive), and the fifth 2 TB drive is the parity drive.",
+        "[User requirement] When data is split across drives with a parity drive, the smallest member's size becomes the size used on every member."
+      ],
+      "terminology": {
+        "physical_drive": "An actual disk.",
+        "virtual_drive": "Two or more drives combined end to end so they act as one larger drive.",
+        "member": "A physical or virtual drive that is part of a pool.",
+        "pool": "A set of members with a layout, presented as one storage volume."
+      },
+      "layouts": [
+        "RAID 0 (striping) [User requirement]: capacity is the number of members times the smallest member. No redundancy: one failed member loses all data. The UI must warn about this.",
+        "RAID 1 (mirroring) [User requirement]: capacity equals the smallest member. Survives all but one member failing.",
+        "Dedicated parity, RAID 4 style [User requirement]: data is split across the data members and one member holds parity. Survives one member failure.",
+        "[Planner addition] Distributed parity (RAID 5): the same protection as dedicated parity, without a single parity drive becoming a write bottleneck.",
+        "[Planner addition] Double parity (RAID 6): survives two member failures. Recommended for pools with many drives.",
+        "Linear combining (JBOD concatenation) [User requirement, as the way virtual drives are built]: also available as a standalone layout with no redundancy.",
+        "Nesting [User requirement]: virtual drives can be members of a striped or parity pool."
+      ],
+      "capacity_rules": [
+        "Striped and parity layouts: every member contributes only as much as the smallest member [User requirement]. Extra space on larger members is shown as unused.",
+        "Linear layout: the sum of all members.",
+        "The capacity engine must reproduce the user's example exactly, as a test case: 2+1+1+2+2+2 TB, with 1+1 combined into a 2 TB virtual drive, gives five 2 TB members (four data, one parity), 8 TB usable, surviving one member failure.",
+        "[Planner addition] The designer shows that a virtual drive fails if any of its physical drives fails, and counts as one member failure.",
+        "[Planner addition] A live calculator shows usable capacity, unused space per drive, fault tolerance ('survives 1 drive failure'), and warnings while the user edits. It suggests layouts that waste less space, such as combining smaller drives.",
+        "[Planner addition, priority 'Could'] Unused space on larger members is offered as a separate, unprotected volume."
+      ],
+      "implementation_approach_for_ADR": {
+        "note": "The user decides. Verify every capability claimed here against official documentation before recording it.",
+        "options": [
+          "Option A (recommended): orchestrate Linux mdadm. It supports RAID 0, 1, 4, 5, and 6, linear arrays, and a linear array nested inside a parity array, which matches the user's design exactly. Parity is real-time and the tool is mature. It is Linux-only and needs root. Evaluate the write-intent bitmap and write journal options that protect against the parity 'write hole'.",
+          "Option B: SnapRAID plus mergerfs. File-level parity updated on a schedule; mixed drive sizes waste no space; each data drive stays readable on its own. Files added since the last parity update are unprotected. Could be offered later as an additional 'flexible parity' mode.",
+          "Option C: ZFS or Btrfs. Strong checksumming, but ZFS handles mixed sizes and custom combining poorly, and Btrfs RAID 5/6 is not considered production-safe.",
+          "Rejected: implementing striping and parity inside the NAS application. The risk of data loss is very high, and it reinvents mature, well-tested tools."
+        ]
+      },
+      "privileged_storage_helper": [
+        "The core server stays unprivileged.",
+        "Disk operations go through a small, separate storage helper that runs on the host as root (e.g. a systemd service).",
+        "It exposes a narrow, allow-listed set of operations over a local Unix socket, with authentication. Every request is written to the audit log.",
+        "In Docker deployments, the helper runs on the host instead of the NAS container getting privileged access.",
+        "Linux only. On other platforms, the pool feature is hidden and single-path storage keeps working as before.",
+        "The S03.1 threat model must cover the helper."
+      ],
+      "features": [
+        "Drive discovery: model, serial number, size, type (HDD, SSD, NVMe), SMART health, partitions, mount status, and whether the drive holds the operating system or current NAS data.",
+        "Pool designer GUI: assign drives to roles, combine drives into virtual drives, choose a layout, with the live calculator and warnings.",
+        "Creation safety (invariant I10): creating a pool erases every member drive. List each drive with model and serial number, require the user to type a confirmation phrase, refuse the OS drive and any drive holding NAS data (except through the migration flow), and run a SMART check first with warnings.",
+        "Filesystem: format and mount the pool (ext4 or XFS, per ADR) and set it as the storage root.",
+        "[Planner addition] Data migration: move an existing storage root onto a new pool in a maintenance mode, verify with checksums, and switch paths only after verification succeeds.",
+        "Monitoring: pool state (healthy, degraded, rebuilding, failed) and per-drive SMART data from S10.3, with alerts.",
+        "[Planner addition] Scheduled parity checks (scrubs) with mismatch reports.",
+        "Failure handling: degraded pools keep serving data; a replace-drive wizard; rebuild with progress; clear guidance when more drives have failed than the layout protects against.",
+        "[Planner addition] Expansion: add drives, or replace drives with larger ones and grow the pool, where the chosen tool supports it.",
+        "[Planner addition] Import: detect existing pools after a reinstall or after moving drives to a new machine, since the pool configuration lives on the drives.",
+        "Clear messaging that RAID is not a backup, linking to external backup (S08.6)."
+      ],
+      "testing": [
+        "Never use real disks in CI.",
+        "Use loop devices or virtual disks in a VM to test creation, failures, degraded mode, rebuilds, expansion, and import.",
+        "Plan a documented manual test on real hardware before release."
+      ]
+    }
+  },
+
+  "new_stages": [
+    {
+      "id": "S11",
+      "name": "Duplicate and look-alike management",
+      "origin": "User-defined features, placed by planner",
+      "goal": "Find exact and resolution-variant duplicates of photos, find duplicate files, group look-alike photos into stacks, and let the user resolve all of these safely.",
+      "depends_on": ["S04", "S05", "S06", "S07", "S08.1", "S09"],
+      "substages": [
+        { "id": "S11.1", "name": "Hashing foundation and backfill", "must_cover": "Confirm that content hashes (stored from S01 and S04) and perceptual hashes (from S04.4) exist for every item; a backfill job for any that are missing; the similarity lookup structure; threshold calibration on a labelled fixture set." },
+        { "id": "S11.2", "name": "Photo duplicate detection", "must_cover": "Exact duplicates and resolution variants per photo_duplicates.detection; per-user scope; incremental, scheduled, and on-demand scans; the per-user upload-time duplicate policy." },
+        { "id": "S11.3", "name": "Photo duplicate review and resolution", "must_cover": "Everything in photo_duplicates.review_and_resolution, including the recommended pick, bulk rules with preview, metadata merge, trash, 'not duplicates' marks, and reclaimable space." },
+        { "id": "S11.4", "name": "Look-alike stacks", "must_cover": "Everything in look_alike_stacks: detection, automatic stacking, cover rules, user actions, persistence in sidecars, settings, and behavior in timeline, albums, and search." },
+        { "id": "S11.5", "name": "File duplicate detection", "must_cover": "Everything in file_duplicates.detection: size, partial hash, full hash; per-user scope; upload-time check; folder ignore list." },
+        { "id": "S11.6", "name": "File duplicate resolution and shortcuts", "must_cover": "Resolution options, the shortcut representation chosen in its ADR, every shortcut behavior rule, and how shortcuts appear over network shares." },
+        { "id": "S11.7", "name": "Duplicates and stacks GUI", "must_cover": "The Duplicates view for photos and for files; stack badges in the grid; the stack viewer and its actions; related settings." },
+        { "id": "S11.8", "name": "Testing, audit, and stage review", "must_cover": "False-positive rate tests on the fixture set; large-library performance; metadata merge tests; shortcut edge cases (target moved, trashed, restored, deleted); privacy tests proving no cross-user matches; the R12 documentation audit; completion record; user sign-off." }
+      ],
+      "exit_criteria": "Duplicates and look-alikes are found accurately within each user's own library. Every removal goes through preview, confirmation, and trash. Shortcuts behave correctly in every edge case."
+    },
+    {
+      "id": "S12",
+      "name": "Storage optimization",
+      "origin": "User-defined feature, placed by planner",
+      "goal": "Let users reduce the resolution and quality of existing and future media, with a live preview, full metadata preservation, and an undo window.",
+      "depends_on": ["S04", "S05", "S07", "S08.1", "S08.5", "S11.4"],
+      "substages": [
+        { "id": "S12.1", "name": "Image optimization engine", "must_cover": "All resize modes, orientation-aware targets, never-upscale, rounding rule, quality, format rules, RAW and animated exclusions, metadata preservation, atomic replacement with verification." },
+        { "id": "S12.2", "name": "Video optimization engine", "must_cover": "FFmpeg transcoding with the resize modes and presets, CRF quality, the codec policy from its ADR, audio handling, metadata preservation, evaluation of hardware acceleration." },
+        { "id": "S12.3", "name": "Scope selection and estimation", "must_cover": "All scope filters (the face-group and classification filters exist as hooks, activated in S15); item counts; skip reasons; the sampling-based savings estimate." },
+        { "id": "S12.4", "name": "Live preview service", "must_cover": "On-the-fly preview rendering for images and video clips, caching, and limits so previews stay responsive and never overload the server." },
+        { "id": "S12.5", "name": "Bulk optimization jobs and safety", "must_cover": "Dry run, confirmation, job controls, originals retention and revert, the delete-immediately option, quota updates, optimizationHistory in sidecars." },
+        { "id": "S12.6", "name": "Upload policies", "must_cover": "Everything in storage_optimization.upload_policies, including the post-AI follow-up hook for S15." },
+        { "id": "S12.7", "name": "Storage optimization GUI", "must_cover": "A step-by-step wizard (scope, settings, preview, estimate, confirm); job progress; revert; the upload policy editor; the storage report." },
+        { "id": "S12.8", "name": "Testing, audit, and stage review", "must_cover": "Resize arithmetic tests including the user's 1920x1080 to 1024x768 examples; metadata preservation tests across JPEG, HEIC, PNG, and video formats; orientation tests; revert tests; performance; the R12 documentation audit; completion record; user sign-off." }
+      ],
+      "exit_criteria": "Users can safely shrink their library with exactly the scope and settings they choose, see the result before committing, keep all metadata, and undo within the retention period."
+    },
+    {
+      "id": "S13",
+      "name": "Multi-drive storage pools",
+      "origin": "User-defined feature, placed by planner",
+      "goal": "Let users combine several drives into protected or striped pools, including custom layouts with combined smaller drives and parity, and manage failures and rebuilds safely.",
+      "depends_on": ["S03", "S08", "S10.3"],
+      "substages": [
+        { "id": "S13.1", "name": "Approach, platform scope, and filesystem", "must_cover": "The pool approach ADR (options A, B, C), verified capabilities, Linux-only scope, and the filesystem ADR (ext4 or XFS)." },
+        { "id": "S13.2", "name": "Privileged storage helper", "must_cover": "Design, allow-listed operations, Unix socket authentication, audit logging, systemd installation, and the threat model update." },
+        { "id": "S13.3", "name": "Drive discovery and health", "must_cover": "Drive listing with all fields in features, integrated with the S10.3 SMART monitoring." },
+        { "id": "S13.4", "name": "Layout and capacity engine", "must_cover": "The layout model (physical drives, virtual drives, members, roles); capacity rules; fault tolerance; suggestions; validation. This is pure logic, heavily unit-tested, with the user's example as a required test case." },
+        { "id": "S13.5", "name": "Pool creation and mounting", "must_cover": "Creation safety confirmations, creation through the helper, filesystem creation, mounting, and registering the pool as the storage root." },
+        { "id": "S13.6", "name": "Data migration onto a pool", "must_cover": "Maintenance mode, copying with checksum verification, switching paths only after successful verification, and rollback if verification fails." },
+        { "id": "S13.7", "name": "Monitoring, scrubs, failures, and rebuilds", "must_cover": "Pool states, alerts, scheduled parity checks, degraded operation, the replace-drive wizard, and rebuild progress." },
+        { "id": "S13.8", "name": "Expansion and import", "must_cover": "Adding drives, growing pools where supported, and detecting existing pools after a reinstall or on a new machine." },
+        { "id": "S13.9", "name": "Storage GUI", "must_cover": "A storage page, the pool designer with the live calculator, pool status, and the creation, migration, and replacement wizards." },
+        { "id": "S13.10", "name": "Testing, audit, and stage review", "must_cover": "Simulated-disk tests in CI (creation, failure, degraded mode, rebuild, expansion, import); the manual real-hardware test plan; a documented recovery drill; 'RAID is not a backup' documentation; the R12 documentation audit; completion record; user sign-off." }
+      ],
+      "exit_criteria": "A user can build the example pool from their own drives through the GUI, see exact capacity and fault tolerance first, survive a simulated drive failure, and rebuild without data loss."
+    }
+  ],
+
+  "changes_to_existing_stages": {
+    "note": "Nothing has been implemented yet, so these are plan changes only and need no data migrations. Add each change to the stated substage and label it with this prompt (P005).",
+    "changes": [
+      "S01.2: The storage root must not assume a single physical disk, and must be relocatable so it can later move onto a pool (S13.6). The upload temp folder always follows the storage root's filesystem.",
+      "S01.3 and S01.4: Compute a content hash for every file while it streams during upload, with no extra read, and store it. The hash algorithm is a new ADR (standard-library SHA-256 preferred unless benchmarks justify BLAKE3). This ADR is needed before S01 implementation starts.",
+      "S03.1: The threat model lists the future privileged storage helper (S13.2) as an attack surface.",
+      "S04.2: Exact-duplicate detection at ingest uses the stored content hash, with the default behavior 'Skip and report'. The full per-user policy arrives in S11.2.",
+      "S04.4: Compute a perceptual hash while generating thumbnails, since the image is already decoded, and store it.",
+      "S05.1: The sidecar schema v1 reserves sections for: contentHash, perceptualHash, stack (stack ID, cover flag, user-locked decisions), duplicate decisions ('not duplicate of' list), merged-metadata provenance, and optimizationHistory.",
+      "S06.1: The index schema reserves fields for stack ID and cover flag, and for a shortcut flag. Search behavior for stacks and shortcuts is defined in S11.",
+      "S08.1 and S08.5: Trash and versioning must be able to hold replaced originals from S12 and support reverting them, and must restore items removed through duplicate resolution.",
+      "S09.2: The WebDAV FileSystem design leaves room for representing app-level shortcuts (S11.6).",
+      "S10.1: The admin dashboard reserves a panel for reclaimable duplicate space and optimization savings.",
+      "S10.2: Shortcuts count as zero toward quotas, and quotas update after optimization originals are removed.",
+      "S10.3: Disk health monitoring is designed to be reused by S13.",
+      "S14 (was S11): Add installation of the optional host storage helper on Linux, plus pool documentation.",
+      "S15 (was S12): Insert a new substage S15.11 'AI-assisted library cleanup': embedding-based look-alike grouping, smart cover suggestions, and activation of the face-group and classification filters for storage optimization and upload policies. The previous evaluation substage becomes S15.12 and stays last. Remove 'duplicate and similar photo detection' from the optional AI extensions, since the baseline is now S11 and the AI enhancement is S15.11."
+    ]
+  },
+
+  "adrs_to_create": {
+    "note": "All with status 'Proposed'. Each includes context, options with pros and cons, a recommendation, and consequences. The user decides.",
+    "adrs": [
+      { "topic": "Content hash algorithm (SHA-256 vs BLAKE3)", "stage": "S01.3", "urgency": "Needed before S01 implementation" },
+      { "topic": "Perceptual hash algorithm, library, and similarity lookup structure", "stage": "S04.4 and S11.1" },
+      { "topic": "Look-alike stack storage and display rules", "stage": "S11.4" },
+      { "topic": "File shortcut representation, including over network shares", "stage": "S11.6" },
+      { "topic": "Video optimization codec policy", "stage": "S12.2" },
+      { "topic": "Originals retention and revert, integrated with trash and versioning", "stage": "S12.5" },
+      { "topic": "Multi-drive pool approach (mdadm, SnapRAID with mergerfs, ZFS or Btrfs)", "stage": "S13.1" },
+      { "topic": "Pool filesystem (ext4 vs XFS)", "stage": "S13.1" },
+      { "topic": "Privileged storage helper design", "stage": "S13.2" }
+    ]
+  },
+
+  "dependency_register_additions": {
+    "note": "Add with status 'Proposed' and a verification status. Record each license and any concerns.",
+    "items": [
+      "mdadm (only if option A is chosen)",
+      "smartmontools (smartctl)",
+      "util-linux (lsblk)",
+      "SnapRAID and mergerfs (only if option B is chosen)",
+      "A Go perceptual hash library (agent evaluates, e.g. goimagehash)",
+      "A Go BLAKE3 library (only if chosen in the hash ADR)",
+      "FFmpeg video encoders (already listed as a tool): record that some encoders, such as libx264 and libx265, are GPL-licensed, and that building FFmpeg with them changes the license of that FFmpeg build. Flag this for the user under the P003 licensing policy."
+    ]
+  },
+
+  "verification_tasks": [
+    "Confirm mdadm capabilities: RAID 4 support, nesting a linear array inside a parity array, growing or reshaping each layout, write-intent bitmap, write journal.",
+    "Confirm the maintenance status and license of the perceptual hash library you evaluate.",
+    "Confirm how libvips and ExifTool together preserve all metadata during resizing, for each supported image format.",
+    "Confirm the licensing implications of the FFmpeg encoders listed above.",
+    "Record results in the relevant ADRs and the dependency register. If you have no internet access, mark items 'Unverified'."
+  ],
+
+  "new_open_questions": [
+    "Stack cover: is 'first photo' the earliest date taken (proposed), or the earliest upload?",
+    "Should the same photo existing in both the files area and the photos area be reported as a cross-area duplicate, or ignored?",
+    "Default retention period for replaced originals after optimization (proposed: 30 days)?",
+    "Default upload behavior for exact duplicate photos: 'Skip and report' (proposed), 'Keep both', or 'Ask'?",
+    "How should file shortcuts appear over network shares: as a read-only view of the target, or hidden?",
+    "Pool approach: mdadm (recommended), SnapRAID with mergerfs, or both? Is Linux-only acceptable for pools?",
+    "Include RAID 5 and RAID 6 in addition to the requested layouts?",
+    "Video codec for optimization: H.264 only (most compatible), or also H.265 and AV1 (smaller files)?",
+    "Should an admin be able to apply storage optimization policies to all users, or only users to their own media?"
+  ],
+
+  "pre_approved_documentation_changes": {
+    "note": "The user approves these through this prompt. Record each in the RULES.md changelog, citing P005.",
+    "changes": [
+      "Add invariant I10 to the 'Project invariants' sections of RULES.md and plan.md.",
+      "Add the 'Stage ID changes' table to plan.md.",
+      "Update code-agent-docs/templates/audit-checklist.md so that group K (cross-document consistency) checks historical documents against the 'Stage ID changes' table rather than flagging their old IDs as errors."
+    ]
+  },
+
+  "plan_md_updates": [
+    "Header: archive the current version, bump the MINOR version per R4, update the date.",
+    "Section 3 (requirements): add FR and NFR entries for every [User requirement] and [Planner addition] in this prompt, keeping the labels. Add an NFR for invariant I10.",
+    "Section 5 (open questions): add new_open_questions.",
+    "Section 6 (architecture): add the privileged storage helper, the pool layer beneath the storage root, and the hashing and similarity components.",
+    "Section 7 (technology stack): list the new 'Proposed' items with their ADR links.",
+    "Section 8 (key technical concerns): add perceptual hash thresholds and false positives, metadata preservation during re-encoding, privileged disk operations, and the parity write hole.",
+    "Section 10 (stage roadmap): insert S11, S12, and S13 with every required field; renumber the packaging and AI stages; apply changes_to_existing_stages.",
+    "Add the 'Stage ID changes' table.",
+    "Project invariants section: add I10.",
+    "Section 11 (MVP): re-evaluate which stages form the first usable release and explain any change. The user decides.",
+    "Section 12 (testing strategy): add labelled duplicate and look-alike fixture sets, visual and metadata checks for optimization, and simulated-disk testing for pools.",
+    "Section 13 (risks): add data loss from wrong duplicate matches, quality loss from optimization, disk-level data loss during pool operations, security of the privileged helper, and encoder license implications. Each with a mitigation.",
+    "Section 14 (revision history): add an entry referencing P005 and the session log."
+  ],
+
+  "stage_document_updates": [
+    "In code-agent-docs/stages/S01-basic-nas.md, add tasks for content hashing during upload (S01.3 and S01.4) and for a relocatable storage root (S01.2), with acceptance criteria.",
+    "Note that the new hash-algorithm ADR must be decided before S01 implementation begins.",
+    "If the user has already approved S01, keep its status but list every change in your report for re-confirmation."
+  ],
+
+  "execution_steps": [
+    { "step": 1, "action": "Run R1, archive this prompt, log it, and write the in-progress entry.", "details": "See before_you_start." },
+    { "step": 2, "action": "Impact analysis.", "details": "In the session log, list the plan sections, stages, ADRs, and documents affected, every reference to the old S11 and S12 that must change, and any conflicts." },
+    { "step": 3, "action": "Verification.", "details": "Complete verification_tasks and record the results." },
+    { "step": 4, "action": "Archive the current plan.", "details": "Copy plan.md to code-agent-docs/archive/plan-history/ before editing it." },
+    { "step": 5, "action": "Renumber.", "details": "Apply stage_layout.renumbering across all current documents, add the 'Stage ID changes' table, then search to confirm no old IDs remain with their old meaning." },
+    { "step": 6, "action": "Add the new stages and feature specifications.", "details": "Write S11, S12, and S13 into plan.md with every required field, carrying the detail from feature_specifications into the substages, and keeping the [User requirement] and [Planner addition] labels." },
+    { "step": 7, "action": "Apply changes_to_existing_stages and the remaining plan_md_updates.", "details": "Label each change with P005." },
+    { "step": 8, "action": "Create the ADRs and update the dependency register.", "details": "See adrs_to_create and dependency_register_additions." },
+    { "step": 9, "action": "Apply the pre-approved documentation changes.", "details": "See pre_approved_documentation_changes." },
+    { "step": 10, "action": "Update the Stage 1 document.", "details": "See stage_document_updates." },
+    { "step": 11, "action": "Update CURRENT_STATE.md.", "details": "Remove the in-progress entry. Next steps: the user reviews P005 changes, answers the new open questions, and decides the hash-algorithm ADR before S01 begins." },
+    { "step": 12, "action": "Consistency check.", "details": "Run audit checklist groups D (plan), F (ADRs), G (dependency register), H (stage documents), I (current state), and K (cross-document consistency, including the renumbering) on everything you changed. Fix what is safe to fix and record the rest." },
+    { "step": 13, "action": "Git.", "details": "Commit according to the preference recorded in RULES.md, e.g. 'docs(plan): add duplicates, optimization, and pool stages; renumber S14 and S15 [P005]'. If no preference is recorded, ask." },
+    { "step": 14, "action": "Report to the user and stop.", "details": "Keep it concise: (a) the new stage order; (b) the renumbering; (c) every [Planner addition] as a short list the user can accept or remove; (d) the new ADRs, with the hash-algorithm ADR first because it blocks S01; (e) verification results and license flags; (f) the new open questions. Log this and close the session log with a summary." }
+  ],
+
+  "definition_of_done": [
+    "This prompt is archived at code-agent-docs/prompts/P005-feature-additions.json.",
+    "The previous plan version is archived, and plan.md has a bumped MINOR version and a revision history entry.",
+    "plan.md contains S11, S12, and S13 with every substage and required field, carrying the detail from feature_specifications, and with every [User requirement] and [Planner addition] labelled.",
+    "The packaging stage is S14 and AI is S15, the last stage. No current document uses the old IDs with their old meaning, and the 'Stage ID changes' table exists.",
+    "Every item in changes_to_existing_stages is applied and labelled with P005.",
+    "Invariant I10 is in RULES.md and plan.md, with a changelog entry.",
+    "The nine ADRs exist with status 'Proposed', and the dependency register contains the new items.",
+    "The S01 stage document includes the hashing and relocatable storage root tasks.",
+    "The consistency check (step 12) has been run and its results recorded.",
+    "CURRENT_STATE.md and the session log are current, and the session log has a closing summary.",
+    "No application code was written and no real disks were touched.",
+    "The user has received the report described in step 14."
+  ],
+
+  "final_instruction": "Begin with the R1 startup protocol. Work through the execution steps in order, recording as you go. When everything in definition_of_done is complete, report to the user and stop."
+}
