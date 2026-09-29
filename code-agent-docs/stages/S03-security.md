@@ -3,14 +3,14 @@
 | Field | Value |
 |---|---|
 | Stage ID | S03 |
-| Status | **Planned** (waiting for the user's approval, R3) |
+| Status | **Approved** (2026-09-29, session S007 E050); In Progress from S03.1-T01 |
 | Blocked reason | |
-| Plan version this stage is based on | 1.7.0 |
+| Plan version this stage is based on | 1.8.0 (written on 1.7.0; the approval refined S03.2 criterion 1 and S03.4 criterion 2 in 1.8.0) |
 | Origin | User-defined ("Stage 3 is security implementation."); the admin console foundation (S03.9) is the user's requirement of S007 |
 | Created | 2026-09-29 (session S007) |
 | Last updated | 2026-09-29 (session S007) |
 | Depends on stages | S01 (Done), S02 (Done) |
-| Related ADRs | ADR-0010 security building blocks (Accepted) · ADR-0007 SQLite (Accepted) · ADR-0003 namespaces (Accepted) · ADR-0002 REST/OpenAPI (Accepted) · ADR-0009 SvelteKit (Accepted) · ADR-0005 testing and CI (Accepted) · **ADR-0039 admin console (Proposed; decided with this document, Q74)** · ADR-0029 storage helper (Proposed; threat model input only) |
+| Related ADRs | ADR-0010 security building blocks (Accepted) · ADR-0007 SQLite (Accepted) · ADR-0003 namespaces (Accepted) · ADR-0002 REST/OpenAPI (Accepted) · ADR-0009 SvelteKit (Accepted) · ADR-0005 testing and CI (Accepted) · **ADR-0039 admin console (Accepted with this document, Q74)** · ADR-0029 storage helper (Proposed; threat model input only) |
 
 ## 1. Goal
 
@@ -34,7 +34,7 @@ The NAS can be reached safely from the local network. Only the admin can use it,
 | FR-088 | HTTPS with user-provided or generated self-signed certificates; LAN certificate guidance | Fully | S03.4 |
 | FR-089 | Central authorization check on every route, default deny, extensible for S07 | Fully | S03.5 |
 | FR-090 | Security audit log with retention | Partially: logins, sessions, tokens, settings, and admin actions. Cross-area transfers come in S04.6, sharing in S07 | S03.6 |
-| FR-091 | TOTP two-factor authentication | **Per Q33** (decision D-2) | S03.7 |
+| FR-091 | TOTP two-factor authentication | Fully (Q33 answered yes, D-2) | S03.7 |
 | FR-068 | Command-line admin tools | Partially: create the admin and reset its password (the sidecar and index tools come in S05.7 and S06.2) | S03.2 |
 | FR-219 | Per-device upload-only app passwords (P006, pending Q54) | Foundation only: the token model has scopes, so S09 adds an upload-only scope | S03.3 |
 | FR-221 | Alert delivery (P006, pending Q54) | Threat model only; delivery is built in S10 | S03.1 |
@@ -60,7 +60,7 @@ The NAS can be reached safely from the local network. Only the admin can use it,
 - **HTTPS and the LAN:** plain HTTP stays on this computer; LAN access is a separate HTTPS listener that starts only when an admin exists and a certificate is in place; generated self-signed certificates or the user's own; a certificate guide for five client platforms.
 - **Hardening:** the authorization core with an access level on every route (default deny); CSRF tokens with an Origin check; no CORS; security headers on every response; rate limiting; a review of uploads, previews, and error messages.
 - **Audit trail:** an append-only audit store, typed events, retention, and an admin API to read it.
-- **Two-factor authentication** (TOTP with recovery codes), **only if the user says yes to Q33** (D-2).
+- **Two-factor authentication** (TOTP with recovery codes; the user said yes to Q33, D-2).
 - **Security GUI:** sign-in and first-run pages, the account page (password, sessions, tokens, two-factor), the re-authentication dialog, and handling of expired sessions everywhere.
 - **Admin console foundation (S03.9, ADR-0039):** the `/admin` area, the `/api/v1/admin` API, console-managed settings, the shared admin components, and the first sections.
 - **Tests in S03.10** (R6): unit, integration, system (Playwright), and a security suite; ARM64 CI and the Pi profile; the scans set to fail on high severity; user guides; the documentation audit A004; the completion record.
@@ -120,7 +120,7 @@ flowchart LR
 ### 4.2 Accounts and sign-in (S03.2)
 
 - **Users table** (migration `00003_accounts.sql`, goose, STRICT tables as in S01):
-  - `users`: `id`, `username` (unique, case-insensitive), `namespace` (unique, `u0001` for the first admin), `role` (`admin` or `user`), `password_hash` (PHC string), `password_changed_at`, `created_at`, `updated_at`, `disabled_at`; two-factor columns if Q33 is yes.
+  - `users`: `id`, `username` (unique, case-insensitive), `namespace` (unique, `u0001` for the first admin), `role` (`admin` or `user`), `password_hash` (PHC string), `password_changed_at`, `created_at`, `updated_at`, `disabled_at`; two-factor columns (S03.7).
   - The first admin gets namespace `u0001`, which S01 already created on disk, so no file moves (ADR-0003, plan S03.2 note).
 - **Passwords (ADR-0010):**
   - Argon2id with t=3, m=64 MiB, p=4, a 16-byte salt, and a 32-byte tag, in PHC format; rehash on login when the parameters change.
@@ -183,7 +183,7 @@ flowchart LR
   - `internal/authz`: `Authorize(subject, action, resource) Decision`. S03 has the rules for anonymous, user, admin, and token scopes; S07 adds ownership and sharing rules without touching the routes (plan design note).
   - Every entry of the route table (`internal/api/api.go`) gets an **access level**: `Public`, `User(action)`, `Admin(action)`, or `AdminRecent(action)`. A route without one does not start (a panic at build time of the table) and fails the inventory test.
   - The file handlers take the namespace from the subject, replacing the fixed S01 owner (`server.owner`).
-  - **Public routes:** the web app's static files, the API documentation, `GET /api/v1/system/health` (anonymous callers get only the overall status; the checks and version are for signed-in admins), `GET /api/v1/auth/status`, `POST /api/v1/auth/login`, `POST /api/v1/auth/setup` (loopback, no users), and the two-factor login step if S03.7 is built.
+  - **Public routes:** the web app's static files, the API documentation, `GET /api/v1/system/health` (anonymous callers get only the overall status; the checks and version are for signed-in admins), `GET /api/v1/auth/status`, `POST /api/v1/auth/login`, `POST /api/v1/auth/setup` (loopback, no users), and the two-factor login step (S03.7).
 - **CSRF (ADR-0010):**
   - With cookie authentication, every request that is not GET, HEAD, or OPTIONS must carry `X-CSRF-Token` equal to the session's token, and its `Origin` (or else `Referer`) must be the NAS's own origin. Otherwise `403 csrf_failed`.
   - **No exemption for tus uploads:** Uppy sends the header too (simpler and stronger than the exemption ADR-0010 allowed).
@@ -211,7 +211,7 @@ flowchart LR
 - **Admin API:** `GET /api/v1/admin/audit` with filters (type prefix, time range, actor) and cursor paging.
 - Every state-changing admin route writes an event through one wrapper, so no admin action can skip the audit (FR-344, NFR-050).
 
-### 4.7 Two-factor authentication (S03.7, only if Q33 is yes)
+### 4.7 Two-factor authentication (S03.7; Q33: yes)
 
 - TOTP (RFC 6238) with **`github.com/pquerna/otp` v1.5.0** (ADR-0010). Its QR image uses `github.com/boombuler/barcode` v1.1.0 (MIT), so the GUI needs no QR package.
 - The library is quiet (last release 2024-12-31). If it looks unmaintained when S03.7 starts, the fallback in ADR-0010 applies: RFC 6238 with `crypto/hmac`, tested against the RFC's test vectors, recorded in a new ADR.
@@ -221,7 +221,7 @@ flowchart LR
 - The secret is encrypted in the database (AES-GCM, key in `<internal>/secret.key`, 0600), so a database copy alone (for example a backup, S08) does not reveal it.
 - A console setting "require two-factor for admins" (Security section).
 
-### 4.8 Admin console foundation (S03.9, ADR-0039 option A, pending Q74)
+### 4.8 Admin console foundation (S03.9, ADR-0039 option A, Accepted)
 
 - **Where:** `/admin/…` in the same SvelteKit app, backed by `/api/v1/admin/…`. The main navigation shows an **Admin** entry only to admins. SvelteKit splits the code by route, so the console's code loads only when the console is opened (Pi and phone budgets).
 - **Rules (FR-344):**
@@ -245,7 +245,7 @@ flowchart LR
 - **Network change safety:** when the LAN listener's address or certificate is changed from a LAN session, the old listener stays until the admin confirms from the new address (`POST /api/v1/admin/network/confirm`). Without confirmation the change is **reverted after 2 minutes**, like a display-resolution change, so the admin cannot cut themselves off.
 - **The first sections (plan 6.6):**
   - **Overview:** health report, storage used and free, version and uptime, LAN access and certificate state, recent security events, and a "needs attention" list (each item links to where it is fixed); S10.1 completes it.
-  - **Security:** sessions of all users with revoke; the audit log viewer with filters; the two-factor policy if S03.7 is built.
+  - **Security:** sessions of all users with revoke; the audit log viewer with filters; the two-factor policy (S03.7).
   - **System settings:** Network (the loopback address, LAN access on or off and its address, the certificate: generate, upload, fingerprint, expiry) and Performance (the limits that exist now: synchronous copy limits, upload sizes, rate limits, parallel password hashing; later stages add their concurrency limits here, NFR-051).
   - **Users:** only the admin's own account (a link to the account page) until S07.
   - **About and diagnostics:** version, commit, Go version, OS and architecture, the AGPL license, the third-party components (Go modules from the build information; web packages from a licenses file made at build time), and the full health report.
@@ -279,7 +279,7 @@ The **Pi profile** runs the linux/arm64 release binary in a container on GitHub'
 | `POST /api/v1/auth/reauth` | User (session) | Recent re-authentication | S03.3-T03 |
 | `GET /api/v1/auth/sessions`, `DELETE /api/v1/auth/sessions/{id}`, `POST /api/v1/auth/sessions/end-all` | User (session) | Own sessions | S03.3-T02 |
 | `GET/POST /api/v1/auth/tokens`, `DELETE /api/v1/auth/tokens/{id}` | User (session) | API tokens | S03.3-T04 |
-| `POST /api/v1/auth/totp/…`, `POST /api/v1/auth/login/totp` | User / Public (pending state) | Two-factor (if Q33 is yes) | S03.7 |
+| `POST /api/v1/auth/totp/…`, `POST /api/v1/auth/login/totp` | User / Public (pending state) | Two-factor | S03.7 |
 | `GET /api/v1/admin/audit` | Admin | Audit log | S03.6-T02 |
 | `GET /api/v1/admin/overview`, `GET /api/v1/admin/about` | Admin | Console sections | S03.9-T04 |
 | `GET /api/v1/admin/sessions`, `DELETE /api/v1/admin/sessions/{id}` | Admin | Sessions of all users | S03.9-T04 |
@@ -289,7 +289,7 @@ The **Pi profile** runs the linux/arm64 release binary in a container on GitHub'
 | every existing `/api/v1/files/…` route | User (`files:read` or `files:write` for tokens) | Unchanged behavior, now signed in | S03.5-T01 |
 | `GET /api/v1/system/health` | Public (status only) / Admin (full) | Health | S03.5-T01 |
 
-**New problem codes** (only added, `docs/api/errors.md`): `unauthenticated` (401), `forbidden` (403), `csrf_failed` (403), `reauth_required` (403), `setup_not_allowed` (403), `weak_password` (400, with a `rule`), `locked_out` (429), `rate_limited` (429), and `second_factor_required` (401) if S03.7 is built. Each route gets a review row in `docs/api/conventions.md`, as in S01 and S02.
+**New problem codes** (only added, `docs/api/errors.md`): `unauthenticated` (401), `forbidden` (403), `csrf_failed` (403), `reauth_required` (403), `setup_not_allowed` (403), `weak_password` (400, with a `rule`), `locked_out` (429), `rate_limited` (429), and `second_factor_required` (401, S03.7). Each route gets a review row in `docs/api/conventions.md`, as in S01 and S02.
 
 ### 4.11 Web additions
 
@@ -300,7 +300,7 @@ web/src/
 ├── lib/api/client.ts    + middleware: X-CSRF-Token on unsafe requests; 401 → sign-in page with ?next=
 ├── lib/uploads/         + the CSRF header in Uppy's tus requests
 └── routes/
-    ├── login/           sign-in (and the two-factor step if S03.7)
+    ├── login/           sign-in and the two-factor step (S03.7)
     ├── setup/           first run (this computer only; elsewhere it shows the command-line way)
     ├── account/         password, sessions, API tokens, two-factor
     └── admin/           +layout (console shell), overview, security/, security/audit, settings/network,
@@ -321,7 +321,7 @@ The main navigation gets a user menu (account, sign out) and the Admin entry for
 | S03.4 | Transport security | Not started | S03.2 | FR-088, NFR-020 |
 | S03.5 | Application hardening | Not started | S03.2, S03.3 | FR-089, NFR-022 |
 | S03.6 | Security logging and audit trail | Not started | S03.2 | FR-090, NFR-016 |
-| S03.7 | Two-factor authentication (optional) | Not started (**per Q33**) | S03.2, S03.3 | FR-091 |
+| S03.7 | Two-factor authentication (optional per account) | Not started (Q33: yes) | S03.2, S03.3 | FR-091 |
 | S03.8 | Security GUI | Not started | S03.2–S03.7, S02 | FR-064, FR-086, NFR-015 |
 | S03.9 | Admin console foundation | Not started | S03.2, S03.3, S03.6, S03.8 | FR-342, FR-344, NFR-050, NFR-051 |
 | S03.10 | Security testing and stage review | Not started | S03.1–S03.9 | NFR-023, NFR-010, NFR-050, NFR-051 |
@@ -351,7 +351,7 @@ Its tests are written in S03.10. Bugs found while building are recorded in secti
 ### S03.2: First-run setup and authentication
 
 - **Goal:** Only the admin can use the NAS, with strong credentials and no defaults.
-- **Substage acceptance criteria (plan, criterion 1 refined by D-3):**
+- **Substage acceptance criteria (plan 1.8.0; criterion 1 refined by D-3):**
   1. Until the admin exists, only the first-run endpoint is reachable, and only from localhost. On a machine without a local browser the admin is created with the command line.
   2. Passwords are stored as Argon2id hashes with the parameters from the ADR, and no default credentials exist anywhere.
   3. Repeated failed logins trigger rate limiting and a temporary lockout.
@@ -383,7 +383,7 @@ Its tests are written in S03.10. Bugs found while building are recorded in secti
 ### S03.4: Transport security
 
 - **Goal:** Encrypted connections on the LAN, and LAN exposure only when it is safe.
-- **Substage acceptance criteria (plan, criterion 2 made concrete by 4.4):**
+- **Substage acceptance criteria (plan 1.8.0; criterion 2 made concrete, 4.4):**
   1. The server serves HTTPS with a user-provided or generated self-signed certificate.
   2. The LAN listener serves HTTPS only and starts only when an admin exists and a certificate is in place, and only when the user configures `server.lan_bind`; plain HTTP stays on loopback.
   3. The guide explains trusting the certificate on Windows, macOS, Linux, Android, and iOS.
@@ -425,20 +425,20 @@ Its tests are written in S03.10. Bugs found while building are recorded in secti
 | S03.6-T01 | **Audit store and events** (4.6): the table and trigger (in 00003), `internal/audit`, the event types, the calls from auth, sessions, tokens, lockout, CLI; mirrored to the structured log. | Not started | Each listed action creates one event with the required fields; an `UPDATE` on the table fails; no secret appears in `details` or the log (checked by grep after a scripted session). |
 | S03.6-T02 | **Retention and admin API:** the daily retention job (`audit.retention`, default 365 days); `GET /api/v1/admin/audit` with filters and paging; the admin-action wrapper that audits every state-changing admin route. | Not started | Old events (inserted with past times) are removed by the job; the API filters and pages; there is no route that changes or deletes events. |
 
-### S03.7: Two-factor authentication (optional, per Q33)
+### S03.7: Two-factor authentication (optional per account; Q33: yes)
 
 - **Goal:** Optional TOTP two-factor authentication for accounts.
-- **Substage acceptance criteria (plan, if approved):**
+- **Substage acceptance criteria (plan, approved in 1.8.0):**
   1. Users can enrol a TOTP authenticator, after which login requires a code.
   2. Each recovery code works once.
   3. Disabling 2FA requires the password and a current code.
 
 | Task ID | Description | Status | Acceptance criteria |
 |---|---|---|---|
-| S03.7-T01 | **Enrolment and verification** (4.7): check the library's maintenance first (fallback per ADR-0010); secret encrypted at rest; QR image; confirm with a first code; recovery codes. Register the packages. | Not started (per Q33) | An authenticator app (for example on a phone) enrols by QR and its codes verify; the database holds no plain secret; 10 recovery codes are shown once. |
-| S03.7-T02 | **Login step, recovery, disabling, policy:** the pending state (5 minutes, 5 tries), recovery codes used once, disabling with password and code, the "require for admins" setting (applied in S03.9). | Not started (per Q33) | Login asks for the code; a used recovery code is refused the second time; disabling without a code fails. |
+| S03.7-T01 | **Enrolment and verification** (4.7): check the library's maintenance first (fallback per ADR-0010); secret encrypted at rest; QR image; confirm with a first code; recovery codes. Register the packages. | Not started | An authenticator app (for example on a phone) enrols by QR and its codes verify; the database holds no plain secret; 10 recovery codes are shown once. |
+| S03.7-T02 | **Login step, recovery, disabling, policy:** the pending state (5 minutes, 5 tries), recovery codes used once, disabling with password and code, the "require for admins" setting (applied in S03.9). | Not started | Login asks for the code; a used recovery code is refused the second time; disabling without a code fails. |
 
-If Q33 is "no": S03.7 is marked Done as "not required" with a deviation note (plan), and two-factor moves to R05 (P006).
+Q33 was answered yes (D-2), so S03.7 is built. The rest of FR-262 (two-factor enforced for everyone) stays in R05.
 
 ### S03.8: Security GUI
 
@@ -451,7 +451,7 @@ If Q33 is "no": S03.7 is marked Done as "not required" with a deviation note (pl
 | Task ID | Description | Status | Acceptance criteria |
 |---|---|---|---|
 | S03.8-T01 | **Sign-in flow** (run right after S03.3): `/setup` (this computer only; elsewhere it explains `local-ai-nas admin create`), `/login`, the sign-in guard in the layout (status at start, redirect with `?next=`), the user menu with sign out, `401` from any call leads to sign-in with a notice, the auth store. | Not started | A fresh server in Edge opens the setup page, creates the admin, and lands in Files; after sign-out every page leads to sign-in and back to the page afterwards; phone layout and keyboard work; axe clean in both themes. |
-| S03.8-T02 | **Account page and re-authentication:** `/account` with password change (strength hint, the passphrase suggestion), sessions (current marked, end one, sign out everywhere), API tokens (create with scopes and expiry, shown once with a copy button, revoke), two-factor (if S03.7); the shared `ReauthDialog` used on `403 reauth_required`. | Not started | Each action works in the GUI and matches the API; a lockout and a rate limit show plain messages; axe clean. |
+| S03.8-T02 | **Account page and re-authentication:** `/account` with password change (strength hint, the passphrase suggestion), sessions (current marked, end one, sign out everywhere), API tokens (create with scopes and expiry, shown once with a copy button, revoke), two-factor (S03.7); the shared `ReauthDialog` used on `403 reauth_required`. | Not started | Each action works in the GUI and matches the API; a lockout and a rate limit show plain messages; axe clean. |
 
 ### S03.9: Admin console foundation
 
@@ -464,10 +464,10 @@ If Q33 is "no": S03.7 is marked Done as "not required" with a deviation note (pl
 
 | Task ID | Description | Status | Acceptance criteria |
 |---|---|---|---|
-| S03.9-T01 | **Admin API foundation:** the `/api/v1/admin` prefix, the `Admin` and `AdminRecent` levels in use, the audit wrapper for every state-changing admin route; ADR-0039 set to Accepted if the user chose option A (Q74). | Not started | A user-role subject (created directly in the database for the check) gets `403 forbidden` on every admin route and anonymous callers get `401`; an admin change produces an audit event. |
+| S03.9-T01 | **Admin API foundation:** the `/api/v1/admin` prefix, the `Admin` and `AdminRecent` levels in use, the audit wrapper for every state-changing admin route; ADR-0039 is Accepted (Q74, S007 E050). | Not started | A user-role subject (created directly in the database for the check) gets `403 forbidden` on every admin route and anonymous callers get `401`; an admin change produces an audit event. |
 | S03.9-T02 | **Console shell and shared components** (4.8): `/admin` layout, the section registry and navigation (phone: a section list; desktop: a side list), the Admin entry for admins only, the components in `web/src/lib/admin/` with `README.md`, and a gallery entry for each component on the development page. | Not started | The console opens from the Admin entry; a non-admin sees no Admin entry and `/admin` shows "not available"; the gallery shows every component in both themes; keyboard and screen reader names work. |
 | S03.9-T03 | **Console-managed settings** (4.8): `internal/settings` on the `settings` table, the new precedence, shared validation, sources, audit, live apply where supported; the admin settings API. | Not started | A value changed in the console survives a restart; one set by an environment variable is shown read-only with its source; an invalid value gets the same message as in the config file. |
-| S03.9-T04 | **The first sections** (4.8): Overview, Security (sessions of all users, audit viewer, two-factor policy if S03.7), System settings (Network with certificate management, Performance), Users (own account link), About and diagnostics (with the build-time web licenses file). | Not started | Each section works on a 360 px phone and on a desktop in Edge and Firefox; certificate generation and upload need re-authentication and are audited; axe clean in both themes. |
+| S03.9-T04 | **The first sections** (4.8): Overview, Security (sessions of all users, audit viewer, two-factor policy), System settings (Network with certificate management, Performance), Users (own account link), About and diagnostics (with the build-time web licenses file). | Not started | Each section works on a 360 px phone and on a desktop in Edge and Firefox; certificate generation and upload need re-authentication and are audited; axe clean in both themes. |
 | S03.9-T05 | **Network change safety:** keep-or-revert for LAN listener changes made from a LAN session (2 minutes), with a countdown and a confirm button in the console. | Not started | Changing the LAN port from a LAN browser shows the new address; not confirming reverts after 2 minutes; confirming from the new address keeps it. |
 
 ### S03.10: Security testing and stage review
@@ -496,14 +496,14 @@ Rule: one task In Progress at a time. Before starting a task, mark it (and its s
 | Path | Create / Change | Purpose | Task ID(s) |
 |---|---|---|---|
 | `code-agent-docs/security/threat-model.md` | Create | Threat model and its review record | S03.1-T01, T02, S03.10-T04 |
-| `internal/db/migrations/00003_accounts.sql` | Create | users, sessions, api_tokens, audit_events (+ two-factor columns and recovery codes if Q33 is yes, in `00004`) | S03.2-T01, S03.6-T01, S03.7-T01 |
+| `internal/db/migrations/00003_accounts.sql` | Create | users, sessions, api_tokens, audit_events (+ two-factor columns and recovery codes in `00004`, S03.7) | S03.2-T01, S03.6-T01, S03.7-T01 |
 | `internal/auth/` | Create | users, passwords, sessions, tokens, throttling, re-authentication | S03.2, S03.3 |
 | `internal/authz/` | Create | `Authorize(subject, action, resource)` | S03.5-T01 |
 | `internal/audit/` | Create | audit store, event types, retention | S03.6 |
 | `internal/ratelimit/` | Create | per-address token buckets with bounded memory | S03.5-T04, S03.2-T04 |
 | `internal/tlsconf/` | Create | certificates, listener manager | S03.4, S03.9-T05 |
 | `internal/settings/` | Create | console-managed settings | S03.9-T03 |
-| `internal/totp/` | Create (if Q33) | two-factor | S03.7 |
+| `internal/totp/` | Create | two-factor | S03.7 |
 | `internal/api/api.go`, `server.go`, new `auth*.go`, `admin*.go`, `middleware*.go` | Change / Create | access levels, middleware chain, handlers | S03.2–S03.9 |
 | `internal/config/config.go`, `flags.go` | Change | `server.lan_bind`, TLS files, `security.*`, `audit.retention`, `ratelimit.*`; precedence with the console layer | S03.3, S03.4, S03.5, S03.9-T03 |
 | `internal/health/checks.go` | Change | certificate expiry check | S03.4-T02 |
@@ -527,8 +527,8 @@ Checked on 2026-09-29 (Go module proxy for versions, GitHub license API for lice
 |---|---|---|---|---|
 | `golang.org/x/crypto` (`argon2`) | v0.57.0 | Argon2id password hashing (ADR-0010; the version the ADR named is still the latest) | BSD-3-Clause | Yes |
 | `golang.org/x/term` | v0.46.0 | Reading a password on the terminal without echo (`admin create`, `reset-password`) | BSD-3-Clause | Yes |
-| `github.com/pquerna/otp` | v1.5.0 | TOTP (ADR-0010), **only if Q33 is yes** | Apache-2.0 | Yes |
-| `github.com/boombuler/barcode` | v1.1.0 (pulled by otp) | QR code image for enrolment, only if Q33 is yes | MIT | Yes |
+| `github.com/pquerna/otp` | v1.5.0 | TOTP (ADR-0010; Q33: yes) | Apache-2.0 | Yes |
+| `github.com/boombuler/barcode` | v1.1.0 (pulled by otp) | QR code image for enrolment (Q33: yes) | MIT | Yes |
 | CI runner `ubuntu-24.04-arm` | — | ARM64 tests and the Pi profile (free for public repositories, verified in S007 E046) | GitHub service | n/a (not shipped) |
 
 No new npm packages are expected. The rate limiter is built in (no `golang.org/x/time`).
@@ -569,7 +569,7 @@ cd web && pnpm test:e2e        # when the task touches the GUI or the routes
 - [ ] LAN access is HTTPS only and starts only with an admin and a certificate; plain HTTP never leaves the computer.
 - [ ] CSRF, headers, no CORS, and rate limits are in force on every route; errors leak nothing.
 - [ ] Security events are audited, append-only, with retention.
-- [ ] Two-factor authentication works, if Q33 is yes.
+- [ ] Two-factor authentication works: enrolment, the login step, recovery codes, disabling, and the admin policy.
 - [ ] The admin console exists with its rules (admin-only on the server, re-authentication, audit, typed confirmation) and its first sections, usable on a phone and a desktop.
 - [ ] The Raspberry Pi budgets (4.9) are met in the Pi profile, and the ARM64 job is green.
 - [ ] The stage's unit, integration, and system/application tests are written and pass in CI on Linux, Windows, and ARM64; coverage ≥ 80%. Linter and formatter are clean.
@@ -595,21 +595,23 @@ cd web && pnpm test:e2e        # when the task touches the GUI or the routes
 
 ## 11. Approval record
 
-<!-- Status moves to Approved only after this is filled in. -->
+> "approve s03"
+> (2026-09-29, session S007, log E050)
 
-_Pending: asked in session S007 (E049), with decisions D-1 to D-6:_
-- **D-1 (Q74):** admin console as `/admin` in the same web app (ADR-0039 option A, recommended), or a separate app on its own port.
-- **D-2 (Q33):** build TOTP two-factor now (S03.7, optional per account; recommended), or later (R05).
-- **D-3:** headless first run: the admin is created on the machine with the command line (recommended), or with a one-time setup code from another computer on the LAN.
-- **D-4:** the new documentation folder `code-agent-docs/security/` for the threat model (added to the documentation map in RULES).
-- **D-5 (Q75):** which Raspberry Pi. Until answered, the budgets assume a Pi 5 with 4 GB (4.9).
-- **D-6:** a minimum password length of 12 characters.
+**Decisions given with the approval** (asked in E049 with a recommendation each; no change was asked, so each recommendation applies):
+- **D-1 (Q74):** the admin console is `/admin` in the same web app (ADR-0039 option A); **ADR-0039 Accepted**.
+- **D-2 (Q33):** two-factor authentication is built now (S03.7), optional per account, with the "require for admins" policy.
+- **D-3:** on a machine without a local browser, such as a headless Raspberry Pi, the admin is created on the machine with `local-ai-nas admin create` (the S13.2 deployers call it); the web setup page works on this computer only (plan 1.8.0, S03.2 criterion 1).
+- **D-4:** the new documentation folder `code-agent-docs/security/` holds the threat model (RULES 1.8.2, documentation map).
+- **D-5 (Q75):** not answered yet; the S03 budgets assume a Raspberry Pi 5 with 4 GB (4.9) until the user says which Pi.
+- **D-6:** passwords have at least 12 characters.
 
 ## 12. Change log for this stage document
 
 | Date | Session | Change | Reason | Approval needed / given |
 |---|---|---|---|---|
 | 2026-09-29 | S007 | Initial version (plan 1.7.0, with the admin console foundation S03.9, the Pi budgets, and the ARM64 and Pi-profile CI) | R3: the stage document before any S03 code | Needed (section 11) |
+| 2026-09-29 | S007 | **Approved** (E050); decisions D-1–D-6 recorded (section 11); the Q33 and Q74 conditions resolved in the text (two-factor is built; ADR-0039 Accepted); plan 1.8.0 | The user's approval | Given |
 
 ### Bugs found during the stage
 

@@ -1,18 +1,19 @@
 # CURRENT_STATE
 
-**Last updated:** 2026-09-29 22:05 +0500 (session S007)
-**Plan version:** 1.7.0 (`code-agent-docs/plan.md`), **Approved baseline** 1.0.0 (S005). 1.6.0 (P006): research, MVP additions FR-217–FR-221 (pending Q54), releases R01–R12. 1.7.0 (P007 and the user's S007 requirements): drive lifecycle in S14, **SSD caching S15, AI now S16**, the **admin console** (S03.9, S10.6, plan 6.6), **Raspberry Pi first** (NFR-051), **deployers for Debian, Arch Linux, Windows 11, Raspberry Pi OS** (FR-149, NFR-052). 16 stages, 133 substages; IDs translated in plan 10.18
-**Current phase:** **S01 Done** (S005 E126). **S02 Done** (signed off 2026-09-29, S007 E044). **S03 (Security): Planned**: the stage document is written and waits for the user's approval; no S03 code before it (R3)
+**Last updated:** 2026-09-30 00:21 +0500 (session S007)
+**Plan version:** 1.8.0 (`code-agent-docs/plan.md`; 1.8.0: **S03 approved**, Q33 yes, Q74 `/admin` with ADR-0039 Accepted, command-line admin creation for headless machines, the LAN listener made concrete), **Approved baseline** 1.0.0 (S005). 1.6.0 (P006): research, MVP additions FR-217–FR-221 (pending Q54), releases R01–R12. 1.7.0 (P007 and the user's S007 requirements): drive lifecycle in S14, **SSD caching S15, AI now S16**, the **admin console** (S03.9, S10.6, plan 6.6), **Raspberry Pi first** (NFR-051), **deployers for Debian, Arch Linux, Windows 11, Raspberry Pi OS** (FR-149, NFR-052). 16 stages, 133 substages; IDs translated in plan 10.18
+**Current phase:** **S01 Done** (S005 E126). **S02 Done** (signed off 2026-09-29, S007 E044). **S03 (Security): Approved** (S007 E050) and **In Progress** (`stages/S03-security.md`)
 
 ## Active stage and task
-- **Active stage:** none in progress. **S02: NAS GUI** is **Done** (`stages/S02-nas-gui.md`, signed off in S007 E044); S01 is **Done**. **S03 (Security): Planned** (`stages/S03-security.md`, written in S007 E049; awaiting approval with decisions D-1–D-6).
-- **Active task:** none. Waiting for the user's approval of the S03 stage document (R3). The P005 follow-up tasks of S01 are all done.
+- **Active stage:** **S03: Security**, In Progress (`stages/S03-security.md`, approved in S007 E050 with D-1–D-6 as recommended). **S02: NAS GUI** is **Done** (signed off in S007 E044); S01 is **Done**.
+- **Active task:** **S03.1-T01** threat model (`code-agent-docs/security/threat-model.md`). Execution order: S03.1 → S03.2 → S03.3 → S03.8-T01 → S03.5 → S03.6 → S03.4 → S03.7 → S03.8-T02 → S03.9 → S03.10. The P005 follow-up tasks of S01 are all done.
 - **The user's instruction (S007 E010):** after P005, resume S02 and work until the stage is complete, and also build the P005 items that belong to the current or earlier stages (the S01 follow-up tasks).
 
 ## In progress (write-ahead)
-- Nothing in progress. The S03 stage document is committed and waits for approval.
+- **S03.1-T01** (threat model), branch `docs/S03.1-T01-threat-model`.
 
 ## Last completed
+- **S03 approved** (S007 E050): "approve s03"; D-1–D-6 as recommended; plan 1.8.0 (1.7.0 archived); ADR-0039 Accepted; RULES 1.8.2 (`security/` folder); audit checklist (threat model check).
 - **S03 stage document written** (S007 E049; `stages/S03-security.md`): 10 substages, 36 tasks; the design for accounts, sessions and tokens, HTTPS on a separate LAN listener (plain HTTP stays on this computer), default-deny authorization, CSRF, headers, rate limits, the audit trail, optional TOTP (Q33), the security GUI, and the **admin console foundation** (S03.9: `/admin`, console-managed settings, shared components, first sections); **Raspberry Pi budgets** (4.9) and the ARM64 and Pi-profile CI (S03.10). New dependencies checked: x/crypto v0.57.0, x/term v0.46.0 (BSD-3-Clause); pquerna/otp v1.5.0 (Apache-2.0) and boombuler/barcode v1.1.0 (MIT) only if Q33 is yes.
 - **Plan change request #7, the admin console, Raspberry Pi first, and the deployers applied** (S007 E044–E047; branch `docs/P007-drives-cache-admin-console`): plan 1.7.0; ADR-0030–ADR-0039 (Proposed; verification results inside); RULES 1.8.1; register (P007 candidates, Arch Linux column in section 12, AI renumbered S16); audit checklist; README proposal R-16. No application code.
 - **Stage-end CI green** (S007 E027–E028): run 36433983279, 15 of 15 jobs, on the tag `S02-done` (`develop` 494e616). The first run had failed in the Linux system tests because of two test races, fixed in `fix/S02.8-T05-e2e-resume-race`; the tag was moved with the user's permission.
@@ -39,7 +40,7 @@
 - **S01 Done** (S005 E126), plan 1.1.4: every task, CI run, and decision is in `stages/S01-basic-nas.md` (sections 12 and 13) and the S005 log.
 
 ## Next steps
-1. **The user's approval of S03** (`stages/S03-security.md`, section 11), with **D-1** admin console form (Q74; `/admin` recommended), **D-2** two-factor now (Q33; recommended), **D-3** headless first run by command line (recommended), **D-4** the `code-agent-docs/security/` folder, **D-5** which Raspberry Pi (Q75; budgets assume a Pi 5 with 4 GB), **D-6** password minimum 12. After approval: record it (section 11, log), set S03 Approved, apply the refined criteria to the plan (PATCH), and start **S03.1-T01** (threat model), in the execution order of section 5.
+1. **S03 in the execution order of its section 5**, one task at a time (mark it In Progress here and in the stage document first). The user's review of the threat model is asked at the next stop; work continues meanwhile.
 2. **Still open from the P005 report** (not blocking S02): Q42–Q49 and Q51; accepting or removing the planner additions (labelled in plan section 3); ADR-0022–ADR-0029 (Proposed); the RAID 0/1 reading of E008. ADR-0021 and the CI trigger were decided in E013. The S01 follow-ups are done (S007 E017–E019).
 3. Follow-up from S01 (the user's decision): run `scripts/perf-baseline.sh` on the Raspberry Pi and the mini-PC when available; also measure SHA-256 there (ADR-0021).
 4. **Endpoint workflow (spec-first):** spec → `go generate ./internal/api` → strict operation; an error case in `errorCases`/`bodyErrorCases`; a review row in `docs/api/conventions.md`; a fake-service test that invalid input never reaches the service.
@@ -47,22 +48,23 @@
 6. Every finished branch: merge it into `develop` myself (`--no-ff`) and push (RULES User Preferences).
 
 ## Blocked or waiting on user
-- **S03 approval** (R3; decisions D-1–D-6 in `stages/S03-security.md` section 11). Also open, not blocking: Q67–Q76 (P007), Q54 and Q34 (P006), README proposals R-13–R-16.
+- Open, not blocking: **Q75** (which Raspberry Pi; the S03 budgets assume a Pi 5 with 4 GB), Q67–Q73 and Q76 (P007), Q54 and Q34 (P006), README proposals R-13–R-16; the user's review of the threat model when S03.1-T01 is done.
 - **Stray folder `C:\c`** (holds only an empty `Users` tree, left by an S006 command): deleting it was blocked by a safety check, so the user deletes it.
 
 ## Open questions (short list; full text in plan.md section 5)
-- **New in 1.7.0 (to ask with the S03 approval):** Q67 confirm the P007 MVP additions (predictive drive health; the migration engine with a console page) · Q68 rollback window · Q69 burn-in · Q70 LVM layer at pool creation · Q71 database on a single SSD · Q72 cache defaults · Q73 spin-down · **Q74 admin console form** (same app at `/admin`, recommended) · **Q75 which Raspberry Pi** (model, RAM, how drives connect) · **Q76 deployer form** (guided scripts first, recommended).
+- **New in 1.7.0 (to ask with the S03 approval):** Q67 confirm the P007 MVP additions (predictive drive health; the migration engine with a console page) · Q68 rollback window · Q69 burn-in · Q70 LVM layer at pool creation · Q71 database on a single SSD · Q72 cache defaults · Q73 spin-down · Q74 answered (E050: `/admin`) · **Q75 which Raspberry Pi** (model, RAM, how drives connect) · **Q76 deployer form** (guided scripts first, recommended).
 - **New in 1.6.0 (P006), to ask at the next stop:** Q54 confirm the MVP additions (Live Photos and motion photos, phone auto-backup bridge, alert delivery) and **Q34 file versioning (recommended yes)** first; then Q52 AI position (after all releases, I8) · Q53 drive pools right after the MVP or at the end · Q55 NG1 reword · Q56 mobile apps (NG2) · Q57 non-destructive editing (NG3) · Q58 external libraries · Q59 map tiles · Q60 public accounts · Q61 exposure methods · Q62 locked folder · Q63 version labels · Q64 office engine · Q65 excluded features · Q66 invariant I11.
 - **New in 1.4.0 (P005):** Q42 stack cover · Q43 cross-area duplicates · Q44 retention of replaced originals · Q45 upload default for exact duplicates · Q46 shortcuts over shares · Q47 mdadm and Linux-only pools · Q48 video codec · Q49 who applies optimization policies · Q51 confirm M3 = S01–S13. **Q50 answered** (S007 E010: now).
 - **Partly open:** Q5 native Windows/macOS installers (S13.2) · Q6 AI speed expectations · Q26 image formats (HEIC/RAW) · Q32 photos exposure over shares
-- **Open for later stages:** Q10, Q11, Q13, Q14, Q15, Q19, Q27–Q31, Q33–Q36, Q39, Q40, Q41
+- **Open for later stages:** Q10, Q11, Q13, Q14, Q15, Q19, Q27–Q31, Q34–Q36, Q39, Q40, Q41
+- **Answered in S007:** Q33 (yes: S03.7), Q74 (`/admin`), both E050; Q50 (E010)
 - **Answered in S005:** Q1 (multi-platform), Q16 (closed), Q18 (100k photos + 100k files), Q22 (AGPL-3.0), Q37 (none), Q38 (S01–S11 in the IDs of that time, through the pre-AI release; since 1.4.0 that release is S13, so M3 is S01–S13, to confirm in Q51)
 
 ## Pointers
 - Latest session log: `code-agent-docs/logs/sessions/2026-09-28_S007.md` (current); S006 is closed
-- Stage documents: `code-agent-docs/stages/S03-security.md` (**Planned**, awaiting approval); `code-agent-docs/stages/S02-nas-gui.md` (**Done**, signed off in S007 E044); `code-agent-docs/stages/S01-basic-nas.md` (**Done**; P005 follow-up tasks at the end of section 5; completion record in section 13)
+- Stage documents: `code-agent-docs/stages/S03-security.md` (**In Progress**, approved in S007 E050); `code-agent-docs/stages/S02-nas-gui.md` (**Done**, signed off in S007 E044); `code-agent-docs/stages/S01-basic-nas.md` (**Done**; P005 follow-up tasks at the end of section 5; completion record in section 13)
 - Audit reports: `code-agent-docs/audits/A003-2026-09-28-documentation-audit.md` (the S02 final review, with `A003-readme-proposal.md`); `A002-2026-09-24-documentation-audit.md` (the S01 final review); `A001-2026-09-24-documentation-audit.md`
-- ADRs: `code-agent-docs/decisions/ADR-0001` … `ADR-0039` (0019 and 0022–0039 Proposed, 0030–0039 new in 1.7.0; 0021 Accepted in S007; 0012 superseded in part by 0020; the rest Accepted)
+- ADRs: `code-agent-docs/decisions/ADR-0001` … `ADR-0039` (0019 and 0022–0038 Proposed, 0030–0039 new in 1.7.0, 0039 Accepted in S007 E050; 0021 Accepted in S007; 0012 superseded in part by 0020; the rest Accepted)
 - Dependency register: `code-agent-docs/dependencies.md` (section 12: deployment prerequisites per platform, the input for the S13.2 setup scripts)
 - Research: `code-agent-docs/research/R001-2026-09-28-cloud-storage-feature-research.md` (P006)
-- Rules: `code-agent-docs/RULES.md` (v1.8.1: Raspberry Pi first and a deployer per platform; R13 Releases; keep working, stop only when told or at a stage's end, stopping = save, commit, push; the agent's co-author line stays in commits, for transparency; invariant I10; CI only at stage completion, on a tag `S<NN>-done` or by hand) · Prompts: `code-agent-docs/prompts/` (P002–P007)
+- Rules: `code-agent-docs/RULES.md` (v1.8.2: `security/` folder for the threat model; v1.8.1: Raspberry Pi first and a deployer per platform; R13 Releases; keep working, stop only when told or at a stage's end, stopping = save, commit, push; the agent's co-author line stays in commits, for transparency; invariant I10; CI only at stage completion, on a tag `S<NN>-done` or by hand) · Prompts: `code-agent-docs/prompts/` (P002–P007)

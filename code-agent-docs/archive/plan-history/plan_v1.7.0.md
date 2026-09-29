@@ -2,7 +2,7 @@
 
 | Field | Value |
 |---|---|
-| **Version** | 1.8.0 |
+| **Version** | 1.7.0 |
 | **Status** | **Approved baseline** (approved by the user in S005, 2026-09-24); 1.1.0 adds the user's setup-script requirement (S005 E015) |
 | **Last updated** | 2026-09-29 (session S007) |
 | **Source of vision** | `README.md` (repository root), the user's staged roadmap (`code-agent-docs/prompts/P002-staged-development-roadmap.json`), the user's technology stack (`code-agent-docs/prompts/P003-technology-stack.json`), and the user's feature additions (`code-agent-docs/prompts/P005-feature-additions.json`, with the user's chat decisions in S007) |
@@ -207,7 +207,7 @@ Priorities: **Must** (required for its stage to be Done), **Should** (important;
 | FR-088 | HTTPS with user-provided certificates or a generated self-signed certificate, plus guidance for certificates on a LAN. | Must | New. |
 | FR-089 | A central authorization check on every route, default deny, built to be extended for multi-user (S07). | Must | New. |
 | FR-090 | A security audit log: logins, failed attempts, security-relevant changes, cross-area transfers, and sharing events, with a retention policy. | Must | New. |
-| FR-091 | TOTP two-factor authentication. | Could | New. Q33 answered **yes** (S007 E050): built in S03.7. |
+| FR-091 | TOTP two-factor authentication. | Could | New. Pending Q33. |
 
 #### Photos area and library (S04)
 
@@ -776,7 +776,7 @@ Questions keep their numbers permanently. **★ = needed for S01**: none left (Q
 30. **Sharing scope.** Read-only as specified, or also write access? Should sharing with groups of users be possible? _Needed by: S07.5._
 31. **Document content search.** Include full-text search inside PDF, Word, and text files in the files area? _Needed by: S06.2 (design), later stage for implementation._ _(1.6.0, P006: the answer also decides G-134: in S06 if "yes" for the MVP, else in R11.)_
 32. **Network shares.** _Partly answered (P003, ADR-0015):_ **WebDAV first**. SMB via Samba later, Linux-only, optional (ADR-0019, Proposed). **Still open:** should the photos area be exposed over network shares, and if so, read-only? _Needed by: S09.3._ _Recommendation: photos read-only over shares._
-33. **Two-factor authentication.** Wanted? _Needed by: S03.7._ _(1.6.0, P006: the answer also decides G-060: in S03.7 if "yes", else in R05.)_ _Answered (S007 E050, with the S03 approval): **yes**. S03.7 builds TOTP with recovery codes and the "require for admins" policy; the rest of FR-262 stays in R05._
+33. **Two-factor authentication.** Wanted? _Needed by: S03.7._ _(1.6.0, P006: the answer also decides G-060: in S03.7 if "yes", else in R05.)_
 34. **File versioning.** Wanted? _Needed by: S08.5._ _(1.6.0, P006: **recommended "yes"** (gap G-004): every competitor keeps versions, and from S09 files can be overwritten over WebDAV. R04 (rewind and ransomware recovery) and R11 depend on it.)_
 35. **AI opt-in scope.** Per installation or per user? _Needed by: S16.1._
 36. **Optional AI extensions.** Which are wanted: OCR for receipts and documents, semantic search? _Needed by: S16.10._ _(1.4.0, P005: duplicate and similar-photo detection is no longer an option here; its baseline is S11 and its AI enhancement S16.11.)_
@@ -828,7 +828,7 @@ _(Planner-added from P006; Q54 and Q34 first, because they change the MVP, then 
 71. **The database on an SSD:** allow it on a single SSD (a recent metadata backup required), or require a mirrored SSD pair? _Needed by: S15.2._
 72. **SSD cache defaults:** minimum file size and access threshold (proposed: 8 MB and 3 reads in 7 days)? _Needed by: S15.4._
 73. **Hard-drive spin-down:** include it as an option (Could), or leave it out? _Needed by: S15.6._
-74. _(the user's requirement, S007)_ **Admin console form:** an admin section of the same web app at `/admin` (recommended, ADR-0039), or a separate app on its own port? _Needed by: S03.9._ _Answered (S007 E050, with the S03 approval): the same app at `/admin`; ADR-0039 Accepted._
+74. _(the user's requirement, S007)_ **Admin console form:** an admin section of the same web app at `/admin` (recommended, ADR-0039), or a separate app on its own port? _Needed by: S03.9._
 75. _(the user's requirement, S007)_ **Which Raspberry Pi:** Raspberry Pi 5 with 4 GB, 8 GB, or 16 GB of RAM, and how the drives connect (USB 3 enclosures, or an NVMe HAT on PCIe)? The answer sets the memory and speed budgets (NFR-051). _Needed by: S03 (budgets), S13.5 (measurements)._
 76. _(the user's requirement, S007)_ **Deployer form:** guided setup scripts for all four platforms first (recommended, simplest to keep in step), or native packages (a `.deb` repository, an Arch package, a Windows installer) as well, later? _Needed by: S13.2._
 
@@ -1127,7 +1127,7 @@ The console (ADR-0039) is the one place for administration. S03.9 builds its she
 | SSD read cache (P007) | Application-level, content-addressed, TinyLFU admission, W-TinyLFU eviction, write-through | [ADR-0036](decisions/ADR-0036-ssd-read-cache.md) | Proposed (S15.1) |
 | Fast internal data (P007) | Derived data on the SSD by default; the database optionally | [ADR-0037](decisions/ADR-0037-fast-internal-data-placement.md) | Proposed (S15.2) |
 | Block-level SSD cache (P007) | lvmcache writethrough, only with an LVM layer from pool creation; not in the first version (Q70) | [ADR-0038](decisions/ADR-0038-block-level-ssd-cache.md) | Proposed (S15.1) |
-| Admin console (the user's requirement) | An admin section of the same web app at `/admin` with admin API routes under `/api/v1/admin` | [ADR-0039](decisions/ADR-0039-admin-console.md) | **Accepted** (S007 E050, with the S03 approval) |
+| Admin console (the user's requirement) | An admin section of the same web app at `/admin` with admin API routes under `/api/v1/admin` | [ADR-0039](decisions/ADR-0039-admin-console.md) | Proposed (S03.9) |
 | AI models | CLIP-family zero-shot (e.g. SigLIP, Apache-2.0); YuNet (MIT); SFace (Apache-2.0); HDBSCAN (scikit-learn); RapidOCR if S16.10 is approved; InsightFace excluded | [ADR-0018](decisions/ADR-0018-ai-models.md) | Accepted direction (variants deferred to S16) |
 
 ### 7.1 Deferred items
@@ -1138,7 +1138,7 @@ The console (ADR-0039) is the one place for administration. S03.9 builds its she
 - **Semantic search** needs a text model at query time. That is an **exception to I4** and needs explicit user approval before it is built (ADR-0018, FR-054). _Default decided in S005 (D-06): precomputed forms only; revisit with Q36._
 - ~~Storage layout (ADR-0003)~~: accepted in S005 (D-01), no longer pending.
 - **P005 decisions:** ADR-0021 to ADR-0029 (the table above). ADR-0021 (content hash) was **Accepted** in S007 (SHA-256); the others are Proposed.
-- **P007 and the admin console (1.7.0):** ADR-0030 to ADR-0038 are **Proposed**, decided when their stages are planned in detail. **ADR-0039** (admin console) was **Accepted** with the S03 approval (S007 E050).
+- **P007 and the admin console (1.7.0):** ADR-0030 to ADR-0039, all **Proposed**, decided when their stages are planned in detail.
 - **Complex RAID** (parity, combined drives, nesting, SnapRAID with mergerfs) is deferred by the user's decision in S007 (section 11a).
 - Implementation-time confirmations recorded as tasks:
   - Node.js LTS and TypeScript 7 / svelte-check compatibility (S02.1).
@@ -1394,7 +1394,7 @@ Work is **stage-gated** and governed by `code-agent-docs/RULES.md`.
 |---|---|---|---|---|---|
 | S01 | Basic NAS implementation | User-defined | A reliable storage service that manages the files area through an API, with the two-area layout in place. | Plan baseline approval | Done |
 | S02 | NAS GUI | User-defined | A graphical application that lets people use the NAS without touching the API. | S01 | **Done** |
-| S03 | Security | User-defined | Comprehensive security so the NAS can be safely reached from the local network (single admin). | S01, S02 | **Approved** (2026-09-29, S007 E050; `stages/S03-security.md`); In Progress from S03.1-T01 |
+| S03 | Security | User-defined | Comprehensive security so the NAS can be safely reached from the local network (single admin). | S01, S02 | Planned (stage document `stages/S03-security.md` written 2026-09-29, S007; awaiting the user's approval) |
 | S04 | Media management | User-defined | A separate photos area with Google Photos style management. | S03 | Not started |
 | S05 | Media metadata | User-defined | Every photo has a sidecar JSON file that is the source of truth for its metadata. | S04 | Not started |
 | S06 | Search | User-defined | Fast, forgiving search across both files and photos. | S05 | Not started |
@@ -1722,7 +1722,7 @@ flowchart LR
 - **Goal:** Comprehensive security so the NAS can be safely reached from the local network. There is a single admin account at this stage; multiple users come in S07.
 - **User requirements (quoted):**
   > "Stage 3 is security implementation."
-- **Status:** **Approved** (2026-09-29, S007 E050; `stages/S03-security.md`); In Progress from S03.1-T01
+- **Status:** Planned (stage document `stages/S03-security.md` written 2026-09-29, S007; awaiting the user's approval)
 
 #### S03.1: Threat model
 - **Goal:** Identify what must be protected, from whom, and where, to drive the rest of S03.
@@ -1749,12 +1749,12 @@ flowchart LR
 - **Scope:**
   - First-run creation of the admin account (never default passwords); Argon2id password hashing.
   - Login and logout; password change; login rate limiting and lockout.
-  - _Added scope:_ users and sessions tables via goose migrations on the S01 SQLite database (ADR-0007); an Argon2id parameter benchmark on reference hardware (ADR-0010); a CLI admin password reset; _(1.8.0)_ CLI admin creation (`admin create`) for machines without a local browser, such as a headless Raspberry Pi, used by the deployers (S13.2).
+  - _Added scope:_ users and sessions tables via goose migrations on the S01 SQLite database (ADR-0007); an Argon2id parameter benchmark on reference hardware (ADR-0010); a CLI admin password reset.
 - **Deliverables:** user and session migrations; user store; auth endpoints; first-run flow; CLI password reset.
 - **Depends on:** S03.1.
 - **Requirements:** FR-064, FR-085, FR-068, NFR-010.
 - **Acceptance criteria:**
-  1. Until the admin exists, only the first-run endpoint is reachable, and only from localhost. On a machine without a local browser the admin is created on the machine with the command line _(1.8.0, S03 decision D-3)_.
+  1. Until the admin exists, only the first-run endpoint is reachable, and only from localhost.
   2. Passwords are stored as Argon2id hashes with the parameters from the ADR, and no default credentials exist anywhere.
   3. Repeated failed logins trigger rate limiting and a temporary lockout (tested).
   4. A password change invalidates the user's other sessions.
@@ -1778,13 +1778,13 @@ flowchart LR
 
 #### S03.4: Transport security
 - **Goal:** Encrypted connections on the LAN, and LAN exposure only when it is safe.
-- **Scope:** HTTPS; user-provided certificates and generated self-signed certificates; guidance for certificates on a LAN; the gate that allows LAN binding (NFR-020). _(1.8.0)_ Plain HTTP stays on loopback (`server.bind`); LAN access is a separate HTTPS-only listener (`server.lan_bind`).
+- **Scope:** HTTPS; user-provided certificates and generated self-signed certificates; guidance for certificates on a LAN; the gate that allows LAN binding (NFR-020).
 - **Deliverables:** TLS configuration; certificate generation command; LAN certificate guide; bind-address gate.
 - **Depends on:** S03.2.
 - **Requirements:** FR-088, NFR-020.
 - **Acceptance criteria:**
   1. The server serves HTTPS with a user-provided or generated self-signed certificate.
-  2. Binding to a non-loopback address requires HTTPS and an existing admin, and is allowed only once S03 is Done and the user configures it: the LAN listener (`server.lan_bind`) serves HTTPS only and starts only when an admin and a certificate exist, and plain HTTP stays on loopback _(made concrete in 1.8.0)_.
+  2. Binding to a non-loopback address requires HTTPS and an existing admin, and is allowed only once S03 is Done and the user configures it.
   3. The guide explains trusting the certificate on Windows, macOS, Linux, Android, and iOS.
 - **Risks/notes:** Self-signed certificates cause browser warnings. The guide mitigates this; a local CA option can come later.
 - **Status:** Not started
@@ -1824,11 +1824,11 @@ flowchart LR
 
 #### S03.7: Two-factor authentication (optional)
 - **Goal:** Optional TOTP 2FA for accounts.
-- **Scope:** TOTP-based 2FA with recovery codes. Priority "Could"; **approved**: the user answered Q33 with yes (S007 E050).
+- **Scope:** TOTP-based 2FA with recovery codes. Priority "Could", pending the user's decision (Q33).
 - **Deliverables:** TOTP enrolment and verification; recovery codes.
 - **Depends on:** S03.2, S03.3.
 - **Requirements:** FR-091.
-- **Acceptance criteria (approved in 1.8.0):**
+- **Acceptance criteria (if approved):**
   1. Users can enrol a TOTP authenticator, after which login requires a code.
   2. Each recovery code works once.
   3. Disabling 2FA requires the password and a current code.
@@ -4032,4 +4032,3 @@ CI runs on Linux and Windows from S01.1. _Since S007 (the user's preference):_ C
 | 1.5.0 | 2026-09-28 | Requirements (MINOR), from the user's walkthrough of S02: **FR-008** gets the user's 30-day trash retention (S08.1 scope and criterion 3); the trash stays in S08.1, as the user decided. New **FR-214** (folder sizes), **FR-215** (added and modified dates, both shown), **FR-216** (finished uploads appear at once; a single uploaded item is scrolled into view and blinks twice). S02.3 and S02.4 get follow-up notes and requirements; their tasks S02.3-T05 and S02.4-T05 are in the stage document. | The user's messages in S007 (E030, E031) and answer "Both" (E032) | `logs/sessions/2026-09-28_S007.md`; `stages/S02-nas-gui.md` |
 | 1.6.0 | 2026-09-29 | **Competitor research and release roadmap** (MINOR, R4): research R001 (18 services, 118 gaps, each with one destination); goal G13; NG5 changed, NG1–NG3 marked pending Q55–Q57; MVP additions FR-217–FR-221 (Live Photos and motion photos, phone auto-backup bridge, alert delivery; pending Q54) with P006 labels in S03.1, S03.3, S04.1, S04.2, S04.6, S04.7, S04.9, S05.1, S05.3, S05.8, S08.1, S09.2, S09.3, S09.5, S09.6, S10.3, S10.5, S10.6, S11.2, S12.3; section 3.3 with FR-222–FR-327 for releases R01–R12 and NFR-040–NFR-043; 11b (roadmap, release process = RULES R13, conflicts), 11c (public release specification, I11 proposed only); Q52–Q66; S15.10 extensions; future components; milestones; risks RK-37–RK-41. Written against 1.4.2 and adapted to 1.5.0 (FR IDs from FR-217; folder sizes and the added date already in FR-214, FR-215). No stage created for R01–R12. | Plan change request #6 (the user's messages quoted in 11b) | `prompts/P006-competitor-research-release-roadmap.json`; `research/R001-2026-09-28-cloud-storage-feature-research.md`; `logs/sessions/2026-09-28_S007.md` |
 | 1.7.0 | 2026-09-29 | **Drive lifecycle, SSD caching, the admin console, and Raspberry Pi first** (MINOR, R4). P007: MVP additions MVP-A predictive drive health (S10.3, FR-332) and MVP-B the migration engine with a command line and, at the user's wish, a console page (S08.4, FR-333), pending Q67; S14 renamed "Drives, pools, and drive lifecycle" with new S14.9–S14.11 and changes to S14.2, S14.3, S14.6, S14.7, S14.8 (FR-208 promoted); new stage **S15 SSD caching** (section 10.15a, eight substages); **AI renumbered S15 → S16**. The user's requirement: the **admin console**: new S03.9 (foundation) and S10.6 (completeness), S10 renamed, section 6.6 (console map), FR-342–FR-345, NFR-050, ADR-0039. The user's requirement: **Raspberry Pi first**: G15, NFR-051, A24, 8.32–8.34 (the Pi 5 has no hardware video encoder), ARM64 and Pi-profile CI, Q75. The user's requirement: **deployers for Debian, Arch Linux, Windows 11, and Raspberry Pi OS**, very user-friendly (FR-149 changed, NFR-052, A25, S13.2, Q76). Also FR-328–FR-341, NFR-044–NFR-049, A18 and A22 refined, Q67–Q75, components, flows, ADR-0030–ADR-0039 (Proposed), concerns 8.27–8.31, M4 "Drives and storage", 11a write-back caching, fixtures, risks RK-42–RK-49; renumbering S03.9 → S03.10, S10.6 → S10.7, S14.9 → S14.12, S14.10 → S14.13 (10.18). No application code. | Plan change request #7 and the user's messages in S007 (E044, E046) | `prompts/P007-drive-lifecycle-and-ssd-cache.json`; `logs/sessions/2026-09-28_S007.md` |
-| 1.8.0 | 2026-09-29 | Stage change (MINOR): **S03 approved** with its stage document (`stages/S03-security.md`). S03.2 acceptance criterion 1 refined: on a machine without a local browser (a headless Raspberry Pi) the admin is created with the command line (`admin create`, also used by the S13.2 deployers). S03.4 scope and criterion 2 made concrete: plain HTTP stays on loopback, LAN access is a separate HTTPS-only listener (`server.lan_bind`). **Q33 answered yes** (S03.7 built; FR-091). **Q74 answered**: the admin console is `/admin` in the same app; **ADR-0039 Accepted**. S03 status Approved. Q75 stays open (the S03 budgets assume a Raspberry Pi 5 with 4 GB). | The user's approval "approve s03" of the stage document with decisions D-1–D-6 as recommended (S007 E050) | `logs/sessions/2026-09-28_S007.md`; `stages/S03-security.md` |
