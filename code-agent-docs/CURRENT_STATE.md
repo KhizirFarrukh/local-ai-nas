@@ -1,18 +1,19 @@
 # CURRENT_STATE
 
-**Last updated:** 2026-09-30 01:50 +0500 (session S007)
+**Last updated:** 2026-09-30 01:58 +0500 (session S007)
 **Plan version:** 1.9.0 (**`code-agent-docs/plan/PLAN_INDEX.md`**; the plan is split into files since phase B, ADR-0044). **17 stages, 139 substages.** 1.9.0 (P008 with the user's D1–D7, S007 E058–E061): I3 (the database is authoritative for ownership and access) and I4 (the typed search text may be embedded) reworded; follow-ups F1–F5 approved and built in S03 (item IDs, protection against other websites, job foundation and operation journal, trash, `synchronous=FULL`); sidecars `.lainas.json`; internal alpha at M2; change intake R14 (MVP frozen); the user's **new S13 dependency security review** before packaging (packaging S14, drives S15, SSD caching S16, AI S17; plan 10.18); the user's **Google Takeout import** (Drive and Photos, everything Google recorded) in R01 with the user's sample data first (A28). Earlier: 1.8.x S03 approved; 1.7.0 P007 (drive lifecycle, SSD caching, admin console, Raspberry Pi first, deployers); 1.6.0 P006 (releases R01–R12); **Approved baseline** 1.0.0 (S005)
 **Current phase:** **S01 Done** (S005 E126). **S02 Done** (signed off 2026-09-29, S007 E044). **S03 (Security): Approved** (S007 E050) and **In Progress** (`stages/S03-security.md`)
 
 ## Active stage and task
 - **Active stage:** **S03: Security**, In Progress (`stages/S03-security.md`, approved in S007 E050 with D-1–D-6 as recommended). **S02: NAS GUI** is **Done** (signed off in S007 E044); S01 is **Done**.
-- **Active task:** **S01.3-T11** (F1): the items table and UUIDv7 IDs on every create, rename, move, copy, and delete (ADR-0040).
+- **Active task:** **S01.4-T08** (F3): the durable job foundation (jobs table, workers with leases, retries, progress, cancel; long operations as `202` jobs; ADR-0011 amendment).
 - **The user's instruction (S007 E010):** after P005, resume S02 and work until the stage is complete, and also build the P005 items that belong to the current or earlier stages (the S01 follow-up tasks).
 
 ## In progress (write-ahead)
-- **S01.3-T11** (F1, item registry), branch `feat/S01.3-T11-item-registry`.
+- **S01.4-T08** (F3, job foundation), branch `feat/S01.4-T08-jobs`.
 
 ## Last completed
+- **S01.3-T11 done (F1)** (S007 E067): migration `00004_items.sql`; `files.Registry` (Ensure, EnsureAll, Moved, Deleted, Lookup) called by every write path next to the content hashes; `internal/items` (UUIDv7 via google/uuid v1.6.0, now a direct requirement). Checked with a scripted session: rename and move keep IDs, copies get new ones, an overwrite keeps the ID, deletes retire; the table matched the disk (4 items, 4 present rows).
 - **S01.1-T12 done (F5)** (S007 E066): `synchronous=FULL` and an explicit `wal_autocheckpoint(1000)` on every connection (`internal/db/db.go`); the pragma test checks both pools; `BenchmarkCommit`: about 0.41 ms per small commit with FULL versus 0.024 ms with NORMAL on the development PC.
 - **S03.5-T02 first part done (F2)** (S007 E065): `internal/api/origin.go`: a Host allow-list (loopback, `localhost`, configured names; `421 misdirected_request`) and an Origin check on state-changing requests (`403 csrf_failed`; no Origin allowed for scripts); the app's `Referrer-Policy` is now `same-origin`; two problem kinds (spec, generated code, GUI messages, `docs/api/errors.md`, a conventions section). Bug S03-B01's rebinding half is fixed. Playwright system tests (the real binary, the GUI in Chromium, Firefox, and Edge): 142 passed, 2 skipped (as before), so the GUI's own requests (uploads with tus, folder uploads, file operations, archives) pass the Origin check under Referrer-Policy: same-origin.
 - **P008 complete** (S007 E058–E064): phases A (content, plan 1.9.0), B (plan split into `code-agent-docs/plan/`, verified), C (README) committed and merged into `develop` (b121757); ADR-0040, ADR-0041, ADR-0042 **Accepted** ("Accept all three (Recommended)").

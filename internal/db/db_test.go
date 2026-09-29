@@ -111,7 +111,7 @@ func TestReaderCannotWrite(t *testing.T) {
 }
 
 // migrations is the number of migration files (internal/db/migrations).
-const migrations = 3
+const migrations = 4
 
 func TestMigrateIdempotent(t *testing.T) {
 	d := openTest(t)

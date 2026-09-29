@@ -92,6 +92,8 @@ func (s *Local) CreateFolder(ctx context.Context, owner, apiPath string, o Folde
 			}
 			r = result{NewItem(owner, made, info), created}
 			stampAdded(root, &r.item, info)
+			// The folder and any parents just made get IDs (best effort).
+			_, _ = s.registry.Ensure(ctx, owner, made, KindDir)
 			return nil
 		})
 		return r, err

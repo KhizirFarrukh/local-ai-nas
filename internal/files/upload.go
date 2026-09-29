@@ -78,6 +78,9 @@ func (s *Local) Upload(ctx context.Context, owner, apiPath string, body io.Reade
 			if err == nil && s.hashes.Record(ctx, owner, final, it.ETag, sum) == nil {
 				it.ContentHash = sum
 			}
+			if err == nil {
+				_, _ = s.registry.Ensure(ctx, owner, final, KindFile) // best effort (Registry)
+			}
 			r = result{it, created}
 			return err
 		})
@@ -136,6 +139,9 @@ func (s *Local) CommitUpload(ctx context.Context, owner, apiPath, src string, o 
 			it, err = withDetails(root, it, "/"+final)
 			if err == nil && o.ContentHash != "" && s.hashes.Record(ctx, owner, final, it.ETag, o.ContentHash) == nil {
 				it.ContentHash = o.ContentHash
+			}
+			if err == nil {
+				_, _ = s.registry.Ensure(ctx, owner, final, KindFile) // best effort (Registry)
 			}
 			r = result{it, created}
 			return err

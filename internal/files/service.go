@@ -114,6 +114,9 @@ type Options struct {
 	// Hashes keeps the files' content hashes (S01.3-T10); nil means
 	// NopHashes.
 	Hashes Hashes
+	// Registry keeps the items' stable IDs (S01.3-T11); nil means
+	// NopRegistry.
+	Registry Registry
 }
 
 // Local implements Service on the local disk. Every path goes through the
@@ -126,6 +129,7 @@ type Local struct {
 	copyLimits CopyLimits
 	locks      *storage.Locks
 	hashes     Hashes
+	registry   Registry
 }
 
 var _ Service = (*Local)(nil)
@@ -138,7 +142,10 @@ func NewLocal(r *storage.Resolver, o Options) *Local {
 	if o.Hashes == nil {
 		o.Hashes = NopHashes{}
 	}
-	return &Local{resolver: r, hooks: o.Hooks, space: o.Space, copyLimits: o.CopyLimits, locks: storage.NewLocks(), hashes: o.Hashes}
+	if o.Registry == nil {
+		o.Registry = NopRegistry{}
+	}
+	return &Local{resolver: r, hooks: o.Hooks, space: o.Space, copyLimits: o.CopyLimits, locks: storage.NewLocks(), hashes: o.Hashes, registry: o.Registry}
 }
 
 // lockFolder serializes the steps that give a new name to an item in the

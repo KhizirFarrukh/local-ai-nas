@@ -38,6 +38,13 @@
 - **Security:** an ID is an identifier, not a permission (I5); public links use separate random tokens (R09).
 - **Existing data:** a one-time, resumable backfill job (ADR-0011 amendment).
 
+### Implementation notes (S01.3-T11, S007 E067)
+
+- **Overwrite:** writing new content to an existing path (an upload or copy with `on_conflict=overwrite`) keeps that item's ID: it is a new version of the same file, so a share or an album entry survives an update. A new path (including an automatic rename) gets a new ID; a move that replaces an item retires the replaced item's ID.
+- **Retired rows stay** with their last path, so references and the audit trail can still name the item.
+- **Case-insensitive disks:** the registry keys items by the path as the request spelled it; a case variant of an existing name registers as another path. The listing-based assignment (S01.3-T12) and the reconciler (S05.7) retire such rows, as they must for content hashes.
+- **Best effort,** as the content hashes: a failed registry write never undoes the operation; the operation journal (S01.4-T09) closes the gap after crashes.
+
 ## Consequences
 
 - **Easier:** every later feature refers to items safely; renames and moves stop breaking references.
