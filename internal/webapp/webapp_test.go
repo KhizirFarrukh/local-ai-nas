@@ -102,7 +102,7 @@ func TestSecurityHeaders(t *testing.T) {
 	w := serve(t, h, http.MethodGet, "/files")
 	want := map[string]string{
 		"X-Content-Type-Options":  "nosniff",
-		"Referrer-Policy":         "no-referrer",
+		"Referrer-Policy":         "same-origin",
 		"X-Frame-Options":         "DENY",
 		"Content-Security-Policy": "default-src 'self'; script-src 'self' 'sha256-abc='; frame-ancestors 'none'",
 	}

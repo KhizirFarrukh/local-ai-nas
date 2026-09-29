@@ -63,6 +63,12 @@ const (
 	// Unavailable means the server cannot take the request now, for
 	// example while it shuts down; retry later.
 	Unavailable
+	// Misdirected is a request whose Host header does not name this
+	// server, such as one sent through DNS rebinding (S03.5-T02, ADR-0042).
+	Misdirected
+	// CSRFFailed is a state-changing request that another website sent:
+	// its Origin is not this server's own (S03.5-T02, ADR-0042).
+	CSRFFailed
 )
 
 type kindInfo struct {
@@ -87,6 +93,8 @@ var kinds = map[Kind]kindInfo{
 	TooLargeForSync:     {"too_large_for_sync", http.StatusUnprocessableEntity},
 	Locked:              {"locked", http.StatusLocked},
 	Unavailable:         {"unavailable", http.StatusServiceUnavailable},
+	Misdirected:         {"misdirected_request", http.StatusMisdirectedRequest},
+	CSRFFailed:          {"csrf_failed", http.StatusForbidden},
 }
 
 // Kinds returns every defined kind, in order.

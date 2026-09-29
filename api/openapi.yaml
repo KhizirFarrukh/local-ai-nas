@@ -944,6 +944,8 @@ components:
             - too_large_for_sync
             - locked
             - unavailable
+            - misdirected_request
+            - csrf_failed
         rule:
           type: string
           description: The exact rule that was broken, for some codes (for example `reserved_name` for `invalid_name`).

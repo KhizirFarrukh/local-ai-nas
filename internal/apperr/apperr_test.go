@@ -40,6 +40,8 @@ func TestKindMapping(t *testing.T) {
 		{TooLargeForSync, "too_large_for_sync", 422},
 		{Locked, "locked", 423},
 		{Unavailable, "unavailable", 503},
+		{Misdirected, "misdirected_request", 421},
+		{CSRFFailed, "csrf_failed", 403},
 		{Kind(999), "internal", 500}, // unknown kinds are treated as internal
 	}
 	if len(tests)-1 != len(kinds) {
@@ -59,8 +61,8 @@ func TestKindMapping(t *testing.T) {
 
 func TestKinds(t *testing.T) {
 	ks := Kinds()
-	if len(ks) != len(kinds) || ks[0] != Internal || ks[len(ks)-1] != Unavailable {
-		t.Errorf("Kinds() = %v, want all %d kinds from internal to unavailable", ks, len(kinds))
+	if len(ks) != len(kinds) || ks[0] != Internal || ks[len(ks)-1] != CSRFFailed {
+		t.Errorf("Kinds() = %v, want all %d kinds from internal to csrf_failed", ks, len(kinds))
 	}
 }
 

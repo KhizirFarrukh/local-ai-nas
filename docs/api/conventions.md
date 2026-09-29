@@ -114,6 +114,17 @@ Links that exist in the storage (the API never creates them) are items of their 
 - Every error response is an RFC 9457 problem (`application/problem+json`) with a stable `code`, sometimes a `rule`, and the `correlation_id`. See [errors.md](errors.md).
 - Unknown endpoints get `404 not_found`, and a known endpoint with the wrong method gets `405 method_not_allowed` with an `Allow` header. Both are problems too.
 
+## Requests from other websites
+
+Since S03.5-T02 (ADR-0042), two checks protect the NAS from web pages the user visits, even before sign-in exists:
+
+- **Host:** the `Host` header must name this server: a loopback address (`127.0.0.1`, `[::1]`), `localhost`, or a host name the admin configured. The port is not checked. Anything else gets `421 misdirected_request`. This stops DNS rebinding, where a page's own host name resolves to the NAS. A reverse proxy must pass the original `Host` on.
+- **Origin:** a request that can change something (any method except GET, HEAD, and OPTIONS) that carries an `Origin` header must come from the server's own origin (its scheme and `Host`); another origin, or `null`, gets `403 csrf_failed`. Browsers always send `Origin` on such requests; a request without one, such as one from `curl` or a script, is let through.
+- The API never sends CORS headers (`Access-Control-Allow-Origin`), so other websites cannot read its answers.
+- The web app sends `Referrer-Policy: same-origin`: referrers never leave the NAS, and browsers put the real origin on the app's own requests.
+
+Once sign-in exists (S03.3, S03.5), cookies are checked with CSRF tokens as well; these two checks stay.
+
 ## Request IDs
 
 Every response has an `X-Request-ID` header. A client may send its own (1 to 128 characters: letters, digits, `-`, `_`, `.`, `:`) and the server keeps it. The same ID is the `correlation_id` of a problem and appears in every server log line for the request.

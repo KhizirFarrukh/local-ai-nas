@@ -24,7 +24,7 @@ import (
 // putContent calls PUT /api/v1/files/content with body.
 func putContent(t *testing.T, h http.Handler, query string, body []byte) (*httptest.ResponseRecorder, gen.FileItem) {
 	t.Helper()
-	req := httptest.NewRequest(http.MethodPut, "/api/v1/files/content?"+query, bytes.NewReader(body))
+	req := newTestRequest(http.MethodPut, "/api/v1/files/content?"+query, bytes.NewReader(body))
 	req.Header.Set("Content-Type", "application/octet-stream")
 	rec := httptest.NewRecorder()
 	h.ServeHTTP(rec, req)
@@ -99,7 +99,7 @@ func TestUploadInvalidInputNeverReachesService(t *testing.T) {
 		{"path=/a.txt", -1, http.StatusLengthRequired, "length_required"},
 		{"path=/a.txt", 11, http.StatusRequestEntityTooLarge, "too_large"},
 	} {
-		req := httptest.NewRequest(http.MethodPut, "/api/v1/files/content?"+tt.query, strings.NewReader("abc"))
+		req := newTestRequest(http.MethodPut, "/api/v1/files/content?"+tt.query, strings.NewReader("abc"))
 		req.ContentLength = tt.length
 		rec := httptest.NewRecorder()
 		h.ServeHTTP(rec, req)

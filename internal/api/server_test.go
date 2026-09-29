@@ -34,7 +34,7 @@ func TestGetHealthStatuses(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			rec := httptest.NewRecorder()
-			New(Options{Version: "v", Checks: tt.checks}).ServeHTTP(rec, httptest.NewRequest(http.MethodGet, "/api/v1/system/health", nil))
+			New(Options{Version: "v", Checks: tt.checks}).ServeHTTP(rec, newTestRequest(http.MethodGet, "/api/v1/system/health", nil))
 			var rep gen.HealthReport
 			if err := json.Unmarshal(rec.Body.Bytes(), &rep); err != nil {
 				t.Fatal(err)
@@ -53,7 +53,7 @@ func TestGetHealthStatuses(t *testing.T) {
 func problemOf(t *testing.T, h http.HandlerFunc) (int, apperr.Problem) {
 	t.Helper()
 	rec := httptest.NewRecorder()
-	logging.RequestID(h).ServeHTTP(rec, httptest.NewRequest(http.MethodGet, "/api/v1/x", nil))
+	logging.RequestID(h).ServeHTTP(rec, newTestRequest(http.MethodGet, "/api/v1/x", nil))
 	var p apperr.Problem
 	if err := json.Unmarshal(rec.Body.Bytes(), &p); err != nil {
 		t.Fatalf("body %q is not a problem: %v", rec.Body, err)

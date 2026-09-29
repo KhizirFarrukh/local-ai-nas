@@ -14,7 +14,7 @@ import (
 // postFolder calls POST /api/v1/files/folders with a JSON body.
 func postFolder(t *testing.T, h http.Handler, body string) (*httptest.ResponseRecorder, gen.FileItem) {
 	t.Helper()
-	req := httptest.NewRequest(http.MethodPost, "/api/v1/files/folders", strings.NewReader(body))
+	req := newTestRequest(http.MethodPost, "/api/v1/files/folders", strings.NewReader(body))
 	req.Header.Set("Content-Type", "application/json; charset=utf-8")
 	rec := httptest.NewRecorder()
 	h.ServeHTTP(rec, req)
@@ -79,7 +79,7 @@ func TestCreateFolderInvalidInputNeverReachesService(t *testing.T) {
 		}
 	}
 	// Without the JSON content type the body is not even read.
-	req := httptest.NewRequest(http.MethodPost, "/api/v1/files/folders", strings.NewReader(`{"path":"/x"}`))
+	req := newTestRequest(http.MethodPost, "/api/v1/files/folders", strings.NewReader(`{"path":"/x"}`))
 	req.Header.Set("Content-Type", "text/plain")
 	rec := httptest.NewRecorder()
 	h.ServeHTTP(rec, req)

@@ -57,7 +57,7 @@ func TestUnversionedPathsAreNotServed(t *testing.T) {
 	h := New(Options{})
 	for _, p := range []string{"/", "/health", "/api", "/api/v2/system/health", "/v1/system/health"} {
 		rec := httptest.NewRecorder()
-		h.ServeHTTP(rec, httptest.NewRequest(http.MethodGet, p, nil))
+		h.ServeHTTP(rec, newTestRequest(http.MethodGet, p, nil))
 		if rec.Code != http.StatusNotFound {
 			t.Errorf("GET %s = %d, want 404", p, rec.Code)
 		}
@@ -66,7 +66,7 @@ func TestUnversionedPathsAreNotServed(t *testing.T) {
 
 func TestHealthRoute(t *testing.T) {
 	rec := httptest.NewRecorder()
-	New(Options{Version: "1.2.3"}).ServeHTTP(rec, httptest.NewRequest(http.MethodGet, "/api/v1/system/health", nil))
+	New(Options{Version: "1.2.3"}).ServeHTTP(rec, newTestRequest(http.MethodGet, "/api/v1/system/health", nil))
 	if rec.Code != http.StatusOK || !strings.Contains(rec.Body.String(), `"version":"1.2.3"`) {
 		t.Errorf("health = %d %s", rec.Code, rec.Body)
 	}
@@ -87,7 +87,7 @@ func TestPhotosAPINotAvailable(t *testing.T) {
 		{http.MethodDelete, "/api/v1/photos/items/abc"},
 	} {
 		rec := httptest.NewRecorder()
-		h.ServeHTTP(rec, httptest.NewRequest(tc.method, tc.path, nil))
+		h.ServeHTTP(rec, newTestRequest(tc.method, tc.path, nil))
 		var p apperr.Problem
 		if err := json.Unmarshal(rec.Body.Bytes(), &p); err != nil {
 			t.Fatalf("%s %s: body %q is not a problem: %v", tc.method, tc.path, rec.Body, err)
