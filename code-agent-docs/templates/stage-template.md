@@ -50,7 +50,7 @@ flowchart LR
 
 <!--
 Hierarchy: Stage → Substage → Task (RULES.md R3).
-Substage IDs and their goals, scope, and acceptance criteria come from plan.md section 10. Copy them here, then break each substage into tasks.
+Substage IDs and their goals, scope, and acceptance criteria come from the stage's plan file (`plan/stages/S<NN>-<slug>.md`, plan section 10). Copy them here, then break each substage into tasks.
 Task IDs: S<NN>.<n>-T<NN>, e.g. S01.3-T02 = task 2 of substage S01.3.
 Status values: Not started / In Progress / Testing / Review / Done / Blocked (with reason).
 -->
@@ -64,8 +64,8 @@ Status values: Not started / In Progress / Testing / Review / Done / Blocked (wi
 
 ### S<NN>.1: <Substage name>
 
-- **Goal:** <from plan.md>
-- **Substage acceptance criteria:** <from plan.md, refined if needed>
+- **Goal:** <from the plan>
+- **Substage acceptance criteria:** <from the plan, refined if needed>
 
 | Task ID | Description | Status | Acceptance criteria |
 |---|---|---|---|
@@ -127,7 +127,7 @@ Commands that must pass before a task is marked Done (build, lint, format, and t
 - [ ] 
 - [ ] The stage's unit, integration, and system/application tests are written and pass in CI on Linux and Windows; coverage ≥ 80%. Linter and formatter are clean.
 - [ ] Documentation audit (R12) done; no Critical finding open.
-- [ ] Documentation (plan.md, CURRENT_STATE.md, ADRs, README if user-facing) is updated.
+- [ ] Documentation (the plan, CURRENT_STATE.md, ADRs, README if user-facing) is updated.
 
 ## 10. Risks and rollback approach
 

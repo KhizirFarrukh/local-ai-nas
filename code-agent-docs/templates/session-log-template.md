@@ -19,7 +19,7 @@ Redact secrets (passwords, API keys, tokens) in every entry.
 
 ## Startup
 
-- **Documents read:** <RULES.md, CURRENT_STATE.md, plan.md, previous log(s), stage doc, ADRs>
+- **Documents read:** <RULES.md, CURRENT_STATE.md, the plan files (PLAN_INDEX.md and those R1 names), previous log(s), stage doc, ADRs>
 - **Previous session ended cleanly?** <yes / no; if no, what was reconstructed>
 - **Git state:** <branch, last commit, uncommitted or unrecorded changes found and reported>
 - **Resume summary given to the user:**

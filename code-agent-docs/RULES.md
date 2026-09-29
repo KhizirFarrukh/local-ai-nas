@@ -1,6 +1,6 @@
 # RULES: Permanent Operating Rules for AI Agents on local-ai-nas
 
-**RULES.md version:** 1.9.0
+**RULES.md version:** 1.9.1
 **Created:** 2026-09-23 (session S001)
 **Source:** `operating_rules` in `code-agent-docs/bootstrap/initial-prompt.json`, transcribed in full with the original rule IDs.
 
@@ -18,7 +18,7 @@ Do this at the start of **every** session and every new chat, even if the user's
 
 1. Read `code-agent-docs/RULES.md` completely (this file).
 2. Read `code-agent-docs/CURRENT_STATE.md`.
-3. Read `code-agent-docs/plan.md`: sections 2a (invariants), 5 (open questions), 7 (chosen stack), and 10.1 (roadmap overview), plus the **complete** section of the active (or next) stage in section 10. Read the other sections when the work needs them. _(Changed in RULES 1.4.0, approved by the user in S005, decision D-09.)_
+3. Read the plan in `code-agent-docs/plan/`: `PLAN_INDEX.md`, then `invariants.md` (section 2a), `questions.md` (5, open questions), `tech-stack.md` (7, chosen stack), and `roadmap.md` (10.1, roadmap overview), plus the **complete** file of the active (or next) stage in `plan/stages/` (its section 10.x). _(The same sections as before the plan was split in 1.9.0, ADR-0044.)_ Read the other sections when the work needs them. _(Changed in RULES 1.4.0, approved by the user in S005, decision D-09.)_
 4. Read the most recent session log in `code-agent-docs/logs/sessions/`. If it has no closing summary, also read the one before it and reconstruct what was in progress.
 5. Read the stage document for the active stage (`code-agent-docs/stages/`) and any ADRs it references (`code-agent-docs/decisions/`).
 6. Run `git log` and `git status`. Report any changes that the logs do not describe to the user before continuing.
@@ -31,7 +31,7 @@ Do this at the start of **every** session and every new chat, even if the user's
 
 ## Project invariants
 
-No code, plan change, stage document, or ADR may violate these invariants without **explicit user approval**. A change to an invariant is itself a RULES.md change: it needs approval and goes in the changelog. They are repeated in `plan.md` ("Project invariants").
+No code, plan change, stage document, or ADR may violate these invariants without **explicit user approval**. A change to an invariant is itself a RULES.md change: it needs approval and goes in the changelog. They are repeated in the plan (`plan/invariants.md`, "Project invariants").
 
 - **I1:** The storage root contains exactly two user-data areas: `files/` and `photos/`. They never intersect. An item moves between them only when the user explicitly copies or moves it.
 - **I2:** Internal application data (database, search index, caches, thumbnails, trash, configuration) lives outside `files/` and `photos/`.
@@ -54,7 +54,7 @@ No code, plan change, stage document, or ADR may violate these invariants withou
 
 1. Read `code-agent-docs/RULES.md` completely.
 2. Read `code-agent-docs/CURRENT_STATE.md`.
-3. Read `code-agent-docs/plan.md`: sections 2a (invariants), 5 (open questions), 7 (chosen stack), and 10.1 (roadmap overview), plus the **complete** section of the active (or next) stage in section 10. Read the other sections when the work needs them. _(Changed in RULES 1.4.0, approved by the user in S005, decision D-09.)_
+3. Read the plan in `code-agent-docs/plan/`: `PLAN_INDEX.md`, then `invariants.md` (section 2a), `questions.md` (5, open questions), `tech-stack.md` (7, chosen stack), and `roadmap.md` (10.1, roadmap overview), plus the **complete** file of the active (or next) stage in `plan/stages/` (its section 10.x). _(The same sections as before the plan was split in 1.9.0, ADR-0044.)_ Read the other sections when the work needs them. _(Changed in RULES 1.4.0, approved by the user in S005, decision D-09.)_
 4. Read the most recent session log. If it has no closing summary (the session ended abruptly), also read the one before it and reconstruct what was in progress.
 5. Read the stage document for the active stage and any ADRs it references.
 6. Check the git log and working tree (`git status`) for uncommitted or unrecorded changes. If you find changes not described in the logs, report them to the user before continuing.
@@ -87,8 +87,8 @@ No code, plan change, stage document, or ADR may violate these invariants withou
 
 | Level | ID format | Example | Where it is defined |
 |---|---|---|---|
-| Stage | `S<NN>` | `S01` | `plan.md`: every stage, for the whole roadmap |
-| Substage | `S<NN>.<n>` | `S01.3` | `plan.md`: every substage of every stage, with goal, scope, deliverables, dependencies, requirements, acceptance criteria, risks, and status |
+| Stage | `S<NN>` | `S01` | The plan (`plan/roadmap.md` 10.1 and `plan/stages/`): every stage, for the whole roadmap |
+| Substage | `S<NN>.<n>` | `S01.3` | The plan (`plan/stages/`): every substage of every stage, with goal, scope, deliverables, dependencies, requirements, acceptance criteria, risks, and status |
 | Task | `S<NN>.<n>-T<NN>` | `S01.3-T02` (task 2 of substage S01.3) | The stage document `stages/S<NN>-<slug>.md`, written just in time, before the stage starts |
 
 **Stage lifecycle:** `Planned -> Approved -> In Progress -> Testing -> Review -> Done`. A stage can also be `Blocked`, with the reason recorded. Substages and tasks use the same status values, plus `Not started` before work begins.
@@ -96,7 +96,7 @@ No code, plan change, stage document, or ADR may violate these invariants withou
 **A stage document must contain:**
 
 - Goal of the stage
-- Linked requirement IDs from `plan.md`
+- Linked requirement IDs from the plan (`plan/requirements.md`)
 - In scope and out of scope
 - Design approach, with diagrams or interface sketches where useful
 - Task breakdown: for each substage, small tasks with IDs in the form `S01.3-T02`, each with its own acceptance criteria
@@ -112,7 +112,7 @@ No code, plan change, stage document, or ADR may violate these invariants withou
 - Work on one task at a time. Mark it In Progress in the stage document and `CURRENT_STATE.md` before starting it.
 - If implementation reveals the plan is wrong or incomplete, stop. Update the stage document, record the reason, and ask for approval if the change affects scope, architecture, dependencies, data formats, or the sidecar JSON schema. Small internal adjustments can proceed but must still be recorded.
 - A stage is Done only when its tests pass, its acceptance criteria are met, and a completion record is written in the stage document: what was built, deviations from plan, known issues, follow-ups.
-- Detailed stage documents are written just before a stage starts, not all up front. `plan.md` holds the high-level roadmap.
+- Detailed stage documents are written just before a stage starts, not all up front. The plan (`code-agent-docs/plan/`) holds the high-level roadmap.
 
 The template is `code-agent-docs/templates/stage-template.md`.
 
@@ -120,15 +120,15 @@ The template is `code-agent-docs/templates/stage-template.md`.
 
 ## R4: Plan change management
 
-**Principle:** `plan.md` is a living document. It is never final.
+**Principle:** the plan (`code-agent-docs/plan/`, starting at `PLAN_INDEX.md`) is a living document. It is never final.
 
 **When the user requests a change:**
 
 1. Record the request verbatim in the session log.
 2. Analyze impact: which requirements, stages, ADRs, and already-written code are affected.
 3. If the impact is significant or the request is ambiguous, summarize the impact and confirm with the user before editing.
-4. Copy the current `plan.md` to `code-agent-docs/archive/plan-history/plan_v<current-version>.md`.
-5. Edit `plan.md` and bump its version: PATCH for wording or clarification, MINOR for added or changed requirements or stages, MAJOR for architecture changes or scope overhauls.
+4. Copy the current plan folder to `code-agent-docs/archive/plan-history/plan_v<current-version>/` (until 1.8.1 the plan was one file, archived as `plan_v<version>.md`).
+5. Edit the plan and bump its version (one version for the whole plan set, kept in `PLAN_INDEX.md`; the revision entry goes into `changelog.md`): PATCH for wording or clarification, MINOR for added or changed requirements or stages, MAJOR for architecture changes or scope overhauls.
    - **Pre-1.0 exception:** while the plan is a pre-1.0 draft (version `0.x.y`), restructurings, including architecture changes and scope overhauls, bump the **MINOR** version (e.g. `0.1.0 → 0.2.0`). The plan becomes **`1.0.0` when the user approves it as the baseline**. After that, the rules above apply unchanged.
 6. Add a revision history entry: version, date, summary of changes, reason, and a reference to the session log.
 7. Update affected stage documents, ADRs, and `CURRENT_STATE.md`.
@@ -203,7 +203,7 @@ ADR files are named `ADR-<NNNN>-<short-kebab-title>.md` (e.g. `ADR-0001-backend-
 - Nothing is ever deleted from `code-agent-docs/`. Superseded material is archived.
 - When `code-agent-docs/logs/sessions/` holds more than 20 logs, move logs from completed months to `code-agent-docs/archive/sessions/<YYYY-MM>/` and write a `SUMMARY.md` there covering the key work, decisions, and changes of that month. Future agents can read the summary instead of every log.
 - Keep `CURRENT_STATE.md` under about 150 lines. It is the quick entry point; detail belongs in stage docs, ADRs, and logs.
-- Keep `plan.md` focused on the current plan. Historical versions live in `archive/plan-history/`.
+- Keep the plan focused on the current plan. Historical versions live in `archive/plan-history/`.
 
 ---
 
@@ -213,7 +213,7 @@ ADR files are named `ADR-<NNNN>-<short-kebab-title>.md` (e.g. `ADR-0001-backend-
 
 1. The user's latest explicit instruction in chat
 2. `RULES.md`
-3. `plan.md`
+3. The plan (`code-agent-docs/plan/`)
 4. Stage documents and ADRs
 5. Everything else
 
@@ -253,7 +253,7 @@ ADR files are named `ADR-<NNNN>-<short-kebab-title>.md` (e.g. `ADR-0001-backend-
 - The MVP is milestone M3 (S01–S14 plus mvp_additions) and ships as the first stable release. Suggested label v1.0.0; the user decides (S14.7).
 - Feature releases bump the MINOR version (v1.1.0, v1.2.0, …). Fix-only releases bump PATCH and can ship at any time between feature releases. A release that breaks the data format or the upgrade path bumps MAJOR and needs the user's approval.
 - One feature release is in progress at a time. Security fixes take priority over all feature work.
-- Just-in-time conversion: when a release is next, its features become one stage (or several), with substages written into plan.md, inserted before the AI stage as I8 requires, and the AI stage is renumbered (record it in the 10.18 table). Then the stage document is written and approved before any code (R3).
+- Just-in-time conversion: when a release is next, its features become one stage (or several), with substages written into the plan (a new file in `plan/stages/`), inserted before the AI stage as I8 requires, and the AI stage is renumbered (record it in the 10.18 table). Then the stage document is written and approved before any code (R3).
 - Feature freeze: once a release's stage document is approved, adding a feature to it needs the user's approval. Otherwise the feature goes to a later release.
 - Every release ends with its stage's testing and review substage, plus: an upgrade test from the previous release with real migrated data, a security review of every new surface (threat model updated), release notes and a changelog, updated user and admin guides, the R12 documentation audit, a tagged release, and the user's sign-off.
 - Every release keeps the system upgradeable from the previous release (NFR-017) and keeps the NAS fully working with AI disabled (I7).
@@ -283,12 +283,12 @@ All agent documentation lives in `code-agent-docs/`:
 |---|---|
 | `code-agent-docs/RULES.md` | Permanent operating rules for the agent (this file). Read at the start of every session. |
 | `code-agent-docs/CURRENT_STATE.md` | Short, always-current snapshot: where the project stands and what to do next. The first thing a resuming agent relies on. Keep under ~150 lines. |
-| `code-agent-docs/plan.md` | The master development plan. Living document, versioned (R4). |
+| `code-agent-docs/plan/` | The master development plan, split into small files in 1.9.0 (ADR-0044): `PLAN_INDEX.md` (version, stage status, links, and the map from the old section numbers to files), `overview.md`, `invariants.md`, `requirements.md`, `assumptions.md`, `questions.md`, `architecture.md`, `tech-stack.md`, `roadmap.md`, `stages/S<NN>-<slug>.md` (one per stage), `testing.md`, `risks.md`, `changelog.md`. Living, versioned as one set (R4). `code-agent-docs/plan.md` is a short stub that points to the index. |
 | `code-agent-docs/dependencies.md` | The dependency register: every dependency, external tool, dataset, and AI model, with name, version, license, purpose, stage, ADR link, and verification status. Updated in the same commit that introduces a dependency (R6). |
 | `code-agent-docs/stages/` | One detailed plan document per development stage, named `S<NN>-<slug>.md`, e.g. `S01-basic-nas.md`. Created only when a stage is about to be planned in detail. |
 | `code-agent-docs/decisions/` | Architecture Decision Records, e.g. `ADR-0001-backend-language.md`. |
 | `code-agent-docs/logs/sessions/` | One log per working session: `<YYYY-MM-DD>_S<NNN>.md` with a sequential session number (S001, S002, ...). **Session IDs have three digits (S004); stage IDs have two (S04).** They are different things. |
-| `code-agent-docs/archive/plan-history/` | Every superseded version of `plan.md`, e.g. `plan_v0.1.0.md`. These are **verbatim** copies, so their relative links (e.g. `decisions/…`) are relative to `code-agent-docs/` and do not resolve from inside the archive folder. |
+| `code-agent-docs/archive/plan-history/` | Every superseded version of the plan: up to 1.8.1 a copy of `plan.md` (e.g. `plan_v0.1.0.md`); from 1.9.0 on a copy of the whole plan folder (`plan_v<version>/`). These are **verbatim** copies, so their relative links (e.g. `decisions/…`) are relative to `code-agent-docs/` and do not resolve from inside the archive folder. |
 | `code-agent-docs/archive/sessions/` | Older session logs moved here, in `<YYYY-MM>/` folders with a monthly `SUMMARY.md` (R9). |
 | `code-agent-docs/templates/` | `stage-template.md`, `session-log-template.md`, `adr-template.md`, `audit-checklist.md` (the reusable documentation-audit checklist for R12; update it whenever new document types or rules are added). |
 | `code-agent-docs/bootstrap/` | The original bootstrap prompt, archived verbatim (`initial-prompt.json`). It stays there. It is effectively prompt P001. |
@@ -367,3 +367,4 @@ Filled in as the user states lasting preferences (R10). Commit behavior is recor
 | 1.8.1 | 2026-09-29 | User Preferences: Raspberry Pi first, and a very user-friendly deployer for each of Debian, Arch Linux, Windows, and Raspberry Pi; Arch added to the section 12 platforms in the dependency-record bullet. Audit checklist: checks for the admin console, the Raspberry Pi budgets, the four platform columns, and the reused ID S15. | The user's lasting instructions (S007 E046), recorded per R10 |
 | 1.8.2 | 2026-09-29 | Documentation map: new folder `code-agent-docs/security/` for the threat model. Audit checklist: the threat model check (group H). | The user's approval of S03 with decision D-4 ("approve s03", S007 E050) |
 | 1.9.0 | 2026-09-30 | Invariants I3 (the database is authoritative for ownership, access, and sharing; sidecars mirror them) and I4 (the typed search text may be embedded at query time) reworded as in plan 1.9.0; new rule **R14 Change intake** (the MVP scope is frozen after P008). The process itself is unchanged (D4). | The user's decisions D2, D3, D4, D6 on plan change request #8 (S007 E059) |
+| 1.9.1 | 2026-09-30 | The plan moved into `code-agent-docs/plan/` (ADR-0044): documentation map, the Quick start and R1 step 3 (the same sections, now files), the R3 hierarchy table, R4 (archive the whole plan folder; one version in `PLAN_INDEX.md`), R9, R10, R13 wording. The process itself is unchanged (D4). | Plan change request #8, P-A: "Update RULES.md … Pre-approved by the user's request" |
