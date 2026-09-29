@@ -1394,7 +1394,7 @@ Work is **stage-gated** and governed by `code-agent-docs/RULES.md`.
 |---|---|---|---|---|---|
 | S01 | Basic NAS implementation | User-defined | A reliable storage service that manages the files area through an API, with the two-area layout in place. | Plan baseline approval | Done |
 | S02 | NAS GUI | User-defined | A graphical application that lets people use the NAS without touching the API. | S01 | **Done** |
-| S03 | Security | User-defined | Comprehensive security so the NAS can be safely reached from the local network (single admin). | S01, S02 | Not started |
+| S03 | Security | User-defined | Comprehensive security so the NAS can be safely reached from the local network (single admin). | S01, S02 | Planned (stage document `stages/S03-security.md` written 2026-09-29, S007; awaiting the user's approval) |
 | S04 | Media management | User-defined | A separate photos area with Google Photos style management. | S03 | Not started |
 | S05 | Media metadata | User-defined | Every photo has a sidecar JSON file that is the source of truth for its metadata. | S04 | Not started |
 | S06 | Search | User-defined | Fast, forgiving search across both files and photos. | S05 | Not started |
@@ -1722,7 +1722,7 @@ flowchart LR
 - **Goal:** Comprehensive security so the NAS can be safely reached from the local network. There is a single admin account at this stage; multiple users come in S07.
 - **User requirements (quoted):**
   > "Stage 3 is security implementation."
-- **Status:** Not started
+- **Status:** Planned (stage document `stages/S03-security.md` written 2026-09-29, S007; awaiting the user's approval)
 
 #### S03.1: Threat model
 - **Goal:** Identify what must be protected, from whom, and where, to drive the rest of S03.
