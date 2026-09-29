@@ -11,7 +11,7 @@
 
 ## Context
 
-S04.3 builds the shared background job system (FR-095, NFR-012). S05, S06, S08, S09, and S15 reuse it. Required:
+S04.3 builds the shared background job system (FR-095, NFR-012). S05, S06, S08, S09, and S16 reuse it. Required:
 - Survives restarts.
 - Retries with backoff.
 - Priorities.

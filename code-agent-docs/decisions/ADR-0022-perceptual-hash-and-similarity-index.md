@@ -25,7 +25,7 @@
 | **dHash** (difference hash, 64-bit from a 9×8 grayscale image) | Very cheap; robust to resizing and re-compression; tens of lines of code | Weak against crops and larger edits |
 | **pHash** (DCT of a 32×32 grayscale image, 64-bit from the low frequencies) | More robust to compression and small edits; the usual choice for resolution variants | A little more code (a 32×32 DCT); still cheap |
 | Both (two 64-bit values) | Each covers the other's weak cases; a match on both is strong evidence | 16 bytes per image instead of 8 |
-| AI embeddings | Best for look-alikes not shot together | Needs AI, which is optional and last (I7, I8); this is S15.11 |
+| AI embeddings | Best for look-alikes not shot together | Needs AI, which is optional and last (I7, I8); this is S16.11 |
 
 ### Implementation
 

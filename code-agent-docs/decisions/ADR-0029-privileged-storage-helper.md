@@ -52,7 +52,7 @@ A small Go program run as root by systemd, reached over a local Unix socket, doi
 
 - **Easier:** clear security boundary; testable allow list; the core stays unprivileged.
 - **Harder:** two programs to version together (the socket protocol is versioned).
-- **Required (follow-up work, constraints this imposes):** S03.1 lists the helper in the threat model; S14.2 builds it; S14.10 tests refusal of everything outside the allow list; `dependencies.md` records the host tools it runs.
+- **Required (follow-up work, constraints this imposes):** S03.1 lists the helper in the threat model; S14.2 builds it; S14.13 tests refusal of everything outside the allow list; `dependencies.md` records the host tools it runs.
 
 ## Approval record
 
