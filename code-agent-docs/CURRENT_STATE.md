@@ -1,18 +1,19 @@
 # CURRENT_STATE
 
-**Last updated:** 2026-09-29 21:51 +0500 (session S007)
+**Last updated:** 2026-09-29 22:05 +0500 (session S007)
 **Plan version:** 1.7.0 (`code-agent-docs/plan.md`), **Approved baseline** 1.0.0 (S005). 1.6.0 (P006): research, MVP additions FR-217–FR-221 (pending Q54), releases R01–R12. 1.7.0 (P007 and the user's S007 requirements): drive lifecycle in S14, **SSD caching S15, AI now S16**, the **admin console** (S03.9, S10.6, plan 6.6), **Raspberry Pi first** (NFR-051), **deployers for Debian, Arch Linux, Windows 11, Raspberry Pi OS** (FR-149, NFR-052). 16 stages, 133 substages; IDs translated in plan 10.18
-**Current phase:** **S01 Done** (S005 E126). **S02 Done** (signed off 2026-09-29, S007 E044). Next stage: **S03 (Security)**: its stage document is to be written and approved before any code (R3)
+**Current phase:** **S01 Done** (S005 E126). **S02 Done** (signed off 2026-09-29, S007 E044). **S03 (Security): Planned**: the stage document is written and waits for the user's approval; no S03 code before it (R3)
 
 ## Active stage and task
-- **Active stage:** none in progress. **S02: NAS GUI** is **Done** (`stages/S02-nas-gui.md`, signed off in S007 E044); S01 is **Done**. Next: **S03 (Security)**, stage document not written yet.
-- **Active task:** the S03 stage document (R3), for the user's approval. The P005 follow-up tasks of S01 are all done.
+- **Active stage:** none in progress. **S02: NAS GUI** is **Done** (`stages/S02-nas-gui.md`, signed off in S007 E044); S01 is **Done**. **S03 (Security): Planned** (`stages/S03-security.md`, written in S007 E049; awaiting approval with decisions D-1–D-6).
+- **Active task:** none. Waiting for the user's approval of the S03 stage document (R3). The P005 follow-up tasks of S01 are all done.
 - **The user's instruction (S007 E010):** after P005, resume S02 and work until the stage is complete, and also build the P005 items that belong to the current or earlier stages (the S01 follow-up tasks).
 
 ## In progress (write-ahead)
-- **Next: the S03 (Security) stage document** (R3), written for the user's approval before any S03 code. It includes the new S03.9 admin console foundation, the Raspberry Pi budgets (NFR-051), and the ARM64 and Pi-profile CI jobs.
+- Nothing in progress. The S03 stage document is committed and waits for approval.
 
 ## Last completed
+- **S03 stage document written** (S007 E049; `stages/S03-security.md`): 10 substages, 36 tasks; the design for accounts, sessions and tokens, HTTPS on a separate LAN listener (plain HTTP stays on this computer), default-deny authorization, CSRF, headers, rate limits, the audit trail, optional TOTP (Q33), the security GUI, and the **admin console foundation** (S03.9: `/admin`, console-managed settings, shared components, first sections); **Raspberry Pi budgets** (4.9) and the ARM64 and Pi-profile CI (S03.10). New dependencies checked: x/crypto v0.57.0, x/term v0.46.0 (BSD-3-Clause); pquerna/otp v1.5.0 (Apache-2.0) and boombuler/barcode v1.1.0 (MIT) only if Q33 is yes.
 - **Plan change request #7, the admin console, Raspberry Pi first, and the deployers applied** (S007 E044–E047; branch `docs/P007-drives-cache-admin-console`): plan 1.7.0; ADR-0030–ADR-0039 (Proposed; verification results inside); RULES 1.8.1; register (P007 candidates, Arch Linux column in section 12, AI renumbered S16); audit checklist; README proposal R-16. No application code.
 - **Stage-end CI green** (S007 E027–E028): run 36433983279, 15 of 15 jobs, on the tag `S02-done` (`develop` 494e616). The first run had failed in the Linux system tests because of two test races, fixed in `fix/S02.8-T05-e2e-resume-race`; the tag was moved with the user's permission.
 - **S02 signed off and Done** (S007 E044): "you know what, assume its tested, continue to next stage"; the walkthrough and Narrator check were assumed; README proposals R-13–R-15 and the S01 re-confirmation stay open.
@@ -38,7 +39,7 @@
 - **S01 Done** (S005 E126), plan 1.1.4: every task, CI run, and decision is in `stages/S01-basic-nas.md` (sections 12 and 13) and the S005 log.
 
 ## Next steps
-1. **S03 (Security) stage document** (`stages/S03-security.md`, R3): tasks for S03.1–S03.10, including the new **S03.9 admin console foundation** (ADR-0039, Q74), the Raspberry Pi budgets (NFR-051), and the ARM64 and Pi-profile CI jobs (S03.10); then the user's approval, together with Q67–Q76, Q54 and Q34, and README proposals R-13–R-16. No S03 code before approval.
+1. **The user's approval of S03** (`stages/S03-security.md`, section 11), with **D-1** admin console form (Q74; `/admin` recommended), **D-2** two-factor now (Q33; recommended), **D-3** headless first run by command line (recommended), **D-4** the `code-agent-docs/security/` folder, **D-5** which Raspberry Pi (Q75; budgets assume a Pi 5 with 4 GB), **D-6** password minimum 12. After approval: record it (section 11, log), set S03 Approved, apply the refined criteria to the plan (PATCH), and start **S03.1-T01** (threat model), in the execution order of section 5.
 2. **Still open from the P005 report** (not blocking S02): Q42–Q49 and Q51; accepting or removing the planner additions (labelled in plan section 3); ADR-0022–ADR-0029 (Proposed); the RAID 0/1 reading of E008. ADR-0021 and the CI trigger were decided in E013. The S01 follow-ups are done (S007 E017–E019).
 3. Follow-up from S01 (the user's decision): run `scripts/perf-baseline.sh` on the Raspberry Pi and the mini-PC when available; also measure SHA-256 there (ADR-0021).
 4. **Endpoint workflow (spec-first):** spec → `go generate ./internal/api` → strict operation; an error case in `errorCases`/`bodyErrorCases`; a review row in `docs/api/conventions.md`; a fake-service test that invalid input never reaches the service.
@@ -46,6 +47,7 @@
 6. Every finished branch: merge it into `develop` myself (`--no-ff`) and push (RULES User Preferences).
 
 ## Blocked or waiting on user
+- **S03 approval** (R3; decisions D-1–D-6 in `stages/S03-security.md` section 11). Also open, not blocking: Q67–Q76 (P007), Q54 and Q34 (P006), README proposals R-13–R-16.
 - **Stray folder `C:\c`** (holds only an empty `Users` tree, left by an S006 command): deleting it was blocked by a safety check, so the user deletes it.
 
 ## Open questions (short list; full text in plan.md section 5)
@@ -58,7 +60,7 @@
 
 ## Pointers
 - Latest session log: `code-agent-docs/logs/sessions/2026-09-28_S007.md` (current); S006 is closed
-- Stage documents: `code-agent-docs/stages/S02-nas-gui.md` (**Done**, signed off in S007 E044); `code-agent-docs/stages/S01-basic-nas.md` (**Done**; P005 follow-up tasks at the end of section 5; completion record in section 13)
+- Stage documents: `code-agent-docs/stages/S03-security.md` (**Planned**, awaiting approval); `code-agent-docs/stages/S02-nas-gui.md` (**Done**, signed off in S007 E044); `code-agent-docs/stages/S01-basic-nas.md` (**Done**; P005 follow-up tasks at the end of section 5; completion record in section 13)
 - Audit reports: `code-agent-docs/audits/A003-2026-09-28-documentation-audit.md` (the S02 final review, with `A003-readme-proposal.md`); `A002-2026-09-24-documentation-audit.md` (the S01 final review); `A001-2026-09-24-documentation-audit.md`
 - ADRs: `code-agent-docs/decisions/ADR-0001` … `ADR-0039` (0019 and 0022–0039 Proposed, 0030–0039 new in 1.7.0; 0021 Accepted in S007; 0012 superseded in part by 0020; the rest Accepted)
 - Dependency register: `code-agent-docs/dependencies.md` (section 12: deployment prerequisites per platform, the input for the S13.2 setup scripts)
