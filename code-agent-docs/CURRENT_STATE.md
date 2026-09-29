@@ -1,6 +1,6 @@
 # CURRENT_STATE
 
-**Last updated:** 2026-09-30 01:27 +0500 (session S007)
+**Last updated:** 2026-09-30 01:31 +0500 (session S007)
 **Plan version:** 1.9.0 (**`code-agent-docs/plan/PLAN_INDEX.md`**; the plan is split into files since phase B, ADR-0044). **17 stages, 139 substages.** 1.9.0 (P008 with the user's D1–D7, S007 E058–E061): I3 (the database is authoritative for ownership and access) and I4 (the typed search text may be embedded) reworded; follow-ups F1–F5 approved and built in S03 (item IDs, protection against other websites, job foundation and operation journal, trash, `synchronous=FULL`); sidecars `.lainas.json`; internal alpha at M2; change intake R14 (MVP frozen); the user's **new S13 dependency security review** before packaging (packaging S14, drives S15, SSD caching S16, AI S17; plan 10.18); the user's **Google Takeout import** (Drive and Photos, everything Google recorded) in R01 with the user's sample data first (A28). Earlier: 1.8.x S03 approved; 1.7.0 P007 (drive lifecycle, SSD caching, admin console, Raspberry Pi first, deployers); 1.6.0 P006 (releases R01–R12); **Approved baseline** 1.0.0 (S005)
 **Current phase:** **S01 Done** (S005 E126). **S02 Done** (signed off 2026-09-29, S007 E044). **S03 (Security): Approved** (S007 E050) and **In Progress** (`stages/S03-security.md`)
 
@@ -10,9 +10,10 @@
 - **The user's instruction (S007 E010):** after P005, resume S02 and work until the stage is complete, and also build the P005 items that belong to the current or earlier stages (the S01 follow-up tasks).
 
 ## In progress (write-ahead)
-- **Applying plan change request #8** (S007 E058–E061; branch `docs/P008-architecture-review`): D1–D7 answered, verification done, review record R003, phase A (content) and **phase B (plan split, verified: 3,750 lines moved, every ID defined once)** done; next **phase C** (README); then continue working (the user): the approved follow-ups, F2 first.
+- **S03.5-T02, first part (F2): Host allow-list and Origin check** (ADR-0042), branch `feat/S03.5-T02-local-origin`.
 
 ## Last completed
+- **P008 complete** (S007 E058–E064): phases A (content, plan 1.9.0), B (plan split into `code-agent-docs/plan/`, verified), C (README) committed and merged into `develop` (b121757); ADR-0040, ADR-0041, ADR-0042 **Accepted** ("Accept all three (Recommended)").
 - **P008 phase A** (S007 E058–E061): plan 1.9.0 (1.8.1 archived), RULES 1.9.0 (I3, I4, R14), ADR-0040–ADR-0044 and six amendments, P008 follow-up tasks in the S01 and S02 stage documents, S03 execution order and S03.2-T06, register, threat model 1.3, research R003 (R002 superseded in part), audit checklist. The user added the new S13 stage and the Takeout import with its sample-data prerequisite.
 - **External review #1 recorded** (S007 E056–E057): archived as `prompts/CR001-improvement-review-1.md`; disposition `research/R002-2026-09-30-external-review-1.md` (covered points skipped, as the user asked); plan 1.8.1 (Q77–Q81, 8.35–8.37, 8.11 note, RK-50); threat model 1.2 (T-58, T-59); S03 order: the Host allow-list first; README proposal R-17.
 - **S03.2-T02 done** (S007 E054): `internal/auth/password.go`: Argon2id with the ADR-0010 parameters in PHC format, NFKC-normalized passwords, at most 2 hashes at a time (10 s queue, then `ErrBusy`), rehash detection, bounded parsing of stored hashes, a dummy check for unknown users, the password rules (12 characters minimum, D-6). Benchmark on the development PC: about 40 ms and 64 MiB per hash. `golang.org/x/crypto` v0.57.0 in `go.mod` (register updated).
@@ -46,7 +47,7 @@
 - **S01 Done** (S005 E126), plan 1.1.4: every task, CI run, and decision is in `stages/S01-basic-nas.md` (sections 12 and 13) and the S005 log.
 
 ## Next steps
-1. **Finish P008:** phase C (README: status, diagram, license, `.lainas.json`), consistency check; commit and push each phase. **Then continue working** (the user): ask the user to accept ADR-0040, ADR-0041, ADR-0042 (their tasks start first), then **S03.5-T02 first part (F2)** and the rest of the S03 execution order (section 5). **Ask the user** to review the threat model (S03.1 criterion 3).
+1. **Finish P008:** phase C (README: status, diagram, license, `.lainas.json`), consistency check; commit and push each phase. **Then continue working** (the user): ADR-0040–ADR-0042 are Accepted; **S03.5-T02 first part (F2)** and the rest of the S03 execution order (section 5). **Ask the user** to review the threat model (S03.1 criterion 3).
 2. **Still open from the P005 report** (not blocking S02): Q42–Q49 and Q51; accepting or removing the planner additions (labelled in plan section 3); ADR-0022–ADR-0029 (Proposed); the RAID 0/1 reading of E008. ADR-0021 and the CI trigger were decided in E013. The S01 follow-ups are done (S007 E017–E019).
 3. Follow-up from S01 (the user's decision): run `scripts/perf-baseline.sh` on the Raspberry Pi and the mini-PC when available; also measure SHA-256 there (ADR-0021).
 4. **Endpoint workflow (spec-first):** spec → `go generate ./internal/api` → strict operation; an error case in `errorCases`/`bodyErrorCases`; a review row in `docs/api/conventions.md`; a fake-service test that invalid input never reaches the service.
@@ -55,7 +56,6 @@
 
 ## Blocked or waiting on user
 - **Google Takeout sample data** (the user will provide it; plan A28, 8.42): no Takeout import work starts before it is analyzed and recorded; the sample stays in the git-ignored `dev/` folder.
-- **ADR-0040, ADR-0041, ADR-0042** (Proposed, P008): acceptance before their follow-up tasks start.
 - Open, not blocking: **Q75** (which Raspberry Pi; the S03 budgets assume a Pi 5 with 4 GB), Q67–Q73 and Q76 (P007), Q54 and Q34 (P006), README proposals R-13–R-17; the user's review of the threat model.
 - **Stray folder `C:\c`** (holds only an empty `Users` tree, left by an S006 command): deleting it was blocked by a safety check, so the user deletes it.
 
@@ -73,7 +73,7 @@
 - Latest session log: `code-agent-docs/logs/sessions/2026-09-28_S007.md` (current); S006 is closed
 - Stage documents: `code-agent-docs/stages/S03-security.md` (**In Progress**, approved in S007 E050); `code-agent-docs/stages/S02-nas-gui.md` (**Done**, signed off in S007 E044); `code-agent-docs/stages/S01-basic-nas.md` (**Done**; P005 and P008 follow-up tasks at the end of section 5, the P008 ones built in S03; completion record in section 13); `code-agent-docs/stages/S02-nas-gui.md` also has the P008 follow-up S02.5-T05
 - Audit reports: `code-agent-docs/audits/A003-2026-09-28-documentation-audit.md` (the S02 final review, with `A003-readme-proposal.md`); `A002-2026-09-24-documentation-audit.md` (the S01 final review); `A001-2026-09-24-documentation-audit.md`
-- ADRs: `code-agent-docs/decisions/ADR-0001` … `ADR-0044` (0019, 0022–0038, and 0040–0043 Proposed; 0044 Accepted by the user's request; 0039 Accepted in S007 E050; amendments to 0007, 0011, 0014, 0017, 0018 in 1.9.0; 0021 Accepted in S007; 0012 superseded in part by 0020; the rest Accepted)
+- ADRs: `code-agent-docs/decisions/ADR-0001` … `ADR-0044` (0019, 0022–0038, and 0043 Proposed; 0040–0042 Accepted in S007 ("Accept all three (Recommended)"); 0044 Accepted by the user's request; 0039 Accepted in S007 E050; amendments to 0007, 0011, 0014, 0017, 0018 in 1.9.0; 0021 Accepted in S007; 0012 superseded in part by 0020; the rest Accepted)
 - Dependency register: `code-agent-docs/dependencies.md` (section 12: deployment prerequisites per platform, the input for the S14.2 setup scripts)
 - Research: `code-agent-docs/research/R001-2026-09-28-cloud-storage-feature-research.md` (P006); `R002-2026-09-30-external-review-1.md` (CR001, superseded in part); `R003-2026-09-30-external-architecture-review.md` (P008 record, verification)
 - Plan: `code-agent-docs/plan/PLAN_INDEX.md` (files, stage status, map of old section numbers)

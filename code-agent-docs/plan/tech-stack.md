@@ -46,9 +46,9 @@
 | Fast internal data (P007) | Derived data on the SSD by default; the database optionally | [ADR-0037](../decisions/ADR-0037-fast-internal-data-placement.md) | Proposed (S16.2) |
 | Block-level SSD cache (P007) | lvmcache writethrough, only with an LVM layer from pool creation; not in the first version (Q70) | [ADR-0038](../decisions/ADR-0038-block-level-ssd-cache.md) | Proposed (S16.1) |
 | Admin console (the user's requirement) | An admin section of the same web app at `/admin` with admin API routes under `/api/v1/admin` | [ADR-0039](../decisions/ADR-0039-admin-console.md) | **Accepted** (S007 E050, with the S03 approval) |
-| Item identity (P008) | UUIDv7 IDs in an items table; paths are attributes | [ADR-0040](../decisions/ADR-0040-item-identity.md) | Proposed (S01 follow-up, built in S03) |
-| Operation journal (P008) | Intent-first journal, idempotent steps, recovery at startup, failure matrix | [ADR-0041](../decisions/ADR-0041-operation-journal-and-crash-consistency.md) | Proposed (S01 follow-up, built in S03) |
-| Local-origin protection (P008) | Host allow-list, Origin check, no CORS, before login | [ADR-0042](../decisions/ADR-0042-local-origin-protection.md) | Proposed (S03.5-T02) |
+| Item identity (P008) | UUIDv7 IDs in an items table; paths are attributes | [ADR-0040](../decisions/ADR-0040-item-identity.md) | **Accepted** (S007, 2026-09-30) |
+| Operation journal (P008) | Intent-first journal, idempotent steps, recovery at startup, failure matrix | [ADR-0041](../decisions/ADR-0041-operation-journal-and-crash-consistency.md) | **Accepted** (S007, 2026-09-30) |
+| Local-origin protection (P008) | Host allow-list, Origin check, no CORS, before login | [ADR-0042](../decisions/ADR-0042-local-origin-protection.md) | **Accepted** (S007, 2026-09-30) |
 | Hybrid search (P008) | In-process vector index, rank fusion, permission pre-filter, query encoder | [ADR-0043](../decisions/ADR-0043-hybrid-search.md) | Proposed (S17.10) |
 | Plan document structure (P008) | `code-agent-docs/plan/` with `PLAN_INDEX.md` | [ADR-0044](../decisions/ADR-0044-plan-document-structure.md) | **Accepted** (the user's request) |
 | AI models | CLIP-family zero-shot (e.g. SigLIP, Apache-2.0); YuNet (MIT); SFace (Apache-2.0); HDBSCAN (scikit-learn); RapidOCR if S17.10 is approved; InsightFace excluded | [ADR-0018](../decisions/ADR-0018-ai-models.md) | Accepted direction (variants deferred to S17) |
@@ -62,7 +62,7 @@
 - ~~Storage layout (ADR-0003)~~: accepted in S005 (D-01), no longer pending.
 - **P005 decisions:** ADR-0021 to ADR-0029 (the table above). ADR-0021 (content hash) was **Accepted** in S007 (SHA-256); the others are Proposed.
 - **P007 and the admin console (1.7.0):** ADR-0030 to ADR-0038 are **Proposed**, decided when their stages are planned in detail. **ADR-0039** (admin console) was **Accepted** with the S03 approval (S007 E050).
-- **P008 (1.9.0):** new ADR-0040 (item identity), ADR-0041 (operation journal and crash consistency), ADR-0042 (local-origin protection before authentication), ADR-0043 (hybrid search), all **Proposed**; ADR-0044 (plan document structure) **Accepted** by the user's request. Amended: ADR-0007 (durability, D5), ADR-0011 (minimal job foundation now), ADR-0014 (per-field mapping, Arabic-script normalization, BM25, no vectors in Bleve), ADR-0017 and ADR-0018 (execution providers, quantized models, CLIP ViT-B/32, query encoder), ADR-0024 (targets by item ID).
+- **P008 (1.9.0):** new ADR-0040 (item identity), ADR-0041 (operation journal and crash consistency), ADR-0042 (local-origin protection before authentication), **Accepted** by the user in S007; ADR-0043 (hybrid search) **Proposed**; ADR-0044 (plan document structure) **Accepted** by the user's request. Amended: ADR-0007 (durability, D5), ADR-0011 (minimal job foundation now), ADR-0014 (per-field mapping, Arabic-script normalization, BM25, no vectors in Bleve), ADR-0017 and ADR-0018 (execution providers, quantized models, CLIP ViT-B/32, query encoder), ADR-0024 (targets by item ID).
 - **Complex RAID** (parity, combined drives, nesting, SnapRAID with mergerfs) is deferred by the user's decision in S007 (section 11a).
 - Implementation-time confirmations recorded as tasks:
   - Node.js LTS and TypeScript 7 / svelte-check compatibility (S02.1).
