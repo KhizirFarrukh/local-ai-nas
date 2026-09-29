@@ -113,6 +113,7 @@ func (s *Local) Copy(ctx context.Context, owner, fromAPI, toAPI string, o CopyOp
 				return err
 			}
 			s.recordAll(ctx, owner, final, hashed)
+			s.registerCopy(ctx, owner, final, entries, src.IsDir())
 			info, err := root.Lstat(filepath.FromSlash(final))
 			if err != nil {
 				return fsError(err, toAPI)

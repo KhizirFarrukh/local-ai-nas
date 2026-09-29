@@ -97,6 +97,13 @@ func (s *Local) move(ctx context.Context, op Op, owner, fromAPI, toAPI string, o
 				return fsError(err, toAPI)
 			}
 			_ = s.hashes.Moved(ctx, owner, from, final) // best effort (Hashes)
+			// The IDs follow the move; an item that had none gets one now.
+			_ = s.registry.Moved(ctx, owner, from, final) // best effort (Registry)
+			kind := KindFile
+			if info.IsDir() {
+				kind = KindDir
+			}
+			_, _ = s.registry.Ensure(ctx, owner, final, kind)
 			it = NewItem(owner, final, info)
 			stampAdded(root, &it, info)
 			it, err = withDetails(root, it, "/"+final)

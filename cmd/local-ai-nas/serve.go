@@ -18,6 +18,7 @@ import (
 	"github.com/KhizirFarrukh/local-ai-nas/internal/db"
 	"github.com/KhizirFarrukh/local-ai-nas/internal/files"
 	"github.com/KhizirFarrukh/local-ai-nas/internal/health"
+	"github.com/KhizirFarrukh/local-ai-nas/internal/items"
 	"github.com/KhizirFarrukh/local-ai-nas/internal/logging"
 	"github.com/KhizirFarrukh/local-ai-nas/internal/schedule"
 	"github.com/KhizirFarrukh/local-ai-nas/internal/storage"
@@ -132,6 +133,7 @@ func cmdServe(ctx context.Context, args []string, stderr io.Writer) int {
 		Space:      guard,
 		CopyLimits: files.CopyLimits{MaxItems: a.cfg.Copy.SyncMaxItems, MaxBytes: int64(a.cfg.Copy.SyncMaxBytes)},
 		Hashes:     contenthash.New(a.db),
+		Registry:   items.New(a.db, items.AreaFiles),
 	})
 	tus, err := uploads.New(uploads.Options{
 		Dir:       a.layout.TmpUploads,

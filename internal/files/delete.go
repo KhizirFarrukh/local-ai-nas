@@ -43,7 +43,8 @@ func (s *Local) Delete(ctx context.Context, owner, apiPath string, o DeleteOptio
 				if err := root.RemoveAll(name); err != nil {
 					return fsError(err, apiPath)
 				}
-				_ = s.hashes.Deleted(ctx, owner, rel) // best effort (Hashes)
+				_ = s.hashes.Deleted(ctx, owner, rel)   // best effort (Hashes)
+				_ = s.registry.Deleted(ctx, owner, rel) // best effort (Registry)
 				return nil
 			}
 			err = root.Remove(name)
@@ -53,7 +54,8 @@ func (s *Local) Delete(ctx context.Context, owner, apiPath string, o DeleteOptio
 			if err != nil {
 				return fsError(err, apiPath)
 			}
-			_ = s.hashes.Deleted(ctx, owner, rel) // best effort (Hashes)
+			_ = s.hashes.Deleted(ctx, owner, rel)   // best effort (Hashes)
+			_ = s.registry.Deleted(ctx, owner, rel) // best effort (Registry)
 			return nil
 		})
 	})
