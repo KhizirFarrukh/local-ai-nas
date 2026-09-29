@@ -1,19 +1,20 @@
 # CURRENT_STATE
 
-**Last updated:** 2026-09-29 20:57 +0500 (session S007)
+**Last updated:** 2026-09-29 21:32 +0500 (session S007)
 **Plan version:** 1.6.0 (`code-agent-docs/plan.md`; P006: MVP additions FR-217–FR-221 pending Q54, release roadmap R01–R12 in section 11b), **Approved baseline** 1.0.0 (S005); 1.4.0 adds P005 (15 stages, 120 substages; packaging is now S13 and AI S15, table in plan 10.18)
-**Current phase:** **S01 (Basic NAS) Done** (signed off, S005 E126; P005 follow-up tasks done in S007). **S02 (NAS GUI) In Progress** (approved S006 E009); S02.1–S02.7 Done; S02.8 In Progress (T01–T04 done; T05 waits for the sign-off)
+**Current phase:** **S01 Done** (S005 E126). **S02 Done** (signed off 2026-09-29, S007 E044). Next stage: **S03 (Security)**: its stage document is to be written and approved before any code (R3)
 
 ## Active stage and task
-- **Active stage:** **S02: NAS GUI**, **In Progress** (`stages/S02-nas-gui.md`; approved in S006 E009, with "Skip Safari": S02 checks Chrome, Edge, and Firefox). S01 is **Done** (`stages/S01-basic-nas.md`, completion record in section 13).
-- **Active task:** **S02.8-T05**, waiting for the user's sign-off (stage-end CI run 36592445848 green). The P005 follow-up tasks of S01 are all done.
+- **Active stage:** none in progress. **S02: NAS GUI** is **Done** (`stages/S02-nas-gui.md`, signed off in S007 E044); S01 is **Done**. Next: **S03 (Security)**, stage document not written yet.
+- **Active task:** applying P007 and the admin console (plan); then the S03 stage document. The P005 follow-up tasks of S01 are all done.
 - **The user's instruction (S007 E010):** after P005, resume S02 and work until the stage is complete, and also build the P005 items that belong to the current or earlier stages (the S01 follow-up tasks).
 
 ## In progress (write-ahead)
-- **S02.8-T05: waiting for the user's sign-off.** Stage-end CI run 36592445848 is green on the tag `S02-done` (`develop` b6123a1); the completion record (section 13) is up to date. Asked: the sign-off after a hands-on walkthrough (with the Narrator check), README proposals R-13–R-15, the re-confirmation of S01, and the P006 decisions Q54 and Q34 first. After the sign-off: S02 Done in the plan, the stage document, and here; apply the README proposals the user approves; merge nothing into `main` unless asked.
+- **Applying plan change request #7 (drive lifecycle and SSD caching)** together with the **admin console** the user asked for (S007 E044). Documentation only. Then S03: write its stage document for the user's approval (R3).
 
 ## Last completed
 - **Stage-end CI green** (S007 E027–E028): run 36433983279, 15 of 15 jobs, on the tag `S02-done` (`develop` 494e616). The first run had failed in the Linux system tests because of two test races, fixed in `fix/S02.8-T05-e2e-resume-race`; the tag was moved with the user's permission.
+- **S02 signed off and Done** (S007 E044): "you know what, assume its tested, continue to next stage"; the walkthrough and Narrator check were assumed; README proposals R-13–R-15 and the S01 re-confirmation stay open.
 - **S02.3-T05 and S02.4-T05 done** (S007 E042; the user's walkthrough): folder sizes (`GET /files/usage`), added and modified dates (`added_time`, sortable), uploads shown at once (bug S02-B12) and a single upload revealed with two blinks (`locate`); bug S02-B13 (a request storm from an effect) found by the new system tests and fixed. 210 web tests; system tests 142 passed, 2 skipped; Go coverage 89.7%.
 - **Plan change request #6 applied** (S007 E034–E040; branch `docs/P006-release-roadmap`, merged into `feat/S02-walkthrough-fixes`): research R001 (18 services, 118 gaps); plan 1.6.0 (G13; NG5 changed; NG1–NG3 pending Q55–Q57; MVP additions FR-217–FR-221; releases R01–R12 with FR-222–FR-327 and NFR-040–NFR-043; sections 3.3, 11b, 11c; I11 proposed only); RULES 1.8.0 (R13 Releases, `research/` folder, keep-working rule); register section 13 (release candidates). No application code; no stage for R01–R12.
 - **S02.8-T04 done** (S007 E024): documentation audit A003: 8 findings, no Critical; 6 fixed (plan 1.4.2), 1 accepted, 1 for the user (README proposals R-13–R-15, asked at the S02 sign-off).
