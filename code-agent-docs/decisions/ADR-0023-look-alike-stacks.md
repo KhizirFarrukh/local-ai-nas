@@ -30,7 +30,7 @@
 1. **Camera burst identifiers:** photos of one user with the same `BurstUUID` or `GCamera:BurstID`; the cover is the `BurstPrimary` photo when marked.
 2. **Shot sequence** (no identifier): same camera (make, model, serial where present), consecutive capture times within a short gap (starting point 1 s, using sub-second times where present), and a perceptual match.
 3. **Look-alikes:** same camera, within the time window (setting, starting point 2 minutes), and a perceptual distance under the look-alike threshold (ADR-0022).
-4. **AI** (S16.11, optional): embedding similarity adds look-alikes not shot together.
+4. **AI** (S17.11, optional): embedding similarity adds look-alikes not shot together.
 
 ## Decision
 
@@ -48,7 +48,7 @@
 
 - **Easier:** stacks survive index rebuilds and restores; AI can add members later without a schema change.
 - **Harder:** a stack change is a multi-sidecar write (a job with per-sidecar atomic writes; a partial failure is repaired by reconciliation, S05.7).
-- **Required (follow-up work, constraints this imposes):** S05.1 reserves the `stack` section; S05.3 extracts burst identifiers and sub-second times; S06.1 reserves the index fields; S11.4 builds it; S16.11 adds AI grouping without overriding locked decisions.
+- **Required (follow-up work, constraints this imposes):** S05.1 reserves the `stack` section; S05.3 extracts burst identifiers and sub-second times; S06.1 reserves the index fields; S11.4 builds it; S17.11 adds AI grouping without overriding locked decisions.
 
 ## Approval record
 
@@ -58,5 +58,5 @@ _Pending: put to the user with the P005 report (S007). Q42 (cover definition) is
 
 - **Related requirements:** FR-160–FR-168, FR-165 (bursts), FR-164 (AI)
 - **Related ADRs:** ADR-0022 (perceptual hash), ADR-0012 (ExifTool extraction), ADR-0014 (index)
-- **Related stages:** S05.1, S05.3, S06.1, S11.4, S11.7, S16.11
+- **Related stages:** S05.1, S05.3, S06.1, S11.4, S11.7, S17.11
 - **Plan version:** 1.4.0

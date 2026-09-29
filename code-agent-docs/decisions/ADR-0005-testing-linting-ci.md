@@ -35,9 +35,9 @@ NFR-014 requires tests, linting, formatting, and CI on every stage. NFR-023 requ
 | Web end-to-end tests | **Playwright 1.63.0** (`@playwright/test`) | Apache-2.0 | From S02 |
 | Web checks | **svelte-check 4.7.6**, **ESLint 10.11.0** (+ eslint-plugin-svelte 3.23.0), **Prettier 3.9.9** (+ prettier-plugin-svelte 4.1.1) | MIT | From S02 |
 | Web audit and licenses | `pnpm audit`, `pnpm licenses list` | (pnpm MIT) | From S02 |
-| Python | **pytest 9.1.1**, **Ruff 0.16.8** (lint + format) | MIT | From S16 |
-| Container scanning | **Trivy v0.74.0** | Apache-2.0 | From the first image build (S01.1 dev image, S13 release images) |
-| Dependency updates | **Dependabot** (ecosystems: gomod, npm, docker, github-actions; pip/uv for `ai-worker/` in S16) | GitHub service | Agent decided: native to GitHub, no app installation, config in the repository |
+| Python | **pytest 9.1.1**, **Ruff 0.16.8** (lint + format) | MIT | From S17 |
+| Container scanning | **Trivy v0.74.0** | Apache-2.0 | From the first image build (S01.1 dev image, S14 release images) |
+| Dependency updates | **Dependabot** (ecosystems: gomod, npm, docker, github-actions; pip/uv for `ai-worker/` in S17) | GitHub service | Agent decided: native to GitHub, no app installation, config in the repository |
 | CI | **GitHub Actions**, jobs on `ubuntu-latest` and `windows-latest` from S01.1 (macOS added for S09 client tests) | GitHub service | The repository is on GitHub (`origin`); confirms Q24 |
 | Fixtures | `testdata/` with `testdata/SOURCES.md` recording the source and license of every fixture. Generated fixtures preferred | — | P003 |
 
@@ -57,5 +57,5 @@ NFR-014 requires tests, linting, formatting, and CI on every stage. NFR-023 requ
 
 - **Related requirements:** NFR-013, NFR-014, NFR-023, NFR-029
 - **Related ADRs:** ADR-0001, ADR-0004, ADR-0006, ADR-0009, ADR-0017
-- **Related stages:** S01.1 onward (web from S02, Python from S16)
+- **Related stages:** S01.1 onward (web from S02, Python from S17)
 - **Plan version:** 0.3.0

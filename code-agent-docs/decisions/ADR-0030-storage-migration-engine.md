@@ -43,13 +43,13 @@
 
 ## Consequences
 
-- **Easier:** one engine for the command line in the MVP (S08.4) and the console wizards later (S14.6, S14.10); verification is exact.
+- **Easier:** one engine for the command line in the MVP (S08.4) and the console wizards later (S15.6, S15.10); verification is exact.
 - **Harder:** metadata preservation (times, and on Linux ownership and modes the app relies on) must be tested per platform.
-- **Required:** crash-injection tests at every phase (S08.7, S14.13); the maintenance-mode page (S08.4); the downtime target in the stage document (NFR-045).
+- **Required:** crash-injection tests at every phase (S08.7, S15.13); the maintenance-mode page (S08.4); the downtime target in the stage document (NFR-045).
 
 ## Approval record
 
-_Pending: put to the user with the P007 report (S007 E047). Decided when its stage is planned in detail (S08.4 (command line, MVP-B) and S14.6 (GUI and online))._
+_Pending: put to the user with the P007 report (S007 E047). Decided when its stage is planned in detail (S08.4 (command line, MVP-B) and S15.6 (GUI and online))._
 
 ## Links
 

@@ -56,3 +56,12 @@ P003 principle: "one core server binary, one database file". Pure-Go builds with
 - **Related ADRs:** ADR-0003, ADR-0010, ADR-0011, ADR-0014
 - **Related stages:** S01 onward (S03 users and sessions, S04.3 jobs, S07 sharing mirror, S08.3 backup)
 - **Plan version:** 0.3.0
+
+## Amendment 1 (2026-09-30, plan 1.9.0): durability FULL
+
+- **The user's decision D5 (P008, S007 E059):** "FULL, throttled writes (Recommended)". Every connection sets `synchronous=FULL` instead of `NORMAL`.
+- **Why (verified 2026-09-30, SQLite documentation):** "A transaction committed in WAL mode with synchronous=NORMAL might roll back following a power loss or system crash"; FULL "is atomic, consistent, isolated, and durable (ACID) in WAL mode". From S03 the database holds users, sessions and their revocations, API tokens, the audit trail, item IDs, trash records, and the operation journal.
+- **Throttled writes:** session last-seen and token last-used at most once a minute; job progress at most once a second per job; batched inserts during ingest.
+- **Pragmas set and tested explicitly:** `journal_mode=WAL`, `foreign_keys=ON`, `busy_timeout=5000`, `synchronous=FULL`; SQLite's default automatic checkpoint.
+- **Also verified:** modernc.org/sqlite v1.59.0 bundles SQLite 3.53.4; `VACUUM INTO` works and the driver has the online backup API (`NewBackup`, `Step`, `Finish`), for database snapshots (FR-355).
+- **Task:** S01.1-T12 (P008 follow-up F5, built in S03).

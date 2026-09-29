@@ -13,7 +13,7 @@
 
 - Drive retirement offers "securely erase before disposal or sale" (P007, FR-336). It cannot be undone (I10) and must never touch the wrong drive.
 
-**Verified 2026-09-29:** hdparm's `--security-erase` and `--security-erase-enhanced` are marked "DANGEROUS" in hdparm(8); ATA security commands fail on drives in the "frozen" state (commonly set by the BIOS) and are often blocked by USB bridges. For NVMe, `nvme sanitize` (block erase, overwrite, or crypto erase) works on the whole device, while `nvme format --ses=1` (user data erase) works per namespace (nvme-cli documentation and guides). **Unverified:** support detection details per drive, to check at S14.11.
+**Verified 2026-09-29:** hdparm's `--security-erase` and `--security-erase-enhanced` are marked "DANGEROUS" in hdparm(8); ATA security commands fail on drives in the "frozen" state (commonly set by the BIOS) and are often blocked by USB bridges. For NVMe, `nvme sanitize` (block erase, overwrite, or crypto erase) works on the whole device, while `nvme format --ses=1` (user data erase) works per namespace (nvme-cli documentation and guides). **Unverified:** support detection details per drive, to check at S15.11.
 
 ## Options considered
 
@@ -34,11 +34,11 @@
 
 ## Consequences
 
-- **Required:** helper operations for sanitize, format, security erase, and overwrite, each refusing the OS drive and any drive holding NAS data (S14.2); tests on virtual disks only (NFR-038).
+- **Required:** helper operations for sanitize, format, security erase, and overwrite, each refusing the OS drive and any drive holding NAS data (S15.2); tests on virtual disks only (NFR-038).
 
 ## Approval record
 
-_Pending: put to the user with the P007 report (S007 E047). Decided when its stage is planned in detail (S14.11)._
+_Pending: put to the user with the P007 report (S007 E047). Decided when its stage is planned in detail (S15.11)._
 
 ## Links
 

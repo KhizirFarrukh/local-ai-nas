@@ -28,16 +28,16 @@ The storage root always lives at the same path (e.g. `/srv/local-ai-nas`). The s
 
 ## Decision
 
-**Recommended: Option A on Linux with the helper; Option B elsewhere** (and on Linux without the helper). The switch happens inside the maintenance window: stop the service or container, remount (A) or rewrite the configuration (B), start, and run the post-switch check. The container is **restarted**, not relied on to see a mount change live, so no special mount propagation is needed. To confirm in S14.6 with Docker's documentation on bind mounts.
+**Recommended: Option A on Linux with the helper; Option B elsewhere** (and on Linux without the helper). The switch happens inside the maintenance window: stop the service or container, remount (A) or rewrite the configuration (B), start, and run the post-switch check. The container is **restarted**, not relied on to see a mount change live, so no special mount propagation is needed. To confirm in S15.6 with Docker's documentation on bind mounts.
 
 ## Consequences
 
 - **Easier:** Docker users never edit their Compose file after a drive change.
-- **Required:** the setup scripts (S13.2) install the NAS with the stable mount point on Linux; the switch and rollback are tested with Docker and natively (S14.13).
+- **Required:** the setup scripts (S14.2) install the NAS with the stable mount point on Linux; the switch and rollback are tested with Docker and natively (S15.13).
 
 ## Approval record
 
-_Pending: put to the user with the P007 report (S007 E047). Decided when its stage is planned in detail (S14.6)._
+_Pending: put to the user with the P007 report (S007 E047). Decided when its stage is planned in detail (S15.6)._
 
 ## Links
 

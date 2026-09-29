@@ -1,0 +1,448 @@
+{
+  "prompt_meta": {
+    "name": "local-ai-nas: External Architecture Review — Foundations, Search, AI Hardware, and Process (Plan Change Request #8)",
+    "prompt_version": "1.0",
+    "type": "Plan change request, handled under code-agent-docs/RULES.md R4 (plan changes) and R5 (decision records)",
+    "written_against": "plan 1.4.2 (S01 Done, S02 in its final review), plus P006 and P007 if they have been applied",
+    "how_to_read_this": "Read this entire prompt before acting. Every field is an instruction. The user received an external review and some suggestions, and asked for them to be 'added into the plan so these can also be implemented along the way'. The planner checked every suggestion against the real plan, corrected the ones that were outdated or conflicted with decisions already made, and improved the rest. Follow this prompt, not the raw suggestions. Labels: [Review] = adopted from the review or the user's suggestions (by the user's request); [Planner addition] = the planner's improvement, which the user can remove. Items in decisions_to_ask_first change invariants or reverse something the user explicitly asked for earlier, so they need the user's answer before they are applied."
+  },
+
+  "user_requirements": {
+    "note": "Record verbatim in the session log.",
+    "message": "I got these suggestions, go through them, improve if possible, and then make a detailed json prompt for it so the ai coding agent can go through them and add them into the plan so these can also be implemented along the way",
+    "inline_suggestions_verbatim": [
+      "1. Asynchronous Task Queuing (Protecting Disk I/O). The Pitfall: If the AI model tries to process embeddings or vision tagging synchronously on every HTTP file upload, large directory drops will freeze the API or choke your CPU/GPU. The Pattern: Use an async background worker (e.g., Celery, BullMQ, or Go Goroutines paired with Redis). Save file to disk → return 200 OK to user immediately. Push file_id to the AI processing queue. Worker pulls job, generates vector embeddings / OCR / thumbnails in the background at a lower process priority.",
+      "2. Hardware-Aware Inference Engines. To keep AI inference light on server hardware, leverage modern lightweight execution backends: Text/RAG Embeddings: Use small ONNX models running on ONNX Runtime or FastEmbed rather than full PyTorch overhead. Vision / Image Tagging: Use quantized vision models (like clip-ViT-B-32 or Moondream) accelerated via CUDA (for NVIDIA GPUs), ROCm (for AMD), or OpenVINO/QuickSync (for Intel iGPUs).",
+      "3. Hybrid Search Architecture (Vector + Full-Text). Vector Search (Semantic): Storing embeddings in pgvector (PostgreSQL extension), Qdrant, or ChromaDB lets users search by concept (e.g., searching 'tax receipt from last month' without having that exact string in the file name). BM25 / Full-Text Search: Combine vector search with standard full-text search (Postgres tsvector or SQLite FTS5) so users can still do exact filename or keyword matching.",
+      "Suggested roadmap item 1. Docker Compose Orchestration: Package the app, database, worker queue, and local AI runner into a single clean docker-compose.yml so users can deploy the entire NAS stack with docker compose up -d.",
+      "Suggested roadmap item 2. Access Control & Multi-Tenancy: Add basic user authentication (JWT/OAuth) and scoped storage folders if you plan to share the NAS with family or housemates.",
+      "Suggested roadmap item 3. Storage Health & Volume Monitoring: Provide simple dashboard metrics for storage space remaining, CPU/GPU utilization during AI inference, and background queue status."
+    ],
+    "attached_review": "A document titled 'Local AI NAS — Architecture & Project Improvement Review' (repository KhizirFarrukh/local-ai-nas). Its points are summarized faithfully in source_suggestions (R-01 to R-13). If the user has placed the review file in the repository, archive it unchanged at code-agent-docs/research/<next number>-external-architecture-review.md; otherwise this prompt's summary is the record."
+  },
+
+  "context_corrections": {
+    "note": "The review was written as if S01 had not started. Correct these points in your analysis; do not act on the outdated parts.",
+    "items": [
+      "S01 is Done and S02 was in its final review at plan 1.4.2. The review's 'before S01 begins' changes become follow-up tasks, done first in the stage now being worked on (the user's standing preference from S007 E010: 'make sure to work on the new stuff too if they were meant to be part of current or previous stages').",
+      "The license is already chosen: AGPL-3.0-or-later (Q22, LICENSE added in S01.1-T02). Only the README needs to show it clearly.",
+      "The roadmap has 15 stages at plan 1.4.2 (more if P006/P007 were applied), not twelve. AI stays last (I8).",
+      "Direct video playback is already planned: 'Original' quality streams without transcoding (FR-144).",
+      "The background job system (S04.3, ADR-0011), the separate optional AI worker (ADR-0017), and ONNX Runtime with optional GPU execution providers (ADR-0017/0018) already exist in the plan. Suggestions 1 and 2 refine them; they do not replace them.",
+      "Docker Compose with an optional 'ai' profile is already planned (ADR-0006, S13.1). The database is SQLite inside the core, and the job queue lives in SQLite, so there are deliberately no separate database or queue containers.",
+      "Multi-user accounts and per-user folders are S07; server-side sessions are S03 (ADR-0010). OIDC single sign-on is in release R05 if P006 was applied."
+    ]
+  },
+
+  "source_suggestions": {
+    "note": "Every suggestion, with the planner's verdict. Copy this table into the review record file (review_record) and into your report.",
+    "items": [
+      { "id": "R-01", "suggestion": "Immutable ItemID/MediaID (UUIDv7 or ULID) for every stored object; paths are not identity. Albums, shares, jobs, faces, audit, search, and reconciliation reference IDs.", "verdict": "Adopt with improvements (highest priority)", "where": "change F1" },
+      { "id": "R-02", "suggestion": "Namespace the sidecar file name (e.g. IMG_0001.jpg.lainas.json) so it never collides with Google Takeout or other tools' .json files.", "verdict": "Adopt; suffix chosen by the user (D1). Answers Q11.", "where": "change S05-A" },
+      { "id": "R-03", "suggestion": "Security and ACL data (owner, shares, permissions, public links, revocation) must be authoritative in SQLite, not in editable sidecars; sidecars may hold a non-authoritative mirror.", "verdict": "Adopt with improvements; needs the user's confirmation because it refines invariant I3 and the user's P002 wording (D2)", "where": "change S07-A" },
+      { "id": "R-04", "suggestion": "A minimal durable job/operation foundation now, grown later instead of replaced; defined crash and recovery behavior for operations that touch the filesystem, sidecars, SQLite, and the index.", "verdict": "Adopt with improvements", "where": "change F3" },
+      { "id": "R-05", "suggestion": "Move minimal Trash earlier (S02 or S03); consider minimal database backup earlier.", "verdict": "Adopt", "where": "changes F4 and S03-A" },
+      { "id": "R-06", "suggestion": "Browser-side protection before full authentication: strict Host and Origin validation, no permissive CORS, localhost-only binding, protection of state-changing requests, an unpredictable token.", "verdict": "Adopt, urgent (the GUI can already delete files on an unauthenticated localhost server)", "where": "change F2" },
+      { "id": "R-07", "suggestion": "Resolve the semantic-search contradiction: allow lightweight local query embedding; forbid media inference and expensive AI in request paths.", "verdict": "Adopt the direction; rewording invariant I4 needs the user's approval (D3)", "where": "change AI-C" },
+      { "id": "R-08", "suggestion": "Reduce project-management ceremony: read only CURRENT_STATE, the active stage, and relevant ADRs; no full conversation transcripts; brief technical summaries.", "verdict": "Partly adopt. Reading less at startup is adopted. Dropping transcripts reverses the user's original bootstrap requirement, so it is the user's decision (D4).", "where": "change P-B" },
+      { "id": "R-09", "suggestion": "Split the master plan into smaller authoritative documents with a short index, so it is not mandatory hot context.", "verdict": "Adopt with improvements (keep it under code-agent-docs/, because docs/ is for user documentation per ADR-0004)", "where": "change P-A" },
+      { "id": "R-10", "suggestion": "Keep the core stack; do not turn it into microservices; the Python AI worker as a separate process is reasonable.", "verdict": "Already the plan. Record as confirmed.", "where": "none" },
+      { "id": "R-11", "suggestion": "Search: per-field analyzers (no stemming on names and file names), keyword fields, prefix, structured dates; Unicode and multilingual design from the start (English, Urdu, Roman Urdu, Arabic-script names).", "verdict": "Adopt with improvements", "where": "change S06-A" },
+      { "id": "R-12", "suggestion": "Review SQLite synchronous=FULL before users, sessions, shares, and audit data live in the database.", "verdict": "Adopt; the option is the user's choice (D5)", "where": "change F5" },
+      { "id": "R-13", "suggestion": "README: clear status section, a small architecture diagram, and the license. After these changes, freeze the architecture and avoid another broad planning cycle.", "verdict": "Adopt the README update. The planning freeze becomes a change-intake rule for the user to approve (D6).", "where": "changes P-C and P-D" },
+      { "id": "I-01", "suggestion": "Async task queuing: save, return immediately, queue AI work, run workers at lower priority (Celery, BullMQ, or goroutines with Redis).", "verdict": "Already the plan's design (SQLite queue, no Redis). Adopt the improvements: OS-level CPU and I/O priority, backpressure for huge drops, and a responsiveness requirement under load.", "where": "changes F3 and S04-A" },
+      { "id": "I-02", "suggestion": "Hardware-aware inference: ONNX Runtime or FastEmbed; quantized vision models (clip-ViT-B-32, Moondream) on CUDA, ROCm, OpenVINO/QuickSync.", "verdict": "Adopt with corrections: an execution-provider matrix with automatic detection and CPU fallback, and quantized variants in the benchmark. Moondream and 'RAG' are generative AI (NG9) and are not adopted. QuickSync is a video encoder, already used for transcoding, not an inference engine.", "where": "change AI-A" },
+      { "id": "I-03", "suggestion": "Hybrid search: vectors in pgvector, Qdrant, or ChromaDB, combined with BM25 full text (Postgres or SQLite FTS5).", "verdict": "Adopt hybrid retrieval with a different storage: no new database or service. Lexical search stays in Bleve; vectors live in internal data with an in-process index; results are merged by rank fusion after permission filtering.", "where": "changes S06-B and AI-B" },
+      { "id": "I-04", "suggestion": "Docker Compose for app, database, worker queue, and local AI runner.", "verdict": "Already planned. Adopt the hardening improvements.", "where": "change S13-A" },
+      { "id": "I-05", "suggestion": "Basic authentication (JWT/OAuth) and scoped storage folders.", "verdict": "Already planned (S03, S07). JWT is not adopted for browser sessions: server-side sessions can be revoked instantly (ADR-0010). OAuth/OIDC sign-in stays in R05 (P006).", "where": "none (record reasons)" },
+      { "id": "I-06", "suggestion": "Dashboard metrics: storage remaining, CPU/GPU utilization during AI, queue status.", "verdict": "Storage and queue are planned (S10.1, S10.4). Adopt the missing resource metrics with history.", "where": "change S10-A" }
+    ]
+  },
+
+  "decisions_to_ask_first": {
+    "note": "Ask these at the start of the session with your question tool (they change what you write). Show the recommendation first. If the user is not available, record each as pending in the plan with both options, apply nothing that changes an invariant or reverses an earlier user requirement, and continue with everything else.",
+    "questions": [
+      {
+        "id": "D1",
+        "question": "Sidecar file name: which suffix should photo sidecars use?",
+        "options": ["IMG_0001.jpg.lainas.json (Recommended: short, unique to this project, keeps paths short for Windows)", "IMG_0001.jpg.local-ai-nas.json (self-explanatory, longer)", "Keep IMG_0001.jpg.json with the identifying marker (current plan)"],
+        "why_it_matters": "Google Takeout and other tools write .json files next to photos (Takeout has used names like IMG_0001.jpg.json and IMG_0001.jpg.supplemental-metadata.json). The Takeout import (R01 in P006) and server-side import would put those files next to ours. A namespaced suffix removes the collision without having to read the file to know whose it is. S05 has not started, so there is nothing to migrate. Changes FR-023, 8.6, the README, and answers Q11."
+      },
+      {
+        "id": "D2",
+        "question": "Where should ownership and sharing data be authoritative?",
+        "options": ["In the database; each photo sidecar (and each shared file's hidden sidecar, if chosen in Q28) keeps a read-only mirror (Recommended)", "In the sidecars, as currently planned"],
+        "why_it_matters": "In P002 you asked that a shared file 'carries data about which user owns it and who has read access to it'. With the recommended option the file still carries that data, but the NAS never trusts it for access decisions. Otherwise anyone who can edit a sidecar (over a network share, write-shared folders, or directly on disk) could grant themselves access, because the reconciler re-reads hand-edited sidecars. Refines I3 to: sidecars are the source of truth for descriptive photo metadata; ownership, access, and sharing are authoritative in the database."
+      },
+      {
+        "id": "D3",
+        "question": "Semantic search: may a small local model turn the typed search text into a vector at query time?",
+        "options": ["Yes, only the search text, only when the optional AI worker runs, with a strict time limit and normal search as fallback (Recommended)", "No, keep 'no AI at query time' (semantic search stays limited to precomputed forms, D-06)"],
+        "why_it_matters": "Real 'search by meaning' ('tax receipt from last month') needs the query text itself to be embedded when the user types it; that cannot be precomputed. The recommended wording keeps the intent of I4: no model ever reads user files in a request, and search works fully with AI off (I7). Proposed I4: 'Search reads only the index. No model reads user content in a request path. The one exception: when the optional AI worker is running and semantic search is enabled, a small local text model may embed the typed search text, within a strict time limit, falling back to normal search.' Also updates FR-054, D-06, and Q36."
+      },
+      {
+        "id": "D4",
+        "question": "Agent working process: how lean should it be?",
+        "options": [
+          "Lean mode (Recommended): startup reads RULES quick start, CURRENT_STATE, the plan index, the active stage, and relevant ADRs. Your instructions stay verbatim in the logs; agent activity becomes short technical entries written at checkpoints; write-ahead stays for multi-step actions. Full transcripts, if you want them, are kept only on your machine (git-ignored), because the repository is public. Plan versions are archived with git tags instead of file copies. Small decisions go into the stage document's decision table; ADRs only for architecture-significant ones.",
+          "Keep the current process unchanged",
+          "Minimal (the review's model): no transcripts, technical summaries only"
+        ],
+        "why_it_matters": "The review is right that the process has become heavy (plan.md alone is about 300 KB). But your very first instruction was that the agent must record the chat logs and context so a new instance can continue exactly. The recommended option keeps that guarantee while cutting most of the overhead. The minimal option would drop it."
+      },
+      {
+        "id": "D5",
+        "question": "SQLite durability now that users, sessions, shares, item IDs, and trash records will live in the database:",
+        "options": ["synchronous=FULL for the whole database, with high-frequency writes such as job progress throttled (Recommended)", "Two database files: critical data with FULL, operational data with NORMAL", "Keep synchronous=NORMAL"],
+        "why_it_matters": "In WAL mode with NORMAL, the database never corrupts, but a power cut can roll back the last committed transactions (a new share, a password change, a trash record). FULL makes every commit durable at a small cost that matters little at home scale. Two files would weaken atomicity, because SQLite does not make transactions atomic across attached databases in WAL mode. Decide before S03 (users and sessions); recorded as an ADR-0007 amendment."
+      },
+      {
+        "id": "D6",
+        "question": "Planning freeze: adopt a change-intake rule so new ideas stop re-planning the MVP?",
+        "options": ["Yes (Recommended): after this change, MVP scope is frozen; new features go to the release backlog unless they are security or data-integrity fixes, foundations that are cheap only now, or you explicitly put them in the MVP", "No, keep adding to the plan as ideas come"],
+        "why_it_matters": "The review's main warning is that planning is outpacing building. Five plan change requests in a week (P005–P008) have grown the MVP. This rule keeps ideas recorded without delaying the first release."
+      },
+      {
+        "id": "D7",
+        "question": "Internal alpha: tag an early build for your own daily use when S06 (search) is done?",
+        "options": ["Yes, an internal alpha at milestone M2 (S01–S06) for your own use, not a public release (Recommended, now that trash comes early)", "No, wait for the MVP"],
+        "why_it_matters": "The review suggests S06 as the first genuinely usable point. You chose M3 as the first release (Q38/Q51) and that stays. An internal alpha lets you use the NAS earlier and find real problems sooner. This is safe only because trash moves earlier (F4)."
+      }
+    ]
+  },
+
+  "before_you_start": [
+    "Run the full session start protocol from code-agent-docs/RULES.md (R1).",
+    "Save this entire prompt, unchanged, to code-agent-docs/prompts/P008-external-architecture-review.json. If P008 is taken, use the next free number everywhere this prompt says P008. Log the user's message verbatim.",
+    "In CURRENT_STATE.md under 'In progress', write: 'Applying plan change request #8 (external architecture review)'.",
+    "Find out the real current state: which stage is active, whether S02 is Done, whether P006 and P007 were applied, and how the user answered their questions. Adapt every placement below to the real state; never overwrite a user decision.",
+    "Ask decisions_to_ask_first (two question rounds are fine) before editing the plan."
+  ],
+
+  "objective": "Add the adopted and improved suggestions to the plan: foundation follow-ups to be implemented first in the current stage (stable item IDs, browser-origin protection, a durable operation and job foundation, minimal trash, SQLite durability), changes to later stages (ingest priority, sidecar naming, per-field and multilingual search, hybrid search, ACL authority, resource metrics, Compose hardening, hardware-aware AI), and process changes (split the plan into small documents, lean startup, README status, change intake). Apply the user's decisions, record requirements, ADRs, and risks, then report and stop.",
+
+  "out_of_scope": [
+    "Writing application code in this session. The foundation follow-ups are planned as tasks and implemented after the user approves them (R3).",
+    "Adding PostgreSQL, Redis, Qdrant, ChromaDB, or any other new server or service.",
+    "Generative AI (captioning models such as Moondream, RAG, chat over files): NG9 is unchanged.",
+    "Rewording invariants or reversing the logging requirement without the user's answers (D2, D3, D4)."
+  ],
+
+  "changes": {
+    "foundation_followups": {
+      "timing": "[Review, adapted] Implement first, in the stage currently being worked on, before its other remaining tasks. Record tasks that belong to a Done stage as follow-ups in that stage's document (precedent: the P005 S01 follow-ups), with task IDs in that document's scheme and acceptance criteria. List them in your report for approval before coding (R3). The stage's final testing substage covers them.",
+      "F1": {
+        "name": "Stable item IDs",
+        "priority": "Highest. Every later feature (albums, shares, trash, jobs, faces, shortcuts, search, audit, reconciliation, the P007 migration engine) references items.",
+        "requirements": [
+          "[Review] Every item in both areas (file, folder, photo, video) gets a permanent ID at creation. Format: UUIDv7 (RFC 9562: time-ordered, so database indexes stay efficient), decided in a new ADR 'Item identity'. Verify the Go library (e.g. google/uuid's v7 support) and its license.",
+          "[Review] An items table in SQLite holds item ID, owner, area, relative path, kind, size, modification time, content hash (FR-211), and status. Paths are attributes that change; the ID never does.",
+          "[Review] Rename and move keep the ID. Copy creates a new ID. Cross-area move keeps the ID (the ADR confirms this); cross-area copy creates a new one.",
+          "[Planner addition] Items created outside the app (direct disk access now, network shares in S09) get an ID when first seen: in bulk by the reconciliation scan, and on demand when a listing meets an unknown file (a small idempotent write protected by a unique constraint).",
+          "[Planner addition] Moves made outside the app keep their ID when the reconciler matches the new path to the missing old one by file identity (inode or Windows file ID) and size and time, or by content hash. Unmatched missing items are marked missing for a grace period, then retired; their references (shares, album entries) are reported, never silently dropped.",
+          "[Review] For photos, the media ID is also written into the sidecar (reserved field in S05.1), so IDs survive a lost database; a rebuild restores them from sidecars. For the files area, IDs live only in the database and are protected by the database backups (S03-A snapshots, S08.3); record this trade-off in the ADR.",
+          "[Review] Internal references use IDs: search index document IDs, job payloads (with the expected content hash as a safety check), trash records, audit events (ID plus the path at the time), shortcuts (ADR-0024), albums and face assignments (Q13 JSON documents), shares.",
+          "[Planner addition] The API adds 'id' to every listing and details response and a lookup endpoint by ID; path-based endpoints stay (WebDAV and scripts are path-based). This is an additive, non-breaking API change recorded in api/openapi.yaml.",
+          "[Planner addition] IDs are identifiers, not permissions: knowing an ID never grants access (I5), and public links (R09) always use separate random tokens, because UUIDv7 reveals its creation time.",
+          "Existing data: a one-time backfill assigns IDs to everything already stored (idempotent, resumable, as an operation from F3)."
+        ]
+      },
+      "F2": {
+        "name": "Browser-origin protection before full authentication",
+        "priority": "Urgent. Until S03, the GUI and API run on localhost with no login and can delete files. Any website the user visits can try to send requests to localhost (cross-site form posts) or use DNS rebinding (a hostile domain that resolves to 127.0.0.1) to reach the API as if it were same-origin.",
+        "requirements": [
+          "[Review] Strict Host header allow-list: localhost, 127.0.0.1, [::1], and hostnames the admin configures later. Anything else gets 421 or 403. This defeats DNS rebinding.",
+          "[Review] Every state-changing request (POST, PUT, PATCH, DELETE, tus upload requests, WebDAV writes when S09 arrives) requires an Origin header matching the NAS's own origin; a missing or foreign Origin is rejected.",
+          "[Review] No permissive CORS: no Access-Control-Allow-Origin for other origins, and preflights from other origins fail.",
+          "[Review] A random per-install token (created at first start, stored in internal data with restrictive permissions) is required on state-changing requests in a custom header. The served web UI receives it automatically; scripts and the S01 demo and integration tests read it from the token file or a command that prints it. In S03 this is replaced by sessions and CSRF tokens; the Host and Origin checks stay forever.",
+          "[Planner addition] Security tests: DNS-rebinding request (wrong Host) refused; cross-site form post refused; request without the token refused; the GUI and the scripts still work.",
+          "Update NFR-022 and the S03.1 threat model with these threats, and S01.6 (bind-address guard) notes."
+        ]
+      },
+      "F3": {
+        "name": "Durable operation and job foundation, with crash consistency",
+        "requirements": [
+          "[Review] Build the core of the S04.3 job system now instead of the temporary S01.4 cleanup scheduler: a persistent jobs table (id, type, state, payload, progress, attempts, timestamps), workers with leases and retries, and progress reporting. S04.3 then adds priorities, per-type limits, and the full monitor on top (principle 4: grow, do not replace). ADR-0011 is updated, not replaced.",
+          "[Review] Long operations become jobs: copying, moving across devices, and deleting large trees; cleaning abandoned uploads; the F1 backfill; later indexing and imports. The API answers 202 Accepted with a job ID, and the GUI shows progress and allows cancel where safe.",
+          "[Review] An operation journal for every logical operation that touches more than one place (filesystem, sidecar, SQLite, search index): the intent is recorded before any side effect, each step is idempotent, and the operation is marked complete at the end. At startup, unfinished operations are rolled forward where possible and rolled back otherwise; leftover temp files are cleaned.",
+          "[Review] A written failure matrix with the defined outcome for each case: file write succeeds but rename fails; rename succeeds but the database commit fails; disk becomes full mid-write; the app crashes; power is lost. The rule of thumb: never lose user data, and never leave an item that is visible but inconsistent; an orphaned file is adopted by the reconciler, never deleted.",
+          "[Planner addition] Crash-injection tests at every step of every journaled operation (generalizing the S05.8 sidecar crash tests into one shared harness).",
+          "[Planner addition] Idempotency keys (Should): state-changing API requests may carry an Idempotency-Key header, so a client that retries after a timeout does not copy, move, or share twice. Important later for mobile and sync clients (R07, R08).",
+          "[Review, I-01] Uploads never wait for derived work: finalize (atomic rename, content hash, database record) completes the request; thumbnails, metadata, indexing, and AI are queued."
+        ]
+      },
+      "F4": {
+        "name": "Minimal trash, early",
+        "requirements": [
+          "[Review] Deleting in the files area moves the item to the owner's trash in internal data (trash/<namespace>/, same filesystem as the root, A18) with its original path and item ID recorded; restore returns it (auto-renaming on a name conflict) with the same ID; a job purges items after a retention period (default 30 days).",
+          "[Review] A basic Trash page in the GUI (list, restore, delete permanently, empty trash). If S02 is Done, add it in the current stage's GUI work.",
+          "S08.1 later extends it: photos with sidecars, album and share restore, per-user views after S07, removed duplicates and replaced originals (P005). Update S08.1 so it extends instead of creating.",
+          "Update RK-19 (risk now mitigated) and the section 11 caveat on M2."
+        ]
+      },
+      "F5": {
+        "name": "SQLite durability",
+        "requirements": [
+          "[Review] Apply the user's D5 choice as an amendment to ADR-0007 before S03 creates users and sessions. With FULL: throttle high-frequency writes (e.g. job progress at most once per second per job, batched inserts during ingest), and benchmark on the Raspberry Pi and the Windows PC.",
+          "[Planner addition] Set and test the other pragmas explicitly (busy timeout, foreign keys on, WAL checkpoint policy) and record them in the ADR."
+        ]
+      }
+    },
+
+    "later_stage_changes": [
+      {
+        "id": "S03-A",
+        "stage": "S03 (Security)",
+        "changes": [
+          "[Review] The F2 checks stay and join the full CSRF, session, and rate-limit design; the per-install token is retired when sessions arrive.",
+          "[Review, planner detail] Automatic database snapshots from S03 on, when users and sessions exist: a consistent copy (SQLite VACUUM INTO or the online backup API) on a schedule and before every migration, keeping the last N copies in internal data. The GUI and docs say plainly that copies on the same disk protect against corruption and bad updates, not against disk failure; S08.3 and S08.6 extend this."
+        ]
+      },
+      {
+        "id": "S04-A",
+        "stage": "S04 (Media management), especially S04.2 to S04.4 and S04.8",
+        "changes": [
+          "[Review, I-01] Ingest is fully asynchronous: dropping thousands of files enqueues cheap jobs in batches, and the API stays responsive.",
+          "[Planner addition] Real OS-level priority for background work, not only queue priority: external tools (ExifTool, libvips, FFmpeg for thumbnails) run with lower CPU priority (nice on Linux; below-normal priority class on Windows) and idle or low I/O priority where the OS supports it (ionice on Linux, whose effect depends on the I/O scheduler; cgroup io.weight in Docker). Interactive streaming transcodes keep normal priority. Verify each mechanism per platform.",
+          "[Planner addition] Backpressure: limits on queued-but-unstarted work per user and overall, and throttling of derived work while interactive use is high (extends the existing 'background jobs yield while someone is watching').",
+          "[Planner addition] GPU sharing rule: when the same GPU or iGPU does video transcoding (S04.8) and AI inference (AI stage), live playback wins and AI jobs pause.",
+          "[Review] New NFR: while a 10,000-file import runs, browsing and search latency stay within NFR-003 targets; tested in S04.9 and S13.5."
+        ]
+      },
+      {
+        "id": "S05-A",
+        "stage": "S05 (Media metadata)",
+        "changes": [
+          "[Review] Sidecar file name per D1. Update FR-023, FR-030 (foreign .json files are now simply never ours), 8.6, the fixtures (a Takeout-style .json next to the photo and our sidecar must coexist), and the README proposal.",
+          "[Review] Reserve 'mediaId' (F1) in schema v1.",
+          "[Review] If D2 is the recommended option: the 'access' section becomes a mirror written only by the core (I9), marked non-authoritative in the schema; the reconciler never imports access data from a hand-edited sidecar; a mismatch is logged and repaired from the database."
+        ]
+      },
+      {
+        "id": "S06-A",
+        "stage": "S06 (Search), in the S06.1 index-mapping ADR",
+        "changes": [
+          "[Review] Per-field analysis instead of one analyzer everywhere. At least: file name (normalized, tokenized on separators, camel case, and digit boundaries so 'IMG_1204' matches '1204'; prefix; no stemming); path (keyword and prefix); description and user text (language-aware full text with stemming); tags (exact normalized); person and face-group names (exact, prefix, typo-tolerant, no stemming); camera and lens (exact and token); place (exact at every level, city to country, FR-063); MIME and type (keyword); dates, sizes, ratings (structured). Record the full table in the ADR.",
+          "[Review, planner detail] Unicode and multilingual from the start: NFC normalization and case folding; Arabic-script normalization that treats Urdu and Arabic letter variants as equal (for example Farsi and Arabic yeh, keheh and kaf, heh goal and heh), removes diacritics and tatweel for matching, and never stems non-English text; right-to-left display tested in the GUI. Roman Urdu spelling variants are handled by typo tolerance plus the user-extendable synonym dictionary. Q15 (languages) decides which language analyzers are added; the normalization itself is not optional.",
+          "[Planner addition] Golden query set extended with Urdu, Roman Urdu, and mixed-script names and descriptions."
+        ]
+      },
+      {
+        "id": "S06-B",
+        "stage": "S06 (Search), design hooks only",
+        "changes": [
+          "[Review, I-03] Make the query pipeline ready for hybrid retrieval without building semantic search yet: index documents keyed by item ID (F1), permission filtering done once as a set of allowed IDs that any retriever must respect, and a pluggable 'semantic retriever' interface that returns nothing until the AI stage.",
+          "[Planner addition] Record that Bleve's own vector search depends on a native library through cgo (verify), which conflicts with pure-Go builds (ADR-0001), so vectors will not live in Bleve."
+        ]
+      },
+      {
+        "id": "S07-A",
+        "stage": "S07 (Multi-user and sharing)",
+        "changes": [
+          "[Review] Per D2: owner, access lists, shares, and later public links and revocations are authoritative in SQLite and checked only by the policy layer; sidecars and the files-area hidden sidecars (Q28) are written mirrors. Update 6.5, 8.8, S07.3, S07.4, FR-114, and Q28's recommendation.",
+          "[Planner addition] Disaster recovery without a database backup: ownership comes from the namespace directory (admin-controlled); the admin may choose to restore sharing from the sidecar mirrors, shown as a list to confirm, never automatically.",
+          "[Review, I-05] Record why JWT is not used for browser sessions (instant revocation with server-side sessions, ADR-0010)."
+        ]
+      },
+      {
+        "id": "S10-A",
+        "stage": "S10 (Administration and monitoring)",
+        "changes": [
+          "[Review, I-06] System resources on the dashboard: CPU, memory, load, disk I/O throughput, temperatures where available, and while the AI worker runs its CPU, memory, and GPU utilization where the hardware reports it (NVIDIA through its management library or tool; other vendors best effort, shown as 'not available' otherwise).",
+          "[Planner addition] A small metrics history in SQLite (e.g. one-minute points kept 7 days, then hourly for 90 days) for simple charts, and queue depth over time.",
+          "[Planner addition] Could: an opt-in, authenticated, LAN-only metrics endpoint in Prometheus format for homelab users."
+        ]
+      },
+      {
+        "id": "S13-A",
+        "stage": "S13 (Packaging), S13.1",
+        "changes": [
+          "[Review, I-04] Keep one compose file; no database or queue containers (SQLite and the queue are inside the core).",
+          "[Planner addition] Health checks, restart policies, a non-root user, a read-only root filesystem where possible, documented volumes (storage root, internal data, configuration), and resource limits for the AI container.",
+          "[Planner addition] AI images per accelerator as compose profiles (e.g. CPU, NVIDIA, Intel, AMD), with device passthrough documented, because each needs a different ONNX Runtime build (AI-A)."
+        ]
+      },
+      {
+        "id": "AI-A",
+        "stage": "AI stage (S15 at plan 1.4.2; later number if P007 was applied), S15.1 and ADR-0017/0018",
+        "changes": [
+          "[Review, I-02] Hardware-aware execution: detect the hardware at startup, pick the best available ONNX Runtime execution provider, run a short benchmark on first start to choose batch size and confirm speed, and fall back to CPU automatically. Record the provider with each result (NFR-018).",
+          "[Review, corrected] Provider matrix to evaluate and verify for current support and licenses: CPU (default; ARM64 for Raspberry Pi), CUDA and TensorRT (NVIDIA), OpenVINO (Intel CPU, integrated GPU, and NPU), AMD (the ROCm provider has been in transition toward MIGraphX in ONNX Runtime; verify the current path), DirectML or Windows ML for GPUs on Windows 11 (verify current status), CoreML only if macOS is supported.",
+          "[Review] Quantized variants (e.g. INT8 ONNX) of every candidate model are benchmarked for speed and accuracy on the evaluation set; a quantized model is adopted only if accuracy stays within the target.",
+          "[Review] Add OpenAI CLIP ViT-B/32 as a benchmark candidate next to SigLIP (check the license of the exact weights). FastEmbed may be evaluated as a convenience layer over ONNX Runtime only if it can run strictly from local model files, with no downloads at runtime (I6).",
+          "[Correction recorded] QuickSync is Intel's video encoder, already used for transcoding (ADR-0020); inference on Intel graphics goes through OpenVINO.",
+          "[Not adopted] Moondream and other captioning or chat models (generative, NG9)."
+        ]
+      },
+      {
+        "id": "AI-B",
+        "stage": "AI stage, semantic search (FR-054, S15.10), if the user enables it (Q36)",
+        "changes": [
+          "[Review, I-03, improved] Vector storage without new services: embeddings in internal data (per model, keyed by item ID, never mixing two models' vectors), loaded into an in-process index in the core. At 100,000 photos, brute-force similarity over compact vectors is expected to be fast enough; a pure-Go approximate index (e.g. HNSW) only if benchmarks demand it. Rebuildable (I2) by re-running the AI.",
+          "[Review] Hybrid ranking: lexical results from Bleve and semantic results are merged by reciprocal rank fusion with tunable weights. Operators (before:, place:, type:, in:) are hard filters on both sides.",
+          "[Planner addition] Permission filtering before ranking on the semantic side too, so counts, ordering, and timing never reveal other users' items (NFR-024).",
+          "[Planner addition] A similarity threshold, so semantic search does not return weak matches just to fill a page; results matched by meaning are labeled in the GUI.",
+          "[Planner addition] The golden query set measures hybrid against lexical-only search; hybrid ships only if it is better.",
+          "[Not adopted] pgvector (would require PostgreSQL, against ADR-0007), Qdrant and ChromaDB (extra services), SQLite FTS5 (Bleve already covers full text with fuzzy matching; FTS5 was rejected in ADR-0014). Record whether current Bleve offers BM25 scoring (verify) in ADR-0014."
+        ]
+      },
+      {
+        "id": "AI-C",
+        "stage": "Invariant I4 and the AI stage",
+        "changes": [
+          "Per D3: if approved, reword I4 as proposed in D3 and change D-06, FR-054, 7.1, and Q36 accordingly. The query-text encoder runs inside the optional AI worker behind the local internal API (ADR-0017), with a strict time limit (e.g. 300 ms, set in the stage) and a small cache of recent query vectors; on timeout or when the worker is off, search silently uses lexical results only (I7).",
+          "[Planner addition] Could: semantic search over documents in the files area, using text extracted for full-text search (FR-111 / G-134) split into chunks and embedded. This is retrieval, not generation."
+        ]
+      }
+    ],
+
+    "process_changes": {
+      "P-A": {
+        "name": "Split the plan into small documents",
+        "adopted": "[Review] Adopted by the user's request. plan.md is about 300 KB, far too large to read in every session.",
+        "structure": {
+          "code-agent-docs/plan/PLAN_INDEX.md": "Short (target under 150 lines): plan version, status of every stage, current milestone, active stage, next actions, links to every plan file, and a table mapping every old plan.md section number to its new file, so references like 'plan 8.8' in logs and ADRs still resolve.",
+          "code-agent-docs/plan/overview.md": "Sections 1, 2, 2b.",
+          "code-agent-docs/plan/invariants.md": "Section 2a. The single source; RULES.md links to it instead of repeating it, and the audit check 'worded identically in two places' becomes 'defined in one place'.",
+          "code-agent-docs/plan/requirements.md": "Section 3 (and 3.3 if P006 added it).",
+          "code-agent-docs/plan/assumptions.md": "Section 4.",
+          "code-agent-docs/plan/questions.md": "Section 5, open questions first, answered ones below.",
+          "code-agent-docs/plan/architecture.md": "Sections 6 and 8.",
+          "code-agent-docs/plan/tech-stack.md": "Section 7.",
+          "code-agent-docs/plan/roadmap.md": "Sections 9, 10.1, 10.17, 10.18, 11, 11a, and any release sections from P006.",
+          "code-agent-docs/plan/stages/SNN-<slug>.md": "One file per stage with its substage specification (section 10.x). Task-level stage documents stay in code-agent-docs/stages/ as today.",
+          "code-agent-docs/plan/testing.md": "Section 12.",
+          "code-agent-docs/plan/risks.md": "Section 13.",
+          "code-agent-docs/plan/changelog.md": "Section 14 (revision history).",
+          "code-agent-docs/plan.md": "Replaced by a short stub pointing to PLAN_INDEX.md, so existing links keep working."
+        },
+        "rules": [
+          "Do the split as its own step and commit, after the content changes are committed, and do not reword anything while moving it. If your context is running low, checkpoint and continue in a new session.",
+          "Verify the move mechanically: every non-heading line of the old plan appears in exactly one new file (except the lines you deliberately changed to fix cross-references), and every requirement, question, assumption, risk, and invariant ID is defined exactly once. Use a temporary check that is not committed as application code; record the result.",
+          "One version for the whole plan set, kept in PLAN_INDEX.md. R4 archiving follows D4 (git tags in lean mode; otherwise the whole plan folder is archived).",
+          "Update RULES.md (documentation map, R1 reading order, R4, R12 references), the audit checklist, AGENTS.md and the editor pointer file, CURRENT_STATE.md pointers, and the templates. Pre-approved by the user's request."
+        ]
+      },
+      "P-B": {
+        "name": "Leaner session startup and records",
+        "adopted_now": "[Review] The R1 reading order becomes: RULES.md quick start, CURRENT_STATE.md, plan/PLAN_INDEX.md, the active stage's plan file and task document, and the ADRs they reference. Other plan files and the latest session log are read only when needed (e.g. CURRENT_STATE shows an interrupted action). Pre-approved.",
+        "pending_D4": "Everything else in D4 (log format, transcripts, git-tag archiving, ADR threshold) is applied only as the user answers."
+      },
+      "P-C": {
+        "name": "README update",
+        "adopted": "[Review] Pre-approved by the user's request; show the diff in your report.",
+        "content": [
+          "A 'Current status' section generated from the real plan state: which stages are Done, the active stage, what works today (e.g. the files API and the GUI), what is next.",
+          "A small architecture diagram matching the real plan: browser → REST API → one Go core (files, photos, search, jobs, auth services) → files/, photos/ with sidecars, SQLite, Bleve index; the optional Python AI worker beside it. No microservices.",
+          "The license (AGPL-3.0-or-later) with a link to LICENSE.",
+          "The sidecar file name per D1.",
+          "Add to every stage's final review checklist: update the README status section."
+        ]
+      },
+      "P-D": {
+        "name": "Change intake (rule R14)",
+        "pending_D6": "If approved, add R14 to RULES.md: after P008 the MVP scope is frozen. New requests are recorded in a backlog table (date, source, summary, proposed release) and planned into a future release, unless they are security or data-integrity fixes, foundations that are cheap only now, or the user explicitly puts them in the MVP. The agent says which case applies when a new request arrives."
+      }
+    }
+  },
+
+  "requirements_to_add": {
+    "note": "Add to the requirements (plan file or section 3) with new IDs after the highest existing ones, labelled [Review] or [Planner addition] with P008, linked to their substages.",
+    "functional": [
+      "Stable item IDs for every item, kept through renames and moves, used by all internal references (Must, F1).",
+      "Reconciliation keeps IDs for external moves and assigns IDs to unknown files (Must, F1).",
+      "Media ID in each photo sidecar (Must, F1/S05).",
+      "Lookup by item ID in the API (Should, F1).",
+      "Host and Origin validation, no permissive CORS, per-install token until sessions exist (Must, F2).",
+      "Long file operations as durable jobs with progress and cancel (Must, F3).",
+      "Operation journal with recovery at startup (Must, F3).",
+      "Idempotency keys for state-changing requests (Should, F3).",
+      "Minimal trash for the files area with restore and purge, and a Trash page (Must, F4).",
+      "Scheduled database snapshots from S03 (Should, S03-A).",
+      "Namespaced sidecar file name per D1 (Must, S05-A).",
+      "Per-field search analysis and Unicode/Arabic-script normalization (Must, S06-A).",
+      "Hybrid-ready search pipeline hooks (Should, S06-B).",
+      "Database-authoritative ownership and access with sidecar mirrors, per D2 (Must, S07-A).",
+      "System resource metrics with history; optional metrics endpoint (Should; endpoint Could, S10-A).",
+      "Hardware-aware AI execution with automatic provider selection and CPU fallback (Must within the AI stage, AI-A).",
+      "Hybrid lexical and semantic search with fusion and permission pre-filtering (Could, pending Q36 and D3, AI-B)."
+    ],
+    "non_functional": [
+      "Crash consistency: no journaled operation loses user data or leaves a visible inconsistent item after a crash, power loss, or full disk at any step; proven by crash-injection tests (Must).",
+      "API responsiveness under background load: browsing and search stay within NFR-003 while a 10,000-file import runs (Must).",
+      "Background work runs at lower OS CPU and I/O priority than interactive work (Should).",
+      "Database durability per D5 (Must).",
+      "Local-origin safety: no state change is possible from another website or a rebound hostname (Must)."
+    ]
+  },
+
+  "adrs": {
+    "new": [
+      { "topic": "Item identity (UUIDv7, items table, rules for rename, move, copy, cross-area transfer, external moves, backfill)", "status": "Proposed; needed before the F1 tasks start" },
+      { "topic": "Operation journal and crash consistency (journal format, step idempotency, recovery rules, failure matrix)", "status": "Proposed; needed before F3" },
+      { "topic": "Local-origin protection before authentication (Host, Origin, token)", "status": "Proposed; needed before F2" },
+      { "topic": "Hybrid search (vector storage, in-process index, fusion, permission pre-filter, query encoder)", "status": "Proposed; decided in the AI stage" },
+      { "topic": "Plan document structure (the P-A layout and verification method)", "status": "Accepted by the user's request; record it" }
+    ],
+    "amended": [
+      "ADR-0007 (SQLite): synchronous mode per D5, pragmas, write throttling.",
+      "ADR-0011 (job queue): built now in minimal form, grown in S04.3.",
+      "ADR-0014 (Bleve): per-field mapping table, Unicode and Arabic-script normalization, BM25 availability, no vectors in Bleve.",
+      "ADR-0017/0018 (AI worker and models): execution-provider matrix, quantized variants, CLIP ViT-B/32 as a candidate, query encoder (if D3), per-accelerator images.",
+      "ADR-0024 (shortcuts): targets referenced by item ID.",
+      "S05.1 sidecar schema ADR: file name per D1, mediaId, non-authoritative access mirror per D2."
+    ]
+  },
+
+  "verification_tasks": [
+    "UUIDv7 support and license of the chosen Go library.",
+    "Whether modernc.org/sqlite supports VACUUM INTO and the online backup API; the exact durability semantics of synchronous NORMAL and FULL in WAL mode (SQLite documentation).",
+    "Bleve: current vector-search requirements (native library, build tags) and whether BM25 scoring is available.",
+    "ONNX Runtime: current status of the AMD (ROCm/MIGraphX), DirectML/Windows ML, OpenVINO, and CUDA/TensorRT providers, their Python packages, and licenses.",
+    "Process and I/O priority mechanisms: Linux nice and ioprio (which I/O schedulers honor them), cgroup v2 io.weight in Docker, Windows priority classes for child processes.",
+    "License of the exact CLIP ViT-B/32 weights considered, and whether FastEmbed can run fully offline from local files.",
+    "Record results in the ADRs; mark anything unverifiable 'Unverified'."
+  ],
+
+  "review_record": "Create code-agent-docs/research/<next number>-2026-09-30-external-architecture-review.md (create the research folder and add it to the documentation map if P006 did not): the source of the review, the context_corrections, the source_suggestions table with verdicts, the user's decisions D1–D7, and links to the changes. This is how later sessions know why the plan changed.",
+
+  "plan_updates_summary": [
+    "Archive the current plan version, then bump the version per R4 (MINOR), in one content commit before the split.",
+    "Invariants: I3 per D2, I4 per D3 (only with approval).",
+    "Requirements: requirements_to_add.",
+    "Assumptions: add 'IDs, not paths, identify items' and 'the database is authoritative for access' (if D2).",
+    "Questions: record D1–D7 with answers as new numbered questions; mark Q11 answered by D1, Q36/D-06 updated by D3.",
+    "Architecture: items table and operation journal in 6.1 and 6.5; new concerns: item identity, crash consistency, local-origin protection, search field analysis and multilingual normalization, hybrid retrieval (future).",
+    "Roadmap: the follow-up tasks in the current stage; changes to S03, S04, S05, S06, S07, S08.1, S10, S13, and the AI stage; the internal alpha milestone if D7 is yes.",
+    "Testing: shared crash-injection harness, local-origin security tests, multilingual golden queries, background-load responsiveness test, hybrid-versus-lexical evaluation.",
+    "Risks: add 'process overhead slows delivery' (mitigation: lean startup, plan split, change intake) and 'identity drift between disk and database' (mitigation: reconciler matching, backfill, tests); mark RK-19 mitigated; update RK-17 with local-origin threats.",
+    "Revision history entry referencing P008, the review record, and the session log."
+  ],
+
+  "execution_steps": [
+    { "step": 1, "action": "Run R1, archive this prompt, log the message, write the in-progress entry, and establish the real current state.", "details": "See before_you_start." },
+    { "step": 2, "action": "Ask D1–D7.", "details": "With the recommendations first. Record the answers verbatim." },
+    { "step": 3, "action": "Verification.", "details": "Complete verification_tasks." },
+    { "step": 4, "action": "Write the review record.", "details": "See review_record." },
+    { "step": 5, "action": "Content changes (phase A).", "details": "Archive the plan, apply the foundation follow-ups as tasks in the right stage documents, apply later_stage_changes, requirements, ADRs (new ones as Proposed, amendments noted), invariant and process decisions per the answers, and plan_updates_summary. Commit." },
+    { "step": 6, "action": "Plan split (phase B).", "details": "Apply P-A and the adopted part of P-B mechanically, verify, update RULES.md and pointers, commit. Checkpoint and continue in a new session if needed." },
+    { "step": 7, "action": "README (phase C).", "details": "Apply P-C, commit." },
+    { "step": 8, "action": "Update CURRENT_STATE.md.", "details": "Next steps: the user approves the follow-up tasks; then implement F2 first (urgent), then F1, F3, F4, F5 in the order the ADRs allow; then continue the stage." },
+    { "step": 9, "action": "Consistency check.", "details": "Run the audit checklist groups D, F, G, I, and K on the new structure." },
+    { "step": 10, "action": "Report to the user and stop.", "details": "Short, as the user prefers: (a) the verdict table in one line per suggestion; (b) the follow-up tasks to approve, F2 first; (c) the decisions as answered or still pending; (d) the new plan structure in two lines; (e) the README diff summary; (f) verification results. Log it and close the session log." }
+  ],
+
+  "definition_of_done": [
+    "The prompt is archived as P008 (or the next free number); the review record exists.",
+    "D1–D7 are answered or recorded as pending; nothing that needs an answer was applied without one.",
+    "F1–F5 exist as approved-pending tasks with acceptance criteria in the right stage documents, and their ADRs exist.",
+    "Every later_stage_change is in its stage with a P008 label.",
+    "The plan is split into code-agent-docs/plan/ with PLAN_INDEX.md, verified mechanically; RULES.md, the pointer files, and the audit checklist use the new structure; R1 uses the lean reading order.",
+    "The README shows the real status, a correct diagram, the license, and the sidecar name per D1.",
+    "CURRENT_STATE.md and the session log are current, with a closing summary.",
+    "No application code was written and no new service or database was added.",
+    "The user has received the report described in step 10."
+  ],
+
+  "final_instruction": "Begin with the R1 startup protocol, then ask D1–D7. Work through the execution steps in order, recording as you go. When everything in definition_of_done is complete, report to the user and stop."
+}

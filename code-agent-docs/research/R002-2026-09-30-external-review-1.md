@@ -1,5 +1,7 @@
 # R002: External review #1, disposition
 
+> **Superseded in part** by plan change request #8 (`prompts/P008-external-architecture-review.json`, the user's detailed prompt on the same review) and the user's decisions D1–D7: see [R003](R003-2026-09-30-external-architecture-review.md). This record shows the first check against the plan ("if something is already covered then skip it"); P008 adopts several points marked "covered" here with improvements (trash early, the job foundation now, sidecar naming, semantic search at query time).
+
 | Field | Value |
 |---|---|
 | Source | `code-reviews/1-local-ai-nas-improvement-review.md` (the user's file), archived verbatim as `prompts/CR001-improvement-review-1.md` |
@@ -31,5 +33,5 @@ The review was written against an earlier state of the project: it speaks of cha
 | R1 | README status section | Yes | README proposal R-13 (A003) |
 | R2 | README architecture diagram | **No** | **Recorded:** README proposal **R-17** |
 | R3 | Choose a license before outside contributions | Yes | AGPL-3.0-or-later (Q22, S005; README, LICENSE) |
-| RM | Roadmap adjustments (IDs in S01, Trash in S03, direct video playback, namespaced sidecars in S05, first usable release at S06) | Yes | The current 16-stage plan and the user's decisions: S01 and S02 Done; Trash in S08 (user); direct play first (ADR-0020); sidecar naming Q11; the first usable release is M3 = S13 (the user, S005; Q51). Only the ID point is new (row 1) |
+| RM | Roadmap adjustments (IDs in S01, Trash in S03, direct video playback, namespaced sidecars in S05, first usable release at S06) | Yes | The current 16-stage plan and the user's decisions: S01 and S02 Done; Trash in S08 (user); direct play first (ADR-0020); sidecar naming Q11; the first usable release is M3 = S14 (the user, S005; Q51). Only the ID point is new (row 1) |
 | F | "Freeze the architecture and begin implementation" | Yes | Implementation is under way (S01, S02 Done; S03 In Progress) |

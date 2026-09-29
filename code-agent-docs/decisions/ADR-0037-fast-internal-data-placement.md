@@ -30,11 +30,11 @@
 
 ## Consequences
 
-- **Required:** the move wizard in the admin console (S15.2, S15.7); failure tests (S15.8).
+- **Required:** the move wizard in the admin console (S16.2, S16.7); failure tests (S16.8).
 
 ## Approval record
 
-_Pending: put to the user with the P007 report (S007 E047). Decided when its stage is planned in detail (S15.2)._
+_Pending: put to the user with the P007 report (S007 E047). Decided when its stage is planned in detail (S16.2)._
 
 ## Links
 

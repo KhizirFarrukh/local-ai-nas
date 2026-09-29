@@ -43,7 +43,7 @@ Read `smartctl -j` (through the helper on Linux; directly where allowed), store 
 
 ## Consequences
 
-- **Required:** the fixtures of healthy, degrading, and failed drives (12.3); alerts through the MVP channels (FR-221); the helper operation "run self-test" on Linux (S14.2 extends it).
+- **Required:** the fixtures of healthy, degrading, and failed drives (12.3); alerts through the MVP channels (FR-221); the helper operation "run self-test" on Linux (S15.2 extends it).
 
 ## Approval record
 

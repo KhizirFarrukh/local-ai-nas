@@ -9,6 +9,7 @@ Updated in audit A003 (session S007): group G also covers the tools the tests us
 Updated in session S007 (P006, pre-approved): group D checks the research files and the release roadmap.
 Updated in session S007 (P007, the admin console, the Raspberry Pi, the deployers): groups G, H, K.
 Updated in session S007 (S03 approval): the threat model check (group H).
+Updated in session S007 (P008, plan 1.9.0): groups C, D, H (R14 backlog, I3 and I4 wording, follow-up tasks in Done stages, the Takeout prerequisite).
 UPDATE THIS CHECKLIST whenever a new document type, folder, rule, or invariant is added (R12 / P004).
 
 How to use:
@@ -80,6 +81,7 @@ How to use:
 - [ ] Pointer files are short, point to correct paths, and give the correct reading order.
 
 ### D. Plan
+- [ ] New requests since P008 are in the backlog table (plan 11d) with their case and placement (RULES R14).
 - [ ] The header version equals the latest revision entry, and every previous version is archived.
 - [ ] Every required section is present and non-empty.
 - [ ] All stages are present and in order. The AI stage is last (I8).
@@ -115,6 +117,8 @@ How to use:
 - [ ] The tools the tests and fixtures use are listed too: test browsers, fixture generators, and anything CI installs (A003 F-005).
 
 ### H. Stage documents
+- [ ] Follow-up tasks of a Done stage (P005, P008 precedent) are listed in that stage's document with approval, and the current stage's execution order and testing substage include them.
+- [ ] No Google Takeout import work started before the user's sample data was analyzed and recorded (plan A28, 8.42).
 - [ ] From S03: `security/threat-model.md` exists; every threat has a status (mitigated with its test, accepted risk with the user's approval, or open with the stage that handles it); the stage under audit updated it for every attack surface it added (FR-084).
 - [ ] Only the active or next stage has a stage document (just-in-time rule). Any others are flagged.
 - [ ] Each stage document covers all of its substages, with tasks `S<NN>.<n>-T<NN>`, each with acceptance criteria.
@@ -142,7 +146,7 @@ How to use:
 
 ### K. Cross-document consistency
 - [ ] Stage, substage, task, requirement, ADR, and invariant IDs are identical everywhere.
-- [ ] **Stage ID changes** (plan.md 10.18): documents written before a renumbering (session logs, prompts, archived plans, completion records, ADR history, changelog and revision-history rows) keep the old IDs and are **not** findings; check that their IDs are correct for their date by translating through the table. Current documents must use the new IDs, and no current document may use a reused ID (e.g. S11, S12 before and after 1.4.0; S15 before and after 1.7.0, AI then, SSD caching now) in its old meaning. Every current document that mentions a renumbered stage uses its current ID.
+- [ ] **Stage ID changes** (plan.md 10.18): documents written before a renumbering (session logs, prompts, archived plans, completion records, ADR history, changelog and revision-history rows) keep the old IDs and are **not** findings; check that their IDs are correct for their date by translating through the table. Current documents must use the new IDs, and no current document may use a reused ID (e.g. S11, S12 before and after 1.4.0; S15 before and after 1.7.0, AI then, SSD caching now; S13–S16 before and after 1.9.0, when the dependency security review became S13 and the later stages moved up by one) in its old meaning. Every current document that mentions a renumbered stage uses its current ID.
 - [ ] Terminology is consistent (areas, sidecar naming, operators, component names).
 - [ ] All relative links and backticked `code-agent-docs/…` paths resolve.
 - [ ] Product documentation (`docs/`, `scripts/README.md`, the README's Development section): links and anchors resolve, and every command it shows was run as written (for example by extracting its code blocks into a script), or the report says which were not.

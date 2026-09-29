@@ -41,7 +41,7 @@
 
 - **Easier:** familiar, repairable filesystem; nothing new for the setup scripts beyond e2fsprogs (usually present).
 - **Harder:** no filesystem checksums; corruption is detected by S08.2 integrity checks and md consistency checks (FR-207).
-- **Required (follow-up work, constraints this imposes):** S14.5 formats and mounts through the helper; `dependencies.md` rows for e2fsprogs and xfsprogs (Linux, optional pool component).
+- **Required (follow-up work, constraints this imposes):** S15.5 formats and mounts through the helper; `dependencies.md` rows for e2fsprogs and xfsprogs (Linux, optional pool component).
 
 ## Approval record
 
@@ -51,5 +51,5 @@ _Pending: put to the user with the P005 report (S007)._
 
 - **Related requirements:** FR-204, NFR-036
 - **Related ADRs:** ADR-0027 (pool approach), ADR-0029 (storage helper)
-- **Related stages:** S14.1, S14.5
+- **Related stages:** S15.1, S15.5
 - **Plan version:** 1.4.0

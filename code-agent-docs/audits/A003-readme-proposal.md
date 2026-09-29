@@ -59,8 +59,10 @@ IDs continue from A002 (R-01 to R-12).
 - [ ] Stages 8–10: Trash and backups, network drives, administration and monitoring
 - [ ] Stage 11: Duplicate and look-alike photos (including bursts) and duplicate files
 - [ ] Stage 12: Storage optimization (smaller photos and videos, on request)
-- [ ] Stage 13: Packaging and the first release (without AI)
-- [ ] Stage 14: Multiple drives in a storage pool (RAID 0 and RAID 1)
+- [ ] Stage 13: Dependency security review (every library checked; upgrade, else downgrade)
+- [ ] Stage 14: Packaging and the first release (without AI)
+- [ ] Stage 15: Drives: new drives, upgrades, mirrors, and storage pools (RAID 0 and RAID 1)
+- [ ] Stage 16: SSD caching (optional)
 - [ ] Final stage: optional local AI (auto-classification, face grouping)
 ```
 

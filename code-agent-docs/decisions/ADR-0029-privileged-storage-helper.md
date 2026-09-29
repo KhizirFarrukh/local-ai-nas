@@ -11,9 +11,9 @@
 
 ## Context
 
-- Drive pools (S14) need root: listing drives with SMART, partitioning, creating md arrays, formatting, mounting, replacing members.
+- Drive pools (S15) need root: listing drives with SMART, partitioning, creating md arrays, formatting, mounting, replacing members.
 - The **core must never run as root** (NFR-037, RK-35). It faces the network and parses untrusted uploads.
-- Deployments: native service on Linux (S13.2 setup scripts) or Docker Compose (S13.1). Pools are Linux-only (A22).
+- Deployments: native service on Linux (S14.2 setup scripts) or Docker Compose (S14.1). Pools are Linux-only (A22).
 - Wrong disk operations destroy data (RK-34); every one must be deliberate, checked, and logged (I10).
 
 ## Options considered
@@ -34,7 +34,7 @@ A small Go program run as root by systemd, reached over a local Unix socket, doi
 
 ### Option D: udisks2 over D-Bus with polkit rules
 - **Pros:** an existing, maintained privileged daemon with drive, filesystem, and md RAID interfaces.
-- **Cons:** polkit rules grant broad disk rights to the core's user; D-Bus inside containers is awkward; headless servers may not run udisks2; its md RAID interface's exact capabilities are **not verified** (to check in S14.1 if Option A is questioned).
+- **Cons:** polkit rules grant broad disk rights to the core's user; D-Bus inside containers is awkward; headless servers may not run udisks2; its md RAID interface's exact capabilities are **not verified** (to check in S15.1 if Option A is questioned).
 - **License / cost:** GPL-2.0-or-later / LGPL (to verify).
 
 ## Decision
@@ -46,13 +46,13 @@ A small Go program run as root by systemd, reached over a local Unix socket, doi
 - **Validation:** every target drive must be in the helper's own inventory; the OS drive and drives holding mounted data (including the current storage root, outside the migration flow) are refused; destructive requests need the confirmation token issued after the user typed the phrase (FR-203).
 - **Execution:** fixed command templates with arguments passed as separate strings (never through a shell); timeouts; progress events.
 - **Audit:** every request, its result, and the calling user are logged by the helper (root-owned log) and mirrored to the core's security log (S03.6).
-- **Installation:** an optional component of the Linux setup scripts (S13.2), added in S14.2; with Docker, the helper runs on the host.
+- **Installation:** an optional component of the Linux setup scripts (S14.2), added in S15.2; with Docker, the helper runs on the host.
 
 ## Consequences
 
 - **Easier:** clear security boundary; testable allow list; the core stays unprivileged.
 - **Harder:** two programs to version together (the socket protocol is versioned).
-- **Required (follow-up work, constraints this imposes):** S03.1 lists the helper in the threat model; S14.2 builds it; S14.13 tests refusal of everything outside the allow list; `dependencies.md` records the host tools it runs.
+- **Required (follow-up work, constraints this imposes):** S03.1 lists the helper in the threat model; S15.2 builds it; S15.13 tests refusal of everything outside the allow list; `dependencies.md` records the host tools it runs.
 
 ## Approval record
 
@@ -62,5 +62,5 @@ _Pending: put to the user with the P005 report (S007)._
 
 - **Related requirements:** FR-210, FR-203, NFR-037
 - **Related ADRs:** ADR-0027 (pool approach), ADR-0028 (filesystem), ADR-0010 (security building blocks)
-- **Related stages:** S03.1, S13.2, S14.2
+- **Related stages:** S03.1, S14.2, S15.2
 - **Plan version:** 1.4.0 (concern 8.24)
