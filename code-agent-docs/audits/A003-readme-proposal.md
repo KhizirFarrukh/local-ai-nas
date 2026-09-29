@@ -128,3 +128,27 @@ Planned deployment options, each with its own easy deployer (one command or a do
 **Reason:** the user's requirements in S007 (E046): "this project should be very optimized on a raspberry pi, i will run it on a pi" and "deployable on debian, arch, windows, pi and more (but these 4 mentioned must be focused) … a different deployment script … very user friendly" (plan FR-149, NFR-051, NFR-052).
 
 **When:** any time; asked with R-13–R-15.
+
+---
+
+### R-17: Architecture at a glance _(added after A003, from external review #1, S007 E057)_
+
+**Current:** the README has no architecture overview.
+
+**Proposed:** a short section after "Features":
+```
+## 🧭 How it fits together
+
+Browser (the web app) ──▶ local-ai-nas: one program on your NAS
+                           ├─ Files area  → files/
+                           ├─ Photos area → photos/ + metadata sidecars (stages 4–5)
+                           ├─ Search index, rebuildable (stage 6)
+                           ├─ Background jobs (stage 4)
+                           └─ Database: accounts, sessions, settings, jobs
+                                  ▲
+                      Optional AI helper (local only, last stage)
+```
+
+**Reason:** external review #1 (`code-agent-docs/prompts/CR001-improvement-review-1.md`) suggests a small architecture diagram; the plan's diagrams (section 6) are too detailed for the README. The diagram shows the planned parts with their stages, so it does not claim they are built.
+
+**When:** any time; asked with R-13–R-16.
