@@ -1,6 +1,9 @@
 import { describe, expect, it, vi } from 'vitest';
 import { page, userEvent } from 'vitest/browser';
 import { render } from 'vitest-browser-svelte';
+// The app's styles, so the list is laid out and scrolls as in the app
+// (only the rows on screen exist) and the blink's animation applies.
+import '../../app.css';
 import FileView from './FileView.svelte';
 import { FolderListing } from './listing.svelte';
 import { Selection } from './selection.svelte';
@@ -72,7 +75,7 @@ describe('FileView as a list', () => {
       [...document.querySelectorAll('button[aria-label^="Sort by"]')].map((b) =>
         b.textContent?.trim()
       );
-    const wide = await setup(30, {}, 900);
+    const wide = await setup(30, {}, 850); // Type needs 900 px
     await vi.waitFor(() => expect(header()).toEqual(['Name', 'Size', 'Added', 'Modified']));
     await expect
       .poll(() => page.getByTestId('item-added').first().element().textContent)
@@ -287,9 +290,11 @@ describe('reveal (S02.4-T05)', () => {
     await (
       screen.component as unknown as { reveal: (i: number, p: string) => Promise<void> }
     ).reveal(250, target.path);
-    const cell = page.getByRole('gridcell', { name: new RegExp(`^${target.name},`) });
+    const cell = page.getByRole('gridcell', {
+      name: new RegExp(`^${target.name.replace('.', '\\.')},`)
+    });
     await expect.element(cell).toBeVisible();
-    await expect.element(cell).toHaveClass(/flash/);
+    await expect.element(cell).toHaveClass('flash');
     const style = getComputedStyle(cell.element());
     expect(style.animationName).toBe('flash');
     expect(style.animationIterationCount).toBe('2');
