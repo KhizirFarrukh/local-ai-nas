@@ -4,6 +4,8 @@
 import { describe, expect, it, vi } from 'vitest';
 import { render } from 'vitest-browser-svelte';
 import { activity } from '$lib/shell/activity.svelte';
+import { FolderListing } from '$lib/files/listing.svelte';
+import StartInEffect from '$lib/testing/StartInEffect.svelte';
 import TrackInEffect from '$lib/testing/TrackInEffect.svelte';
 import { fakeChunkBytes } from '$lib/testing/tus-fake';
 import { Uploader } from '$lib/uploads/uploader.svelte';
@@ -30,6 +32,26 @@ describe('S02-B04', () => {
     window.removeEventListener('error', onerror);
     expect(runs.count).toBe(1);
     expect(errors).toEqual([]);
+  });
+});
+
+describe('S02-B13', () => {
+  it('a folder listing started in an effect loads once instead of looping', async () => {
+    const runs = { count: 0 };
+    let loads = 0;
+    const listing = new FolderListing(async () => {
+      loads++;
+      return {
+        item: { path: '/f', name: 'f', kind: 'dir', size: 0, mod_time: '', added_time: '' },
+        items: [],
+        total: 0
+      };
+    }, '/f');
+    await render(StartInEffect, { listing, runs });
+    await vi.waitFor(() => expect(listing.total).toBe(0));
+    await new Promise((r) => setTimeout(r, 100));
+    expect(runs.count).toBe(1);
+    expect(loads).toBe(1);
   });
 });
 

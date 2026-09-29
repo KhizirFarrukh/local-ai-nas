@@ -249,6 +249,11 @@ func TestIntegration(t *testing.T) {
 	h.expect(main, "GET /files/items", req{method: "GET", path: "/api/v1/files/items"}, 400)
 	h.expect(main, "GET /files/items", req{method: "GET", path: "/api/v1/files/items?path=/missing"}, 404)
 	h.expect(main, "GET /files/items", req{method: "POST", path: "/api/v1/files/items"}, 405)
+	// A folder's size (S02.3-T05): adds up /docs at any depth.
+	h.expect(main, "GET /files/usage", req{method: "GET", path: "/api/v1/files/usage?path=/docs"}, 200)
+	h.expect(main, "GET /files/usage", req{method: "GET", path: "/api/v1/files/usage"}, 400)
+	h.expect(main, "GET /files/usage", req{method: "GET", path: "/api/v1/files/usage?path=/missing"}, 404)
+	h.expect(main, "GET /files/usage", req{method: "POST", path: "/api/v1/files/usage?path=/"}, 405)
 	h.expect(main, "PUT /files/content", put("path=/docs/gone.txt", "x"), 201)
 	h.expect(main, "DELETE /files/items", req{method: "DELETE", path: "/api/v1/files/items?path=/docs/gone.txt"}, 204)
 	h.expect(main, "DELETE /files/items", req{method: "DELETE", path: "/api/v1/files/items?path=/"}, 400)

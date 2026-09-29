@@ -33,6 +33,10 @@ export class FolderListing {
    * again (S02.3-T05).
    */
   loads = $state(0);
+  // Counted here, not by reading `loads`: start() runs inside the page's
+  // effect, and reading `loads` there would make the effect depend on it
+  // and run again for ever (a request storm found by the system tests).
+  private loadCount = 0;
 
   // Plain collections on purpose: deep reactivity over tens of thousands
   // of items would cost more than it gives; `version` tells the views.
@@ -55,7 +59,7 @@ export class FolderListing {
     this.pages.clear();
     this.loading.clear();
     this.error = undefined;
-    this.loads++;
+    this.loads = ++this.loadCount;
     await this.fetch(0, true);
   }
 
@@ -87,7 +91,7 @@ export class FolderListing {
       this.folder = results[0].item;
       this.total = results[0].total ?? results[0].items?.length ?? 0;
       this.error = undefined;
-      this.loads++;
+      this.loads = ++this.loadCount;
       this.version++;
     } catch {
       // Keep what is shown; the next change or a reload tries again.
