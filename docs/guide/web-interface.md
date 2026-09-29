@@ -14,7 +14,8 @@ It works in current Chrome, Edge, and Firefox, on a computer, a tablet, or a pho
 - **The path** at the top shows where you are. Click any part of it to go back up.
 - **Open a folder** by double-clicking it (a single tap on a touch screen), or select it and press Enter.
 - **Go up** with Backspace or Alt+↑.
-- **List or grid:** the two buttons on the right switch between a list with details and a grid of tiles. In the list, click a column title (Name, Size, Modified, Type) to sort by it; click it again to reverse the order. In the grid, pick the order from the Sort menu. The browser remembers your choice.
+- **List or grid:** the two buttons on the right switch between a list with details and a grid of tiles. In the list, click a column title (Name, Size, Added, Modified, Type) to sort by it; click it again to reverse the order. In the grid, pick the order from the Sort menu. The browser remembers your choice.
+- **Sizes and dates:** every item shows its size, folders too (the NAS adds up what is inside; a folder shows "…" for a moment while it does). **Added** is when the item arrived on the NAS (uploaded, created, or copied); it stays the same when you rename, move, or change the file. **Modified** is when its content last changed. A wide list shows them in columns; on a phone and in the grid, the size and the added date are under the name.
 - **Large folders** stay fast: only what is on screen is loaded, so a folder of 50,000 items opens as quickly as a small one.
 
 ## Selecting
@@ -36,6 +37,7 @@ Right-click an item, or empty space in the folder, to open its menu. On a touch 
 - The **progress panel** at the bottom shows each upload with its progress and speed. You can **pause**, **resume**, **cancel**, and **retry** each one.
 - Uploads survive trouble: if the network drops, they continue by themselves when it is back. If you close or reload the page, add the same file to the same folder again, and it continues from where it stopped instead of starting over.
 - A file appears only once all of it has arrived, so a broken upload never leaves half a file behind.
+- Finished uploads show up in the folder on screen at once, folders too. When you upload **one** file or folder, the list scrolls to it and it **blinks twice**, so you see where it is (with reduced motion, it is lit for a moment instead).
 
 ## When a name is taken
 
