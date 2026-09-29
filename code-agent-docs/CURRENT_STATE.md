@@ -1,16 +1,16 @@
 # CURRENT_STATE
 
-**Last updated:** 2026-09-29 20:43 +0500 (session S007)
+**Last updated:** 2026-09-29 20:57 +0500 (session S007)
 **Plan version:** 1.6.0 (`code-agent-docs/plan.md`; P006: MVP additions FR-217–FR-221 pending Q54, release roadmap R01–R12 in section 11b), **Approved baseline** 1.0.0 (S005); 1.4.0 adds P005 (15 stages, 120 substages; packaging is now S13 and AI S15, table in plan 10.18)
 **Current phase:** **S01 (Basic NAS) Done** (signed off, S005 E126; P005 follow-up tasks done in S007). **S02 (NAS GUI) In Progress** (approved S006 E009); S02.1–S02.7 Done; S02.8 In Progress (T01–T04 done; T05 waits for the sign-off)
 
 ## Active stage and task
 - **Active stage:** **S02: NAS GUI**, **In Progress** (`stages/S02-nas-gui.md`; approved in S006 E009, with "Skip Safari": S02 checks Chrome, Edge, and Firefox). S01 is **Done** (`stages/S01-basic-nas.md`, completion record in section 13).
-- **Active task:** **S02.8-T05**: the stage-end CI run again (the walkthrough fixes are on `develop`), then the user's sign-off. The P005 follow-up tasks of S01 are all done.
+- **Active task:** **S02.8-T05**, waiting for the user's sign-off (stage-end CI run 36592445848 green). The P005 follow-up tasks of S01 are all done.
 - **The user's instruction (S007 E010):** after P005, resume S02 and work until the stage is complete, and also build the P005 items that belong to the current or earlier stages (the S01 follow-up tasks).
 
 ## In progress (write-ahead)
-- **S02.8-T05: the stage-end CI must run again** before the S02 sign-off: `develop` has the walkthrough fixes (S02.3-T05, S02.4-T05). The tag `S02-done` points at 494e616; moving it again needs the user's permission (asked in S007 E042), or the user starts "Run workflow". Then: the completion record's test results and the cross-browser report's CI sentence, and the sign-off (walkthrough, Narrator check, README proposals R-13–R-15, S01 re-confirmation, and the P006 questions Q54 and Q34 first).
+- **S02.8-T05: waiting for the user's sign-off.** Stage-end CI run 36592445848 is green on the tag `S02-done` (`develop` b6123a1); the completion record (section 13) is up to date. Asked: the sign-off after a hands-on walkthrough (with the Narrator check), README proposals R-13–R-15, the re-confirmation of S01, and the P006 decisions Q54 and Q34 first. After the sign-off: S02 Done in the plan, the stage document, and here; apply the README proposals the user approves; merge nothing into `main` unless asked.
 
 ## Last completed
 - **Stage-end CI green** (S007 E027–E028): run 36433983279, 15 of 15 jobs, on the tag `S02-done` (`develop` 494e616). The first run had failed in the Linux system tests because of two test races, fixed in `fix/S02.8-T05-e2e-resume-race`; the tag was moved with the user's permission.
@@ -36,7 +36,7 @@
 - **S01 Done** (S005 E126), plan 1.1.4: every task, CI run, and decision is in `stages/S01-basic-nas.md` (sections 12 and 13) and the S005 log.
 
 ## Next steps
-1. **S02.8-T05** (`stages/S02-nas-gui.md`, section 5): run the stage-end CI again on `develop` (move the tag `S02-done` with the user's permission, or the user runs the workflow by hand); record its results in section 13 and the cross-browser report. Remaining: the user's sign-off with a hands-on walkthrough on this PC (including the Narrator listening check of S02.7-T02), README proposals R-13–R-15 (`audits/A003-readme-proposal.md`), and the re-confirmation of S01 with its follow-ups.
+1. **S02.8-T05** (`stages/S02-nas-gui.md`, section 5): the user's sign-off (the walkthrough with the Narrator check, README proposals R-13–R-15, the S01 re-confirmation, and Q54 and Q34). Then S02 Done in the plan, the stage document, and CURRENT_STATE; next stage S03: write its stage document (R3) for the user's approval.
 2. **Still open from the P005 report** (not blocking S02): Q42–Q49 and Q51; accepting or removing the planner additions (labelled in plan section 3); ADR-0022–ADR-0029 (Proposed); the RAID 0/1 reading of E008. ADR-0021 and the CI trigger were decided in E013. The S01 follow-ups are done (S007 E017–E019).
 3. Follow-up from S01 (the user's decision): run `scripts/perf-baseline.sh` on the Raspberry Pi and the mini-PC when available; also measure SHA-256 there (ADR-0021).
 4. **Endpoint workflow (spec-first):** spec → `go generate ./internal/api` → strict operation; an error case in `errorCases`/`bodyErrorCases`; a review row in `docs/api/conventions.md`; a fake-service test that invalid input never reaches the service.
