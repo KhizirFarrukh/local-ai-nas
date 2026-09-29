@@ -35,11 +35,11 @@
 
 ## Consequences
 
-- **Required:** a known-drive registry keyed by serial and WWN (S14.3); the threat model entry for hostile hot-plug devices (S03.1); detection tests with loop devices (S14.13).
+- **Required:** a known-drive registry keyed by serial and WWN (S15.3); the threat model entry for hostile hot-plug devices (S03.1); detection tests with loop devices (S15.13).
 
 ## Approval record
 
-_Pending: put to the user with the P007 report (S007 E047). Decided when its stage is planned in detail (S14.3 (extends ADR-0029))._
+_Pending: put to the user with the P007 report (S007 E047). Decided when its stage is planned in detail (S15.3 (extends ADR-0029))._
 
 ## Links
 

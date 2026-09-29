@@ -39,11 +39,11 @@
 
 ## Consequences
 
-- **Required:** simulated-disk tests (loop devices) for degraded creation, add and resync (also interrupted), replace mode, and growth (S14.13, NFR-038); the RAID 0 reshape stays unused unless a later check shows it is reliable.
+- **Required:** simulated-disk tests (loop devices) for degraded creation, add and resync (also interrupted), replace mode, and growth (S15.13, NFR-038); the RAID 0 reshape stays unused unless a later check shows it is reliable.
 
 ## Approval record
 
-_Pending: put to the user with the P007 report (S007 E047). Decided when its stage is planned in detail (S14.7, S14.8, S14.10 (extends ADR-0027))._
+_Pending: put to the user with the P007 report (S007 E047). Decided when its stage is planned in detail (S15.7, S15.8, S15.10 (extends ADR-0027))._
 
 ## Links
 

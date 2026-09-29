@@ -3,9 +3,9 @@
 | Field | Value |
 |---|---|
 | Requirement | FR-084: a documented threat model, maintained through the project |
-| Version | 1.2 |
+| Version | 1.3 |
 | Created | 2026-09-30 (session S007, task S03.1-T01) |
-| Last updated | 2026-09-30 (session S007, external review #1) |
+| Last updated | 2026-09-30 (session S007, plan 1.9.0) |
 | Status | **Draft for the user's review** (S03.1 criterion 3) |
 | Maintained by | Every stage that adds an attack surface updates this file (RULES documentation map; audit checklist group H) |
 
@@ -53,7 +53,7 @@ flowchart LR
     OTHER -. "file permissions" .-> DATA
 ```
 
-**Trust boundaries:** (1) the network, between any client and the listeners; (2) the browser, between the NAS's own origin and every other web page; (3) the host, between the service's files and other local users and processes; (4) the process, between the core and the tools it will run later (media tools S04–S05, the storage helper S14, the AI worker S16).
+**Trust boundaries:** (1) the network, between any client and the listeners; (2) the browser, between the NAS's own origin and every other web page; (3) the host, between the service's files and other local users and processes; (4) the process, between the core and the tools it will run later (media tools S04–S05, the storage helper S15, the AI worker S17).
 
 ## 3. Assets
 
@@ -66,7 +66,7 @@ flowchart LR
 | A-05 | The database (metadata, content hashes, sessions, settings) | Integrity, confidentiality |
 | A-06 | The audit log | Integrity (who did what) |
 | A-07 | Configuration and future secrets (SMTP and webhook credentials, FR-221) | Confidentiality, integrity |
-| A-08 | The host (the service's ability to run code, and from S14 a privileged helper) | Integrity |
+| A-08 | The host (the service's ability to run code, and from S15 a privileged helper) | Integrity |
 | A-09 | Availability of the service, especially on a Raspberry Pi with little memory | Availability |
 
 ## 4. Attackers
@@ -102,9 +102,9 @@ flowchart LR
 | E-14 | Camera upload endpoint and app passwords (FR-219) | S09 | Future (pending Q54) |
 | E-15 | Alert delivery: SMTP, webhook, ntfy (FR-221) | S10 | Future, outbound (pending Q54) |
 | E-16 | Media tools on user content (ExifTool, libvips, libheif, FFmpeg) | S04–S05, S12 | Future: parsers of untrusted files |
-| E-17 | The privileged storage helper (a root service over a Unix socket) and drive events | S14 (ADR-0029, P007) | Future |
-| E-18 | The AI worker | S16 | Future |
-| E-19 | Updates and releases | S13 | Future |
+| E-17 | The privileged storage helper (a root service over a Unix socket) and drive events | S15 (ADR-0029, P007) | Future |
+| E-18 | The AI worker | S17 | Future |
+| E-19 | Updates and releases | S14 | Future |
 
 ## 6. Threats
 
@@ -140,7 +140,7 @@ flowchart LR
 | T-16 | CSRF: another site makes the admin's browser change or delete files | T | A-01 / X-02 / E-01, E-02 | A per-session token in `X-CSRF-Token` on every unsafe request, tus included; the `Origin` check; `SameSite=Lax` | Open → S03.5-T02 |
 | T-17 | Login CSRF: the admin is signed in to an account the attacker chose | S | A-01 / X-02 / E-08 | The `Origin` check on login and setup (with one admin this matters from S07) | Open → S03.5-T02 |
 | T-18 | Clickjacking: the console is framed and the admin tricked into clicks | T | A-07 / X-02 / E-05, E-09 | `frame-ancestors 'none'` and `X-Frame-Options: DENY` on every response | Mitigated for the app (S02.1-T02); API answers in S03.5-T03 |
-| T-19 | **DNS rebinding:** a page on the attacker's domain resolves that name to `127.0.0.1` or the NAS's LAN address; its requests then look same-origin (Origin and Host both name the attacker's domain) | I, T | A-01 / X-02 / E-07 | A **Host allow-list** per listener: loopback accepts only `127.0.0.1`, `localhost`, and `[::1]` with its port; the LAN listener accepts only the configured names, the host name, `<hostname>.local`, and its own addresses. Other Host values get `421`. Cookies are not sent to the attacker's name either, so after S03 only unauthenticated routes (setup, login) are reachable this way | Open → S03.5-T02 (added by this threat model). **Today (S01, S02):** the API has no authentication, so a rebinding page could read or delete files while a development server runs (finding F-01, bug S03-B01) |
+| T-19 | **DNS rebinding:** a page on the attacker's domain resolves that name to `127.0.0.1` or the NAS's LAN address; its requests then look same-origin (Origin and Host both name the attacker's domain) | I, T | A-01 / X-02 / E-07 | A **Host allow-list** per listener: loopback accepts only `127.0.0.1`, `localhost`, and `[::1]` with its port; the LAN listener accepts only the configured names, the host name, `<hostname>.local`, and its own addresses. Other Host values get `421`. Cookies are not sent to the attacker's name either, so after S03 only unauthenticated routes (setup, login) are reachable this way | Open → S03.5-T02, first part, built first (FR-350, ADR-0042). **Today (S01, S02):** the API has no authentication, so a rebinding page could read or delete files while a development server runs (finding F-01, bug S03-B01) |
 | T-20 | Another site reads answers through CORS | I | A-01 / X-02 / E-01 | No `Access-Control-Allow-Origin` anywhere | Mitigated (no CORS headers since S01; tusd's CORS off, checked in S03.1-T02); tested in S03.5-T03 |
 | T-21 | A crafted file name injects script into the GUI | T, E | A-03 / X-03 / E-05 | Svelte escapes text; no raw HTML from data (checked in S03.1-T02); the CSP forbids inline scripts | Mitigated (S02, CSP by hash); re-checked in S03.1-T02 |
 | T-22 | An uploaded HTML, SVG, or PDF file runs script in the app's origin | E | A-03 / X-03 / E-03 | Downloads: `attachment`, `nosniff`, `Content-Security-Policy: default-src 'none'; sandbox`; previews: images only through `<img>`, text as text, pdf.js without scripting or eval | Mitigated (S01.3, S02.6; system tests of S02.8); re-checked in S03.5-T05 |
@@ -188,8 +188,8 @@ flowchart LR
 
 | ID | Threat | STRIDE | Assets / attacker / surface | Mitigation | Status |
 |---|---|---|---|---|---|
-| T-42 | Another local user reads the database, logs, config, or TLS key | I | A-02–A-05 / X-05 / E-11 | Files and folders created by the service readable only by it (0600 and 0700 on Linux); on Linux the S13 deployers run the service as its own user | Open → S03.5-T05 (permissions, finding F-02, bug S03-B02), S13.2 (service user) |
-| T-43 | Another local user resets the admin password with the CLI | E | A-02 / X-05 / E-10 | The CLI needs write access to the database file, which T-42 restricts to the service's user | Open → S03.5-T05, S13.2 |
+| T-42 | Another local user reads the database, logs, config, or TLS key | I | A-02–A-05 / X-05 / E-11 | Files and folders created by the service readable only by it (0600 and 0700 on Linux); on Linux the S14 deployers run the service as its own user | Open → S03.5-T05 (permissions, finding F-02, bug S03-B02), S14.2 (service user) |
+| T-43 | Another local user resets the admin password with the CLI | E | A-02 / X-05 / E-10 | The CLI needs write access to the database file, which T-42 restricts to the service's user | Open → S03.5-T05, S14.2 |
 | T-44 | A compromised dependency runs code in the build or the service | E | A-08 / X-07 / E-12 | Pinned versions (`go.sum`, `pnpm-lock.yaml`); govulncheck, `pnpm audit`, Trivy, Dependabot, license checks (S01, S02); few dependencies | Partly mitigated (S01, S02); Open → S03.10-T03 (fail on high severity); the residual is an **accepted-risk candidate** |
 | T-45 | The disk or SD card is stolen and read | I | A-01–A-05 / X-06 / — | The NAS does not encrypt data at rest; the guide points to the operating system's disk encryption | **Accepted-risk candidate** (documented in S03.10-T04) |
 | T-46 | A backup exposes credentials or secrets | I | A-02, A-07 / X-06 / — | Only hashes of passwords, sessions, and tokens are stored; two-factor secrets encrypted with a key kept outside the database (S03.7); backups handle secrets (S08.3, FR-221) | Open → S03.7-T01; Future → S08.3 |
@@ -202,15 +202,15 @@ flowchart LR
 | T-48 | Camera-upload app passwords reach more than uploads | E | E-14 | An upload-only token scope; per-device revocation; the client sees only what it uploaded (FR-219) | Future → S09 (pending Q54) |
 | T-49 | Alert delivery leaks data or is abused to reach internal services (SSRF) | I | E-15 | Destinations set only by the admin; TLS; HMAC-signed webhooks; minimal content; secrets never logged (FR-221) | Future → S10 (pending Q54) |
 | T-50 | A crafted media file exploits a parser (ExifTool, libvips, libheif, FFmpeg) | E, D | E-16 | Tools run as separate processes with time and memory limits, never with shell strings; tools kept patched (register) | Future → S04, S05, S12 |
-| T-51 | A compromised core asks the privileged storage helper to format or erase drives | E, T, D | E-17 | A narrow allow-list of typed operations; the helper checks the caller's identity on its socket; destructive steps need the admin's typed confirmation passed through; everything audited (ADR-0029) | Future → S14.2 |
-| T-52 | A hostile USB drive with a crafted filesystem is plugged in | E | E-17 | Never mounted automatically; only inside a flow the admin started; `nosuid,nodev,noexec` (P007, ADR-0034) | Future → S14 |
-| T-53 | Secure erase or a pool change hits the wrong drive | T, D | E-17 | Stable drive IDs, previews, typed confirmation, LED blink, audit (ADR-0035) | Future → S14.11 |
-| T-54 | The AI worker reads more of the library than it needs, or sends data out | I, E | E-18 | A separate process with least privilege and no network; models checked by hash (ADR-0017) | Future → S16 |
+| T-51 | A compromised core asks the privileged storage helper to format or erase drives | E, T, D | E-17 | A narrow allow-list of typed operations; the helper checks the caller's identity on its socket; destructive steps need the admin's typed confirmation passed through; everything audited (ADR-0029) | Future → S15.2 |
+| T-52 | A hostile USB drive with a crafted filesystem is plugged in | E | E-17 | Never mounted automatically; only inside a flow the admin started; `nosuid,nodev,noexec` (P007, ADR-0034) | Future → S15 |
+| T-53 | Secure erase or a pool change hits the wrong drive | T, D | E-17 | Stable drive IDs, previews, typed confirmation, LED blink, audit (ADR-0035) | Future → S15.11 |
+| T-54 | The AI worker reads more of the library than it needs, or sends data out | I, E | E-18 | A separate process with least privilege and no network; models checked by hash (ADR-0017) | Future → S17 |
 | T-55 | Users read each other's data through IDs (uploads, archives, jobs, shares) | I | E-01–E-04 | Ownership rules in `authz`; IDs bound to their owner (prepared in S03.5-T05) | Future → S07 |
 | T-56 | The console is reachable from the internet once the NAS is exposed | E | E-09 | A setting that limits `/admin` and `/api/v1/admin` to the LAN or VPN (ADR-0039) | Future → R09 |
-| T-57 | A tampered release or update is installed | E | E-19 | Published checksums and signatures; the deployers verify them | Future → S13 |
-| T-58 | Access data kept in sidecars or hidden files is changed outside the app (on the filesystem, over a network share with write access, by restoring an old backup) and grants access | E | E-11, E-13 | The database is the authority for owners, ACLs, and shares; sidecars only mirror it (plan 8.36) | Future → S05.1, S07.3 (decision **Q78**; external review #1) |
-| T-59 | A power cut rolls back the last committed security changes (a revoked session or token, a password change, audit events), because SQLite in WAL mode with `synchronous=NORMAL` flushes only at checkpoints | S, R | E-11 | `synchronous=FULL` (plan 8.37) | Open → decision **Q79**, before S03.3-T01 (external review #1) |
+| T-57 | A tampered release or update is installed | E | E-19 | Published checksums and signatures; the deployers verify them | Future → S14 |
+| T-58 | Access data kept in sidecars or hidden files is changed outside the app (on the filesystem, over a network share with write access, by restoring an old backup) and grants access | E | E-11, E-13 | The database is the authority for owners, ACLs, and shares; sidecars only mirror it (plan 8.36) | Future → S05.1, S07.3: **decided** (the user's decision D2, P008): the database is authoritative (FR-359) |
+| T-59 | A power cut rolls back the last committed security changes (a revoked session or token, a password change, audit events), because SQLite in WAL mode with `synchronous=NORMAL` flushes only at checkpoints | S, R | E-11 | `synchronous=FULL` (plan 8.37) | Open → S01.1-T12 (built in S03): **decided** `synchronous=FULL` (D5, NFR-056) |
 
 ## 7. Review of existing code (S03.1-T02)
 
@@ -252,3 +252,4 @@ _None yet. Candidates are marked in section 6 (T-33, T-37, T-44, T-45). Each bec
 | 2026-09-30 | S007 | Version 1.0 (S03.1-T01): assets, attackers, surfaces, threats T-01–T-57 |
 | 2026-09-30 | S007 | Version 1.1 (S03.1-T02): section 7, the review of the S01 and S02 code: findings F-01–F-08 (bugs S03-B01, S03-B02) and what was found sound |
 | 2026-09-30 | S007 | Version 1.2: T-58 (access data edited outside the app) and T-59 (security writes rolled back by a power cut), from external review #1 (CR001, research R002) |
+| 2026-09-30 | S007 | Version 1.3 (plan 1.9.0): T-58 and T-59 decided (D2, D5); T-19 mitigated first (FR-350, ADR-0042); stage IDs renumbered (packaging S14, drives S15, AI S17) |

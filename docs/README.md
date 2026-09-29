@@ -12,6 +12,6 @@ Project documentation for users and developers.
 - `storage-root.md`: moving the storage root to another folder or disk (S01.2-T07, NFR-036).
 - `guide/web-interface.md`: using the web interface: browsing, uploads, downloads, organizing, previews, shortcuts, accessibility (S02.8-T03).
 - `reports/S02-cross-browser.md`: the cross-browser check of the web interface in Chrome, Edge, and Firefox (S02.8-T03).
-- Install and admin guides, and the rest of the user guide, follow in S13.4.
+- Install and admin guides, and the rest of the user guide, follow in S14.4.
 
 The agent's working documents (plan, rules, stage documents, logs) live in [`code-agent-docs/`](../code-agent-docs/).

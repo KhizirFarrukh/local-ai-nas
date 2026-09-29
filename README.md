@@ -4,7 +4,16 @@
 
 **local-ai-nas** is a network-attached storage platform that anyone can deploy on their own hardware. It keeps two separate areas: **Files**, a general-purpose file store, and **Photos**, a Google Photos–style library. It organizes your photos, understands what's in them, and lets you search both areas with natural, forgiving queries, all without sending a single byte to the cloud.
 
-> ⚠️ **Status: early development.** Stage 1, the NAS core, is complete: the Files area can be managed through a REST API on the same computer (see Development). Everything else below is the planned scope and is not implemented yet.
+> ⚠️ **Status: early development.** Stages 1 and 2 are complete, stage 3 (security) is in progress. Until it is done, the server answers only on the computer it runs on. Everything below that is not listed under "Works today" is the planned scope and is not implemented yet.
+
+## 📍 Current status
+
+| | Stages and features |
+|---|---|
+| **Done** | Stage 1: the NAS core (storage service and REST API) · Stage 2: the web interface |
+| **In progress** | Stage 3: security (sign-in, HTTPS on your home network, protection against other websites), together with foundations built early: stable IDs for every item, a trash, durable background jobs, and crash-safe file operations |
+| **Works today** | The Files area, in a browser or through the REST API, **on the same computer only**: browse, upload (large and resumable, whole folders too), download (also several items as a ZIP), create, rename, move, copy, delete, and preview files |
+| **Next** | Stage 4: the Photos library (see the Roadmap below) |
 
 ---
 
@@ -21,7 +30,7 @@
 - Timeline and album views, similar to Google Photos
 - Video playback streamed to any device, with a live quality menu (Auto, Original, 1080p, 720p, …); lower qualities are prepared on demand
 - Automatic extraction of EXIF data (date/time, camera, GPS location)
-- Each photo in the Photos area gets its own **sidecar JSON metadata file** stored right next to it
+- Each photo in the Photos area gets its own **sidecar JSON metadata file** stored right next to it (`IMG_0001.jpg.lainas.json`, a name no other tool uses)
 - Your metadata stays portable: it lives with your files, not locked inside a database
 
 ### 🤖 Optional Local AI (opt-in)
@@ -29,7 +38,7 @@ When enabled, AI runs **locally** in a separate, optional component alongside th
 
 - **Auto-classification:** photos are analyzed and tagged by content (e.g. `receipt`, `document`, `food`, `landscape`, `pet`, `screenshot`). Upload a random receipt and it becomes findable by searching `receipts`, with no manual tagging needed.
 - **Face detection & grouping:** detects human faces and clusters similar faces together, so you can browse all photos of the same person. A single photo can contain multiple faces, and each face is grouped independently.
-- **Results are persisted:** all classifications and face groups are written into the photo's JSON metadata file. The AI runs once per photo at processing time, **not** at search time.
+- **Results are persisted:** all classifications and face groups are written into the photo's JSON metadata file. The AI analyzes each photo once, at processing time, **not** at search time: search reads the stored results. Only the optional search by meaning turns the words you type into a vector, locally, and falls back to normal search if the AI is off.
 
 ### 🔍 Smart Search
 Search covers both the Files and Photos areas. It runs over stored metadata and a local search index, so it is fast and doesn't require the AI model to be running.
@@ -71,23 +80,44 @@ receipts after:2025 place:lahore
 
 ---
 
+## 🧭 How It Fits Together
+
+```
+  Browser (the web app)          Scripts (REST API)
+             \                        /
+              v                      v
+   local-ai-nas: one program on your NAS (Go)
+     ├─ Files               -> files/
+     ├─ Photos              -> photos/ + .lainas.json sidecars    (stages 4–5)
+     ├─ Search              -> a rebuildable index (Bleve)        (stage 6)
+     ├─ Background jobs     -> thumbnails, imports, checks
+     └─ Accounts, settings  -> SQLite database
+                 ^
+   Optional AI helper (Python, ONNX; local only)                  (last stage)
+```
+
+One program does the work; there are no separate database or queue servers. The AI helper is the only extra process, and it is optional.
+
+---
+
 ## 🗂️ Sidecar Metadata
 
-Every photo has a companion JSON file stored alongside it. The full original filename is kept in the sidecar name to avoid collisions (e.g. `IMG_0001.jpg` and `IMG_0001.png`).
+Every photo has a companion JSON file stored alongside it. The sidecar is named after the full original filename plus `.lainas.json`, so it never collides with another photo (e.g. `IMG_0001.jpg` and `IMG_0001.png`) or with other tools' `.json` files, such as those in a Google Takeout export.
 
 ```
 photos/
 ├── IMG_0001.jpg
-├── IMG_0001.jpg.json
+├── IMG_0001.jpg.lainas.json
 ├── IMG_0002.png
-└── IMG_0002.png.json
+└── IMG_0002.png.lainas.json
 ```
 
-Example `IMG_0001.jpg.json` (draft schema):
+Example `IMG_0001.jpg.lainas.json` (draft schema):
 
 ```json
 {
   "schemaVersion": 1,
+  "mediaId": "0199e2c4-…",
   "file": {
     "name": "IMG_0001.jpg",
     "size": 2483921,
@@ -125,7 +155,7 @@ Example `IMG_0001.jpg.json` (draft schema):
 }
 ```
 
-The sidecar files are the **source of truth**. Any search index built by the application is a cache that can be rebuilt from them at any time.
+The sidecar files are the **source of truth** for photo metadata. Who owns a photo and who may see it is decided by the NAS's own database (a sidecar keeps a read-only copy), so editing a file can never grant access. Any search index built by the application is a cache that can be rebuilt from them at any time.
 
 ---
 
@@ -241,8 +271,8 @@ On Windows, run the `scripts/*.sh` files from Git Bash. More in [docs/testing.md
 ## 🗺️ Roadmap
 
 - [x] Stage 1: Basic NAS (storage service and API; Files and Photos areas)
-- [ ] Stage 2: Web interface for the NAS
-- [ ] Stage 3: Security (login, HTTPS, hardening)
+- [x] Stage 2: Web interface for the NAS
+- [ ] Stage 3: Security (login, HTTPS, hardening) — in progress
 - [ ] Stage 4: Media management (Photos area: timeline, albums, viewer)
 - [ ] Stage 5: Media metadata (EXIF, sidecar JSON, offline place names)
 - [ ] Stage 6: Search across Files and Photos (fuzzy, synonyms, operators)

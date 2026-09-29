@@ -19,7 +19,7 @@
 ## Options considered
 
 ### Option A: App-level shortcut records
-A database row: owner, the shortcut's path and name, and the **target's stable file ID**. Listings show it at its path with a shortcut badge; opening or downloading serves the target.
+A database row: owner, the shortcut's path and name, and the **target's item ID** (ADR-0040, since plan 1.9.0; before: "stable file ID"). Listings show it at its path with a shortcut badge; opening or downloading serves the target.
 - **Pros:** follows moves and renames (by ID); the same on every platform; access checked on the target every time; zero quota; easy to find all shortcuts to a target.
 - **Cons:** nothing exists on disk, so tools that read the disk directly (SMB, a backup of `files/`) do not see it; the WebDAV layer must present it.
 - **License / cost:** none.
@@ -43,7 +43,7 @@ A database row: owner, the shortcut's path and name, and the **target's stable f
 
 **Recommended: Option A, app-level shortcut records.**
 
-- A shortcut refers to its target by stable file ID and is re-resolved on every access, with the full authorization check on the target (I5). A shortcut can never be shared.
+- A shortcut refers to its target by item ID (ADR-0040) and is re-resolved on every access, with the full authorization check on the target (I5). A shortcut can never be shared.
 - **Quota:** zero (FR-175, S10.2).
 - **Target moved or renamed:** the shortcut follows it and shows the target's current path.
 - **Target trashed:** the shortcut shows "target missing" with a restore option; restoring the target brings the shortcut back. **Target permanently deleted:** the user is warned first how many shortcuts point to it; afterwards they show "target deleted" and can be removed.
@@ -54,7 +54,7 @@ A database row: owner, the shortcut's path and name, and the **target's stable f
 ## Consequences
 
 - **Easier:** correct on every platform; no traversal risk; no quota tricks.
-- **Harder:** shortcuts are invisible to programs that read the disk directly; the S13 backup of internal data must include the shortcut table (it does: it is in the database).
+- **Harder:** shortcuts are invisible to programs that read the disk directly; the S14 backup of internal data must include the shortcut table (it does: it is in the database).
 - **Required (follow-up work, constraints this imposes):** S09.2's WebDAV FileSystem leaves room for virtual entries; S10.2 counts shortcuts as zero; S11.6 builds it; search (S06) indexes shortcuts with the shortcut flag.
 
 ## Approval record

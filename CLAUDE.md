@@ -8,7 +8,7 @@ Before doing anything else, including answering the user's first request, read t
 
 1. `code-agent-docs/RULES.md`: operating rules. Read it completely.
 2. `code-agent-docs/CURRENT_STATE.md`: where the project stands and the next step.
-3. `code-agent-docs/plan.md`: the master development plan.
+3. `code-agent-docs/plan/PLAN_INDEX.md`: the master development plan's index (the plan is split into files in `code-agent-docs/plan/`; RULES R1 names the files to read).
 4. The most recent file in `code-agent-docs/logs/sessions/`.
 
 Then finish the rest of the startup checklist in RULES.md (R1): read the active stage document, check git status, open a new session log, and give the user a resume summary.

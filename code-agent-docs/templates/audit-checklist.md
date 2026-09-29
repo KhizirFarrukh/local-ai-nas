@@ -4,11 +4,12 @@
 Template for documentation audits under RULES.md R12.
 Created in audit A001 (session S004) from P004. Written generally so that every later audit (A002, A003, ...) can reuse it.
 Updated in audit A002 (session S005): checks for the product documentation (docs/, scripts/, README sections owned by stages) in groups A, E, and K.
-Updated in session S007 (P005, pre-approved): group K checks historical documents against the plan's "Stage ID changes" table (plan.md 10.18).
+Updated in session S007 (P005, pre-approved): group K checks historical documents against the plan's "Stage ID changes" table (plan 10.18, in `plan/roadmap.md`).
 Updated in audit A003 (session S007): group G also covers the tools the tests use; group H checks the files table against what was built; group J checks task-start entries.
 Updated in session S007 (P006, pre-approved): group D checks the research files and the release roadmap.
 Updated in session S007 (P007, the admin console, the Raspberry Pi, the deployers): groups G, H, K.
 Updated in session S007 (S03 approval): the threat model check (group H).
+Updated in session S007 (P008, plan 1.9.0): groups C, D, H (R14 backlog, I3 and I4 wording, follow-up tasks in Done stages, the Takeout prerequisite).
 UPDATE THIS CHECKLIST whenever a new document type, folder, rule, or invariant is added (R12 / P004).
 
 How to use:
@@ -22,7 +23,7 @@ How to use:
 1. The user's recorded instructions: `bootstrap/initial-prompt.json`, every `prompts/P<NNN>-*.json`, and the verbatim USER entries in session logs.
 2. `README.md` (the project vision).
 3. `RULES.md`.
-4. `plan.md`.
+4. The plan (`plan/`, starting at `PLAN_INDEX.md`).
 5. ADRs, stage documents, `dependencies.md`, audits.
 6. Git history (`git log --all`, `git show`) as evidence of what actually happened.
 
@@ -47,7 +48,7 @@ How to use:
   - Create or backfill an approval the user did not give ("Approval not recorded").
   - Edit past session-log entries (add a new entry, or a clearly labelled retroactive note at the end of the old log).
   - Mark something verified that was not actually verified.
-- **Plan versioning:** if plan.md changes, archive it first and make one PATCH bump for the whole audit, with a revision entry citing the audit and its trigger.
+- **Plan versioning:** if the plan changes, archive the plan folder first and make one PATCH bump for the whole audit, with a revision entry citing the audit and its trigger.
 
 ## Severity levels
 - **Critical:** would make a fresh agent resume incorrectly, break an invariant, or misrepresent an approval. Examples: a wrong next step, a missing rule, a missing pointer file, a claimed approval that was never given.
@@ -63,7 +64,7 @@ How to use:
 - [ ] Every required file exists: RULES, CURRENT_STATE, plan, dependencies, all templates, bootstrap prompt, every archived prompt, audit reports.
 - [ ] Root files exist: README.md, AGENTS.md, and every editor-native pointer file listed in RULES.md.
 - [ ] No orphaned files: every file is covered by the documentation map (or the map needs an entry).
-- [ ] `archive/plan-history/` holds every superseded plan version listed in the revision history, and each equals `git show <commit>:code-agent-docs/plan.md`.
+- [ ] `archive/plan-history/` holds every superseded plan version listed in the revision history, and each equals `git show <commit>:code-agent-docs/plan.md` (up to 1.8.1) or the plan folder at its commit (from 1.9.0).
 - [ ] Every script the documentation shows as `scripts/<name>.sh` is executable in git (`git ls-files -s`: mode 100755).
 
 ### B. Prompt fulfillment
@@ -80,6 +81,7 @@ How to use:
 - [ ] Pointer files are short, point to correct paths, and give the correct reading order.
 
 ### D. Plan
+- [ ] New requests since P008 are in the backlog table (plan 11d) with their case and placement (RULES R14).
 - [ ] The header version equals the latest revision entry, and every previous version is archived.
 - [ ] Every required section is present and non-empty.
 - [ ] All stages are present and in order. The AI stage is last (I8).
@@ -88,13 +90,15 @@ How to use:
 - [ ] Traceability: every FR/NFR maps to a substage; every referenced ID exists; no duplicates; deprecated IDs are marked, not deleted.
 - [ ] Dependencies: every "depends on" exists; no cycles; no dependency on a later stage.
 - [ ] Open questions: answered ones cite where; open ones name what they block; none answered without a user decision; baseline-approval decisions are grouped.
-- [ ] Invariants are worded identically in plan.md and RULES.md.
+- [ ] Invariants are worded identically in `plan/invariants.md` and RULES.md.
+- [ ] `PLAN_INDEX.md`: its version equals the newest row of `changelog.md`; its stage status table equals `roadmap.md` 10.1; its file table and section map list every plan file (ADR-0044).
 - [ ] The chosen-stack table matches the ADRs' current statuses and links.
 - [ ] No stale text contradicts a newer decision (grep for superseded technologies and answered-question markers such as "pending Q…").
 - [ ] Every gap in every research file (`research/R<NNN>-*.md`) has exactly one destination: the MVP, a release, the AI stage, or excluded (P006).
 - [ ] Every feature of every release (plan 11b, 3.3) has an FR ID, and every FR of a release names its release (P006).
 
 ### E. README alignment
+- [ ] The README's "Current status" section matches the plan's stage statuses (updated at every stage's final review, P008).
 - [ ] Every README feature maps to at least one requirement.
 - [ ] Every place where README.md is out of date with **approved** decisions is written up as a proposal (current text → proposed text → reason with source), never as a direct edit.
 - [ ] README edits made by tasks stay inside the sections their stage document names (its files table). Any other change is reverted and written up as a proposal.
@@ -104,17 +108,19 @@ How to use:
 - [ ] Every ADR has every template section.
 - [ ] Every status is valid and matches what the approving prompt or user specified. Accepted ADRs cite their approval.
 - [ ] Superseded ADRs link both ways (including partial supersession notes).
-- [ ] Every ADR is linked from plan.md, and dependency-bearing ADRs are linked from the register.
+- [ ] Every ADR is linked from the plan, and dependency-bearing ADRs are linked from the register.
 - [ ] Every item marked "Unverified" gets a new verification attempt, and the result is recorded.
 
 ### G. Dependency register
-- [ ] Every dependency, external tool, dataset, and model named in plan.md, an ADR, or a stage document is in the register (alternatives named only in "Options considered" go in the alternatives list).
+- [ ] Every dependency, external tool, dataset, and model named in the plan, an ADR, or a stage document is in the register (alternatives named only in "Options considered" go in the alternatives list).
 - [ ] Versions and licenses match the ADRs and stage documents.
 - [ ] Every row has a verification status. License items needing the user's attention are flagged (⚠).
 - [ ] Section 12 has a column for each focus platform (Debian or Ubuntu, Arch Linux, Raspberry Pi, Windows 11) and the Docker image, with package names checked against each platform's package index or marked Unverified.
 - [ ] The tools the tests and fixtures use are listed too: test browsers, fixture generators, and anything CI installs (A003 F-005).
 
 ### H. Stage documents
+- [ ] Follow-up tasks of a Done stage (P005, P008 precedent) are listed in that stage's document with approval, and the current stage's execution order and testing substage include them.
+- [ ] No Google Takeout import work started before the user's sample data was analyzed and recorded (plan A28, 8.42).
 - [ ] From S03: `security/threat-model.md` exists; every threat has a status (mitigated with its test, accepted risk with the user's approval, or open with the stage that handles it); the stage under audit updated it for every attack surface it added (FR-084).
 - [ ] Only the active or next stage has a stage document (just-in-time rule). Any others are flagged.
 - [ ] Each stage document covers all of its substages, with tasks `S<NN>.<n>-T<NN>`, each with acceptance criteria.
@@ -142,7 +148,7 @@ How to use:
 
 ### K. Cross-document consistency
 - [ ] Stage, substage, task, requirement, ADR, and invariant IDs are identical everywhere.
-- [ ] **Stage ID changes** (plan.md 10.18): documents written before a renumbering (session logs, prompts, archived plans, completion records, ADR history, changelog and revision-history rows) keep the old IDs and are **not** findings; check that their IDs are correct for their date by translating through the table. Current documents must use the new IDs, and no current document may use a reused ID (e.g. S11, S12 before and after 1.4.0; S15 before and after 1.7.0, AI then, SSD caching now) in its old meaning. Every current document that mentions a renumbered stage uses its current ID.
+- [ ] **Stage ID changes** (plan 10.18, in `plan/roadmap.md`): documents written before a renumbering (session logs, prompts, archived plans, completion records, ADR history, changelog and revision-history rows) keep the old IDs and are **not** findings; check that their IDs are correct for their date by translating through the table. Current documents must use the new IDs, and no current document may use a reused ID (e.g. S11, S12 before and after 1.4.0; S15 before and after 1.7.0, AI then, SSD caching now; S13–S16 before and after 1.9.0, when the dependency security review became S13 and the later stages moved up by one) in its old meaning. Every current document that mentions a renumbered stage uses its current ID.
 - [ ] Terminology is consistent (areas, sidecar naming, operators, component names).
 - [ ] All relative links and backticked `code-agent-docs/…` paths resolve.
 - [ ] Product documentation (`docs/`, `scripts/README.md`, the README's Development section): links and anchors resolve, and every command it shows was run as written (for example by extracting its code blocks into a script), or the report says which were not.

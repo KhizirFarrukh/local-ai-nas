@@ -39,11 +39,11 @@ Entries keyed by content hash (FR-211); admission by a frequency filter; evictio
 
 ## Consequences
 
-- **Required:** fault-injection and leak tests (S15.8); privacy-safe statistics (aggregated only); the cache excluded from backups and quotas.
+- **Required:** fault-injection and leak tests (S16.8); privacy-safe statistics (aggregated only); the cache excluded from backups and quotas.
 
 ## Approval record
 
-_Pending: put to the user with the P007 report (S007 E047). Decided when its stage is planned in detail (S15.1)._
+_Pending: put to the user with the P007 report (S007 E047). Decided when its stage is planned in detail (S16.1)._
 
 ## Links
 

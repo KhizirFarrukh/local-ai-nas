@@ -107,7 +107,7 @@ flowchart LR
   - The Node.js 24 LTS line (`engines`: `>=24.19`) with pnpm 12.6.0 and a committed `pnpm-lock.yaml`.
 - **Embedding (ADR-0004):**
   - `web/embed.go` (package `web`) embeds `//go:embed all:build`. `web/build/` holds a committed `.gitkeep` and is otherwise git-ignored. So `go build` and `go run` still work without Node.js, as in the README quick start and the CI quick-start step.
-  - A binary built without the UI serves a short notice at `/` that says how to build it. CI's build job and later release builds (S13) build the UI first.
+  - A binary built without the UI serves a short notice at `/` that says how to build it. CI's build job and later release builds (S14) build the UI first.
 - **Serving the app** (new handler in the core):
   - `GET /` and every other non-API path returns the file from `web/build`, or `index.html` for app routes (SPA fallback). Anything under `/api/` never falls back, so unknown API paths stay `404` problems.
   - **Caching:** `/_app/immutable/*` (hashed names) is cached for a year; `index.html` gets `no-cache`.
@@ -369,6 +369,14 @@ Its tests are written in S02.8.
 | S02.8-T03 | **Cross-browser and user guide:** the cross-browser report (Chrome, Edge through Playwright's `msedge` channel on Windows, and Firefox; Safari not checked, E009); `docs/guide/web-interface.md` (the GUI user guide section); the README Development section brought up to date; plan status; CURRENT_STATE; the register. | **Done** (S007 E023) | The report is in `docs/`. The guide covers every S02 flow. The documents match what was built. |
 | S02.8-T04 | **Documentation audit A003 (R12)** using `templates/audit-checklist.md`. | **Done** (S007 E024) | Audit complete; no Critical finding open. |
 | S02.8-T05 | **Completion record and user sign-off**, including a hands-on walkthrough by the user on this PC. | **Done** (S007 E044; signed off by the user, walkthrough assumed) | Section 13 is filled in. The user's sign-off is quoted in the session log. |
+
+### P008 follow-up task (plan 1.9.0; S02 stays Done)
+
+- **Source:** P008 F4 (minimal trash) and F3 (long operations as jobs); approved by the user ("Approve all, F2 first (Recommended)", S007 E059); built in S03 after S01.3-T13; tests in S03.10.
+
+| Task ID | Description | Status | Acceptance criteria |
+|---|---|---|---|
+| S02.5-T05 | **Trash page and background operations in the GUI** (FR-354, FR-351): a Trash page reachable from the navigation (original location, deletion date, restore, delete permanently, empty trash with a typed confirmation, I10); delete dialogs say items go to the trash (no longer "permanent"); operations answered with `202` show progress in the progress panel with cancel, and the listing refreshes when they finish. | Not started | The flows work in Edge and Firefox, on desktop and phone layouts; axe is clean in both themes. |
 
 ## 6. Files and modules expected to be created or changed
 

@@ -19,7 +19,7 @@
 
 ### Option A: Create pools with an optional LVM layer now; offer lvmcache later (writethrough only)
 - **Pros:** a block cache can be added without recreating the pool.
-- **Cons:** one more layer in every pool (complexity, a little overhead), decided at S14.5.
+- **Cons:** one more layer in every pool (complexity, a little overhead), decided at S15.5.
 
 ### Option B: No block-level cache
 - **Pros:** simpler pools.
@@ -31,11 +31,11 @@
 
 ## Consequences
 
-- If Option A is chosen: ADR-0028's pool layout adds LVM, and S14.5 creates it; tests on loop devices.
+- If Option A is chosen: ADR-0028's pool layout adds LVM, and S15.5 creates it; tests on loop devices.
 
 ## Approval record
 
-_Pending: put to the user with the P007 report (S007 E047). Decided when its stage is planned in detail (S15.1 (affects S14.5 and ADR-0028))._
+_Pending: put to the user with the P007 report (S007 E047). Decided when its stage is planned in detail (S16.1 (affects S15.5 and ADR-0028))._
 
 ## Links
 

@@ -53,7 +53,7 @@
 
 - **Easier:** optimized videos play everywhere the NAS is used; no new tool.
 - **Harder:** H.264 files are larger than HEVC or AV1; users who want the smallest files must choose a slower codec.
-- **Required (follow-up work, constraints this imposes):** S12.2 builds the pipeline; `dependencies.md` records the encoder licences (x264, x265, SVT-AV1); the S13.6 licence audit checks the FFmpeg build.
+- **Required (follow-up work, constraints this imposes):** S12.2 builds the pipeline; `dependencies.md` records the encoder licences (x264, x265, SVT-AV1); the S14.6 licence audit checks the FFmpeg build.
 
 ## Approval record
 

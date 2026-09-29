@@ -41,7 +41,7 @@ S06 delivers fast, forgiving search across both areas:
 | Detail | Choice | Reason |
 |---|---|---|
 | Text analyzer | A custom analyzer: unicode tokenizer → lowercase → ASCII folding (accents) → English possessive and stop filters → Porter stemmer. Also an **unstemmed** sub-field for exact-match boosting | Exact > stem > synonym > fuzzy ranking (FR-051) |
-| Keyword fields | `area`, `owner`, `acl`, `type`, `ext`, `tag`, `face_group` (the last reserved for S16) | Exact filters |
+| Keyword fields | `area`, `owner`, `acl`, `type`, `ext`, `tag`, `face_group` (the last reserved for S17) | Exact filters |
 | Typed fields | `taken_at` and `modified_at` (datetime); `size` (numeric) | Range operators |
 | Native Bleve synonyms | Bleve v2.5+ supports synonym indexing (`docs/synonyms.md`). S06.5 may use it as the *mechanism* to apply our dictionary, but the dictionary itself stays project-owned and user-extendable as decided above | Keeps the user's decision; chooses the mechanism with evidence in S06.5 |
 
@@ -60,5 +60,13 @@ S06 delivers fast, forgiving search across both areas:
 
 - **Related requirements:** FR-025, FR-047–FR-053, FR-055–FR-063, FR-104–FR-110, NFR-003, NFR-024
 - **Related ADRs:** ADR-0007, ADR-0011, ADR-0013
-- **Related stages:** S06 onward (S07.4 filters, S16.7 AI fields)
+- **Related stages:** S06 onward (S07.4 filters, S17.7 AI fields)
 - **Plan version:** 0.3.0
+
+## Amendment 1 (2026-09-30, plan 1.9.0)
+
+- **Per-field analysis** (FR-357) instead of one analyzer everywhere: the field table of plan 8.11 (file names tokenized on separators, camel case, and digit boundaries, no stemming; people's names exact, prefix, typo-tolerant; stemming only on prose; keywords and structured filters). The complete mapping is recorded here in S06.1.
+- **Unicode and multilingual:** NFC and case folding; Arabic-script normalization for Urdu and Arabic letter variants; no stemming of non-English text; Q15 decides extra language analyzers.
+- **Scoring:** BM25 is available since Bleve **v2.5.0** (verified 2026-09-30 in the release notes; the pinned v2.6.1 has it); the choice between BM25 and TF-IDF is made in S06.1 with the golden queries.
+- **No vectors in Bleve:** its vector search needs the FAISS C++ library through cgo and the `vectors` build tag (verified in Bleve's `docs/vectors.md`), against pure-Go builds (ADR-0001); hybrid search keeps vectors elsewhere (ADR-0043).
+- **Documents keyed by item ID** (ADR-0040), with permission filtering once as a set of allowed IDs (FR-358).

@@ -12,7 +12,7 @@
 ## Context
 
 - **The user's requirements (P005):** "Handle multiple drives, RAID style." Custom layouts, RAID 0, RAID 1, parity, and combining smaller drives into a larger virtual drive.
-- **The user's decision (S007, E008):** "if working with raids is a complex problem, just do raid 0 and 1 implementation and that too in the end, and leave complex raid for later as planned non implemented work". So S14 builds **RAID 0 and RAID 1 only**; parity, virtual drives, and nesting are deferred (plan 11a).
+- **The user's decision (S007, E008):** "if working with raids is a complex problem, just do raid 0 and 1 implementation and that too in the end, and leave complex raid for later as planned non implemented work". So S15 builds **RAID 0 and RAID 1 only**; parity, virtual drives, and nesting are deferred (plan 11a).
 - The NAS must never implement striping or mirroring itself (NG8, revised): it orchestrates mature tools. Pools are Linux-only (A22, Q47); the core never runs as root (ADR-0029).
 - **Capacity rule (the user's):** every member contributes the size of the smallest member. mdadm RAID 0 would use unequal members fully (verified in S007, E006/E007), so the NAS sizes members itself to keep the user's rule.
 - The design must leave room for the deferred parity layouts without migrating existing pools.
@@ -26,7 +26,7 @@
 
 ### Option B: Btrfs RAID profiles (raid0, raid1)
 - **Pros:** checksums with self-healing on raid1; mixed drive sizes.
-- **Cons:** the filesystem and the RAID are one choice (ADR-0028 would be forced); Btrfs RAID5/6 is documented upstream as not recommended for production (to re-verify in S14.1), which blocks the deferred parity path; the capacity rules differ from the user's.
+- **Cons:** the filesystem and the RAID are one choice (ADR-0028 would be forced); Btrfs RAID5/6 is documented upstream as not recommended for production (to re-verify in S15.1), which blocks the deferred parity path; the capacity rules differ from the user's.
 - **License / cost:** GPL-2.0 (kernel, btrfs-progs).
 
 ### Option C: ZFS (mirror, raidz)
@@ -57,8 +57,8 @@
 ## Consequences
 
 - **Easier:** mature, documented tooling; the deferred layouts can later use the same tool.
-- **Harder:** Linux-only; loop-device tests need root on the test machine (S14.13).
-- **Required (follow-up work, constraints this imposes):** S14.1 re-verifies every mdadm capability used against the current man page and records it here; `dependencies.md` rows for mdadm, util-linux, smartmontools, e2fsprogs/xfsprogs (Linux section 12, optional component).
+- **Harder:** Linux-only; loop-device tests need root on the test machine (S15.13).
+- **Required (follow-up work, constraints this imposes):** S15.1 re-verifies every mdadm capability used against the current man page and records it here; `dependencies.md` rows for mdadm, util-linux, smartmontools, e2fsprogs/xfsprogs (Linux section 12, optional component).
 
 ## Approval record
 
@@ -68,5 +68,5 @@ _Pending: put to the user with the P005 report (S007). Q47 is asked at the same 
 
 - **Related requirements:** FR-195–FR-210, NFR-036–NFR-038; deferred FR-197, FR-198, FR-199
 - **Related ADRs:** ADR-0028 (pool filesystem), ADR-0029 (storage helper), ADR-0003 (storage layout)
-- **Related stages:** S10.3, S14
+- **Related stages:** S10.3, S15
 - **Plan version:** 1.4.0 (concerns 8.24, 8.25; 11a)

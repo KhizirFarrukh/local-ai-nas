@@ -12,7 +12,7 @@
 ## Context
 
 - The user's requirement (S007 E044): the storage and drive features are "part of the admin console (gui based) app", a console "where sysadmin can manage everything related to storage management and system settings and drives management and all the admin stuff"; "it is very crucial" (FR-342–FR-345).
-- The plan had admin pages spread over S03.8, S07.6, S08.7, S09.5, S10.1–S10.5, and S14 with no common structure.
+- The plan had admin pages spread over S03.8, S07.6, S08.7, S09.5, S10.1–S10.5, and S15 with no common structure.
 - R09 (the public release) requires the admin interface to be reachable only from the LAN or the VPN by default (11c), so admin traffic must be easy to tell apart.
 - The NAS will run on a Raspberry Pi (S007 E046): one binary, small memory footprint.
 

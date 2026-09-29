@@ -43,7 +43,7 @@ Not allowed in linked or bundled code:
 
 ### External programs (run as separate processes)
 
-ExifTool, libvips, libheif, and FFmpeg are not linked into the binary. The core runs them as separate programs, so their licenses do not extend to the core. The Docker image ships them, so their license texts and source offers go into the image's third-party notices (S13.1). The Debian FFmpeg build is GPL-3.0-or-later (decision D-04, S005). Their licenses are listed in `dependencies.md` section 6.
+ExifTool, libvips, libheif, and FFmpeg are not linked into the binary. The core runs them as separate programs, so their licenses do not extend to the core. The Docker image ships them, so their license texts and source offers go into the image's third-party notices (S14.1). The Debian FFmpeg build is GPL-3.0-or-later (decision D-04, S005). Their licenses are listed in `dependencies.md` section 6.
 
 ### Development and CI tools
 
@@ -64,7 +64,7 @@ Datasets and models follow the same "anyone may deploy and use" rule. Attributio
 
 - **Go:** [`scripts/check-licenses.sh`](../scripts/check-licenses.sh) runs `go tool go-licenses check ./...` with the allow-list. It fails on any linked package with a license outside the list or with no recognized license. CI runs it on every pull request (S01.1-T05). On Windows, run it from Git Bash.
 - **Web UI:** [`scripts/check-web-licenses.mjs`](../scripts/check-web-licenses.mjs) (S02.1-T05) runs `pnpm licenses list` in `web/`. The packages that ship in the built interface (the `dependencies` and what they pull in) must be on `scripts/allowed-licenses.txt`; every package, the development tools included, must be on that list or in the table of permissive tool licenses above. SPDX expressions are read as written: an `OR` needs one allowed part, an `AND` needs all. A package whose npm metadata states no license is checked by hand and listed in the script by exact version with the license its own files state; so far `combine-errors@3.0.3` (MIT, stated in its Readme; pulled in by tus-js-client). CI runs it in the `web` job.
-- **Release (S13.6):** a full audit of dependencies, external tools, datasets, and models.
+- **Release (S14.6):** a full audit of dependencies, external tools, datasets, and models.
 
 ## Adding a dependency
 

@@ -29,7 +29,7 @@ S05.7 builds the reconciliation scan, and S09.4 adds real-time watching. WebDAV 
 
 - **fsnotify v1.10.1** (`github.com/fsnotify/fsnotify`, BSD-3-Clause, verified) for real-time events.
 - **Periodic reconciliation scan** (S05.7) as the safety net: on startup, on a schedule, and on demand. It catches anything the watcher misses.
-- **Linux note:** inotify is **not recursive** and limits the number of watched folders. Large libraries need a higher `fs.inotify.max_user_watches`, which the **install guide must document** (S13.4), together with how to check the current value. If watch registration fails, the watcher degrades gracefully to reconciliation-only for the affected subtree and reports it (health and admin UI).
+- **Linux note:** inotify is **not recursive** and limits the number of watched folders. Large libraries need a higher `fs.inotify.max_user_watches`, which the **install guide must document** (S14.4), together with how to check the current value. If watch registration fails, the watcher degrades gracefully to reconciliation-only for the affected subtree and reports it (health and admin UI).
 
 ### Implementation details chosen by agent
 | Detail | Choice | Reason |
@@ -43,7 +43,7 @@ S05.7 builds the reconciliation scan, and S09.4 adds real-time watching. WebDAV 
 
 - **Easier:** near-real-time updates with a correctness backstop.
 - **Harder:** watch-limit tuning on Linux; platform-specific event quirks (handled by the reconciler).
-- **Required:** install guide section (S13.4); health reporting when watching is degraded; tests for rename detection and burst debounce (S09.4).
+- **Required:** install guide section (S14.4); health reporting when watching is degraded; tests for rename detection and burst debounce (S09.4).
 
 ## Approval record
 
@@ -54,5 +54,5 @@ S05.7 builds the reconciliation scan, and S09.4 adds real-time watching. WebDAV 
 
 - **Related requirements:** FR-027, FR-028, FR-102
 - **Related ADRs:** ADR-0011, ADR-0015, ADR-0019
-- **Related stages:** S05.7, S09.4, S13.4
+- **Related stages:** S05.7, S09.4, S14.4
 - **Plan version:** 0.3.0

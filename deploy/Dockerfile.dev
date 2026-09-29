@@ -9,7 +9,7 @@
 #            restart, not an image rebuild).
 #   runtime  debian:trixie-slim with only the binary, as a non-root user
 #            (the default target; scanned by Trivy in CI).
-# The release images come in S13.1.
+# The release images come in S14.1.
 
 FROM golang:1.27.1-trixie AS build
 WORKDIR /src

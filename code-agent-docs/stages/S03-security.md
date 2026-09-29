@@ -10,7 +10,7 @@
 | Created | 2026-09-29 (session S007) |
 | Last updated | 2026-09-29 (session S007) |
 | Depends on stages | S01 (Done), S02 (Done) |
-| Related ADRs | ADR-0010 security building blocks (Accepted) · ADR-0007 SQLite (Accepted) · ADR-0003 namespaces (Accepted) · ADR-0002 REST/OpenAPI (Accepted) · ADR-0009 SvelteKit (Accepted) · ADR-0005 testing and CI (Accepted) · **ADR-0039 admin console (Accepted with this document, Q74)** · ADR-0029 storage helper (Proposed; threat model input only) |
+| Related ADRs | ADR-0042 local-origin protection, ADR-0040 item identity, ADR-0041 operation journal (Proposed, P008; S01 follow-ups built here) · ADR-0007 and ADR-0011 amendments · ADR-0010 security building blocks (Accepted) · ADR-0007 SQLite (Accepted) · ADR-0003 namespaces (Accepted) · ADR-0002 REST/OpenAPI (Accepted) · ADR-0009 SvelteKit (Accepted) · ADR-0005 testing and CI (Accepted) · **ADR-0039 admin console (Accepted with this document, Q74)** · ADR-0029 storage helper (Proposed; threat model input only) |
 
 ## 1. Goal
 
@@ -27,7 +27,7 @@ The NAS can be reached safely from the local network. Only the admin can use it,
 | Requirement ID | Title | Covered fully / partially | Substage(s) |
 |---|---|---|---|
 | FR-064 | Authentication for the GUI and API; the admin is created at first run; never default passwords | Fully | S03.2, S03.8 |
-| FR-084 | Threat model, maintained through the project | Fully for S03 (revisited in S07, S09, S13.6, S14, S16) | S03.1, S03.10 |
+| FR-084 | Threat model, maintained through the project | Fully for S03 (revisited in S07, S09, S14.6, S15, S17) | S03.1, S03.10 |
 | FR-085 | Login, logout, password change, rate limiting with lockout | Fully | S03.2 |
 | FR-086 | Sessions: secure cookies, expiry, revocation, "log out everywhere", a list of active sessions | Fully | S03.3, S03.8 |
 | FR-087 | API tokens: scoped, revocable, stored hashed | Fully | S03.3, S03.8 |
@@ -49,6 +49,9 @@ The NAS can be reached safely from the local network. Only the admin can use it,
 | NFR-050 | Admin console enforcement (route inventory, hidden pages, audit) | Fully for the S03 routes (S10.7 checks again at the end of the console work) | S03.9, S03.10 |
 | NFR-051 | Raspberry Pi first | The S03 budgets, the ARM64 CI job, and the Pi profile | S03.10 (budgets apply to every substage) |
 | NFR-009 | Platforms | ARM64 joins CI | S03.10 |
+| FR-350, NFR-057 | Protection against other websites before login (P008 F2) | Fully | S03.5-T02 (first part, built first) |
+| FR-346–FR-349, FR-351–FR-354, NFR-053, NFR-056 | P008 follow-ups of S01 and S02 (item IDs, jobs and journal, idempotency keys, trash, durability) | Fully (tasks in the S01 and S02 stage documents, built in this stage) | S01.1-T12, S01.3-T11–T13, S01.4-T08–T10, S02.5-T05; tests in S03.10 |
+| FR-355 | Database snapshots (P008) | Fully | S03.2-T06 |
 
 ## 3. Scope
 
@@ -71,7 +74,7 @@ The NAS can be reached safely from the local network. Only the admin can use it,
 - A local certificate authority or ACME certificates (a later option; the guide mentions using your own certificate).
 - Upload-only app passwords (FR-219, S09, pending Q54) and alert delivery (FR-221, S10). S03 only prepares the token scopes and lists the threats.
 - Console sections of later stages: storage and drives, users, sharing, network shares, backups, jobs, logs viewer and alerts, updates (plan 6.6). They appear in the console when their stages build them, never as dead links.
-- The deployers (S13.2). S03 adds the commands they will call (`admin create --password-stdin`, `tls generate`).
+- The deployers (S14.2). S03 adds the commands they will call (`admin create --password-stdin`, `tls generate`).
 - Real Raspberry Pi measurements (the user has no Pi yet; the Pi profile in CI stands in until then).
 
 ## 4. Design approach
@@ -130,7 +133,7 @@ flowchart LR
 - **First-run setup:**
   - While no user exists, `POST /api/v1/auth/setup` creates the admin and signs in. It answers only on the loopback listener; the LAN listener does not run without an admin anyway (4.4).
   - The check and the insert are one transaction, so two parallel setup requests cannot create two admins.
-  - **Headless machines such as the Pi (decision D-3, recommended):** the admin is created on the machine itself with `local-ai-nas admin create` (the S13 deployer calls it and asks for the name and password in its guided flow). After that the admin signs in from any browser on the LAN. The web setup page stays for desktop installs, where the browser runs on the same computer.
+  - **Headless machines such as the Pi (decision D-3, recommended):** the admin is created on the machine itself with `local-ai-nas admin create` (the S14 deployer calls it and asks for the name and password in its guided flow). After that the admin signs in from any browser on the LAN. The web setup page stays for desktop installs, where the browser runs on the same computer.
 - **Login and logout:** `POST /api/v1/auth/login` (`{username, password}`) → session cookie; `POST /api/v1/auth/logout`. A wrong username and a wrong password give the same answer and take the same time (a dummy hash for unknown names).
 - **Password change:** `POST /api/v1/auth/password` with the current password; it ends every other session of the user (plan S03.2, criterion 4).
 - **Throttling and lockout (FR-085), designed so the single admin can never be locked out for good:**
@@ -327,7 +330,7 @@ The main navigation gets a user menu (account, sign out) and the Admin entry for
 | S03.9 | Admin console foundation | Not started | S03.2, S03.3, S03.6, S03.8 | FR-342, FR-344, NFR-050, NFR-051 |
 | S03.10 | Security testing and stage review | Not started | S03.1–S03.9 | NFR-023, NFR-010, NFR-050, NFR-051 |
 
-**Execution order:** S03.1 → S03.2-T01, T02 → **the Host allow-list and the Origin check of S03.5-T02** (moved forward in 2026-09-30: bug S03-B01 is open now, and external review #1 asks for this protection before full authentication) → S03.2-T03 … T05 → S03.3 (Q79 decides the database durability before S03.3-T01) → **S03.8-T01** (sign-in pages, so the GUI stays usable once routes need a session) → S03.5 (the rest of T02 is the CSRF token) → S03.6 → S03.4 → S03.7 → S03.8-T02 → S03.9 → S03.10.
+**Execution order** (updated 2026-09-30, plan 1.9.0, the user's approval of the P008 follow-ups: "Approve all, F2 first (Recommended)"): S03.1 → S03.2-T01, T02 → **S03.5-T02, first part: Host allow-list and Origin check** (F2, ADR-0042; bug S03-B01) → **S01.1-T12** (F5, durability) → **S01.3-T11** (F1, item registry) → **S01.4-T08** (F3, job foundation) → **S01.3-T12** (F1, IDs in the API and the backfill job) → **S01.4-T09, T10** (F3, operation journal, idempotency keys) → **S01.3-T13, S02.5-T05** (F4, trash) → S03.2-T03 … T06 → S03.3 → **S03.8-T01** (sign-in pages, so the GUI stays usable once routes need a session) → S03.5 (the rest; T02's second part is the CSRF token) → S03.6 → S03.4 → S03.7 → S03.8-T02 → S03.9 → S03.10 (the tests of S03 and of the P008 follow-ups). The job foundation comes before the ID backfill and the trash purge, which run as jobs.
 
 **Rule (R6):** the tasks in S03.1–S03.9 deliver code (or, in S03.1, documents), written to be testable. Such a task is Done when:
 - it builds;
@@ -346,7 +349,7 @@ Its tests are written in S03.10. Bugs found while building are recorded in secti
 
 | Task ID | Description | Status | Acceptance criteria |
 |---|---|---|---|
-| S03.1-T01 | **Threat model** `code-agent-docs/security/threat-model.md` (new folder, added to the documentation map in RULES, D-4): <br>• **assets:** user files, credentials and sessions, TLS keys, the database, the audit log, the configuration; <br>• **attackers:** someone on the LAN, a malicious web page in the admin's browser (CSRF, clickjacking), a malicious file (uploads, previews, archives), a stolen session or token, another local user or process on the host, a stolen backup or disk, a compromised dependency; <br>• **surfaces:** API, GUI, tus, downloads and previews, archives, the CLI, the config file, internal data, the listeners; and the future ones: network shares (S09), camera upload and app passwords (FR-219), alert delivery (FR-221), the privileged storage helper and its drive operations and hot-plug risks (S14, ADR-0029, P007), the AI worker (S16), and the admin console (ADR-0039); <br>• **threats T-01…** with a STRIDE category, each mapped to a substage and task, or marked as an accepted-risk candidate. | **Done** (S007 E051) | Every threat is mapped or marked. The future surfaces are listed with the stage that must handle them. The user is asked to review it at the next stop (work continues meanwhile; changes they ask for are applied). |
+| S03.1-T01 | **Threat model** `code-agent-docs/security/threat-model.md` (new folder, added to the documentation map in RULES, D-4): <br>• **assets:** user files, credentials and sessions, TLS keys, the database, the audit log, the configuration; <br>• **attackers:** someone on the LAN, a malicious web page in the admin's browser (CSRF, clickjacking), a malicious file (uploads, previews, archives), a stolen session or token, another local user or process on the host, a stolen backup or disk, a compromised dependency; <br>• **surfaces:** API, GUI, tus, downloads and previews, archives, the CLI, the config file, internal data, the listeners; and the future ones: network shares (S09), camera upload and app passwords (FR-219), alert delivery (FR-221), the privileged storage helper and its drive operations and hot-plug risks (S15, ADR-0029, P007), the AI worker (S17), and the admin console (ADR-0039); <br>• **threats T-01…** with a STRIDE category, each mapped to a substage and task, or marked as an accepted-risk candidate. | **Done** (S007 E051) | Every threat is mapped or marked. The future surfaces are listed with the stage that must handle them. The user is asked to review it at the next stop (work continues meanwhile; changes they ask for are applied). |
 | S03.1-T02 | **Review of the S01 and S02 code against the threat model:** path handling, archives, tus, downloads and previews, the app handler, error messages, logs (no secrets), the config and database file permissions. Gaps become tasks in S03.5 or bugs (section 12). | **Done** (S007 E052) | A findings list in the threat model (section "Review of existing code"), each with its follow-up task or bug ID. |
 
 ### S03.2: First-run setup and authentication
@@ -365,6 +368,7 @@ Its tests are written in S03.10. Bugs found while building are recorded in secti
 | S03.2-T03 | **Auth endpoints** (spec first): status, setup, login, logout, password change (4.10); cookie handling from S03.3-T01 (done together); problem codes; review rows in `docs/api/conventions.md`. | Not started | With curl on loopback: setup once (a second setup is `403 setup_not_allowed`), login, status shows the user, logout, password change ends another session; setup from a non-loopback address is refused. |
 | S03.2-T04 | **Throttling and lockout** (4.2): per address and per account; loopback never locked by the account rule; `Retry-After`; the same answer and timing for unknown users. | Not started | Scripted failed logins lock the address after 5 and the account for LAN addresses after 20; loopback still works; the lock ends after its time (fake clock in a check program or a short config value). |
 | S03.2-T05 | **Command line:** `admin create` and `admin reset-password` (terminal without echo via `golang.org/x/term`, or `--password-stdin`); audit events with the actor `cli`. Register `golang.org/x/term`. | Not started | Both work on Windows and Linux while the server runs and while it is stopped; reset ends the user's sessions; the README's Development section mentions them. |
+| S03.2-T06 | **Database snapshots** (FR-355, P008): a consistent copy with `VACUUM INTO` (or the online backup API) on a schedule (daily by default) and before every migration, keeping the last N (default 7) in `.local-ai-nas/snapshots/`; a restore command for a stopped server (`local-ai-nas db restore <snapshot>`); the console (S03.9) shows the last snapshot; the docs say that copies on the same disk protect against corruption and bad updates, not against disk failure. | Not started | A snapshot opens as a valid database with every table; a migration makes a snapshot first; a restore brings back the earlier state. |
 
 ### S03.3: Sessions and tokens
 
@@ -483,8 +487,8 @@ Q33 was answered yes (D-2), so S03.7 is built. The rest of FR-262 (two-factor en
 
 | Task ID | Description | Status | Acceptance criteria |
 |---|---|---|---|
-| S03.10-T01 | **Unit tests:** passwords and the guard, throttling and lockout (fake clock), sessions and cookies, tokens and scopes, CSRF and Origin, headers, the rate limiter, the audit store, settings precedence, certificate generation, authz decisions, the web auth store, client middleware, and console components; regression tests for the bugs in section 12. | Not started | Every package the stage added or changed is tested; coverage ≥ 80% (`internal/...` and `web/src/lib`). |
-| S03.10-T02 | **Integration, system, and security tests:** <br>• **route inventory:** every route has an access level; anonymous callers get `401` except the public list; a user-role subject gets `403` on every admin route; every unsafe cookie route without a CSRF token gets `403`; headers on every answer; no CORS header; <br>• fuzz tests for cookie, bearer token, and Origin parsing; the S01 traversal regressions against signed-in routes; <br>• real database and TLS: migration, retention, the LAN gate, TLS 1.2 minimum; <br>• Playwright (Chromium, Firefox, Edge): first run, sign-in and out, `?next=`, session end from a second context, re-auth dialog, tokens shown once, console hidden for a user-role account, a settings change with its audit event, keep-or-revert; axe on every new screen. | Not started | All pass in CI on Linux, Windows, and ARM64. |
+| S03.10-T01 | **Unit tests:** passwords and the guard, throttling and lockout (fake clock), sessions and cookies, tokens and scopes, CSRF and Origin, headers, the rate limiter, the audit store, settings precedence, certificate generation, authz decisions, the web auth store, client middleware, and console components; regression tests for the bugs in section 12. Also the P008 follow-ups: item IDs, trash, jobs, the operation journal, idempotency keys, snapshots. | Not started | Every package the stage added or changed is tested; coverage ≥ 80% (`internal/...` and `web/src/lib`). |
+| S03.10-T02 | **Integration, system, and security tests:** <br>• **route inventory:** every route has an access level; anonymous callers get `401` except the public list; a user-role subject gets `403` on every admin route; every unsafe cookie route without a CSRF token gets `403`; headers on every answer; no CORS header; <br>• fuzz tests for cookie, bearer token, and Origin parsing; the S01 traversal regressions against signed-in routes; <br>• real database and TLS: migration, retention, the LAN gate, TLS 1.2 minimum; <br>• Playwright (Chromium, Firefox, Edge): first run, sign-in and out, `?next=`, session end from a second context, re-auth dialog, tokens shown once, console hidden for a user-role account, a settings change with its audit event, keep-or-revert; axe on every new screen. <br>• **P008:** the shared crash-injection harness at every crash point of the journaled operations (NFR-053); local-origin tests (foreign Host `421`, foreign and `null` Origin `403`, missing Origin allowed for scripts, the GUI working in three browsers with `Referrer-Policy: same-origin`; NFR-057); the ID backfill and external-file assignment; trash flows; jobs surviving a restart. | Not started | All pass in CI on Linux, Windows, and ARM64. |
 | S03.10-T03 | **CI and Pi budgets:** <br>• an **ARM64 job** on `ubuntu-24.04-arm` (Go tests and the Chromium system tests); <br>• the **Pi profile** job (4.9); <br>• the scans confirmed to fail on high severity: govulncheck, gosec (golangci-lint), `pnpm audit --prod --audit-level high`, Trivy HIGH and CRITICAL; <br>• the budgets measured and recorded in `docs/perf/S03-pi-profile.md`. | Not started | The jobs are green; a deliberately vulnerable dependency (on a throwaway branch) fails the scan; every budget in 4.9 is met or is a finding for the user. |
 | S03.10-T04 | **Documentation:** `docs/guide/security.md` (first run, sign-in, sessions, tokens, two-factor, password reset); the HTTPS guide checked; `docs/guide/admin-console.md` (started, grows with each stage); `docs/api/errors.md` and `conventions.md` (authentication, CSRF, rate limits); README proposals for the user (status, security, LAN access); register; plan statuses; CURRENT_STATE; **the threat model review record** (each threat: mitigation with its test, or an accepted-risk request for the user). | Not started | Documents match what was built; every threat has a status. |
 | S03.10-T05 | **Documentation audit A004** (R12) with `templates/audit-checklist.md`. | Not started | No Critical finding open. |
@@ -603,7 +607,7 @@ cd web && pnpm test:e2e        # when the task touches the GUI or the routes
 **Decisions given with the approval** (asked in E049 with a recommendation each; no change was asked, so each recommendation applies):
 - **D-1 (Q74):** the admin console is `/admin` in the same web app (ADR-0039 option A); **ADR-0039 Accepted**.
 - **D-2 (Q33):** two-factor authentication is built now (S03.7), optional per account, with the "require for admins" policy.
-- **D-3:** on a machine without a local browser, such as a headless Raspberry Pi, the admin is created on the machine with `local-ai-nas admin create` (the S13.2 deployers call it); the web setup page works on this computer only (plan 1.8.0, S03.2 criterion 1).
+- **D-3:** on a machine without a local browser, such as a headless Raspberry Pi, the admin is created on the machine with `local-ai-nas admin create` (the S14.2 deployers call it); the web setup page works on this computer only (plan 1.8.0, S03.2 criterion 1).
 - **D-4:** the new documentation folder `code-agent-docs/security/` holds the threat model (RULES 1.8.2, documentation map).
 - **D-5 (Q75):** not answered yet; the S03 budgets assume a Raspberry Pi 5 with 4 GB (4.9) until the user says which Pi.
 - **D-6:** passwords have at least 12 characters.
@@ -617,6 +621,7 @@ cd web && pnpm test:e2e        # when the task touches the GUI or the routes
 | 2026-09-30 | S007 | S03.1-T01 (threat model, E051): the Host allow-list against DNS rebinding added to 4.5 and S03.5-T02 (T-19); owner binding of archive tickets and tus uploads and restrictive file permissions added to S03.5-T05 (T-29, T-30, T-42); the `?next=` rule added to S03.8-T01 (T-23) | Threats found by the threat model, inside the approved scope ("close common web-application attack classes") | No (small internal adjustment, recorded, R3) |
 | 2026-09-30 | S007 | S03.1-T02 (code review, E052): findings F-01–F-08 in the threat model; bugs S03-B01 and S03-B02 recorded (section 12); S03.5-T04 gains the per-address request limit (F-06); S03.5-T05 gains the file modes and the pdf.js option (F-02, F-08) | Findings of the review, inside the approved scope | No (recorded, R3) |
 | 2026-09-30 | S007 | External review #1 (CR001, E057): the Host allow-list and the Origin check of S03.5-T02 moved to the front of the remaining work (bug S03-B01); a risk row for T-59 (Q79) | The review's point 6 and the open bug; the task itself is unchanged | No (order only, recorded, R3) |
+| 2026-09-30 | S007 | **P008** (E061): execution order puts the approved follow-ups first (F2 as the first part of S03.5-T02, then F5, F1, F3, F4); new task S03.2-T06 (database snapshots); S03.10 covers the follow-ups; linked requirements and ADRs added; later-stage IDs renumbered (plan 1.9.0) | The user's approval (E059) and plan 1.9.0 | Given (E059) |
 
 ### Bugs found during the stage
 

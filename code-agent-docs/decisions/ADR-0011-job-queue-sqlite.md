@@ -11,7 +11,7 @@
 
 ## Context
 
-S04.3 builds the shared background job system (FR-095, NFR-012). S05, S06, S08, S09, and S16 reuse it. Required:
+S04.3 builds the shared background job system (FR-095, NFR-012). S05, S06, S08, S09, and S17 reuse it. Required:
 - Survives restarts.
 - Retries with backoff.
 - Priorities.
@@ -59,3 +59,9 @@ A **persistent job queue stored in SQLite and run inside the core server** (user
 - **Related ADRs:** ADR-0007, ADR-0012, ADR-0014, ADR-0016, ADR-0017
 - **Related stages:** S04.3 onward
 - **Plan version:** 0.3.0
+
+## Amendment 1 (2026-09-30, plan 1.9.0): a minimal job foundation now
+
+- **P008 F3 (approved by the user, S007 E059):** the core of this ADR is built now, in S03, as S01 follow-up S01.4-T08, instead of the temporary S01.4 cleanup scheduler: a persistent `jobs` table (ID, type, state, payload, progress, attempts, lease, timestamps, error), workers with leases and retries with backoff, progress, and cancel.
+- **Long operations become jobs:** copies and moves over the synchronous limits, large deletes and trash purges, abandoned-upload cleanup, the ID backfill (ADR-0040); later indexing and imports. The API answers `202 Accepted` with a job ID.
+- **S04.3 grows it** (priorities, per-type limits, the full monitor, OS-level priority for external tools, NFR-055) instead of creating it (principle 4). A job may run one journaled operation (ADR-0041).

@@ -50,7 +50,7 @@ flowchart LR
 
 <!--
 Hierarchy: Stage → Substage → Task (RULES.md R3).
-Substage IDs and their goals, scope, and acceptance criteria come from plan.md section 10. Copy them here, then break each substage into tasks.
+Substage IDs and their goals, scope, and acceptance criteria come from the stage's plan file (`plan/stages/S<NN>-<slug>.md`, plan section 10). Copy them here, then break each substage into tasks.
 Task IDs: S<NN>.<n>-T<NN>, e.g. S01.3-T02 = task 2 of substage S01.3.
 Status values: Not started / In Progress / Testing / Review / Done / Blocked (with reason).
 -->
@@ -64,8 +64,8 @@ Status values: Not started / In Progress / Testing / Review / Done / Blocked (wi
 
 ### S<NN>.1: <Substage name>
 
-- **Goal:** <from plan.md>
-- **Substage acceptance criteria:** <from plan.md, refined if needed>
+- **Goal:** <from the plan>
+- **Substage acceptance criteria:** <from the plan, refined if needed>
 
 | Task ID | Description | Status | Acceptance criteria |
 |---|---|---|---|
@@ -89,7 +89,7 @@ Status values: Not started / In Progress / Testing / Review / Done / Blocked (wi
 |---|---|---|---|
 | S<NN>.<last>-T01 | **Unit tests** for the code the stage built, including the regression tests for the bugs recorded during the stage (change log) | Not started | Every package the stage added or changed is tested; each recorded bug has its test; coverage ≥ 80% |
 | S<NN>.<last>-T02 | **Integration tests** (real file system, database, HTTP) and **system/application tests** (the real program, used as a user uses it; from S02 the GUI in a browser) | Not started | All stage tests pass in CI on Linux and Windows |
-| S<NN>.<last>-T03 | Documentation updates (README if user-facing, plan status, CURRENT_STATE, register) | Not started | Documents match what was built |
+| S<NN>.<last>-T03 | Documentation updates (the README's "Current status" section always; the rest of the README if user-facing; plan status, CURRENT_STATE, register) | Not started | Documents match what was built |
 | S<NN>.<last>-T04 | **Documentation audit (R12)** using `templates/audit-checklist.md`; report in `audits/A<NNN>-<date>-<slug>.md` | Not started | Audit complete; no Critical finding open (each fixed or escalated to the user) |
 | S<NN>.<last>-T05 | Completion record and user sign-off | Not started | Section 13 filled in; the user's sign-off quoted in the session log |
 
@@ -127,7 +127,7 @@ Commands that must pass before a task is marked Done (build, lint, format, and t
 - [ ] 
 - [ ] The stage's unit, integration, and system/application tests are written and pass in CI on Linux and Windows; coverage ≥ 80%. Linter and formatter are clean.
 - [ ] Documentation audit (R12) done; no Critical finding open.
-- [ ] Documentation (plan.md, CURRENT_STATE.md, ADRs, README if user-facing) is updated.
+- [ ] Documentation (the plan, CURRENT_STATE.md, ADRs, README if user-facing) is updated.
 
 ## 10. Risks and rollback approach
 
