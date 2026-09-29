@@ -98,6 +98,7 @@ How to use:
 - [ ] Every feature of every release (plan 11b, 3.3) has an FR ID, and every FR of a release names its release (P006).
 
 ### E. README alignment
+- [ ] The README's "Current status" section matches the plan's stage statuses (updated at every stage's final review, P008).
 - [ ] Every README feature maps to at least one requirement.
 - [ ] Every place where README.md is out of date with **approved** decisions is written up as a proposal (current text → proposed text → reason with source), never as a direct edit.
 - [ ] README edits made by tasks stay inside the sections their stage document names (its files table). Any other change is reverted and written up as a proposal.

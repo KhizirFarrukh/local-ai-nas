@@ -6,6 +6,9 @@
 | Finding | F-004 (the README does not show the P005 features and stages, or stage 2) |
 | Status | **Proposed**: for the user's decision at the S02 sign-off (S02.8-T05) |
 
+> **Applied in P008 phase C (2026-09-30, pre-approved by the user's request, P-C):** R-13 (replaced by a "Current status" section), R-17 (the "How It Fits Together" diagram), and the part of R-14 that both options share (Stage 2 ticked, Stage 3 marked in progress). Still for the user: the rest of R-14 (option A or B), R-15, R-16.
+
+
 **Basis rule (as in A001 and A002):**
 - Only approved decisions and completed, verified work are used.
 - The README is the source of the vision (plan, header).

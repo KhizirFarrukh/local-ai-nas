@@ -89,7 +89,7 @@ Status values: Not started / In Progress / Testing / Review / Done / Blocked (wi
 |---|---|---|---|
 | S<NN>.<last>-T01 | **Unit tests** for the code the stage built, including the regression tests for the bugs recorded during the stage (change log) | Not started | Every package the stage added or changed is tested; each recorded bug has its test; coverage ≥ 80% |
 | S<NN>.<last>-T02 | **Integration tests** (real file system, database, HTTP) and **system/application tests** (the real program, used as a user uses it; from S02 the GUI in a browser) | Not started | All stage tests pass in CI on Linux and Windows |
-| S<NN>.<last>-T03 | Documentation updates (README if user-facing, plan status, CURRENT_STATE, register) | Not started | Documents match what was built |
+| S<NN>.<last>-T03 | Documentation updates (the README's "Current status" section always; the rest of the README if user-facing; plan status, CURRENT_STATE, register) | Not started | Documents match what was built |
 | S<NN>.<last>-T04 | **Documentation audit (R12)** using `templates/audit-checklist.md`; report in `audits/A<NNN>-<date>-<slug>.md` | Not started | Audit complete; no Critical finding open (each fixed or escalated to the user) |
 | S<NN>.<last>-T05 | Completion record and user sign-off | Not started | Section 13 filled in; the user's sign-off quoted in the session log |
 
