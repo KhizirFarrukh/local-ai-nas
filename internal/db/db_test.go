@@ -41,7 +41,7 @@ func TestOpenPragmas(t *testing.T) {
 	if _, err := os.Stat(d.Path()); err != nil {
 		t.Fatalf("database file: %v", err)
 	}
-	want := map[string]string{"journal_mode": "wal", "foreign_keys": "1", "busy_timeout": "5000", "synchronous": "1"}
+	want := map[string]string{"journal_mode": "wal", "foreign_keys": "1", "busy_timeout": "5000", "synchronous": "2", "wal_autocheckpoint": "1000"}
 	for name, pool := range map[string]*sql.DB{"writer": d.Write, "reader": d.Read} {
 		for p, w := range want {
 			if got := pragma(t, pool, p); !strings.EqualFold(got, w) {
