@@ -4,9 +4,9 @@
 |---|---|
 | Research ID | R001 |
 | Date | 2026-09-28 (a dated snapshot; products change often) |
-| Session | S007 (`logs/sessions/2026-09-28_S007.md`, E034–E036) |
+| Session | S007 (`logs/sessions/2026-09-28_S007.md`, E034–E036, E040) |
 | Source | Plan change request #6: `prompts/P006-competitor-research-release-roadmap.json` (the research was done for the user and delivered in that prompt) |
-| Plan version | Written against 1.4.2; compared with **1.5.0** here; the plan's release roadmap (1.6.0) links to this file |
+| Plan version | Written against 1.4.2; compared with **1.5.0** here; plan **1.6.0** holds the requirements (FR-217–FR-327, NFR-040–NFR-043) and the roadmap (section 11b), and links to this file |
 | Status | Research record. The destinations of the gaps are the planner's proposals (**[Planner addition]**) until the user confirms them (plan section 5, Q52–Q66) |
 
 ## Method
@@ -408,126 +408,126 @@ The research was compared with the plan, not only listed. These competitor featu
 
 Every feature below is missing from the plan or only partly covered. Each has exactly one destination: the MVP, a release (R01–R12, plan section 11b), the AI stage S15 (as an optional extension), or excluded. The FR IDs are in plan section 3.1 (MVP) and 3.3 (releases).
 
-| Gap | Feature | In the plan before P006 | Seen in | Destination |
-|---|---|---|---|---|
-| G-001 | Live Photos and Motion Photos | Missing | Immich, Synology, PhotoPrism, iCloud | MVP |
-| G-002 | Phone photo auto-backup (bridge until native apps) | Missing (native app is candidate in 11a) | Google Photos, iCloud, OneDrive, Dropbox, Amazon Photos, Immich, Synology, MEGA, pCloud | MVP |
-| G-003 | Alert delivery (email, webhook, ntfy) | Partial (alerts only in GUI and logs, FR-129) | Synology, Nextcloud, Dropbox (Rewind emails) | MVP |
-| G-004 | File versioning | Partial (FR-122 Could, pending Q34) | Google Drive, OneDrive, Dropbox, pCloud, Sync.com, Filen, Icedrive, Nextcloud, Seafile | MVP (recommendation: answer Q34 'yes'; the user decides) |
-| G-010 | Google Takeout import | Missing (Q11 mentions Takeout metadata) | Nextcloud (Google Photos import), Immich (tools) | R01 |
-| G-011 | Apple Photos / iCloud export import | Missing | Immich (planned iCloud import) | R01 |
-| G-012 | Import from other clouds (rclone remotes) | Missing | Koofr, Nextcloud external storage | R01 |
-| G-013 | USB drive and camera card import | Missing | Synology (USB Copy) | R01 |
-| G-014 | Export all my data and account deletion | Missing | Ente, Filen, MEGA, Google (Takeout) | R01 |
-| G-015 | XMP sidecar export for other photo tools | Missing (Q19 asks) | Immich, PhotoPrism (YAML) | R01 |
-| G-016 | External read-only libraries (index a host folder in place) | Superseded by the two-area design (A3) | Immich, Nextcloud | EXCLUDED unless the user decides otherwise (conflicts with I1 and A3; Q58) |
-| G-020 | Files area: stars, color labels, tags, descriptions | Missing (photos only) | Google Drive, Icedrive, Seafile, Filen | R02 |
-| G-021 | Recent files and quick access | Missing | Google Drive | R02 |
-| G-022 | Saved searches and recent searches | Missing | Google Drive, Seafile (custom views) | R02 |
-| G-023 | Server-side archive create and extract | Missing | Synology File Station, Google Drive (archive preview) | R02 |
-| G-024 | Batch rename with patterns | Missing | Koofr | R02 |
-| G-025 | Personal storage analyzer and folder sizes | Missing (admin dashboard only). Folder sizes are already FR-214 (S02, plan 1.5.0); the release keeps the analyzer. | Koofr, Google Photos (storage management) | R02 |
-| G-026 | Recently added view | Missing. The added date and its sort exist for the files area (FR-215, plan 1.5.0); the release keeps the photos view. | Immich | R02 |
-| G-027 | Slideshow | Missing | Google Photos, Immich, Synology, Nextcloud, OneDrive | R02 |
-| G-028 | Star ratings | Missing | Immich, Synology | R02 |
-| G-029 | Smart (rule-based) albums | Missing | Synology (conditional albums), Immich (planned), Google Photos (auto-updating albums) | R02 |
-| G-030 | Memories without AI (on this day, year recap, trips) | Missing | Google Photos, iCloud, OneDrive, Immich, Nextcloud | R02 |
-| G-031 | Map view of photos | Missing (GPS and places exist; no map) | Google Photos, Immich, Synology, PhotoPrism, Nextcloud | R02 |
-| G-032 | Folder view of photos | Missing (depends on Q40) | Synology, Immich, PhotoPrism | R02 |
-| G-033 | Grid density, year/month scrubber, calendar view | Missing | Nextcloud, PhotoPrism, Synology | R02 |
-| G-034 | Batch metadata editing (shift dates, set location) | Partial (single-item edits) | PhotoPrism, Synology | R02 |
-| G-035 | Download as compatible format (HEIC to JPEG) | Missing | iCloud (export), Google Photos | R02 |
-| G-040 | Edit (write) sharing and reshare control | Partial (FR-117 Could, pending Q30) | Google Drive, Dropbox, Nextcloud, Seafile, Immich (read-write albums) | R03 |
-| G-041 | User groups and sharing with groups | Partial (FR-117 Could) | Immich (planned), Tresorit, Nextcloud | R03 |
-| G-042 | Shared family/team folders owned by a group | Missing | Google shared drives, Nextcloud Teams, Synology shared space, Sync.com team folders | R03 |
-| G-043 | Partner sharing / shared library | Missing | Google Photos, iCloud Shared Library, Immich, Amazon Family Vault | R03 |
-| G-044 | Collaborative albums with contributors | Missing | Google Photos, Immich, Synology | R03 |
-| G-045 | Comments and reactions on shared items | Missing | Google Photos, Google Drive, Nextcloud, Dropbox | R03 |
-| G-046 | Activity feed and item history | Partial (admin audit log only) | Google Drive, Nextcloud, Seafile, Sync.com | R03 |
-| G-047 | Notification center and per-user email notifications | Partial (transient GUI notifications) | Nextcloud, Dropbox, Google | R03 |
-| G-048 | Ownership transfer | Missing | Google Drive | R03 |
-| G-049 | Decline shares and block a user from sharing with you | Missing | Google Drive (block users, spam) | R03 |
-| G-050 | Point-in-time restore (rewind) of a folder or account | Missing | Dropbox, OneDrive, pCloud, Sync.com | R04 |
-| G-051 | Ransomware / mass-change detection | Missing | OneDrive, Nextcloud (apps), Synology (immutable snapshots) | R04 |
-| G-052 | Filesystem snapshots with immutable retention | Missing (pools use ext4/XFS) | Synology | R04 (Could; needs a filesystem ADR) |
-| G-053 | Off-site encrypted backup to user-owned targets | Missing (local targets only, S08.6) | Synology Hyper Backup, Nextcloud | R04 |
-| G-054 | NAS-to-NAS replication | Missing | Synology (Snapshot Replication, ShareSync) | R04 |
-| G-055 | UPS integration and graceful shutdown | Missing | Synology, TrueNAS (general NAS practice) | R04 |
-| G-056 | Backup health dashboard and scheduled restore tests | Partial (restore tested in S08) | Synology Hyper Backup (integrity checks) | R04 |
-| G-057 | Encrypted local backup targets | Missing | Synology Hyper Backup | R04 |
-| G-060 | TOTP 2FA with recovery codes, enforceable | Partial (FR-091 Could, pending Q33) | all services | R05 (or MVP if Q33 is answered 'yes') |
-| G-061 | Passkeys and security keys (WebAuthn/FIDO2) | Missing | Nextcloud, Koofr, Icedrive | R05 |
-| G-062 | SSO with OIDC; LDAP (Could) | Missing | Nextcloud, Seafile, Filen (enterprise) | R05 |
-| G-063 | Locked folder / private vault | Partial (hide/archive only) | Google Photos, OneDrive, Koofr, pCloud Crypto, Icedrive, Sync.com Vault | R05 |
-| G-064 | Encryption at rest of the storage (full disk) | Missing | Nextcloud (server-side encryption), Synology (encrypted volumes) | R05 |
-| G-065 | Malware scanning of uploads | Missing | Seafile, Nextcloud | R05 |
-| G-066 | Password policy with strength and breached-password checks (offline) | Missing | Nextcloud | R05 |
-| G-067 | New-login alerts, suspicious-login heuristics, per-user security page | Partial (sessions list) | Nextcloud, Google | R05 |
-| G-068 | Admin security checklist | Missing | Nextcloud (security scan) | R05 |
-| G-069 | Per-IP brute-force protection with trusted-proxy awareness | Partial (per-account lockout, FR-085) | Nextcloud | R05 |
-| G-070 | Built-in WireGuard VPN for private remote access | Missing (11a candidate) | Synology (VPN Server), general NAS practice | R06 |
-| G-071 | Mesh VPN guidance (Headscale self-hosted; Tailscale opt-in) | Missing | remote access research | R06 |
-| G-072 | CGNAT relay through the user's own VPS | Missing | remote access research | R06 |
-| G-073 | Dynamic DNS and IPv6 | Missing | Synology, general NAS practice | R06 |
-| G-074 | Trusted TLS certificates via ACME with auto-renewal | Missing (self-signed or user-provided only, FR-088) | Synology, Nextcloud (deployment guides) | R06 |
-| G-075 | Slow-link performance (WAN-aware thumbnails and transfers) | Partial (HLS Auto) | all mobile-first services | R06 |
-| G-080 | Installable web app (PWA) with share target | Missing | PhotoPrism | R07 |
-| G-081 | Native Android and iOS apps | Missing (NG2; 11a candidate) | all services | R07 |
-| G-082 | Background automatic photo and video backup in the app | Missing | Google Photos, iCloud, OneDrive, Immich, Ente, Synology, Amazon | R07 |
-| G-083 | Free up space on the phone | Missing | Google Photos, Immich | R07 |
-| G-084 | Offline files and albums on mobile | Missing | Google Drive, Dropbox, Synology Photos | R07 |
-| G-085 | Document scanner to PDF | Missing | Google Drive, Dropbox, OneDrive, Proton, Tresorit | R07 |
-| G-086 | App lock (biometrics or PIN) | Missing | Google Drive iOS, Google Photos Locked Folder | R07 |
-| G-087 | Widgets and OS share-sheet integration | Missing | Synology Photos, Google Photos | R07 |
-| G-088 | LAN discovery and automatic LAN/remote address switching | Missing | Immich | R07 |
-| G-089 | Push notifications without a vendor cloud where possible | Missing | all mobile apps | R07 |
-| G-090 | Desktop sync client (two-way, selective, conflicts, bandwidth) | Missing | all services | R08 |
-| G-091 | Files on demand / virtual files | Missing | OneDrive, Google Drive, Dropbox, Nextcloud, pCloud, Icedrive, Seafile | R08 |
-| G-092 | PC folder backup | Missing | OneDrive, Google Drive, Synology Active Backup | R08 |
-| G-093 | User CLI (upload, download, sync, share, search) | Missing (admin CLI only) | MEGA, Proton, Ente, Immich | R08 |
-| G-094 | File locking for sync and co-editing | Partial (WebDAV locks, S09.1) | Nextcloud, Seafile | R08 |
-| G-095 | Device list with remote sign-out and wipe of synced data | Partial (sessions) | Tresorit, Seafile, Nextcloud | R08 |
-| G-100 | Public share links for people without an account | Missing (NG5; 11a) | all services | R09 |
-| G-101 | File requests / upload-only links | Missing | Dropbox, pCloud, MEGA, Icedrive, Filen, Tresorit, Synology, Ente (Collect), Seafile | R09 |
-| G-102 | Large file transfer (send files that expire) | Missing | Dropbox Transfer, pCloud Transfer, Proton, MEGA | R09 |
-| G-103 | Guest verification by email code | Missing | Nextcloud (OTP), Seafile, Tresorit | R09 |
-| G-104 | Link access logs and download notifications | Missing | Tresorit, Sync.com | R09 |
-| G-105 | Watermarks on shared previews | Missing | Box | R09 (Could) |
-| G-106 | Branded share pages | Missing | pCloud, Dropbox Transfer, Sync.com | R09 (Could) |
-| G-107 | Invite-based registration, per-user bandwidth limits, abuse tools | Missing | MEGA (transfer quota), Nextcloud | R09 |
-| G-108 | Internet-facing hardening | Missing (LAN-only posture) | Nextcloud, all public services | R09 |
-| G-109 | Go-public readiness gate | Missing | Nextcloud (security scan) | R09 |
-| G-110 | External security audit and staged beta before general availability | Missing | Proton, Ente (independent audits) | R09 |
-| G-111 | UX overhaul for public use (recipients, phones, slow networks, languages) | Partial (accessibility NFR-015) | all public services | R09 |
-| G-112 | Reverse proxy and tunnel support | Missing | Immich, Nextcloud, PhotoPrism (docs) | R09 |
-| G-113 | Operator tools and guidance for hosting other people | Missing | Nextcloud | R09 |
-| G-120 | Music library (tags, albums, playlists, speed) | Partial (audio preview) | pCloud | R10 |
-| G-121 | Video library improvements (subtitles, resume, speed, audio tracks) | Partial (streaming) | pCloud, Immich (speed controls) | R10 |
-| G-122 | DLNA/UPnP media server | Missing | Synology, general NAS practice | R10 |
-| G-123 | Casting to TVs (Chromecast, AirPlay) | Missing | Google Photos, Amazon Photos, pCloud (Kodi) | R10 |
-| G-124 | TV-friendly (10-foot) view | Missing | Amazon Photos, Google Photos | R10 |
-| G-125 | Non-destructive photo editing | Missing (NG3) | all photo services, Immich, Koofr | R10 (needs the NG3 change, Q57) |
-| G-126 | 360° panorama viewer | Missing | Immich, PhotoPrism, Synology | R10 |
-| G-127 | Collages, burst animations, photo videos | Missing | Google Photos | R10 (Could) |
-| G-128 | Manual redaction (blur/pixelate) tool | Missing | Google Photos (Sept 2026) | R10 (part of G-125) |
-| G-130 | Office document previews | Missing (PDF and text only) | Google Drive, Dropbox, Filen, Nextcloud | R11 |
-| G-131 | Optional online co-editing (Collabora or ONLYOFFICE) | Missing | Google, OneDrive, Nextcloud, Seafile, Proton, Koofr | R11 |
-| G-132 | Text and Markdown editor, notes | Missing | Filen, Nextcloud, Seafile | R11 |
-| G-133 | PDF tools (annotate, merge, split, forms); e-sign (Could) | Missing | Dropbox, Tresorit | R11 |
-| G-134 | Full-text search inside documents | Partial (FR-111 Could, pending Q31) | Google Drive, Nextcloud | R11 (or S06 if Q31 is answered 'yes' for the MVP) |
-| G-135 | Text version comparison | Missing | Nextcloud Collectives | R11 |
-| G-140 | Rules and workflows engine | Missing | Immich (Workflows), Nextcloud (Flow) | R12 |
-| G-141 | Signed webhooks for events | Missing | Nextcloud, general APIs | R12 |
-| G-142 | API documentation portal and client SDKs | Partial (OpenAPI + Redoc) | Filen, Immich | R12 |
-| G-143 | S3-compatible API | Missing | MEGA S4, Filen | R12 (Could) |
-| G-144 | Extension / plugin system | Missing | Nextcloud apps, Synology packages | R12 (Could) |
-| G-150 | Pet recognition and grouping | Missing | Google Photos, Amazon Photos | S15 (AI extension, Could) |
-| G-151 | Smart memories using people, pets, and events | Missing | Google Photos, Immich (planned) | S15 (AI extension, Could) |
-| G-152 | AI classification of documents in the files area | Missing (AI is photos-only) | Google Drive (AI search), OneDrive (Copilot) | S15 (AI extension, Could) |
-| G-153 | Sensitive-content auto-hide suggestion | Missing | PhotoPrism (NSFW) | S15 (AI extension, Could) |
-| G-154 | Blurry photo and screenshot cleanup suggestions | Partial (S15.11 smart cover) | OneDrive photo stacks, Google Photos storage management | S15 (extend S15.11) |
-| G-155 | Local speech-to-text subtitles and search for videos | Missing | Nextcloud Assistant (transcription) | S15 (AI extension, Could) |
-| G-156 | Sensitive-text redaction suggestions from OCR | Missing | Google Photos (Redact) | S15 (AI extension, Could; needs OCR, Q36) |
+| Gap | Feature | In the plan before P006 | Seen in | Destination | FR |
+|---|---|---|---|---|---|
+| G-001 | Live Photos and Motion Photos | Missing | Immich, Synology, PhotoPrism, iCloud | MVP | FR-217, FR-218 |
+| G-002 | Phone photo auto-backup (bridge until native apps) | Missing (native app is candidate in 11a) | Google Photos, iCloud, OneDrive, Dropbox, Amazon Photos, Immich, Synology, MEGA, pCloud | MVP | FR-219, FR-220 |
+| G-003 | Alert delivery (email, webhook, ntfy) | Partial (alerts only in GUI and logs, FR-129) | Synology, Nextcloud, Dropbox (Rewind emails) | MVP | FR-221 |
+| G-004 | File versioning | Partial (FR-122 Could, pending Q34) | Google Drive, OneDrive, Dropbox, pCloud, Sync.com, Filen, Icedrive, Nextcloud, Seafile | MVP (recommendation: answer Q34 'yes'; the user decides) | FR-122 (existing, Q34) |
+| G-010 | Google Takeout import | Missing (Q11 mentions Takeout metadata) | Nextcloud (Google Photos import), Immich (tools) | R01 | FR-222 |
+| G-011 | Apple Photos / iCloud export import | Missing | Immich (planned iCloud import) | R01 | FR-223 |
+| G-012 | Import from other clouds (rclone remotes) | Missing | Koofr, Nextcloud external storage | R01 | FR-224 |
+| G-013 | USB drive and camera card import | Missing | Synology (USB Copy) | R01 | FR-225 |
+| G-014 | Export all my data and account deletion | Missing | Ente, Filen, MEGA, Google (Takeout) | R01 | FR-226 |
+| G-015 | XMP sidecar export for other photo tools | Missing (Q19 asks) | Immich, PhotoPrism (YAML) | R01 | FR-227 |
+| G-016 | External read-only libraries (index a host folder in place) | Superseded by the two-area design (A3) | Immich, Nextcloud | EXCLUDED unless the user decides otherwise (conflicts with I1 and A3; Q58) | none (excluded) |
+| G-020 | Files area: stars, color labels, tags, descriptions | Missing (photos only) | Google Drive, Icedrive, Seafile, Filen | R02 | FR-228 |
+| G-021 | Recent files and quick access | Missing | Google Drive | R02 | FR-229 |
+| G-022 | Saved searches and recent searches | Missing | Google Drive, Seafile (custom views) | R02 | FR-230 |
+| G-023 | Server-side archive create and extract | Missing | Synology File Station, Google Drive (archive preview) | R02 | FR-231 |
+| G-024 | Batch rename with patterns | Missing | Koofr | R02 | FR-232 |
+| G-025 | Personal storage analyzer and folder sizes | Missing (admin dashboard only). Folder sizes are already FR-214 (S02, plan 1.5.0); the release keeps the analyzer. | Koofr, Google Photos (storage management) | R02 | FR-233 |
+| G-026 | Recently added view | Missing. The added date and its sort exist for the files area (FR-215, plan 1.5.0); the release keeps the photos view. | Immich | R02 | FR-234 |
+| G-027 | Slideshow | Missing | Google Photos, Immich, Synology, Nextcloud, OneDrive | R02 | FR-235 |
+| G-028 | Star ratings | Missing | Immich, Synology | R02 | FR-236 |
+| G-029 | Smart (rule-based) albums | Missing | Synology (conditional albums), Immich (planned), Google Photos (auto-updating albums) | R02 | FR-237 |
+| G-030 | Memories without AI (on this day, year recap, trips) | Missing | Google Photos, iCloud, OneDrive, Immich, Nextcloud | R02 | FR-238 |
+| G-031 | Map view of photos | Missing (GPS and places exist; no map) | Google Photos, Immich, Synology, PhotoPrism, Nextcloud | R02 | FR-239 |
+| G-032 | Folder view of photos | Missing (depends on Q40) | Synology, Immich, PhotoPrism | R02 | FR-240 |
+| G-033 | Grid density, year/month scrubber, calendar view | Missing | Nextcloud, PhotoPrism, Synology | R02 | FR-241 |
+| G-034 | Batch metadata editing (shift dates, set location) | Partial (single-item edits) | PhotoPrism, Synology | R02 | FR-242 |
+| G-035 | Download as compatible format (HEIC to JPEG) | Missing | iCloud (export), Google Photos | R02 | FR-243 |
+| G-040 | Edit (write) sharing and reshare control | Partial (FR-117 Could, pending Q30) | Google Drive, Dropbox, Nextcloud, Seafile, Immich (read-write albums) | R03 | FR-244 |
+| G-041 | User groups and sharing with groups | Partial (FR-117 Could) | Immich (planned), Tresorit, Nextcloud | R03 | FR-245 |
+| G-042 | Shared family/team folders owned by a group | Missing | Google shared drives, Nextcloud Teams, Synology shared space, Sync.com team folders | R03 | FR-246 |
+| G-043 | Partner sharing / shared library | Missing | Google Photos, iCloud Shared Library, Immich, Amazon Family Vault | R03 | FR-247 |
+| G-044 | Collaborative albums with contributors | Missing | Google Photos, Immich, Synology | R03 | FR-248 |
+| G-045 | Comments and reactions on shared items | Missing | Google Photos, Google Drive, Nextcloud, Dropbox | R03 | FR-249 |
+| G-046 | Activity feed and item history | Partial (admin audit log only) | Google Drive, Nextcloud, Seafile, Sync.com | R03 | FR-250 |
+| G-047 | Notification center and per-user email notifications | Partial (transient GUI notifications) | Nextcloud, Dropbox, Google | R03 | FR-251 |
+| G-048 | Ownership transfer | Missing | Google Drive | R03 | FR-252 |
+| G-049 | Decline shares and block a user from sharing with you | Missing | Google Drive (block users, spam) | R03 | FR-253 |
+| G-050 | Point-in-time restore (rewind) of a folder or account | Missing | Dropbox, OneDrive, pCloud, Sync.com | R04 | FR-254 |
+| G-051 | Ransomware / mass-change detection | Missing | OneDrive, Nextcloud (apps), Synology (immutable snapshots) | R04 | FR-255 |
+| G-052 | Filesystem snapshots with immutable retention | Missing (pools use ext4/XFS) | Synology | R04 (Could; needs a filesystem ADR) | FR-256 |
+| G-053 | Off-site encrypted backup to user-owned targets | Missing (local targets only, S08.6) | Synology Hyper Backup, Nextcloud | R04 | FR-257 |
+| G-054 | NAS-to-NAS replication | Missing | Synology (Snapshot Replication, ShareSync) | R04 | FR-258 |
+| G-055 | UPS integration and graceful shutdown | Missing | Synology, TrueNAS (general NAS practice) | R04 | FR-259 |
+| G-056 | Backup health dashboard and scheduled restore tests | Partial (restore tested in S08) | Synology Hyper Backup (integrity checks) | R04 | FR-260 |
+| G-057 | Encrypted local backup targets | Missing | Synology Hyper Backup | R04 | FR-261 |
+| G-060 | TOTP 2FA with recovery codes, enforceable | Partial (FR-091 Could, pending Q33) | all services | R05 (or MVP if Q33 is answered 'yes') | FR-262 |
+| G-061 | Passkeys and security keys (WebAuthn/FIDO2) | Missing | Nextcloud, Koofr, Icedrive | R05 | FR-263 |
+| G-062 | SSO with OIDC; LDAP (Could) | Missing | Nextcloud, Seafile, Filen (enterprise) | R05 | FR-264 |
+| G-063 | Locked folder / private vault | Partial (hide/archive only) | Google Photos, OneDrive, Koofr, pCloud Crypto, Icedrive, Sync.com Vault | R05 | FR-265 |
+| G-064 | Encryption at rest of the storage (full disk) | Missing | Nextcloud (server-side encryption), Synology (encrypted volumes) | R05 | FR-266 |
+| G-065 | Malware scanning of uploads | Missing | Seafile, Nextcloud | R05 | FR-267 |
+| G-066 | Password policy with strength and breached-password checks (offline) | Missing | Nextcloud | R05 | FR-268 |
+| G-067 | New-login alerts, suspicious-login heuristics, per-user security page | Partial (sessions list) | Nextcloud, Google | R05 | FR-269 |
+| G-068 | Admin security checklist | Missing | Nextcloud (security scan) | R05 | FR-270 |
+| G-069 | Per-IP brute-force protection with trusted-proxy awareness | Partial (per-account lockout, FR-085) | Nextcloud | R05 | FR-271 |
+| G-070 | Built-in WireGuard VPN for private remote access | Missing (11a candidate) | Synology (VPN Server), general NAS practice | R06 | FR-272 |
+| G-071 | Mesh VPN guidance (Headscale self-hosted; Tailscale opt-in) | Missing | remote access research | R06 | FR-273 |
+| G-072 | CGNAT relay through the user's own VPS | Missing | remote access research | R06 | FR-274 |
+| G-073 | Dynamic DNS and IPv6 | Missing | Synology, general NAS practice | R06 | FR-275 |
+| G-074 | Trusted TLS certificates via ACME with auto-renewal | Missing (self-signed or user-provided only, FR-088) | Synology, Nextcloud (deployment guides) | R06 | FR-276 |
+| G-075 | Slow-link performance (WAN-aware thumbnails and transfers) | Partial (HLS Auto) | all mobile-first services | R06 | FR-277 |
+| G-080 | Installable web app (PWA) with share target | Missing | PhotoPrism | R07 | FR-278 |
+| G-081 | Native Android and iOS apps | Missing (NG2; 11a candidate) | all services | R07 | FR-279 |
+| G-082 | Background automatic photo and video backup in the app | Missing | Google Photos, iCloud, OneDrive, Immich, Ente, Synology, Amazon | R07 | FR-280 |
+| G-083 | Free up space on the phone | Missing | Google Photos, Immich | R07 | FR-281 |
+| G-084 | Offline files and albums on mobile | Missing | Google Drive, Dropbox, Synology Photos | R07 | FR-282 |
+| G-085 | Document scanner to PDF | Missing | Google Drive, Dropbox, OneDrive, Proton, Tresorit | R07 | FR-283 |
+| G-086 | App lock (biometrics or PIN) | Missing | Google Drive iOS, Google Photos Locked Folder | R07 | FR-284 |
+| G-087 | Widgets and OS share-sheet integration | Missing | Synology Photos, Google Photos | R07 | FR-285 |
+| G-088 | LAN discovery and automatic LAN/remote address switching | Missing | Immich | R07 | FR-286 |
+| G-089 | Push notifications without a vendor cloud where possible | Missing | all mobile apps | R07 | FR-287 |
+| G-090 | Desktop sync client (two-way, selective, conflicts, bandwidth) | Missing | all services | R08 | FR-288 |
+| G-091 | Files on demand / virtual files | Missing | OneDrive, Google Drive, Dropbox, Nextcloud, pCloud, Icedrive, Seafile | R08 | FR-289 |
+| G-092 | PC folder backup | Missing | OneDrive, Google Drive, Synology Active Backup | R08 | FR-290 |
+| G-093 | User CLI (upload, download, sync, share, search) | Missing (admin CLI only) | MEGA, Proton, Ente, Immich | R08 | FR-291 |
+| G-094 | File locking for sync and co-editing | Partial (WebDAV locks, S09.1) | Nextcloud, Seafile | R08 | FR-292 |
+| G-095 | Device list with remote sign-out and wipe of synced data | Partial (sessions) | Tresorit, Seafile, Nextcloud | R08 | FR-293 |
+| G-100 | Public share links for people without an account | Missing (NG5; 11a) | all services | R09 | FR-294 |
+| G-101 | File requests / upload-only links | Missing | Dropbox, pCloud, MEGA, Icedrive, Filen, Tresorit, Synology, Ente (Collect), Seafile | R09 | FR-295 |
+| G-102 | Large file transfer (send files that expire) | Missing | Dropbox Transfer, pCloud Transfer, Proton, MEGA | R09 | FR-296 |
+| G-103 | Guest verification by email code | Missing | Nextcloud (OTP), Seafile, Tresorit | R09 | FR-297 |
+| G-104 | Link access logs and download notifications | Missing | Tresorit, Sync.com | R09 | FR-298 |
+| G-105 | Watermarks on shared previews | Missing | Box | R09 (Could) | FR-299 |
+| G-106 | Branded share pages | Missing | pCloud, Dropbox Transfer, Sync.com | R09 (Could) | FR-300 |
+| G-107 | Invite-based registration, per-user bandwidth limits, abuse tools | Missing | MEGA (transfer quota), Nextcloud | R09 | FR-301 |
+| G-108 | Internet-facing hardening | Missing (LAN-only posture) | Nextcloud, all public services | R09 | FR-302 |
+| G-109 | Go-public readiness gate | Missing | Nextcloud (security scan) | R09 | FR-303 |
+| G-110 | External security audit and staged beta before general availability | Missing | Proton, Ente (independent audits) | R09 | FR-304 |
+| G-111 | UX overhaul for public use (recipients, phones, slow networks, languages) | Partial (accessibility NFR-015) | all public services | R09 | FR-305 |
+| G-112 | Reverse proxy and tunnel support | Missing | Immich, Nextcloud, PhotoPrism (docs) | R09 | FR-306 |
+| G-113 | Operator tools and guidance for hosting other people | Missing | Nextcloud | R09 | FR-307 |
+| G-120 | Music library (tags, albums, playlists, speed) | Partial (audio preview) | pCloud | R10 | FR-308 |
+| G-121 | Video library improvements (subtitles, resume, speed, audio tracks) | Partial (streaming) | pCloud, Immich (speed controls) | R10 | FR-309 |
+| G-122 | DLNA/UPnP media server | Missing | Synology, general NAS practice | R10 | FR-310 |
+| G-123 | Casting to TVs (Chromecast, AirPlay) | Missing | Google Photos, Amazon Photos, pCloud (Kodi) | R10 | FR-311 |
+| G-124 | TV-friendly (10-foot) view | Missing | Amazon Photos, Google Photos | R10 | FR-312 |
+| G-125 | Non-destructive photo editing | Missing (NG3) | all photo services, Immich, Koofr | R10 (needs the NG3 change, Q57) | FR-313 |
+| G-126 | 360° panorama viewer | Missing | Immich, PhotoPrism, Synology | R10 | FR-314 |
+| G-127 | Collages, burst animations, photo videos | Missing | Google Photos | R10 (Could) | FR-315 |
+| G-128 | Manual redaction (blur/pixelate) tool | Missing | Google Photos (Sept 2026) | R10 (part of G-125) | FR-316 |
+| G-130 | Office document previews | Missing (PDF and text only) | Google Drive, Dropbox, Filen, Nextcloud | R11 | FR-317 |
+| G-131 | Optional online co-editing (Collabora or ONLYOFFICE) | Missing | Google, OneDrive, Nextcloud, Seafile, Proton, Koofr | R11 | FR-318 |
+| G-132 | Text and Markdown editor, notes | Missing | Filen, Nextcloud, Seafile | R11 | FR-319 |
+| G-133 | PDF tools (annotate, merge, split, forms); e-sign (Could) | Missing | Dropbox, Tresorit | R11 | FR-320 |
+| G-134 | Full-text search inside documents | Partial (FR-111 Could, pending Q31) | Google Drive, Nextcloud | R11 (or S06 if Q31 is answered 'yes' for the MVP) | FR-321 |
+| G-135 | Text version comparison | Missing | Nextcloud Collectives | R11 | FR-322 |
+| G-140 | Rules and workflows engine | Missing | Immich (Workflows), Nextcloud (Flow) | R12 | FR-323 |
+| G-141 | Signed webhooks for events | Missing | Nextcloud, general APIs | R12 | FR-324 |
+| G-142 | API documentation portal and client SDKs | Partial (OpenAPI + Redoc) | Filen, Immich | R12 | FR-325 |
+| G-143 | S3-compatible API | Missing | MEGA S4, Filen | R12 (Could) | FR-326 |
+| G-144 | Extension / plugin system | Missing | Nextcloud apps, Synology packages | R12 (Could) | FR-327 |
+| G-150 | Pet recognition and grouping | Missing | Google Photos, Amazon Photos | S15 (AI extension, Could) | S15.10 (Could) |
+| G-151 | Smart memories using people, pets, and events | Missing | Google Photos, Immich (planned) | S15 (AI extension, Could) | S15.10 (Could) |
+| G-152 | AI classification of documents in the files area | Missing (AI is photos-only) | Google Drive (AI search), OneDrive (Copilot) | S15 (AI extension, Could) | S15.10 (Could) |
+| G-153 | Sensitive-content auto-hide suggestion | Missing | PhotoPrism (NSFW) | S15 (AI extension, Could) | S15.10 (Could) |
+| G-154 | Blurry photo and screenshot cleanup suggestions | Partial (S15.11 smart cover) | OneDrive photo stacks, Google Photos storage management | S15 (extend S15.11) | S15.10 (Could) |
+| G-155 | Local speech-to-text subtitles and search for videos | Missing | Nextcloud Assistant (transcription) | S15 (AI extension, Could) | S15.10 (Could) |
+| G-156 | Sensitive-text redaction suggestions from OCR | Missing | Google Photos (Redact) | S15 (AI extension, Could; needs OCR, Q36) | S15.10 (Could) |
 
 **Destinations:** EXCLUDED: 1, MVP: 4, R01: 6, R02: 16, R03: 10, R04: 8, R05: 10, R06: 6, R07: 10, R08: 6, R09: 14, R10: 9, R11: 6, R12: 5, S15: 7 (total 118).
 

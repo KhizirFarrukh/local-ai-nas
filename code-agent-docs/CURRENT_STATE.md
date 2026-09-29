@@ -1,7 +1,7 @@
 # CURRENT_STATE
 
-**Last updated:** 2026-09-29 06:37 +0500 (session S007)
-**Plan version:** 1.5.0 (`code-agent-docs/plan.md`), **Approved baseline** 1.0.0 (S005); 1.4.0 adds P005 (15 stages, 120 substages; packaging is now S13 and AI S15, table in plan 10.18)
+**Last updated:** 2026-09-29 20:12 +0500 (session S007)
+**Plan version:** 1.6.0 (`code-agent-docs/plan.md`; P006: MVP additions FR-217–FR-221 pending Q54, release roadmap R01–R12 in section 11b), **Approved baseline** 1.0.0 (S005); 1.4.0 adds P005 (15 stages, 120 substages; packaging is now S13 and AI S15, table in plan 10.18)
 **Current phase:** **S01 (Basic NAS) Done** (signed off, S005 E126; P005 follow-up tasks done in S007). **S02 (NAS GUI) In Progress** (approved S006 E009); S02.1–S02.7 Done; S02.8 In Progress (T01–T04 done; T05 waits for the sign-off)
 
 ## Active stage and task
@@ -10,9 +10,6 @@
 - **The user's instruction (S007 E010):** after P005, resume S02 and work until the stage is complete, and also build the P005 items that belong to the current or earlier stages (the S01 follow-up tasks).
 
 ## In progress (write-ahead)
-- **Applying plan change request #6 (competitor research, MVP additions, post-MVP release roadmap)** — **CHECKPOINT (S007 E037)**, branch `docs/P006-release-roadmap` (stacked on `feat/S02-walkthrough-fixes`; pushed, not merged). Documentation only.
-  - **Done:** step 1 (prompt archived as `prompts/P006-competitor-research-release-roadmap.json`, USER entries E034); step 2 (impact analysis E035: plan 1.5.0 is the base, new FRs from **FR-217**, NFRs from NFR-040, Q52–Q66; no MVP addition touches S01 or S02); step 3 (verification, E036); step 4 (`research/R001-2026-09-28-cloud-storage-feature-research.md`).
-  - **Next (P006 steps 5–12, in the prompt's `execution_steps`):** 5 archive plan 1.5.0; 6 pre-approved changes (RULES: R13 releases and `research/` in the documentation map, changelog citing P006; audit checklist group D; plan G13, NG5, sections 3.3, 11b, 11c); 7 plan 1.6.0 with every `plan_md_updates` item and the MVP additions (P006 labels in S03.1, S03.3, S04.1, S04.2, S04.6, S04.7, S04.9, S05.1, S05.3, S05.8, S08.1, S09.2, S09.3, S09.5, S09.6, S10.3, S10.5, S10.6, S11.2, S12.3; S15.10 extensions); 8 register (a separate candidates section with the licenses of E036); 9 CURRENT_STATE; 10 consistency check (groups D, F, G, I, K); 11 commit; 12 report (Q54 and Q34 first, then Q52, Q53). Then merge this branch into `feat/S02-walkthrough-fixes` and resume the S02 checkpoint below.
 - **CHECKPOINT (S007 E033, the user's request):** S02.3-T05 and S02.4-T05 are **half done** on branch `feat/S02-walkthrough-fixes` (pushed, **not merged**: web tests still fail). Plan 1.5.0 and the stage document tasks are committed on it.
   - **Done:** server (`storage.BirthTime*`, `Item.AddedTime`, sort `added_time`, `GET /files/usage`, `locate`/`position`; spec and client regenerated; guard tests; Go tests pass on Windows and in WSL Linux); web: `FolderSizes` store, `FolderListing.locate`/`loads`, `startUpload` batch (`done`), page refresh fix (B12) and `reveal`, FileView columns by width, second line, grid line, blink CSS; unit tests for plan, batch, sizes, listing.
   - **Open:** 3 failing FileView component tests: (1) the 900 px case shows Type too, use 850 px; (2) sizes were asked for all 100 folders instead of the ones on screen (a debug run did not reproduce it alone; find why in `fileview.svelte.test.ts`); (3) after `reveal()` the cell has no `flash` class. Then: e2e tests (B12 regression, reveal in a folder of 700+ items with `locate`, sizes and dates, sort by Added), docs (`docs/api/conventions.md` review row, `usage.md`, guide, register x/sys purpose), stage document T05 rows Done, format/lint/check/go checks, merge, stage-end CI again (moving the tag `S02-done` needs the user's permission), the S02 sign-off.
@@ -20,6 +17,7 @@
 
 ## Last completed
 - **Stage-end CI green** (S007 E027–E028): run 36433983279, 15 of 15 jobs, on the tag `S02-done` (`develop` 494e616). The first run had failed in the Linux system tests because of two test races, fixed in `fix/S02.8-T05-e2e-resume-race`; the tag was moved with the user's permission.
+- **Plan change request #6 applied** (S007 E034–E040; branch `docs/P006-release-roadmap`, merged into `feat/S02-walkthrough-fixes`): research R001 (18 services, 118 gaps); plan 1.6.0 (G13; NG5 changed; NG1–NG3 pending Q55–Q57; MVP additions FR-217–FR-221; releases R01–R12 with FR-222–FR-327 and NFR-040–NFR-043; sections 3.3, 11b, 11c; I11 proposed only); RULES 1.8.0 (R13 Releases, `research/` folder, keep-working rule); register section 13 (release candidates). No application code; no stage for R01–R12.
 - **S02.8-T04 done** (S007 E024): documentation audit A003: 8 findings, no Critical; 6 fixed (plan 1.4.2), 1 accepted, 1 for the user (README proposals R-13–R-15, asked at the S02 sign-off).
 - **S02.8-T03 done** (S007 E023): user guide `docs/guide/web-interface.md`; cross-browser report `docs/reports/S02-cross-browser.md` (Edge, Chromium, Firefox locally; Google Chrome in CI through `E2E_CHROME=1`); README Development section; register (test browsers, fixture tool).
 - **S02.8-T02 done** (S007 E022): 42 Playwright system tests per browser (125 passed, 1 skipped in Chromium, Firefox, Edge), listing and ZIP64 integration tests, axe 0 violations in both themes; bug S02-B11 (a renamed item was no longer selected) fixed.
@@ -51,6 +49,7 @@
 - **Stray folder `C:\c`** (holds only an empty `Users` tree, left by an S006 command): deleting it was blocked by a safety check, so the user deletes it.
 
 ## Open questions (short list; full text in plan.md section 5)
+- **New in 1.6.0 (P006), to ask at the next stop:** Q54 confirm the MVP additions (Live Photos and motion photos, phone auto-backup bridge, alert delivery) and **Q34 file versioning (recommended yes)** first; then Q52 AI position (after all releases, I8) · Q53 drive pools right after the MVP or at the end · Q55 NG1 reword · Q56 mobile apps (NG2) · Q57 non-destructive editing (NG3) · Q58 external libraries · Q59 map tiles · Q60 public accounts · Q61 exposure methods · Q62 locked folder · Q63 version labels · Q64 office engine · Q65 excluded features · Q66 invariant I11.
 - **New in 1.4.0 (P005):** Q42 stack cover · Q43 cross-area duplicates · Q44 retention of replaced originals · Q45 upload default for exact duplicates · Q46 shortcuts over shares · Q47 mdadm and Linux-only pools · Q48 video codec · Q49 who applies optimization policies · Q51 confirm M3 = S01–S13. **Q50 answered** (S007 E010: now).
 - **Partly open:** Q5 native Windows/macOS installers (S13.2) · Q6 AI speed expectations · Q26 image formats (HEIC/RAW) · Q32 photos exposure over shares
 - **Open for later stages:** Q10, Q11, Q13, Q14, Q15, Q19, Q27–Q31, Q33–Q36, Q39, Q40, Q41
@@ -62,4 +61,5 @@
 - Audit reports: `code-agent-docs/audits/A003-2026-09-28-documentation-audit.md` (the S02 final review, with `A003-readme-proposal.md`); `A002-2026-09-24-documentation-audit.md` (the S01 final review); `A001-2026-09-24-documentation-audit.md`
 - ADRs: `code-agent-docs/decisions/ADR-0001` … `ADR-0029` (0019 and 0022–0029 Proposed; 0021 Accepted in S007; 0012 superseded in part by 0020; the rest Accepted)
 - Dependency register: `code-agent-docs/dependencies.md` (section 12: deployment prerequisites per platform, the input for the S13.2 setup scripts)
-- Rules: `code-agent-docs/RULES.md` (v1.7.2: the agent's co-author line stays in commits, for transparency; invariant I10; CI only at stage completion, on a tag `S<NN>-done` or by hand) · Prompts: `code-agent-docs/prompts/` (P002–P005)
+- Research: `code-agent-docs/research/R001-2026-09-28-cloud-storage-feature-research.md` (P006)
+- Rules: `code-agent-docs/RULES.md` (v1.8.0: R13 Releases; keep working, stop only when told or at a stage's end, stopping = save, commit, push; the agent's co-author line stays in commits, for transparency; invariant I10; CI only at stage completion, on a tag `S<NN>-done` or by hand) · Prompts: `code-agent-docs/prompts/` (P002–P005)
