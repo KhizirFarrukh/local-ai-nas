@@ -316,7 +316,7 @@ The main navigation gets a user menu (account, sign out) and the Admin entry for
 
 | Substage | Name | Status | Depends on | Requirements |
 |---|---|---|---|---|
-| S03.1 | Threat model | **In Progress** | S02 | FR-084, FR-221 (threats only) |
+| S03.1 | Threat model | **Review** (T01 and T02 done; the user's review of the threat model is asked at the next stop) | S02 | FR-084, FR-221 (threats only) |
 | S03.2 | First-run setup and authentication | Not started | S03.1 | FR-064, FR-085, FR-068, NFR-010 |
 | S03.3 | Sessions and tokens | Not started | S03.2 | FR-086, FR-087, FR-219 (foundation) |
 | S03.4 | Transport security | Not started | S03.2 | FR-088, NFR-020 |
@@ -347,7 +347,7 @@ Its tests are written in S03.10. Bugs found while building are recorded in secti
 | Task ID | Description | Status | Acceptance criteria |
 |---|---|---|---|
 | S03.1-T01 | **Threat model** `code-agent-docs/security/threat-model.md` (new folder, added to the documentation map in RULES, D-4): <br>• **assets:** user files, credentials and sessions, TLS keys, the database, the audit log, the configuration; <br>• **attackers:** someone on the LAN, a malicious web page in the admin's browser (CSRF, clickjacking), a malicious file (uploads, previews, archives), a stolen session or token, another local user or process on the host, a stolen backup or disk, a compromised dependency; <br>• **surfaces:** API, GUI, tus, downloads and previews, archives, the CLI, the config file, internal data, the listeners; and the future ones: network shares (S09), camera upload and app passwords (FR-219), alert delivery (FR-221), the privileged storage helper and its drive operations and hot-plug risks (S14, ADR-0029, P007), the AI worker (S16), and the admin console (ADR-0039); <br>• **threats T-01…** with a STRIDE category, each mapped to a substage and task, or marked as an accepted-risk candidate. | **Done** (S007 E051) | Every threat is mapped or marked. The future surfaces are listed with the stage that must handle them. The user is asked to review it at the next stop (work continues meanwhile; changes they ask for are applied). |
-| S03.1-T02 | **Review of the S01 and S02 code against the threat model:** path handling, archives, tus, downloads and previews, the app handler, error messages, logs (no secrets), the config and database file permissions. Gaps become tasks in S03.5 or bugs (section 12). | Not started | A findings list in the threat model (section "Review of existing code"), each with its follow-up task or bug ID. |
+| S03.1-T02 | **Review of the S01 and S02 code against the threat model:** path handling, archives, tus, downloads and previews, the app handler, error messages, logs (no secrets), the config and database file permissions. Gaps become tasks in S03.5 or bugs (section 12). | **Done** (S007 E052) | A findings list in the threat model (section "Review of existing code"), each with its follow-up task or bug ID. |
 
 ### S03.2: First-run setup and authentication
 
@@ -410,8 +410,8 @@ Its tests are written in S03.10. Bugs found while building are recorded in secti
 | S03.5-T01 | **Authorization core and default deny:** `internal/authz`; the access level on every route (4.5); the namespace from the subject; minimal anonymous health; **the existing test harnesses updated** (Go helper that signs in a test subject; Playwright global setup that creates the admin and saves the signed-in state). | Not started | Every S01 and S02 route needs a session or token (curl without one: `401 unauthenticated`); the GUI works after sign-in; all existing Go tests and the 142 system tests pass. |
 | S03.5-T02 | **CSRF and Origin check** (4.5), tus included; the openapi-fetch middleware and the Uppy header in the GUI. **Host allow-list** per listener against DNS rebinding (threat T-19): loopback accepts only `127.0.0.1`, `localhost`, `[::1]` with its port; the LAN listener only its configured names, the host name, `<hostname>.local`, and its own addresses; anything else gets `421`. | Not started | A POST without the token or from another origin is `403 csrf_failed`; a request with `Host: attacker.example` is `421` on both listeners; uploads, folder uploads, archives, and file operations work in the GUI. |
 | S03.5-T03 | **Security headers and CORS** (4.5) on every response, API and app. | Not started | The headers appear on an API answer, an app page, a download, and a problem answer; no answer carries `Access-Control-Allow-Origin`; the app still loads with no CSP error in the console (Edge, Firefox). |
-| S03.5-T04 | **Rate limiting** (4.5): the per-address limiter, bounded memory, `429 rate_limited`, console-managed limits (read from config until S03.9). | Not started | A burst above the limit gets `429` with `Retry-After`; normal GUI use (a 10,000-item folder, a 200-file upload) never hits it. |
-| S03.5-T05 | **Review fixes:** the S03.1-T02 findings for uploads, previews, and error messages; archive tickets and tus uploads bound to the user who created them (T-29, T-30); files and folders the service creates readable only by it (T-42, T-43). | Not started | Each finding is fixed (bug entry) or moved to the threat model as an accepted-risk candidate with a reason; another subject cannot use a ticket or upload ID; new database, log, and key files are 0600 on Linux. |
+| S03.5-T04 | **Rate limiting** (4.5): the per-address limiter, bounded memory, `429 rate_limited`, console-managed limits (read from config until S03.9); a per-address limit on concurrent requests, so a few slow clients cannot hold many connections on a Pi (finding F-06). | Not started | A burst above the limit gets `429` with `Retry-After`; normal GUI use (a 10,000-item folder, a 200-file upload) never hits it. |
+| S03.5-T05 | **Review fixes:** the S03.1-T02 findings for uploads, previews, and error messages; archive tickets and tus uploads bound to the user who created them (T-29, T-30); files and folders the service creates readable only by it (T-42, T-43): `.local-ai-nas` 0700, the database files 0600, tusd's modes (bug S03-B02); `isEvalSupported: false` for pdf.js if the option exists (F-08). | Not started | Each finding is fixed (bug entry) or moved to the threat model as an accepted-risk candidate with a reason; another subject cannot use a ticket or upload ID; new database, log, and key files are 0600 on Linux. |
 
 ### S03.6: Security logging and audit trail
 
@@ -614,11 +614,14 @@ cd web && pnpm test:e2e        # when the task touches the GUI or the routes
 | 2026-09-29 | S007 | Initial version (plan 1.7.0, with the admin console foundation S03.9, the Pi budgets, and the ARM64 and Pi-profile CI) | R3: the stage document before any S03 code | Needed (section 11) |
 | 2026-09-29 | S007 | **Approved** (E050); decisions D-1–D-6 recorded (section 11); the Q33 and Q74 conditions resolved in the text (two-factor is built; ADR-0039 Accepted); plan 1.8.0 | The user's approval | Given |
 | 2026-09-30 | S007 | S03.1-T01 (threat model, E051): the Host allow-list against DNS rebinding added to 4.5 and S03.5-T02 (T-19); owner binding of archive tickets and tus uploads and restrictive file permissions added to S03.5-T05 (T-29, T-30, T-42); the `?next=` rule added to S03.8-T01 (T-23) | Threats found by the threat model, inside the approved scope ("close common web-application attack classes") | No (small internal adjustment, recorded, R3) |
+| 2026-09-30 | S007 | S03.1-T02 (code review, E052): findings F-01–F-08 in the threat model; bugs S03-B01 and S03-B02 recorded (section 12); S03.5-T04 gains the per-address request limit (F-06); S03.5-T05 gains the file modes and the pdf.js option (F-02, F-08) | Findings of the review, inside the approved scope | No (recorded, R3) |
 
 ### Bugs found during the stage
 
 | ID | Found in | Description | Fix | Regression test |
 |---|---|---|---|---|
+| S03-B01 | S03.1-T02 (threat T-19, finding F-01) | The API has no authentication and no Host check, so a web page using DNS rebinding can use the files API of a development server running on the same computer | S03.5-T01 (authentication), S03.5-T02 (Host allow-list) | S03.10-T02: a foreign `Host` gets `421`; anonymous calls get `401` |
+| S03-B02 | S03.1-T02 (finding F-02) | The database file is created 0644 by SQLite and tusd's upload files 0664, so members of the service's group can read the database and change uploads in progress | S03.5-T05 | S03.10-T01/T02: the modes of new files and folders on Linux |
 
 ## 13. Completion record
 
