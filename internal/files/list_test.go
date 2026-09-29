@@ -82,16 +82,25 @@ func TestListLargeFolderPaginates(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	folder, err := os.Open(dir)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer func() { _ = folder.Close() }()
 	ref := map[string]Item{}
 	for _, e := range entries {
 		info, err := e.Info()
 		if err != nil {
 			t.Fatal(err)
 		}
-		ref[e.Name()] = NewItem(owner, "big/"+e.Name(), info)
+		it := NewItem(owner, "big/"+e.Name(), info)
+		if added, ok := storage.BirthTime(folder, e.Name(), info); ok {
+			it.AddedTime = added
+		}
+		ref[e.Name()] = it
 	}
 
-	for _, key := range []SortKey{SortName, SortSize, SortModTime, SortKind} {
+	for _, key := range []SortKey{SortName, SortSize, SortModTime, SortAdded, SortKind} {
 		for _, order := range []Order{Asc, Desc} {
 			t.Run(string(key)+"_"+string(order), func(t *testing.T) {
 				got, pages := listAll(t, s, "/big", ListOptions{Limit: 333, Sort: key, Order: order})

@@ -88,6 +88,12 @@ var errorCases = []struct {
 	{http.MethodDelete, "/api/v1/files/items?path=/docs/../../x", http.StatusBadRequest, "outside_root"},
 	{http.MethodDelete, "/api/v1/files/items?path=/missing", http.StatusNotFound, "not_found"},
 	{http.MethodDelete, "/api/v1/files/items?path=/docs", http.StatusConflict, "conflict"},
+	// GET /api/v1/files/usage (S02.3-T05).
+	{http.MethodGet, "/api/v1/files/usage", http.StatusBadRequest, "invalid_request"},
+	{http.MethodGet, "/api/v1/files/usage?path=/docs/../../x", http.StatusBadRequest, "outside_root"},
+	{http.MethodGet, "/api/v1/files/usage?path=/missing", http.StatusNotFound, "not_found"},
+	{http.MethodPost, "/api/v1/files/usage?path=/", http.StatusMethodNotAllowed, "method_not_allowed"},
+	{http.MethodGet, "/api/v1/files/items?path=/&locate=a%2Fb", http.StatusBadRequest, "invalid_request"},
 	// POST /api/v1/files/folders: other methods (the body cases are below).
 	{http.MethodGet, "/api/v1/files/folders", http.StatusMethodNotAllowed, "method_not_allowed"},
 	// POST /api/v1/files/operations/{rename,move}: other methods (the body

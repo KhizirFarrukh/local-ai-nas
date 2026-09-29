@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { pickedFromInput, planUpload } from './plan';
+import { pickedFromInput, planUpload, topItem } from './plan';
 
 const f = (name: string) => new File(['x'], name);
 
@@ -53,5 +53,14 @@ describe('pickedFromInput', () => {
       { file: inFolder, relativePath: 'trip/a.jpg' },
       { file: plain, relativePath: 'b.jpg' }
     ]);
+  });
+});
+
+describe('topItem', () => {
+  it('names the item right below the folder an upload went to (S02.4-T05)', () => {
+    expect(topItem('/', '/a.txt')).toBe('/a.txt');
+    expect(topItem('/', '/trip/day 2/b.txt')).toBe('/trip');
+    expect(topItem('/docs', '/docs/trip/a.txt')).toBe('/docs/trip');
+    expect(topItem('/docs', '/docs/taken (1).txt')).toBe('/docs/taken (1).txt');
   });
 });

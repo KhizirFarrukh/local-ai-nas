@@ -13,7 +13,7 @@ Stage 2's criterion (plan S02.8, criterion 2): the GUI is checked in current Chr
 
 ## What was checked
 
-**Automatically, in every browser** (`web/tests/e2e`, 42 tests per browser, against the real binary with the embedded interface):
+**Automatically, in every browser** (`web/tests/e2e`, 48 tests per browser, against the real binary with the embedded interface):
 
 - browsing, including a folder of 50,000 items (first page and a jump to the end each within 5 s, only the rows on screen in the page);
 - uploads: files, a folder, drag and drop, pause and resume, a network drop, a reload followed by adding the same file again (continues at the server's offset), and a taken name;
@@ -21,9 +21,10 @@ Stage 2's criterion (plan S02.8, criterion 2): the GUI is checked in current Chr
 - operations: new folder, rename, move, copy, delete, cut and paste, and every choice of the conflict dialog;
 - previews: image, video and audio with seeking by byte ranges (206), text with its 256 KB limit, PDF, the fallback card, and active content (HTML shown as text, SVG scripts never run);
 - keyboard-only use and the focus after every dialog and menu; phone and tablet widths (360, 768, 1024 px); accessibility with axe in both themes;
-- the regression tests of the bugs found in stage 2 (S02-B02, B03, B05, B06, B10, B11).
+- sizes and dates (folder sizes, the added and modified dates, the phone layout, sorting by the added date) and finished uploads shown (a folder upload appearing without a reload, a single upload scrolled into view with two blinks, also in a 600-item folder), from the user's walkthrough;
+- the regression tests of the bugs found in stage 2 (S02-B02, B03, B05, B06, B10, B11, B12).
 
-**Results on the test PC** (2026-09-28): Chromium, Firefox, and Edge, **125 of 126 passed, 1 skipped** (below), repeatedly. axe found **no violation of any impact** on the main screens in either theme in any browser. **In CI** (the stage-end run 36433983279, 2026-09-28), the same suite passed on Linux (Chromium, Firefox, Google Chrome) and on Windows (Chromium, Firefox, Edge, Google Chrome). The first stage-end run had found two timing races in the tests themselves, both in Chromium on Linux; they were fixed before this run (stage document, S02.8-T05).
+**Results on the test PC** (2026-09-29): Chromium, Firefox, and Edge, **142 of 144 passed, 2 skipped** (the folder-picker tests in Firefox, below). axe found **no violation of any impact** on the main screens in either theme in any browser. **In CI** (the stage-end run 36433983279, 2026-09-28), the same suite passed on Linux (Chromium, Firefox, Google Chrome) and on Windows (Chromium, Firefox, Edge, Google Chrome). The first stage-end run had found two timing races in the tests themselves, both in Chromium on Linux; they were fixed before this run (stage document, S02.8-T05).
 
 **By hand during the stage** (details in the stage document and the session logs S006 and S007): layouts at phone and tablet widths, touch (tap and long press), contrast in both themes (axe `color-contrast` in Edge and Firefox: no violation), a 2 GiB video seeking with two range requests in Edge and Firefox, ZIP archives of 4.2 GiB opening in Windows Explorer and Info-ZIP `unzip`, and uploads of 1,000 files by folder button in Edge, Chromium, and Firefox.
 

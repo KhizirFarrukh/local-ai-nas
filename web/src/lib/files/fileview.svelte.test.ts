@@ -1,9 +1,13 @@
 import { describe, expect, it, vi } from 'vitest';
 import { page, userEvent } from 'vitest/browser';
 import { render } from 'vitest-browser-svelte';
+// The app's styles, so the list is laid out and scrolls as in the app
+// (only the rows on screen exist) and the blink's animation applies.
+import '../../app.css';
 import FileView from './FileView.svelte';
 import { FolderListing } from './listing.svelte';
 import { Selection } from './selection.svelte';
+import { FolderSizes } from './sizes.svelte';
 import type { FileItem } from './types';
 
 function items(n: number): FileItem[] {
@@ -12,23 +16,24 @@ function items(n: number): FileItem[] {
     name: `item${String(i).padStart(3, '0')}${i % 3 === 0 ? '' : '.txt'}`,
     kind: i % 3 === 0 ? 'dir' : 'file',
     size: 1000 * i,
-    mod_time: '2026-09-28T10:00:00Z'
+    mod_time: '2026-09-28T10:00:00Z',
+    added_time: '2026-09-28T10:00:00Z'
   }));
 }
 
 /** A box of fixed size, as the main area is in the app. */
-function box(): HTMLElement {
+function box(width = 900): HTMLElement {
   const el = document.createElement('div');
-  el.style.cssText = 'width: 900px; height: 440px; display: flex; flex-direction: column';
+  el.style.cssText = `width: ${width}px; height: 440px; display: flex; flex-direction: column`;
   document.body.append(el);
   return el;
 }
 
-async function setup(n = 30, extra: Record<string, unknown> = {}) {
+async function setup(n = 30, extra: Record<string, unknown> = {}, width = 900) {
   const list = items(n);
   const listing = new FolderListing(
     async () => ({
-      item: { path: '/f', name: 'f', kind: 'dir', size: 0, mod_time: '' },
+      item: { path: '/f', name: 'f', kind: 'dir', size: 0, mod_time: '', added_time: '' },
       items: list,
       total: n
     }),
@@ -40,7 +45,7 @@ async function setup(n = 30, extra: Record<string, unknown> = {}) {
   const onsort = vi.fn();
   const onmenu = vi.fn();
   const screen = await render(FileView, {
-    target: box(),
+    target: box(width),
     props: {
       listing,
       selection,
@@ -65,6 +70,40 @@ const active = () => {
 };
 
 describe('FileView as a list', () => {
+  it('shows Size, Added, and Modified where they fit, else the size and date under the name', async () => {
+    const header = () =>
+      [...document.querySelectorAll('button[aria-label^="Sort by"]')].map((b) =>
+        b.textContent?.trim()
+      );
+    const wide = await setup(30, {}, 850); // Type needs 900 px
+    await vi.waitFor(() => expect(header()).toEqual(['Name', 'Size', 'Added', 'Modified']));
+    await expect
+      .poll(() => page.getByTestId('item-added').first().element().textContent)
+      .toMatch(/2026/);
+    await wide.screen.unmount();
+    await setup(30, {}, 400);
+    await vi.waitFor(() => expect(header()).toEqual(['Name']));
+    await expect
+      .poll(() => page.getByTestId('item-details').nth(1).element().textContent)
+      .toMatch(/^1,000 bytes · Added .*2026/);
+  });
+
+  it('shows the size of a folder once it is added up, asking only for the folders on screen', async () => {
+    const asked: string[] = [];
+    const sizes = new FolderSizes(async (path) => {
+      asked.push(path);
+      return 4096;
+    });
+    await setup(300, { sizes });
+    await expect
+      .element(page.getByRole('gridcell', { name: /^item000, Folder, 4 KB, added/ }))
+      .toBeVisible();
+    await expect.element(page.getByTestId('item-size').first()).toHaveTextContent('4 KB');
+    expect(asked.length).toBeGreaterThan(0);
+    expect(asked.length).toBeLessThan(40); // not all 100 folders
+    expect(asked.every((p) => !p.endsWith('.txt'))).toBe(true);
+  });
+
   it('is one grid named by the folder, with one column and every item described', async () => {
     const { grid } = await setup();
     await expect.element(grid).toHaveAttribute('aria-label', 'Items in f');
@@ -72,11 +111,13 @@ describe('FileView as a list', () => {
     await expect.element(grid).toHaveAttribute('aria-multiselectable', 'true');
     await expect.element(grid).toHaveAttribute('aria-rowcount', '30');
     await expect
-      .element(page.getByRole('gridcell', { name: /^item000, Folder, modified/ }))
+      .element(page.getByRole('gridcell', { name: /^item000, Folder, added .+, modified / }))
       .toBeVisible();
     await expect
       .element(
-        page.getByRole('gridcell', { name: /^item001\.txt, TXT file, 1,000 bytes, modified/ })
+        page.getByRole('gridcell', {
+          name: /^item001\.txt, TXT file, 1,000 bytes, added .+, modified /
+        })
       )
       .toBeVisible();
   });
@@ -239,5 +280,26 @@ describe('FileView on a touch screen', () => {
     );
     await new Promise((r2) => setTimeout(r2, 600));
     expect(onmenu).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe('reveal (S02.4-T05)', () => {
+  it('scrolls to an item and blinks it twice, then stops', async () => {
+    const { screen, list } = await setup(300);
+    const target = list[250];
+    await (
+      screen.component as unknown as { reveal: (i: number, p: string) => Promise<void> }
+    ).reveal(250, target.path);
+    const cell = page.getByRole('gridcell', {
+      name: new RegExp(`^${target.name.replace('.', '\\.')},`)
+    });
+    await expect.element(cell).toBeVisible();
+    await expect.element(cell).toHaveClass('flash');
+    const style = getComputedStyle(cell.element());
+    expect(style.animationName).toBe('flash');
+    expect(style.animationIterationCount).toBe('2');
+    await expect
+      .poll(() => cell.element().classList.contains('flash'), { timeout: 3000 })
+      .toBe(false);
   });
 });

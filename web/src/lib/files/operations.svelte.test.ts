@@ -7,7 +7,14 @@ import type { FileItem } from './types';
 
 function item(path: string, kind: FileItem['kind'] = 'file'): FileItem {
   const name = path.split('/').at(-1) ?? '';
-  return { path, name, kind, size: 1, mod_time: '2026-09-28T00:00:00Z' };
+  return {
+    path,
+    name,
+    kind,
+    size: 1,
+    mod_time: '2026-09-28T00:00:00Z',
+    added_time: '2026-09-28T00:00:00Z'
+  };
 }
 
 function setup(handler: FakeHandler) {

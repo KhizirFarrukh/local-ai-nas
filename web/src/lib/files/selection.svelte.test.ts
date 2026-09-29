@@ -7,7 +7,8 @@ const make = (i: number): FileItem => ({
   name: String(i),
   kind: 'file',
   size: i,
-  mod_time: '2026-09-28T00:00:00Z'
+  mod_time: '2026-09-28T00:00:00Z',
+  added_time: '2026-09-28T00:00:00Z'
 });
 
 /** A source of n items whose loaded range grows by loadRange. */

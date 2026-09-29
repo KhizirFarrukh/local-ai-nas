@@ -17,7 +17,8 @@ const item = (path: string, kind: FileItem['kind'] = 'file'): FileItem => ({
   name: path.split('/').at(-1) ?? '',
   kind,
   size: 1,
-  mod_time: '2026-09-28T00:00:00Z'
+  mod_time: '2026-09-28T00:00:00Z',
+  added_time: '2026-09-28T00:00:00Z'
 });
 
 describe('NameDialog', () => {

@@ -91,6 +91,7 @@ func (s *Local) CreateFolder(ctx context.Context, owner, apiPath string, o Folde
 				return fsError(err, apiPath)
 			}
 			r = result{NewItem(owner, made, info), created}
+			stampAdded(root, &r.item, info)
 			return nil
 		})
 		return r, err

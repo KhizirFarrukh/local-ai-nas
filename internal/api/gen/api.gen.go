@@ -83,15 +83,18 @@ func (e ListOrder) Valid() bool {
 
 // Defines values for ListSort.
 const (
-	Kind    ListSort = "kind"
-	ModTime ListSort = "mod_time"
-	Name    ListSort = "name"
-	Size    ListSort = "size"
+	AddedTime ListSort = "added_time"
+	Kind      ListSort = "kind"
+	ModTime   ListSort = "mod_time"
+	Name      ListSort = "name"
+	Size      ListSort = "size"
 )
 
 // Valid indicates whether the value is a known member of the ListSort enum.
 func (e ListSort) Valid() bool {
 	switch e {
+	case AddedTime:
+		return true
 	case Kind:
 		return true
 	case ModTime:
@@ -252,6 +255,12 @@ type CreateFolderRequest struct {
 
 // FileItem defines model for FileItem.
 type FileItem struct {
+	// AddedTime When the item was added to the NAS, in UTC: its creation time
+	// on the file system, set by an upload, a new folder, or a copy,
+	// and kept by renames, moves, and edits. Where the file system
+	// records no creation time, it is the modification time.
+	AddedTime time.Time `json:"added_time"`
+
 	// ContentHash The hash of the file's content, as `sha256:` and 64 lowercase
 	// hexadecimal digits (only for a single file, not in listings). It
 	// is present for files uploaded or copied through the NAS and
@@ -319,6 +328,9 @@ type ItemsResponse struct {
 	// NextCursor Present when more items follow; pass it as `cursor` to get the next page.
 	NextCursor *string `json:"next_cursor,omitempty"`
 
+	// Position The position of the `locate` item in the sorted folder (0 is the first); absent when it is not there.
+	Position *int `json:"position,omitempty"`
+
 	// Total For a folder, how many items it has in all pages.
 	Total *int `json:"total,omitempty"`
 }
@@ -380,6 +392,21 @@ type RenameRequest struct {
 
 	// Path The item to rename, starting with `/`.
 	Path string `json:"path"`
+}
+
+// Usage defines model for Usage.
+type Usage struct {
+	// Files How many files it holds, at any depth.
+	Files int `json:"files"`
+
+	// Folders How many folders it holds, at any depth (not counting itself).
+	Folders int `json:"folders"`
+
+	// Path The folder (or file) that was added up.
+	Path string `json:"path"`
+
+	// Size The total size of the files, in bytes.
+	Size int64 `json:"size"`
 }
 
 // Path defines model for Path.
@@ -458,6 +485,18 @@ type GetItemsParams struct {
 	Limit *int       `form:"limit,omitempty" json:"limit,omitempty"`
 	Sort  *ListSort  `form:"sort,omitempty" json:"sort,omitempty"`
 	Order *ListOrder `form:"order,omitempty" json:"order,omitempty"`
+
+	// Locate The name of an item in the folder (not a path). The answer's
+	// `position` says where it is in this sort order, so a client can
+	// show it, such as a finished upload; the page itself does not
+	// change.
+	Locate *string `form:"locate,omitempty" json:"locate,omitempty"`
+}
+
+// GetUsageParams defines parameters for GetUsage.
+type GetUsageParams struct {
+	// Path A path in the caller's files area, starting with `/` (the root of the area), in Unicode NFC. See docs/api/conventions.md.
+	Path Path `form:"path" json:"path"`
 }
 
 // CreateArchiveJSONRequestBody defines body for CreateArchive for application/json ContentType.
@@ -507,6 +546,9 @@ type ServerInterface interface {
 	// RenameItem Rename a file or folder
 	// (POST /files/operations/rename)
 	RenameItem(w http.ResponseWriter, r *http.Request)
+	// GetUsage Add up the size of a folder
+	// (GET /files/usage)
+	GetUsage(w http.ResponseWriter, r *http.Request, params GetUsageParams)
 	// GetHealth Server health and startup checks
 	// (GET /system/health)
 	GetHealth(w http.ResponseWriter, r *http.Request)
@@ -787,6 +829,19 @@ func (siw *ServerInterfaceWrapper) GetItems(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
+	// ------------- Optional query parameter "locate" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "locate", r.URL.Query(), &params.Locate, runtime.BindQueryParameterOptions{Type: "string", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "locate"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "locate", Err: err})
+		}
+		return
+	}
+
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		siw.Handler.GetItems(w, r, params)
 	}))
@@ -831,6 +886,39 @@ func (siw *ServerInterfaceWrapper) RenameItem(w http.ResponseWriter, r *http.Req
 
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		siw.Handler.RenameItem(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// GetUsage operation middleware
+func (siw *ServerInterfaceWrapper) GetUsage(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params GetUsageParams
+
+	// ------------- Required query parameter "path" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, true, "path", r.URL.Query(), &params.Path, runtime.BindQueryParameterOptions{Type: "string", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "path"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "path", Err: err})
+		}
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.GetUsage(w, r, params)
 	}))
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -984,6 +1072,7 @@ func HandlerWithOptions(si ServerInterface, options StdHTTPServerOptions) http.H
 	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/files/archives/{id}", wrapper.DownloadArchive)
 	m.HandleFunc(http.MethodDelete+" "+options.BaseURL+"/files/items", wrapper.DeleteItem)
 	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/files/items", wrapper.GetItems)
+	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/files/usage", wrapper.GetUsage)
 	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/system/health", wrapper.GetHealth)
 
 	return m
@@ -2337,6 +2426,95 @@ func (response RenameItem500ApplicationProblemPlusJSONResponse) VisitRenameItemR
 	return err
 }
 
+type GetUsageRequestObject struct {
+	Params GetUsageParams
+}
+
+type GetUsageResponseObject interface {
+	VisitGetUsageResponse(w http.ResponseWriter) error
+}
+
+type GetUsage200JSONResponse Usage
+
+func (response GetUsage200JSONResponse) VisitGetUsageResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type GetUsage400ApplicationProblemPlusJSONResponse struct {
+	BadRequestApplicationProblemPlusJSONResponse
+}
+
+func (response GetUsage400ApplicationProblemPlusJSONResponse) VisitGetUsageResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(400)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type GetUsage404ApplicationProblemPlusJSONResponse struct {
+	NotFoundApplicationProblemPlusJSONResponse
+}
+
+func (response GetUsage404ApplicationProblemPlusJSONResponse) VisitGetUsageResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(404)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type GetUsage405ApplicationProblemPlusJSONResponse struct {
+	MethodNotAllowedApplicationProblemPlusJSONResponse
+}
+
+func (response GetUsage405ApplicationProblemPlusJSONResponse) VisitGetUsageResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/problem+json")
+	if response.Headers.Allow != nil {
+		w.Header().Set("Allow", fmt.Sprint(*response.Headers.Allow))
+	}
+	w.WriteHeader(405)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type GetUsage500ApplicationProblemPlusJSONResponse struct {
+	InternalErrorApplicationProblemPlusJSONResponse
+}
+
+func (response GetUsage500ApplicationProblemPlusJSONResponse) VisitGetUsageResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(500)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
 type GetHealthRequestObject struct {
 }
 
@@ -2439,6 +2617,9 @@ type StrictServerInterface interface {
 	// RenameItem Rename a file or folder
 	// (POST /files/operations/rename)
 	RenameItem(ctx context.Context, request RenameItemRequestObject) (RenameItemResponseObject, error)
+	// GetUsage Add up the size of a folder
+	// (GET /files/usage)
+	GetUsage(ctx context.Context, request GetUsageRequestObject) (GetUsageResponseObject, error)
 	// GetHealth Server health and startup checks
 	// (GET /system/health)
 	GetHealth(ctx context.Context, request GetHealthRequestObject) (GetHealthResponseObject, error)
@@ -2763,6 +2944,32 @@ func (sh *strictHandler) RenameItem(w http.ResponseWriter, r *http.Request) {
 		sh.options.ResponseErrorHandlerFunc(w, r, err)
 	} else if validResponse, ok := response.(RenameItemResponseObject); ok {
 		if err := validResponse.VisitRenameItemResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// GetUsage operation middleware
+func (sh *strictHandler) GetUsage(w http.ResponseWriter, r *http.Request, params GetUsageParams) {
+	var request GetUsageRequestObject
+
+	request.Params = params
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.GetUsage(ctx, request.(GetUsageRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "GetUsage")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(GetUsageResponseObject); ok {
+		if err := validResponse.VisitGetUsageResponse(w); err != nil {
 			sh.options.ResponseErrorHandlerFunc(w, r, err)
 		}
 	} else if response != nil {

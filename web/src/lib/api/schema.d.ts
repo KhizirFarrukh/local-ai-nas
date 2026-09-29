@@ -282,6 +282,30 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/files/usage": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Add up the size of a folder
+         * @description Adds up the files in the folder at `path`, at any depth: their
+         *     total size and how many files and folders it holds. Symbolic
+         *     links are neither followed nor counted. For a file, it is the
+         *     file's own size. The server reads the whole tree, so a large one
+         *     takes a while; the walk stops if the client goes away.
+         */
+        get: operations["getUsage"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/system/health": {
         parameters: {
             query?: never;
@@ -347,6 +371,14 @@ export interface components {
              */
             mod_time: string;
             /**
+             * Format: date-time
+             * @description When the item was added to the NAS, in UTC: its creation time
+             *     on the file system, set by an upload, a new folder, or a copy,
+             *     and kept by renames, moves, and edits. Where the file system
+             *     records no creation time, it is the modification time.
+             */
+            added_time: string;
+            /**
              * @description The media type of a file. In a listing it comes from the file
              *     name's extension only (absent when unknown); for a single file it
              *     falls back to sniffing the first 512 bytes.
@@ -368,6 +400,19 @@ export interface components {
              */
             content_hash?: string;
         };
+        Usage: {
+            /** @description The folder (or file) that was added up. */
+            path: string;
+            /**
+             * Format: int64
+             * @description The total size of the files, in bytes.
+             */
+            size: number;
+            /** @description How many files it holds, at any depth. */
+            files: number;
+            /** @description How many folders it holds, at any depth (not counting itself). */
+            folders: number;
+        };
         /**
          * @description A symbolic link is listed but never followed.
          * @enum {string}
@@ -381,6 +426,8 @@ export interface components {
             next_cursor?: string;
             /** @description For a folder, how many items it has in all pages. */
             total?: number;
+            /** @description The position of the `locate` item in the sorted folder (0 is the first); absent when it is not there. */
+            position?: number;
         };
         ArchiveRequest: {
             /** @description The files and folders to put in the archive, each starting with `/`. */
@@ -448,7 +495,7 @@ export interface components {
          * @default name
          * @enum {string}
          */
-        ListSort: "name" | "size" | "mod_time" | "kind";
+        ListSort: "name" | "size" | "mod_time" | "added_time" | "kind";
         /**
          * @default asc
          * @enum {string}
@@ -1065,6 +1112,13 @@ export interface operations {
                 limit?: number;
                 sort?: components["schemas"]["ListSort"];
                 order?: components["schemas"]["ListOrder"];
+                /**
+                 * @description The name of an item in the folder (not a path). The answer's
+                 *     `position` says where it is in this sort order, so a client can
+                 *     show it, such as a finished upload; the page itself does not
+                 *     change.
+                 */
+                locate?: string;
             };
             header?: never;
             path?: never;
@@ -1115,6 +1169,36 @@ export interface operations {
             404: components["responses"]["NotFound"];
             405: components["responses"]["MethodNotAllowed"];
             409: components["responses"]["Conflict"];
+            500: components["responses"]["InternalError"];
+        };
+    };
+    getUsage: {
+        parameters: {
+            query: {
+                /**
+                 * @description A path in the caller's files area, starting with `/` (the root of the area), in Unicode NFC. See docs/api/conventions.md.
+                 * @example /docs/report.pdf
+                 */
+                path: components["parameters"]["Path"];
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description What the folder holds. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Usage"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            404: components["responses"]["NotFound"];
+            405: components["responses"]["MethodNotAllowed"];
             500: components["responses"]["InternalError"];
         };
     };

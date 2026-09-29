@@ -18,7 +18,8 @@ const item = (path: string, kind: FileItem['kind'] = 'file'): FileItem => ({
   name: path.split('/').at(-1) ?? '',
   kind,
   size: 1,
-  mod_time: ''
+  mod_time: '',
+  added_time: ''
 });
 
 function setup(handler: FakeHandler) {

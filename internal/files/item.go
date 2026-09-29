@@ -32,8 +32,12 @@ type Item struct {
 	Kind    Kind      // file, dir, symlink, or other
 	Size    int64     // bytes, for files
 	ModTime time.Time // last modification
-	MIME    string    // media type, from S01.3-T03
-	ETag    string    // content version, from S01.3-T03
+	// AddedTime is when the item was added: its creation time on the
+	// file system (an upload, a new folder, a copy; kept by renames,
+	// moves, and edits), or ModTime where none is recorded (FR-215).
+	AddedTime time.Time
+	MIME      string // media type, from S01.3-T03
+	ETag      string // content version, from S01.3-T03
 	// ContentHash is "sha256:<hex>" when known for this version (S01.3-T10,
 	// ADR-0021): set by uploads, copies, and a file's details.
 	ContentHash string
@@ -43,10 +47,11 @@ type Item struct {
 // namespace of the files area.
 func NewItem(namespace, relPath string, info fs.FileInfo) Item {
 	it := Item{
-		OwnerID: namespace,
-		Area:    "files",
-		RelPath: relPath,
-		ModTime: info.ModTime(),
+		OwnerID:   namespace,
+		Area:      "files",
+		RelPath:   relPath,
+		ModTime:   info.ModTime(),
+		AddedTime: info.ModTime(), // until stampAdded finds the creation time
 	}
 	if relPath != "." {
 		it.Name = path.Base(relPath)

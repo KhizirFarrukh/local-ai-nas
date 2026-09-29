@@ -24,6 +24,7 @@ const (
 	SortName    SortKey = "name"
 	SortSize    SortKey = "size"
 	SortModTime SortKey = "mod_time"
+	SortAdded   SortKey = "added_time" // FR-215
 	SortKind    SortKey = "kind"
 )
 
@@ -52,6 +53,9 @@ type ListOptions struct {
 	Limit  int
 	Sort   SortKey
 	Order  Order
+	// Locate names an item of the folder whose position in this sort
+	// order the page reports (S02.4-T05), such as a finished upload.
+	Locate string
 }
 
 // ListPage is one page of a folder listing.
@@ -62,6 +66,9 @@ type ListPage struct {
 	NextCursor string
 	// Total is the number of items in the folder, over all pages.
 	Total int
+	// Position is where ListOptions.Locate is in the sorted folder, or -1
+	// when it is not there (or was not asked for).
+	Position int
 }
 
 // normalize fills in the defaults and checks every option.
@@ -75,9 +82,9 @@ func (o ListOptions) normalize() (ListOptions, error) {
 	switch o.Sort {
 	case "":
 		o.Sort = SortName
-	case SortName, SortSize, SortModTime, SortKind:
+	case SortName, SortSize, SortModTime, SortAdded, SortKind:
 	default:
-		return o, apperr.Newf(apperr.InvalidRequest, "sort must be name, size, mod_time, or kind, got %q", o.Sort)
+		return o, apperr.Newf(apperr.InvalidRequest, "sort must be name, size, mod_time, added_time, or kind, got %q", o.Sort)
 	}
 	switch o.Order {
 	case "":
@@ -91,6 +98,8 @@ func (o ListOptions) normalize() (ListOptions, error) {
 		return o, apperr.Newf(apperr.InvalidRequest, "offset must be 0 or more, got %d", o.Offset)
 	case o.Offset > 0 && o.Cursor != "":
 		return o, apperr.New(apperr.InvalidRequest, "offset and cursor cannot be used together")
+	case strings.Contains(o.Locate, "/"):
+		return o, apperr.Newf(apperr.InvalidRequest, "locate is the name of an item in the folder, not a path: %q", o.Locate)
 	}
 	return o, nil
 }
@@ -125,6 +134,10 @@ func (s *Local) List(ctx context.Context, owner, path string, opts ListOptions) 
 			less := compareItems(opts.Sort, opts.Order)
 			slices.SortFunc(items, less)
 			page.Total = len(items)
+			page.Position = -1
+			if opts.Locate != "" {
+				page.Position = slices.IndexFunc(items, func(it Item) bool { return it.Name == opts.Locate })
+			}
 			start := min(opts.Offset, len(items))
 			if after != nil {
 				pos := after.item()
@@ -153,6 +166,7 @@ func readFolder(root *os.Root, owner, rel, apiPath string) ([]Item, Item, error)
 		return nil, Item{}, fsError(err, apiPath)
 	}
 	folder := NewItem(owner, rel, info)
+	stampAdded(root, &folder, info)
 	if folder.Kind != KindDir {
 		return nil, Item{}, apperr.Newf(apperr.InvalidRequest, "%s is not a folder", apiPath)
 	}
@@ -178,6 +192,9 @@ func readFolder(root *os.Root, owner, rel, apiPath string) ([]Item, Item, error)
 			return nil, Item{}, fsError(err, apiPath)
 		}
 		it := NewItem(owner, path.Join(rel, e.Name()), info)
+		if t, ok := storage.BirthTime(f, e.Name(), info); ok {
+			it.AddedTime = t // through the open folder: no path lookup per item
+		}
 		if it.Kind == KindFile {
 			it.MIME = mimeByExtension(it.Name) // no sniffing in listings
 		}
@@ -208,6 +225,8 @@ func compareItems(key SortKey, order Order) func(a, b Item) int {
 			c = cmp.Compare(a.Size, b.Size)
 		case SortModTime:
 			c = a.ModTime.Compare(b.ModTime)
+		case SortAdded:
+			c = a.AddedTime.Compare(b.AddedTime)
 		case SortKind:
 			c = cmp.Compare(kindRank[a.Kind], kindRank[b.Kind])
 		}
@@ -229,15 +248,16 @@ type cursor struct {
 	Name    string  `json:"n"`
 	Size    int64   `json:"z,omitempty"`
 	ModTime int64   `json:"t,omitempty"` // Unix nanoseconds
+	Added   int64   `json:"a,omitempty"` // Unix nanoseconds
 	Kind    Kind    `json:"k,omitempty"`
 }
 
 func (c *cursor) item() Item {
-	return Item{Name: c.Name, Size: c.Size, ModTime: time.Unix(0, c.ModTime), Kind: c.Kind}
+	return Item{Name: c.Name, Size: c.Size, ModTime: time.Unix(0, c.ModTime), AddedTime: time.Unix(0, c.Added), Kind: c.Kind}
 }
 
 func encodeCursor(last Item, opts ListOptions) string {
-	c := cursor{Sort: opts.Sort, Order: opts.Order, Name: last.Name, Size: last.Size, ModTime: last.ModTime.UnixNano(), Kind: last.Kind}
+	c := cursor{Sort: opts.Sort, Order: opts.Order, Name: last.Name, Size: last.Size, ModTime: last.ModTime.UnixNano(), Added: last.AddedTime.UnixNano(), Kind: last.Kind}
 	data, _ := json.Marshal(c) // strings and numbers always marshal
 	return base64.RawURLEncoding.EncodeToString(data)
 }

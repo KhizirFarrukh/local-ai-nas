@@ -3,6 +3,7 @@ package api
 import (
 	"context"
 	"io"
+	"strings"
 
 	"github.com/KhizirFarrukh/local-ai-nas/internal/api/gen"
 	"github.com/KhizirFarrukh/local-ai-nas/internal/apperr"
@@ -46,8 +47,20 @@ func (s *server) GetItems(ctx context.Context, req gen.GetItemsRequestObject) (g
 			resp.NextCursor = &page.NextCursor
 		}
 		resp.Total = &page.Total
+		if page.Position >= 0 {
+			resp.Position = &page.Position
+		}
 	}
 	return gen.GetItems200JSONResponse(resp), nil
+}
+
+// GetUsage adds up the size of a folder (S02.3-T05, FR-214).
+func (s *server) GetUsage(ctx context.Context, req gen.GetUsageRequestObject) (gen.GetUsageResponseObject, error) {
+	u, err := s.files.Usage(ctx, s.owner, string(req.Params.Path))
+	if err != nil {
+		return nil, err
+	}
+	return gen.GetUsage200JSONResponse{Path: fileItem(u.Item).Path, Size: u.Size, Files: u.Files, Folders: u.Folders}, nil
 }
 
 // listOptions checks the paging parameters. The generated binding checks
@@ -71,7 +84,7 @@ func listOptions(p gen.GetItemsParams) (files.ListOptions, error) {
 	}
 	if p.Sort != nil {
 		if !p.Sort.Valid() {
-			return o, apperr.Newf(apperr.InvalidRequest, "sort must be name, size, mod_time, or kind, got %q", *p.Sort)
+			return o, apperr.Newf(apperr.InvalidRequest, "sort must be name, size, mod_time, added_time, or kind, got %q", *p.Sort)
 		}
 		o.Sort = files.SortKey(*p.Sort)
 	}
@@ -84,6 +97,12 @@ func listOptions(p gen.GetItemsParams) (files.ListOptions, error) {
 	if p.Cursor != nil {
 		o.Cursor = *p.Cursor
 	}
+	if p.Locate != nil {
+		if strings.Contains(*p.Locate, "/") {
+			return o, apperr.Newf(apperr.InvalidRequest, "locate is the name of an item in the folder, not a path: %q", *p.Locate)
+		}
+		o.Locate = *p.Locate
+	}
 	return o, nil
 }
 
@@ -95,11 +114,12 @@ func fileItem(it files.Item) gen.FileItem {
 		p = "/"
 	}
 	fi := gen.FileItem{
-		Path:    p,
-		Name:    it.Name,
-		Kind:    gen.ItemKind(it.Kind),
-		Size:    it.Size,
-		ModTime: it.ModTime.UTC(),
+		Path:      p,
+		Name:      it.Name,
+		Kind:      gen.ItemKind(it.Kind),
+		Size:      it.Size,
+		ModTime:   it.ModTime.UTC(),
+		AddedTime: it.AddedTime.UTC(),
 	}
 	if it.MIME != "" {
 		fi.Mime = &it.MIME
@@ -161,4 +181,8 @@ func (noFiles) PlanArchive(context.Context, string, []string) (files.ArchivePlan
 
 func (noFiles) WriteArchive(context.Context, files.ArchivePlan, io.Writer) error {
 	return errNoFiles
+}
+
+func (noFiles) Usage(context.Context, string, string) (files.Usage, error) {
+	return files.Usage{}, errNoFiles
 }

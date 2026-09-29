@@ -122,6 +122,7 @@ func TestNoOperationLeavesTheNamespace(t *testing.T) {
 	every := func(p, target string, anyStatus bool) []request {
 		return []request{
 			{"GET", "/api/v1/files/items?path=" + q(p), "", anyStatus},
+			{"GET", "/api/v1/files/usage?path=" + q(p), "", anyStatus},
 			{"GET", "/api/v1/files/content?path=" + q(p), "", anyStatus},
 			{"PUT", "/api/v1/files/content?path=" + q(p) + "&on_conflict=overwrite", "EVIL", anyStatus},
 			{"POST", "/api/v1/files/folders", `{"path":` + jsonString(p) + `,"parents":true}`, anyStatus},

@@ -217,6 +217,56 @@ describe('startUpload and the shared manager', () => {
   });
 });
 
+describe('the batch of startUpload (S02.4-T05)', () => {
+  it('names what arrived, once every file is in place', async () => {
+    const base = `/b${++unique}`;
+    const one = await startUpload([{ file: bytes(3, 'one.txt'), relativePath: 'one.txt' }], base);
+    expect(one?.folders).toBe(0);
+    await expect(one?.done).resolves.toEqual([`${base}/one.txt`]);
+
+    const tree = await startUpload(
+      [
+        { file: bytes(3, 'a.txt'), relativePath: 'trip/a.txt' },
+        { file: bytes(4, 'b.txt'), relativePath: 'trip/day 2/b.txt' }
+      ],
+      base
+    );
+    expect(tree?.folders).toBe(2);
+    await expect(tree?.done).resolves.toEqual([`${base}/trip`]);
+
+    const two = await startUpload(
+      [
+        { file: bytes(1, 'x.txt'), relativePath: 'x.txt' },
+        { file: bytes(1, 'y.txt'), relativePath: 'y.txt' }
+      ],
+      base
+    );
+    expect(await two?.done).toHaveLength(2);
+
+    const empty = await startUpload([], base, ['nothing-inside']);
+    await expect(empty?.done).resolves.toEqual([`${base}/nothing-inside`]);
+  });
+
+  it('names the final name of a renamed upload', async () => {
+    const base = `/b${++unique}`;
+    const batch = await startUpload(
+      [{ file: bytes(2, 'taken.txt'), relativePath: 'taken.txt' }],
+      base,
+      [],
+      'rename'
+    );
+    await expect(batch?.done).resolves.toEqual([`${base}/taken (1).txt`]);
+  });
+
+  it('gives no batch when its folders cannot be created', async () => {
+    const batch = await startUpload(
+      [{ file: bytes(1, 'x'), relativePath: 'fail-here/x' }],
+      `/b${++unique}`
+    );
+    expect(batch).toBeUndefined();
+  });
+});
+
 describe('UploadList', () => {
   it('shows each upload with its state and the actions that fit it', async () => {
     const up = new Uploader(fakeChunkBytes);

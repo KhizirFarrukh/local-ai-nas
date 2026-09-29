@@ -1,6 +1,6 @@
 # RULES: Permanent Operating Rules for AI Agents on local-ai-nas
 
-**RULES.md version:** 1.7.1
+**RULES.md version:** 1.8.0
 **Created:** 2026-09-23 (session S001)
 **Source:** `operating_rules` in `code-agent-docs/bootstrap/initial-prompt.json`, transcribed in full with the original rule IDs.
 
@@ -243,6 +243,24 @@ ADR files are named `ADR-<NNNN>-<short-kebab-title>.md` (e.g. `ADR-0001-backend-
 
 - Run a documentation audit using `code-agent-docs/templates/audit-checklist.md` as part of every stage's final review substage, and whenever the user asks. Audits are numbered sequentially (A001, A002, ...) and reported in `code-agent-docs/audits/`. Critical findings must be fixed or escalated to the user before the stage can be marked Done.
 
+## R13: Releases
+
+**Rule (added in RULES.md 1.8.0, pre-approved in P006):** after the MVP, features are developed and shipped as numbered releases, a set of features at a time (plan section 11b; the same rules are plan 11b.1).
+
+**Rules:**
+
+- Release IDs R01, R02, … are permanent, like FR IDs. A release has: a theme, a goal, a fixed feature set (gap IDs and FR IDs), prerequisites, exit criteria, and a suggested version label.
+- The MVP is milestone M3 (S01–S13 plus mvp_additions) and ships as the first stable release. Suggested label v1.0.0; the user decides (S13.7).
+- Feature releases bump the MINOR version (v1.1.0, v1.2.0, …). Fix-only releases bump PATCH and can ship at any time between feature releases. A release that breaks the data format or the upgrade path bumps MAJOR and needs the user's approval.
+- One feature release is in progress at a time. Security fixes take priority over all feature work.
+- Just-in-time conversion: when a release is next, its features become one stage (or several), with substages written into plan.md, inserted before the AI stage as I8 requires, and the AI stage is renumbered (record it in the 10.18 table). Then the stage document is written and approved before any code (R3).
+- Feature freeze: once a release's stage document is approved, adding a feature to it needs the user's approval. Otherwise the feature goes to a later release.
+- Every release ends with its stage's testing and review substage, plus: an upgrade test from the previous release with real migrated data, a security review of every new surface (threat model updated), release notes and a changelog, updated user and admin guides, the R12 documentation audit, a tagged release, and the user's sign-off.
+- Every release keeps the system upgradeable from the previous release (NFR-017) and keeps the NAS fully working with AI disabled (I7).
+- Features that use the network (imports from other clouds, off-site backup, ACME certificates, DDNS, email, push, tunnels) are off by default and switched on explicitly by the user (I6).
+- Reordering releases, splitting them, or moving a feature between releases needs the user's approval and a plan revision (R4).
+- Features in a release that depend on an AI result (e.g. smart albums by person) work without AI, and gain the AI filter when S15 lands.
+
 ---
 
 ## Documentation map
@@ -263,6 +281,7 @@ All agent documentation lives in `code-agent-docs/`:
 | `code-agent-docs/templates/` | `stage-template.md`, `session-log-template.md`, `adr-template.md`, `audit-checklist.md` (the reusable documentation-audit checklist for R12; update it whenever new document types or rules are added). |
 | `code-agent-docs/bootstrap/` | The original bootstrap prompt, archived verbatim (`initial-prompt.json`). It stays there. It is effectively prompt P001. |
 | `code-agent-docs/prompts/` | Later user prompts (change requests, instructions delivered as files), archived verbatim as `P<NNN>-<short-kebab-title>.<ext>`, e.g. `P002-staged-development-roadmap.json`. The session log records the USER entry as a pointer to the archived file. The user's own originals live in the repository-root `prompts/` folder (user-managed, outside `code-agent-docs/`). |
+| `code-agent-docs/research/` | Research records for planning, numbered sequentially: `R<NNN>-<YYYY-MM-DD>-<slug>.md` (e.g. `R001-2026-09-28-cloud-storage-feature-research.md`, the competitor research behind the release roadmap). Dated snapshots: the plan links to them instead of copying them. Added in 1.8.0 (P006). |
 | `code-agent-docs/audits/` | Documentation audit reports, numbered sequentially: `A<NNN>-<YYYY-MM-DD>-<slug>.md` (e.g. `A001-2026-09-24-documentation-audit.md`), plus audit side documents such as README change proposals (`A<NNN>-readme-proposal.md`). See R12. |
 
 Folders that were created empty got a `.gitkeep` file so git tracks them. These files stay in place even after a folder gains content (R9: nothing is deleted from `code-agent-docs/`).
@@ -293,6 +312,8 @@ Filled in as the user states lasting preferences (R10). Commit behavior is recor
 - **Stacked branches** (S005, 2026-09-24, decision D-03 of audit A001): if an earlier branch is not merged yet, a new branch may be created on top of it (and the user is told). With the merge rule above this should be rare. User's answer: "Accept all (Recommended)".
 - **Testing approach** (S006, 2026-09-25): the user's instruction: "Make sure to add unit tests and integration tests and system/ application tests a part of development process but focus on coding first, write code that is testable, but write tests in the end (of the stage)". Code comes first and is written to be testable. Each stage's final testing substage writes its unit, integration, and system/application tests (R6). Coverage is reported (since S007: locally, and by CI at the stage end, see the next bullet) but does not block during a stage; 80% is an exit criterion of the final testing substage ("Report now, enforce at stage end (Recommended)"). A bug is recorded and fixed at once, and its regression test is written with the stage's tests ("Fix now, test at stage end (Recommended)").
 - **CI only at stage completion** (S007, 2026-09-28): the user's instruction: "dont run CI on every commit/push/checkpoint but CI should only run at the completion of a stage". During a stage, the agent runs the checks locally before each commit and merge, and CI is not triggered by commits, pushes, or checkpoints. CI runs once when a stage is complete, before the user's sign-off. **Mechanism** (the user's answer in S007 E013, "Stage tag + manual (Recommended)"): `.github/workflows/ci.yml` runs only when a stage-completion tag `S<NN>-done` is pushed (after the stage's final testing substage, before sign-off) or when "Run workflow" is used. Branch pushes, merges, and pull requests (including Dependabot's) start nothing, so `[skip ci]` is no longer needed. The tag is created by the agent on `develop` at the stage end.
+- **AI co-author line kept in commits** (S007, 2026-09-29): the agent's commit messages end with its `Co-Authored-By` line, so GitHub shows the agent as co-author, **for transparency**. The user first asked to remove it ("i dont want your name here"), then decided to keep it: "hey you know what, its fine, keep it there, for transparency purposes". Nothing in the history is rewritten.
+- **Keep working; stop only when told or at a stage's end** (S007, 2026-09-29): the agent does not stop at checkpoints. It checkpoints as R8 says (log, CURRENT_STATE, consistent docs, commits) and carries on with the next step. It stops only when the user says so, or when the current stage is complete (its sign-off asked for). Stopping always means: save all state (log, CURRENT_STATE), commit, and push. Questions that only the user can answer are still asked (R10, R11) and, where possible, work continues on what they do not block. The user's words: "keep working, dont stop at checkpoint. stop only when i say or current stage completes and stopping rule is saving, committing and pushing the changes."
 
 ---
 
@@ -324,3 +345,8 @@ Filled in as the user states lasting preferences (R10). Commit behavior is recor
 | 1.7.0 | 2026-09-28 | (c) plan.md: the "Stage ID changes" table (section 10.18) added, and I10 added to the plan's "Project invariants" (2a). | Pre-approved in `code-agent-docs/prompts/P005-feature-additions.json` (`pre_approved_documentation_changes`); session S007 |
 | 1.7.0 | 2026-09-28 | (d) `templates/audit-checklist.md` group K: historical documents are checked against the "Stage ID changes" table instead of their old IDs being flagged as errors. | Pre-approved in `code-agent-docs/prompts/P005-feature-additions.json` (`pre_approved_documentation_changes`); session S007 |
 | 1.7.1 | 2026-09-28 | User Preferences: the CI trigger mechanism (a stage-completion tag `S<NN>-done`, or a manual run). | The user's answer in S007 (E013): "Stage tag + manual (Recommended)", recorded per R10 |
+| 1.7.2 | 2026-09-29 | User Preferences: the agent's co-author line stays in commit messages, for transparency. | The user's decision (S007 E038, E039), recorded per R10 |
+| 1.8.0 | 2026-09-29 | (a) Added rule **R13 (Releases)** with the content of P006 `release_process_rules`. | Pre-approved in `code-agent-docs/prompts/P006-competitor-research-release-roadmap.json` (`pre_approved_documentation_changes`); session S007 |
+| 1.8.0 | 2026-09-29 | (b) Added the folder `code-agent-docs/research/` to the documentation map, with research record R001. | Pre-approved in P006; session S007 |
+| 1.8.0 | 2026-09-29 | (c) `templates/audit-checklist.md` group D: every gap in a research file has exactly one destination; every release feature has an FR ID; every FR of a release names its release. | Pre-approved in P006; session S007 |
+| 1.8.0 | 2026-09-29 | (d) User Preferences: keep working without stopping at checkpoints; stop only when the user says so or a stage completes, and stopping means save, commit, and push. | The user's lasting instruction (S007 E041), recorded per R10 |

@@ -150,6 +150,7 @@ func TestAttackOversizedInputs(t *testing.T) {
 	for _, p := range []string{"/" + long, "/docs/" + long, deep, longPath} {
 		for _, req := range [][2]string{
 			{"GET", "/api/v1/files/items?path=" + url.QueryEscape(p)},
+			{"GET", "/api/v1/files/usage?path=" + url.QueryEscape(p)},
 			{"GET", "/api/v1/files/content?path=" + url.QueryEscape(p)},
 			{"DELETE", "/api/v1/files/items?path=" + url.QueryEscape(p)},
 			{"PUT", "/api/v1/files/content?path=" + url.QueryEscape(p)},

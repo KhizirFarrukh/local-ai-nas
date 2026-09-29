@@ -39,7 +39,7 @@ Versions are the **latest stable at verification**. Only **direct** dependencies
 | github.com/pquerna/otp | v1.5.0 | Apache-2.0 | TOTP 2FA, **only if S03.7 is approved** | S03.7 | [ADR-0010](decisions/ADR-0010-security-building-blocks.md) | Verified 2026-09-24. **Low activity** (last push 2025-08); re-check at S03.7 |
 | github.com/blevesearch/bleve/v2 | v2.6.1 | Apache-2.0 | Embedded full-text search | S06+ | [ADR-0014](decisions/ADR-0014-search-engine-bleve.md) | Verified 2026-09-24 (proxy, GitHub, query.go capabilities) |
 | github.com/fsnotify/fsnotify | v1.10.1 | BSD-3-Clause | File system events | S05.7, S09.4 | [ADR-0016](decisions/ADR-0016-file-watching.md) | Verified 2026-09-24 |
-| golang.org/x/sys | v0.48.0 | BSD-3-Clause | Free-space query (`unix.Statfs`, `windows.GetDiskFreeSpaceEx`) and, from S01.2-T05, volume/device identity (same-filesystem check) | S01.2 | [ADR-0001](decisions/ADR-0001-backend-language-framework.md) | Verified 2026-09-24 (proxy.golang.org, deps.dev). **In `go.mod` as a direct requirement** and linked (S01.2-T04); it was already present indirectly (via modernc and the tools) |
+| golang.org/x/sys | v0.48.0 | BSD-3-Clause | Free-space query (`unix.Statfs`, `windows.GetDiskFreeSpaceEx`) and, from S01.2-T05, volume/device identity (same-filesystem check); from S02.3-T05, the creation time of items on Linux (`unix.Statx` with `STATX_BTIME`; Windows reads it from the standard library's file information) | S01.2 | [ADR-0001](decisions/ADR-0001-backend-language-framework.md) | Verified 2026-09-24 (proxy.golang.org, deps.dev). **In `go.mod` as a direct requirement** and linked (S01.2-T04); it was already present indirectly (via modernc and the tools) |
 | golang.org/x/text (unicode/norm) | v0.42.0 | BSD-3-Clause | NFC normalization of file names in the path resolver | S01.6 | [ADR-0001](decisions/ADR-0001-backend-language-framework.md) (stage-level choice; not named in the ADR text) | Verified 2026-09-24 (proxy.golang.org, deps.dev) in A001. **Decided in S01.6-T01 (S005): normalize to NFC** (not reject). **In `go.mod` as a direct requirement** and linked |
 | golang.org/x/net (webdav) | v0.59.0 | BSD-3-Clause | WebDAV server with a custom FileSystem | S09 | [ADR-0015](decisions/ADR-0015-network-shares-webdav.md) | Verified 2026-09-24 (FileSystem interface in webdav/file.go) |
 
@@ -251,3 +251,18 @@ These are listed so the register covers every technology named in the ADRs (audi
 | Python 3.14 + uv + AI worker packages (section 5) | **Optional AI** (S15) | S15 | AI worker install (S15.1) | AI worker install (S15.1) | AI worker install (S15.1) | `ai` Compose profile | Decided in S15.1 |
 
 **From-source installs only** (not needed with release binaries): Go go1.27.1 (S01+), Node.js LTS + pnpm (S02+, to build the web UI). See sections 1 and 3.
+
+## 13. Candidates for post-MVP releases (P006; not dependencies yet)
+
+**Not dependencies.** Tools the release roadmap (plan section 11b) would add, all as separate programs or containers. They are listed so their licenses are known early; each is verified again when its release is planned in detail, and it moves into sections 1–12 only when a release adopts it (R6). Preliminary check on 2026-09-29 (research R001, verification section).
+
+| Name | Candidate for | License | Purpose | Verification status |
+|---|---|---|---|---|
+| rclone | R01 (imports from other clouds), R04 (off-site backup) | MIT | Transfers to and from cloud remotes the user configures | Candidate (R01). License verified 2026-09-29 (GitHub API, `rclone/rclone`) |
+| ClamAV | R05 (malware scanning), R09 (required for public upload links) | GPL-2.0 (separate program) | Scans uploads, quarantines instead of deleting | Candidate (R05). License verified 2026-09-29 (GitHub API, `Cisco-Talos/clamav`); the virus definitions' terms are **Unverified** |
+| Network UPS Tools | R04 (UPS support) | GPL-2.0-or-later for most files (some scripts GPL-3.0-or-later or Perl's terms) | Battery status, power-loss alerts, clean shutdown | Candidate (R04). Verified 2026-09-29 (`COPYING` in `networkupstools/nut`) |
+| wireguard-tools | R06 (built-in VPN), G-072 relay | GPL-2.0 (separate program; the kernel module is part of Linux) | Private remote access that reaches only the NAS | Candidate (R06). License verified 2026-09-29 (GitHub API, `WireGuard/wireguard-tools`) |
+| LibreOffice | R11 (Office previews by conversion to PDF) | ⚠ MPL-2.0 (`COPYING.MPL`); GitHub's detection reports GPL-3.0 from `COPYING` | Converts Office documents for previews | Candidate (R11). **Partly verified**: which terms cover the conversion parts is checked at R11 |
+| Collabora Online | R11 (optional co-editing, Q64) | MPL-2.0 (separate container) | Online editing over WOPI | Candidate (R11). Verified 2026-09-29 (`COPYING` in `CollaboraOnline/online`) |
+| ONLYOFFICE Docs | R11 (optional co-editing, Q64) | ⚠ AGPL-3.0 (separate container; compatible with the project's AGPL-3.0-or-later, Q22) | Online editing over WOPI | Candidate (R11). License verified 2026-09-29 (GitHub API, `ONLYOFFICE/DocumentServer`); trademark and logo terms **Unverified** |
+| OpenStreetMap data (map tiles or a tile file) | R02 (map view, Q59) | ⚠ ODbL 1.0 (data after September 2012): attribution; share-alike for derived databases the project distributes | The map of photo places | Candidate (R02). Verified 2026-09-29 (<https://osmfoundation.org/wiki/Licence>); decided in the map ADR |

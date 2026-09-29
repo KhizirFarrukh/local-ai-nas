@@ -17,6 +17,7 @@ const file = (name: string, size = 10, mime?: string): FileItem => ({
   kind: 'file',
   size,
   mod_time: '2026-09-28T00:00:00Z',
+  added_time: '2026-09-28T00:00:00Z',
   mime
 });
 

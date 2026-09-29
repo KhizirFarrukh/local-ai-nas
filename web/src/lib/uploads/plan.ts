@@ -52,3 +52,8 @@ function depth(path: string): number {
 export function pickedFromInput(files: File[]): PickedFile[] {
   return files.map((file) => ({ file, relativePath: file.webkitRelativePath || file.name }));
 }
+
+/** The item right below base that path is in: "/a/b/c" in "/a" is "/a/b". */
+export function topItem(base: string, path: string): string {
+  return join(segments(path).slice(0, segments(base).length + 1));
+}

@@ -78,7 +78,10 @@ func TestGetItemsFile(t *testing.T) {
 	}
 	// The media type of .txt comes from the OS's table (it varies), so only
 	// its presence is checked; the ETag format is fixed.
-	want := gen.FileItem{Path: "/docs/a.txt", Name: "a.txt", Kind: "file", Size: 5, ModTime: resp.Item.ModTime, Mime: resp.Item.Mime, Etag: resp.Item.Etag}
+	want := gen.FileItem{Path: "/docs/a.txt", Name: "a.txt", Kind: "file", Size: 5, ModTime: resp.Item.ModTime, AddedTime: resp.Item.AddedTime, Mime: resp.Item.Mime, Etag: resp.Item.Etag}
+	if resp.Item.AddedTime.IsZero() || resp.Item.AddedTime.Location().String() != "UTC" {
+		t.Errorf("added_time = %v, want a UTC time", resp.Item.AddedTime)
+	}
 	if diff := cmp.Diff(want, resp.Item); diff != "" || resp.Items != nil || resp.NextCursor != nil {
 		t.Errorf("file details (-want +got):\n%s items=%v next=%v", diff, resp.Items, resp.NextCursor)
 	}
@@ -183,6 +186,7 @@ func TestGetItemsInvalidInputNeverReachesService(t *testing.T) {
 		"path=/&sort=color",      // not in the enumeration
 		"path=/&order=up",        //
 		"path=/&sort=NAME",       // enumerations are case-sensitive
+		"path=/&locate=a/b",      // a name, not a path
 	} {
 		rec := httptest.NewRecorder()
 		h.ServeHTTP(rec, httptest.NewRequest(http.MethodGet, "/api/v1/files/items?"+q, nil))
@@ -211,4 +215,9 @@ func (r *recordingFiles) PlanArchive(context.Context, string, []string) (files.A
 func (r *recordingFiles) WriteArchive(context.Context, files.ArchivePlan, io.Writer) error {
 	r.calls++
 	return apperr.New(apperr.NotFound, "fake")
+}
+
+func (r *recordingFiles) Usage(context.Context, string, string) (files.Usage, error) {
+	r.calls++
+	return files.Usage{}, apperr.New(apperr.NotFound, "fake")
 }

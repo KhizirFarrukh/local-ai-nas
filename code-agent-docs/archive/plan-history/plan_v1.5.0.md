@@ -2,11 +2,11 @@
 
 | Field | Value |
 |---|---|
-| **Version** | 1.6.0 |
+| **Version** | 1.5.0 |
 | **Status** | **Approved baseline** (approved by the user in S005, 2026-09-24); 1.1.0 adds the user's setup-script requirement (S005 E015) |
-| **Last updated** | 2026-09-29 (session S007) |
+| **Last updated** | 2026-09-28 (session S007) |
 | **Source of vision** | `README.md` (repository root), the user's staged roadmap (`code-agent-docs/prompts/P002-staged-development-roadmap.json`), the user's technology stack (`code-agent-docs/prompts/P003-technology-stack.json`), and the user's feature additions (`code-agent-docs/prompts/P005-feature-additions.json`, with the user's chat decisions in S007) |
-| **Previous version** | 1.5.0, archived at `code-agent-docs/archive/plan-history/plan_v1.5.0.md` (0.1.0–1.4.2 also archived there) |
+| **Previous version** | 1.4.2, archived at `code-agent-docs/archive/plan-history/plan_v1.4.2.md` (0.1.0–1.4.1 also archived there) |
 | **Stage IDs** | Changed in 1.4.0 (P005): the packaging stage is now **S13** (was S11) and AI is **S15** (was S12). Older documents use the old IDs; the table in **10.18** translates them. |
 
 > **This is a living document.** It changes as the user gives feedback. Every change follows `code-agent-docs/RULES.md` **R4**: the old version is archived, the version is bumped, and a revision entry is added. While the plan is a pre-1.0 draft, restructurings bump the MINOR version. **When the user approves this plan as the baseline, it becomes version 1.0.0.**
@@ -31,8 +31,6 @@
 10. Stage roadmap
 11. MVP definition
 11a. Not scheduled / future candidates
-11b. Release roadmap after the MVP (new in 1.6.0)
-11c. Public release specification (R09) (new in 1.6.0)
 12. Testing strategy
 13. Risks and mitigations
 14. Revision history
@@ -74,8 +72,6 @@ The system grows into a **multi-user** NAS: each user has private files and phot
 | S14 | Multi-drive storage pools: RAID 0 and RAID 1 (complex RAID deferred, 11a) | User-defined (P005; scope and position set by the user in S007) |
 | S15 | AI features (always last; was S12) | User-defined |
 
-**Beyond the MVP (1.6.0, P006).** The product goal is to make most commercial cloud storage and photo services unnecessary for the people who use local-ai-nas (G13): first on the home network with the MVP, then from anywhere through private remote access, and finally through a hardened public release. Features that competitors have and the plan lacked are planned as **releases R01–R12** after the MVP, one fixed set of features at a time (section 11b; research in `research/R001-2026-09-28-cloud-storage-feature-research.md`). The public internet release (R09) ships only when its security and UI/UX gates pass (section 11c).
-
 ---
 
 ## 2. Goals and non-goals
@@ -93,14 +89,13 @@ The system grows into a **multi-user** NAS: each user has private files and phot
 - **G10:** Privacy by design at every stage: no telemetry, no cloud, no runtime network calls unless the user enables a feature that needs one.
 - **G11:** _New in 1.4.0 (P005):_ duplicate and look-alike photos, bursts, and duplicate files are found in each user's own library and resolved safely (preview, confirmation, trash), and the library can be shrunk on request with its metadata intact (S11, S12).
 - **G12:** _New in 1.4.0 (P005, S007):_ several drives combined into RAID 0 or RAID 1 pools from the GUI, with honest capacity and fault-tolerance figures (S14). Parity layouts and combined drives are planned for later (11a).
-- **G13:** _New in 1.6.0 (P006, the user's message):_ local-ai-nas replaces most commercial cloud storage and photo services for its users: first on the home network (MVP), then from anywhere through private remote access (R06), and finally through a hardened public release (R09).
 
 ### Non-goals (at least for now)
-- **NG1:** Cloud sync, cloud backup, or any hosted/SaaS component. _Change proposed in 1.6.0 (P006), pending Q55:_ "No hosted service operated by the project and no dependency on one; connections to third-party or user-owned remote services only as explicit opt-in features (I6)." R01 imports and R04 off-site backup depend on it.
-- **NG2:** Native mobile apps and automatic phone backup. Listed as a not-scheduled candidate (11a). _Change proposed in 1.6.0 (P006), pending Q56:_ native apps are planned in R07; the MVP bridges phone backup through WebDAV auto-upload apps (FR-219, FR-220).
-- **NG3:** Photo editing, and writing metadata back into original media files (Q19). _Change proposed in 1.6.0 (P006), pending Q57:_ "no **destructive** editing": R10 adds non-destructive editing that never changes originals.
+- **NG1:** Cloud sync, cloud backup, or any hosted/SaaS component.
+- **NG2:** Native mobile apps and automatic phone backup. Listed as a not-scheduled candidate (11a).
+- **NG3:** Photo editing, and writing metadata back into original media files (Q19).
 - **NG4:** _Changed in 0.4.0:_ video transcoding **for streaming quality levels** is now in scope (S04.8, ADR-0020, the user's request in S004). _Changed in 1.4.0 (P005):_ the app never re-encodes or converts original files **on its own**. The only exception is storage optimization (S12), which the user starts or enables explicitly: it replaces originals only after a preview and a confirmation, and keeps them for an undo window (I10).
-- **NG5:** _Changed in 1.6.0 (P006, the user's message):_ remote access and public share links are no longer non-goals. They are planned after the MVP as **R06** (private remote access, nothing exposed publicly) and **R09** (the public internet release, gated by strict security and UI/UX requirements, 11c). Until then the NAS stays LAN-only. The user: "my project of nas should make every other (or atleast most of them) cloud storage services useless except that my project is currently limited to local hosting, add a future release of public release too but that is very crucial too due to severe UI/UX reasons and also severe security reasons"
+- **NG5:** Remote access from outside the LAN and public share links. Both are not-scheduled candidates (11a).
 - **NG6:** _Withdrawn in 0.2.0._ The v0.1.0 non-goal "no app-provided SMB/WebDAV" is reversed by stage S09.
 - **NG7:** Running AI at search time, and any cloud AI API.
 - **NG8:** _Changed in 1.4.0 (P005, the user's decision in S007):_ drive pools are in scope as **RAID 0 and RAID 1** (S14), built by orchestrating mature Linux tools (never RAID written in the app). Parity layouts, combined (virtual) drives, and nesting are planned for later (11a). Snapshots and general volume management remain out of scope.
@@ -228,8 +223,6 @@ Priorities: **Must** (required for its stage to be Done), **Should** (important;
 | FR-146 | **Auto quality** adapts to network throughput (adaptive bitrate). | Must | New in 0.4.0 (the user's choice "Manual + Auto"). |
 | FR-147 | Quality-selectable playback in **both** the photos lightbox and the files-area video preview. | Must | New in 0.4.0 (the user's choice "Photos + files previews"). |
 | FR-148 | Hardware-accelerated encoding when available, with CPU fallback. Admin-configurable transcoding limits (concurrent sessions, maximum level). | Should | New in 0.4.0 (ADR-0020). |
-| FR-217 | **[Planner addition] P006** **Live Photos and motion photos are paired at ingest.** An Apple Live Photo still (HEIC or JPEG) and its MOV are paired by the content identifier both files carry (MakerNotes `ContentIdentifier`; QuickTime `content.identifier`), uploaded together, separately, or in either order; pairing waits a short, configurable window for the other half. Google and Samsung motion photos (a still with an embedded video: XMP `Camera:MotionPhoto` and `Container:Directory`, or the Samsung trailer) are detected; the clip is played through a byte range of the original or extracted into internal data (I2). The original file is never modified. | Must (pending Q54) | New in 1.6.0 (G-001). S04.1, S04.2, S05.1, S05.3. |
-| FR-218 | **[Planner addition] P006** **A pair is one library item.** One timeline tile with a "Live" badge; the viewer plays the motion part on press or hover, with "play" and "still only". Every operation treats the pair as a unit: albums, favorites, sharing, transfer (S04.6), trash and restore (S08.1), duplicates (S11: the still decides), optimization (S12: the motion part is kept unchanged by default), download (both files, or the still only), and export. The still's sidecar records the pair (motion file name, content hash, source type); the motion file of an Apple pair has no separate entry. | Must (pending Q54) | New in 1.6.0 (G-001). S04.6, S04.7, S08.1, S11.2, S12.3. |
 
 #### Sidecar metadata (S05)
 
@@ -320,9 +313,6 @@ Priorities: **Must** (required for its stage to be Done), **Should** (important;
 | FR-133 | An update mechanism with automatic data and schema migrations and a backup before every update. | Should | New (S13.3). |
 | FR-134 | Install guide, admin guide, user guide, and published hardware requirements. | Must | New (S13.4). |
 | FR-135 | A release process: versioning, changelog, tagged releases. | Should | New (S13.7). |
-| FR-219 | **[Planner addition] P006** **Camera-upload endpoint for phone apps (auto-backup bridge).** A per-user WebDAV endpoint that accepts media only and feeds the normal photo ingest (type check, content hash, duplicate policy, sidecar, thumbnails, index). A client sees only what it uploaded there, enough for apps that check whether a file exists, so the library stays read-only over network shares (Q32). Per-device, upload-only app passwords (scoped API tokens, FR-087), revocable one by one. | Must (pending Q54) | New in 1.6.0 (G-002). S03.3, S09.2, S09.3. |
-| FR-220 | **[Planner addition] P006** **Phone setup and fallback upload.** A mobile-friendly multi-select upload page, per-device setup with a QR code for the server address, and a guide to Android and iOS apps that upload to WebDAV automatically, naming only apps tested at S09 (verified in P006: PhotoSync, FolderSync; research R001). | Should (pending Q54) | New in 1.6.0 (G-002). S09.5, S09.6. |
-| FR-221 | **[Planner addition] P006** **Alert delivery.** Opt-in channels (I6): email through a user-configured SMTP server (TLS or STARTTLS), a generic webhook (JSON, HMAC-signed), and ntfy (self-hostable). Events: disk health failure or pre-failure, low free space, integrity-scan errors, backup failed or overdue, repeated failed logins or lockouts, a job failing repeatedly, and (from S14) a degraded pool. A "send test alert" button, deduplication and rate limits, and a record of delivered and failed alerts. Channel secrets are never logged and never stored in plaintext in backups (S08.3). In the MVP alerts go to the admin; per-user notifications come in R03. | Must (pending Q54) | New in 1.6.0 (G-003). S03.1, S10.3, S10.5, S10.6. |
 
 #### Duplicates, look-alike stacks, and bursts (S11) — new in 1.4.0 (P005)
 
@@ -489,180 +479,6 @@ The user in S007 (E008): "if working with raids is a complex problem, just do ra
 | NFR-038 | **No real disks in tests**: pool tests use loop devices or virtual disks in a VM; a documented manual test on real hardware precedes release. | Must | New in 1.4.0 (P005). S14.10. |
 | NFR-039 | **Metadata preservation in optimization**: across JPEG, HEIC, PNG, and video formats, every EXIF, XMP, and IPTC field of the fixture set survives optimization, and orientation is applied exactly once. | Must | New in 1.4.0 (P005). S12.8. |
 | NFR-032 | **Dependency record for deployment**: every dependency needed to build or deploy the NAS is recorded in `dependencies.md` in the same commit that introduces it (R6), and every **runtime prerequisite** also gets a per-platform entry (minimum version and install method for Linux x86-64, Raspberry Pi, Windows 11, and the Docker image) in section 12. The setup scripts (FR-149) are checked against this record. | Must | New in 1.1.0 (user, S005 E015). All stages from S01. |
-| NFR-040 | **Public release gates** _(1.6.0, P006, [User requirement] emphasized)_: security and UI/UX are release-blocking for R09. R09 ships only when every gate in 11c passes; a gate that cannot be met delays the release. | Must (R09) | New in 1.6.0. |
-| NFR-041 | **Performance over the internet** _(1.6.0, P006)_: public share and upload pages meet performance budgets on a mid-range phone over a throttled 4G profile (e.g. first view under 2.5 s; the R09 stage document sets the numbers), with progressive image loading. | Must (R09) | New in 1.6.0. |
-| NFR-042 | **Accessibility for the public** _(1.6.0, P006)_: a WCAG 2.2 AA audit of every public page and the main owner flows, with no open AA failure at release. | Must (R09) | New in 1.6.0. Extends NFR-015. |
-| NFR-043 | **Security testing of the internet-facing surface** _(1.6.0, P006)_: authorization tests on every public route, link-token brute-force, upload-abuse, rate-limit, and header tests, and fuzzing of every unauthenticated endpoint in CI; an independent penetration test with no open critical or high finding. | Must (R09) | New in 1.6.0. |
-
-### 3.3 Post-MVP requirements (new in 1.6.0, P006)
-
-Every feature that competitors have and the plan lacked (research `research/R001-2026-09-28-cloud-storage-feature-research.md`) has one destination: the MVP (section 3.1, FR-217–FR-221; file versioning is FR-122, Q34), one release below, the AI stage (S15.10 extensions), or the excluded list (11a). Every requirement here is a **[Planner addition]** from P006; the user can accept or remove each one. Releases become stages just in time (11b.1); priorities are within the release.
-
-#### R01: Migration and portability (v1.2.0)
-
-| ID | Requirement | Release | Priority | Gap | Seen in | Notes |
-|---|---|---|---|---|---|---|
-| FR-222 | **Google Takeout import.** Import a Google Takeout archive (zip or tgz, multi-part, resumable, very large) into the user's photos area. Merge each photo's Takeout JSON: date taken when EXIF lacks it, GPS, description, favorites, archived state, and albums. Handle '-edited' copies (keep both, stack them), truncated file names, and media without JSON. Show a dry-run report first (I10). | R01 | Should | G-010 | Nextcloud (Google Photos import), Immich (tools) | [Planner addition] P006 |
-| FR-223 | **Apple Photos / iCloud export import.** Import Apple Photos / iCloud exports: iCloud 'Download your data' archives and folder exports, keeping Live Photo pairs (G-001), albums where available, and dates. Verify the current export formats before the stage document. | R01 | Should | G-011 | Immich (planned iCloud import) | [Planner addition] P006 |
-| FR-224 | **Import from other clouds (rclone remotes).** Import from other clouds through rclone remotes the user configures (Google Drive, OneDrive, Dropbox, pCloud, MEGA, Proton Drive, WebDAV, S3, SFTP): one-time or scheduled, into the files or photos area, resumable, deduplicated by hash. rclone runs as a separate program; its license is verified and recorded. Off by default (I6). | R01 | Should | G-012 | Koofr, Nextcloud external storage | [Planner addition] P006 |
-| FR-225 | **USB drive and camera card import.** USB drive and camera card import: detect a connected card or drive (on Linux via the storage helper), import new media into photos with duplicate skipping, optionally eject. Only media is imported into photos (I1). | R01 | Should | G-013 | Synology (USB Copy) | [Planner addition] P006 |
-| FR-226 | **Export all my data and account deletion.** Export all my data: a per-user archive (or a folder on an external drive) with all files, all photos with their sidecars, albums and stacks as JSON, and a manifest; resumable and verifiable. Account deletion by the user with a waiting period, and by the admin, with ownership transfer of shared items (G-048 prerequisite noted). | R01 | Should | G-014 | Ente, Filen, MEGA, Google (Takeout) | [Planner addition] P006 |
-| FR-227 | **XMP sidecar export for other photo tools.** Optional XMP sidecar export alongside the JSON sidecars (or on demand in the export), so tools like digiKam and Lightroom can read tags, ratings, and descriptions. Originals are never written (Q19). | R01 | Should | G-015 | Immich, PhotoPrism (YAML) | [Planner addition] P006 |
-
-#### R02: Everyday essentials (v1.3.0)
-
-| ID | Requirement | Release | Priority | Gap | Seen in | Notes |
-|---|---|---|---|---|---|---|
-| FR-228 | **Files area: stars, color labels, tags, descriptions.** Files area: stars, color labels, tags, and descriptions, stored in the internal database per the Q28 decision (files have no sidecars), searchable, and included in backups and exports. | R02 | Should | G-020 | Google Drive, Icedrive, Seafile, Filen | [Planner addition] P006 |
-| FR-229 | **Recent files and quick access.** Recent files and a quick-access list (recently opened, modified, uploaded), per user, privacy-respecting (never shows unshared items of others). | R02 | Should | G-021 | Google Drive | [Planner addition] P006 |
-| FR-230 | **Saved searches and recent searches.** Saved searches (any query with operators) pinned in the sidebar, and recent searches per user with a clear option. | R02 | Should | G-022 | Google Drive, Seafile (custom views) | [Planner addition] P006 |
-| FR-231 | **Server-side archive create and extract.** Create zip archives on the server and extract zip, tar, tar.gz, and 7z into a chosen folder, as background jobs with limits against archive bombs (size, count, ratio, path traversal). Browse archive contents before extracting. | R02 | Should | G-023 | Synology File Station, Google Drive (archive preview) | [Planner addition] P006 |
-| FR-232 | **Batch rename with patterns.** Batch rename with patterns (sequence numbers, date taken, find and replace, case), with a preview of every new name and undo (I10). | R02 | Should | G-024 | Koofr | [Planner addition] P006 |
-| FR-233 | **Personal storage analyzer and folder sizes.** Personal storage analyzer: folder sizes, largest files, usage by type, trash and versions usage, and space reclaimable from duplicates (links to S11). | R02 | Should | G-025 | Koofr, Google Photos (storage management) | [Planner addition] P006 |
-| FR-234 | **Recently added view.** Recently added view in photos (sorted by upload date). | R02 | Should | G-026 | Immich | [Planner addition] P006 |
-| FR-235 | **Slideshow.** Slideshow for albums, searches, and the timeline: full screen, speed, loop, shuffle, videos included or skipped, keyboard and touch control. | R02 | Should | G-027 | Google Photos, Immich, Synology, Nextcloud, OneDrive | [Planner addition] P006 |
-| FR-236 | **Star ratings.** Star ratings (0–5) for photos, stored in the sidecar, with a 'rating:' search operator. | R02 | Should | G-028 | Immich, Synology | [Planner addition] P006 |
-| FR-237 | **Smart (rule-based) albums.** Smart albums defined by a saved query (e.g. 'place:lahore after:2025 type:video'), updating automatically; with S15 they can use face: and AI tags. | R02 | Should | G-029 | Synology (conditional albums), Immich (planned), Google Photos (auto-updating albums) | [Planner addition] P006 |
-| FR-238 | **Memories without AI (on this day, year recap, trips).** Memories without AI: 'On this day', year in review, and trips (clusters of photos taken away from the user's usual places within a date range, from GPS and dates). Users can hide a memory, a date, or never show certain albums. | R02 | Should | G-030 | Google Photos, iCloud, OneDrive, Immich, Nextcloud | [Planner addition] P006 |
-| FR-239 | **Map view of photos.** Map view: clustered markers, select an area to see its photos, and a search operator for an area. Offline-capable: decide in an ADR between bundled low-detail tiles, a self-hosted tile file (e.g. PMTiles), and an opt-in online tile server (Q59). Map data licenses (e.g. OpenStreetMap ODbL attribution) are recorded. | R02 | Should | G-031 | Google Photos, Immich, Synology, PhotoPrism, Nextcloud | [Planner addition] P006 |
-| FR-240 | **Folder view of photos.** Folder view of the photos area, matching the on-disk layout decided in Q40. | R02 | Should | G-032 | Synology, Immich, PhotoPrism | [Planner addition] P006 |
-| FR-241 | **Grid density, year/month scrubber, calendar view.** Adjustable grid density, a year and month scrubber on the timeline, and a calendar view. | R02 | Should | G-033 | Nextcloud, PhotoPrism, Synology | [Planner addition] P006 |
-| FR-242 | **Batch metadata editing (shift dates, set location).** Batch metadata editing for many photos at once: shift dates by an offset (camera clock wrong), set a date, set a location, add tags; written to sidecars with undo. | R02 | Should | G-034 | PhotoPrism, Synology | [Planner addition] P006 |
-| FR-243 | **Download as compatible format (HEIC to JPEG).** Download in a compatible format: HEIC to JPEG and HEVC video to H.264 on download, with metadata kept; the original is always available too. | R02 | Should | G-035 | iCloud (export), Google Photos | [Planner addition] P006 |
-
-#### R03: Family sharing and collaboration (v1.4.0)
-
-| ID | Requirement | Release | Priority | Gap | Seen in | Notes |
-|---|---|---|---|---|---|---|
-| FR-244 | **Edit (write) sharing and reshare control.** Write access when sharing (upload, rename, delete inside a shared folder or album), with the option to allow or forbid resharing. Changes are attributed to the user who made them (FR-117 promoted). | R03 | Should | G-040 | Google Drive, Dropbox, Nextcloud, Seafile, Immich (read-write albums) | [Planner addition] P006 |
-| FR-245 | **User groups and sharing with groups.** User groups (e.g. 'Family') managed by the admin; share with a group; membership changes update access immediately (I5). | R03 | Should | G-041 | Immich (planned), Tresorit, Nextcloud | [Planner addition] P006 |
-| FR-246 | **Shared family/team folders owned by a group.** Shared folders owned by a group rather than a person, with a group quota. Needs an ADR on group namespaces in files/ and photos/ that keeps I1 and I5. | R03 | Should | G-042 | Google shared drives, Nextcloud Teams, Synology shared space, Sync.com team folders | [Planner addition] P006 |
-| FR-247 | **Partner sharing / shared library.** Partner sharing: automatically share all photos, or photos from a start date, or (after S15) photos of chosen people, with one partner; the partner can show them in their own timeline. Either side can stop it at any time. | R03 | Should | G-043 | Google Photos, iCloud Shared Library, Immich, Amazon Family Vault | [Planner addition] P006 |
-| FR-248 | **Collaborative albums with contributors.** Collaborative albums: contributors add their own photos while keeping ownership; the album owner can remove items from the album (not delete the contributor's photos). | R03 | Should | G-044 | Google Photos, Immich, Synology | [Planner addition] P006 |
-| FR-249 | **Comments and reactions on shared items.** Comments and reactions on shared photos, albums, and files, with mentions, edit and delete of one's own comments, and moderation by the owner. | R03 | Should | G-045 | Google Photos, Google Drive, Nextcloud, Dropbox | [Planner addition] P006 |
-| FR-250 | **Activity feed and item history.** Activity feed: what changed in items shared with me and by me, and a history panel per item (uploads, renames, moves, shares, comments). | R03 | Should | G-046 | Google Drive, Nextcloud, Seafile, Sync.com | [Planner addition] P006 |
-| FR-251 | **Notification center and per-user email notifications.** A persistent notification center plus per-user email and push preferences (using the MVP channels): shared with you, new comment, new photos in a shared album, storage almost full. | R03 | Should | G-047 | Nextcloud, Dropbox, Google | [Planner addition] P006 |
-| FR-252 | **Ownership transfer.** Ownership transfer of files, folders, and albums to another user, and an admin tool to transfer everything when a user leaves. | R03 | Should | G-048 | Google Drive | [Planner addition] P006 |
-| FR-253 | **Decline shares and block a user from sharing with you.** Decline or leave a share, and block a user from sharing with you. | R03 | Should | G-049 | Google Drive (block users, spam) | [Planner addition] P006 |
-
-#### R04: Data safety plus (v1.5.0)
-
-| ID | Requirement | Release | Priority | Gap | Seen in | Notes |
-|---|---|---|---|---|---|---|
-| FR-254 | **Point-in-time restore (rewind) of a folder or account.** Rewind: restore a folder, an album, or a whole user account to how it was at a chosen moment, using versions, trash, and a change journal; preview of what will change; runs as a job; itself undoable (I10). | R04 | Should | G-050 | Dropbox, OneDrive, pCloud, Sync.com | [Planner addition] P006 |
-| FR-255 | **Ransomware / mass-change detection.** Mass-change detection: many modifications, deletions, renames to unusual extensions, or high-entropy rewrites in a short time from one client (WebDAV, SMB, sync client) pause that client's write access, alert the user and admin, and offer a one-click rewind to before the burst. Thresholds are configurable and tested against normal bulk work. | R04 | Should | G-051 | OneDrive, Nextcloud (apps), Synology (immutable snapshots) | [Planner addition] P006 |
-| FR-256 | **Filesystem snapshots with immutable retention.** scheduled filesystem snapshots with immutable retention on Linux, which needs a snapshot-capable filesystem (btrfs or ZFS) through a new ADR that revisits ADR-0028. Users restore through the GUI; admins cannot delete immutable snapshots before their retention ends. | R04 | Could | G-052 | Synology | [Planner addition] P006 |
-| FR-257 | **Off-site encrypted backup to user-owned targets.** Off-site backup to targets the user owns or chooses: another local-ai-nas, an S3-compatible bucket, SFTP, or rclone remotes. Client-side encrypted, deduplicated, incremental, versioned with retention rules (e.g. daily, weekly, monthly), verified, bandwidth-limited, and restorable from a fresh install. The backup engine is chosen by ADR (e.g. restic, Kopia, or built-in). Off by default (I6); needs the NG1 change (Q55). | R04 | Should | G-053 | Synology Hyper Backup, Nextcloud | [Planner addition] P006 |
-| FR-258 | **NAS-to-NAS replication.** NAS-to-NAS replication for a second box at a relative's house, over the R06 VPN or the internet with mutual authentication. | R04 | Should | G-054 | Synology (Snapshot Replication, ShareSync) | [Planner addition] P006 |
-| FR-259 | **UPS integration and graceful shutdown.** UPS support through Network UPS Tools: show battery status, alert on power loss, and shut down cleanly (jobs paused, database checkpointed) before the battery runs out. | R04 | Should | G-055 | Synology, TrueNAS (general NAS practice) | [Planner addition] P006 |
-| FR-260 | **Backup health dashboard and scheduled restore tests.** Backup health page: last success, age, size, and a scheduled automatic test restore of random samples, with alerts when a backup is overdue or a test restore fails. | R04 | Should | G-056 | Synology Hyper Backup (integrity checks) | [Planner addition] P006 |
-| FR-261 | **Encrypted local backup targets.** Encrypted local backup targets (external drives), with the key escrow and recovery process documented. | R04 | Should | G-057 | Synology Hyper Backup | [Planner addition] P006 |
-
-#### R05: Security and privacy hardening (v1.6.0)
-
-| ID | Requirement | Release | Priority | Gap | Seen in | Notes |
-|---|---|---|---|---|---|---|
-| FR-262 | **TOTP 2FA with recovery codes, enforceable.** TOTP two-factor authentication with recovery codes; the admin can require it for admins or for everyone (earlier, in S03.7, if Q33 is 'yes'). | R05 | Should | G-060 | all services | [Planner addition] P006 |
-| FR-263 | **Passkeys and security keys (WebAuthn/FIDO2).** Passkeys and security keys (WebAuthn/FIDO2), usable as a second factor or for passwordless login. | R05 | Should | G-061 | Nextcloud, Koofr, Icedrive | [Planner addition] P006 |
-| FR-264 | **SSO with OIDC; LDAP (Could).** Single sign-on with OpenID Connect (e.g. Authelia, Authentik, Keycloak). LDAP as Could. | R05 | Should | G-062 | Nextcloud, Seafile, Filen (enterprise) | [Planner addition] P006 |
-| FR-265 | **Locked folder / private vault.** Locked folder: photos and files that need fresh authentication (passkey or PIN) to open, and are excluded from the timeline, search, memories, sharing, network shares, previews in notifications, and AI. Optional client-side encryption for the vault with the trade-offs stated clearly (no server-side thumbnails, search, or recovery without the key) (Q62). | R05 | Should | G-063 | Google Photos, OneDrive, Koofr, pCloud Crypto, Icedrive, Sync.com Vault | [Planner addition] P006 |
-| FR-266 | **Encryption at rest of the storage (full disk).** Encryption at rest: full-disk encryption of the storage root or pools on Linux (LUKS through the storage helper), with unlock at boot by passphrase, key file, or TPM, and documented recovery. On Windows, documented BitLocker use. | R05 | Should | G-064 | Nextcloud (server-side encryption), Synology (encrypted volumes) | [Planner addition] P006 |
-| FR-267 | **Malware scanning of uploads.** Malware scanning of uploads with ClamAV as a separate program (opt-in): scan on upload and on schedule, quarantine instead of deleting, alert the owner. Required before public upload links (R09). | R05 | Should | G-065 | Seafile, Nextcloud | [Planner addition] P006 |
-| FR-268 | **Password policy with strength and breached-password checks (offline).** Password policy: minimum strength by an offline estimator, and an optional offline breached-password list downloaded once with consent. No password reuse across the last N changes. | R05 | Should | G-066 | Nextcloud | [Planner addition] P006 |
-| FR-269 | **New-login alerts, suspicious-login heuristics, per-user security page.** New-device login alerts, simple suspicious-login heuristics (new device, unusual time, many failures), and a per-user security page: sessions, devices, app passwords, 2FA status. | R05 | Should | G-067 | Nextcloud, Google | [Planner addition] P006 |
-| FR-270 | **Admin security checklist.** Admin security checklist: HTTPS, 2FA on admins, default settings, backups, update status, exposed services; each with a fix link. It becomes the core of the R09 readiness gate. | R05 | Should | G-068 | Nextcloud (security scan) | [Planner addition] P006 |
-| FR-271 | **Per-IP brute-force protection with trusted-proxy awareness.** Per-IP brute-force protection with progressive delays, plus a trusted-proxy setting so the real client IP is used only when the request comes from a configured proxy. | R05 | Should | G-069 | Nextcloud | [Planner addition] P006 |
-
-#### R06: Private remote access (v1.7.0)
-
-| ID | Requirement | Release | Priority | Gap | Seen in | Notes |
-|---|---|---|---|---|---|---|
-| FR-272 | **Built-in WireGuard VPN for private remote access.** Built-in WireGuard VPN that reaches only the NAS: per-device configurations with QR codes, revocable per device, audit-logged. Implementation (kernel WireGuard through the storage/system helper, or userspace) by ADR. | R06 | Should | G-070 | Synology (VPN Server), general NAS practice | [Planner addition] P006 |
-| FR-273 | **Mesh VPN guidance (Headscale self-hosted; Tailscale opt-in).** Guides for mesh VPNs: self-hosted Headscale, and Tailscale as an opt-in third-party service, with the privacy trade-off stated. | R06 | Should | G-071 | remote access research | [Planner addition] P006 |
-| FR-274 | **CGNAT relay through the user's own VPS.** CGNAT relay: a guided setup that connects the NAS to a small VPS the user rents, by WireGuard, so it works behind carrier-grade NAT without any third party seeing the traffic; includes VPS hardening steps. | R06 | Should | G-072 | remote access research | [Planner addition] P006 |
-| FR-275 | **Dynamic DNS and IPv6.** Dynamic DNS client for common providers (opt-in) and IPv6 support throughout. | R06 | Should | G-073 | Synology, general NAS practice | [Planner addition] P006 |
-| FR-276 | **Trusted TLS certificates via ACME with auto-renewal.** Trusted certificates through ACME (e.g. Let's Encrypt) with HTTP-01 or DNS-01 validation and automatic renewal, including DNS-01 for private hostnames used only over the VPN. Library choice by ADR. | R06 | Should | G-074 | Synology, Nextcloud (deployment guides) | [Planner addition] P006 |
-| FR-277 | **Slow-link performance (WAN-aware thumbnails and transfers).** Slow-link behavior: smaller thumbnail sizes and lower default video levels on slow connections, HTTP/2, compression, and resumable transfers everywhere. | R06 | Should | G-075 | all mobile-first services | [Planner addition] P006 |
-
-#### R07: Mobile apps (v1.8.0)
-
-| ID | Requirement | Release | Priority | Gap | Seen in | Notes |
-|---|---|---|---|---|---|---|
-| FR-278 | **Installable web app (PWA) with share target.** Installable web app (PWA): home-screen install, share target so other apps can send files to the NAS, offline shell. | R07 | Should | G-080 | PhotoPrism | [Planner addition] P006 |
-| FR-279 | **Native Android and iOS apps.** Native Android and iOS apps (framework by ADR, e.g. Flutter, React Native, or fully native; license-checked): browse files and photos, upload, download, share, search, viewer with video streaming. | R07 | Should | G-081 | all services | [Planner addition] P006 |
-| FR-280 | **Background automatic photo and video backup in the app.** Background automatic backup of chosen phone albums: Wi-Fi only and charging-only options, hash check before upload to skip duplicates, reliable background scheduling on both platforms, Live Photos kept as pairs, progress and error reporting. | R07 | Should | G-082 | Google Photos, iCloud, OneDrive, Immich, Ente, Synology, Amazon | [Planner addition] P006 |
-| FR-281 | **Free up space on the phone.** Free up space: delete local copies that are verified as backed up (hash match), with filters and confirmation (I10). | R07 | Should | G-083 | Google Photos, Immich | [Planner addition] P006 |
-| FR-282 | **Offline files and albums on mobile.** Offline files and albums pinned on the phone. | R07 | Should | G-084 | Google Drive, Dropbox, Synology Photos | [Planner addition] P006 |
-| FR-283 | **Document scanner to PDF.** Document scanner: edge detection, multi-page PDF, saved into the files area. | R07 | Should | G-085 | Google Drive, Dropbox, OneDrive, Proton, Tresorit | [Planner addition] P006 |
-| FR-284 | **App lock (biometrics or PIN).** App lock with biometrics or PIN; hide app content in the task switcher. | R07 | Should | G-086 | Google Drive iOS, Google Photos Locked Folder | [Planner addition] P006 |
-| FR-285 | **Widgets and OS share-sheet integration.** Home-screen widgets (e.g. memories) and OS share-sheet integration. | R07 | Should | G-087 | Synology Photos, Google Photos | [Planner addition] P006 |
-| FR-286 | **LAN discovery and automatic LAN/remote address switching.** Find the NAS on the LAN (mDNS), and switch automatically between the LAN address and the remote address (R06). | R07 | Should | G-088 | Immich | [Planner addition] P006 |
-| FR-287 | **Push notifications without a vendor cloud where possible.** Push notifications: UnifiedPush/ntfy where possible; Apple and Google push services only as an opt-in with the privacy trade-off stated (Q56). | R07 | Should | G-089 | all mobile apps | [Planner addition] P006 |
-
-#### R08: Desktop sync and command line (v1.9.0)
-
-| ID | Requirement | Release | Priority | Gap | Seen in | Notes |
-|---|---|---|---|---|---|---|
-| FR-288 | **Desktop sync client (two-way, selective, conflicts, bandwidth).** Desktop sync client for Windows, macOS, and Linux: two-way sync of chosen folders, selective sync, conflict copies instead of silent overwrites, pause, bandwidth limits, ignore patterns, and change detection by content hash. | R08 | Should | G-090 | all services | [Planner addition] P006 |
-| FR-289 | **Files on demand / virtual files.** Files on demand: placeholders that download when opened (Windows Cloud Files API, macOS File Provider, Linux FUSE); Should on Windows, Could elsewhere. | R08 | Should (Windows), Could (macOS, Linux) | G-091 | OneDrive, Google Drive, Dropbox, Nextcloud, pCloud, Icedrive, Seafile | [Planner addition] P006 |
-| FR-290 | **PC folder backup.** PC folder backup (Desktop, Documents, Pictures) with versions, separate from two-way sync. | R08 | Should | G-092 | OneDrive, Google Drive, Synology Active Backup | [Planner addition] P006 |
-| FR-291 | **User CLI (upload, download, sync, share, search).** User command-line tool: login with an app password, upload, download, sync, search, share, and export, suitable for scripts. | R08 | Should | G-093 | MEGA, Proton, Ente, Immich | [Planner addition] P006 |
-| FR-292 | **File locking for sync and co-editing.** Server-side file locks shared by the sync client, WebDAV, and (later) office editing. | R08 | Should | G-094 | Nextcloud, Seafile | [Planner addition] P006 |
-| FR-293 | **Device list with remote sign-out and wipe of synced data.** Device list per user with remote sign-out; on the next connection a signed-out client removes its local copy of synced data if the user chose that. | R08 | Should | G-095 | Tresorit, Seafile, Nextcloud | [Planner addition] P006 |
-
-#### R09: Public internet release (v2.0.0)
-
-| ID | Requirement | Release | Priority | Gap | Seen in | Notes |
-|---|---|---|---|---|---|---|
-| FR-294 | **Public share links for people without an account.** Public links: unguessable tokens of at least 128 bits; optional password; expiry on by default (e.g. 30 days, configurable, 'never' possible only with a warning); download limit; view-only mode that hides download buttons (stated honestly as best-effort); revoke; optional custom readable slug; QR code; public album pages with a clean gallery. | R09 | Must | G-100 | all services | [Planner addition] P006 |
-| FR-295 | **File requests / upload-only links.** File requests: upload-only links with size, type, and count limits, uploader name and optional email, expiry, a per-link quota counted against the owner, malware scanning, and a notification to the owner; uploaders never see other uploads. | R09 | Must | G-101 | Dropbox, pCloud, MEGA, Icedrive, Filen, Tresorit, Synology, Ente (Collect), Seafile | [Planner addition] P006 |
-| FR-296 | **Large file transfer (send files that expire).** Send large files: an expiring transfer with optional password and a notification when downloaded; stored in internal data until expiry and counted against the sender's quota. | R09 | Must | G-102 | Dropbox Transfer, pCloud Transfer, Proton, MEGA | [Planner addition] P006 |
-| FR-297 | **Guest verification by email code.** Optional guest verification by email code before a link opens (uses the MVP email channel). | R09 | Must | G-103 | Nextcloud (OTP), Seafile, Tresorit | [Planner addition] P006 |
-| FR-298 | **Link access logs and download notifications.** Per-link access log (time, approximate client, action) visible to the owner, and optional notifications on first open and each download. | R09 | Must | G-104 | Tresorit, Sync.com | [Planner addition] P006 |
-| FR-299 | **Watermarks on shared previews.** watermarks on previews of shared items (viewer email or custom text). | R09 | Could | G-105 | Box | [Planner addition] P006 |
-| FR-300 | **Branded share pages.** share pages with the owner's name and optional logo and colors. | R09 | Could | G-106 | pCloud, Dropbox Transfer, Sync.com | [Planner addition] P006 |
-| FR-301 | **Invite-based registration, per-user bandwidth limits, abuse tools.** Accounts for people outside the home: invitation links created by the admin (no open registration by default, Q60), email verification, per-user bandwidth and transfer limits, and admin tools to disable a link or user and see abuse reports. | R09 | Must | G-107 | MEGA (transfer quota), Nextcloud | [Planner addition] P006 |
-| FR-302 | **Internet-facing hardening.** Internet-facing hardening, as specified in 11c (security design): threat model for internet exposure, a separate public edge for anonymous link traffic, admin interface LAN/VPN-only by default, mandatory 2FA for admins, HTTPS-only with a trusted certificate and strict headers, rate limits and brute-force protection per IP, account, and link, malware scanning of public uploads, SSRF protection, re-authentication for sensitive actions, signed releases with an SBOM and an opt-in signed update check, SECURITY.md and an incident runbook, and fuzzing of unauthenticated endpoints in CI. | R09 | Must | G-108 | Nextcloud, all public services | [Planner addition] P006 |
-| FR-303 | **Go-public readiness gate.** The go-public wizard (11c): checks readiness (admin 2FA, valid trusted certificate, recent off-site backup, current software, malware scanning on, strong passwords, link defaults, a working alert channel), refuses to enable exposure until every check passes, keeps monitoring afterwards, and offers a one-click "go private again". | R09 | Must | G-109 | Nextcloud (security scan) | [Planner addition] P006 |
-| FR-304 | **External security audit and staged beta before general availability.** An independent penetration test or security audit of the internet-facing surface with no open critical or high findings, then a private beta with invited external users for an agreed period with no data-loss or security incident, then a staged rollout (11c release gates). | R09 | Must | G-110 | Proton, Ente (independent audits) | [Planner addition] P006 |
-| FR-305 | **UX overhaul for public use (recipients, phones, slow networks, languages).** UX for public use (11c): pages for recipients who have no account and are often on a phone and a slow network; mobile-first share and upload pages with performance budgets; human error messages; a WCAG 2.2 AA audit; an internationalization framework with right-to-left support (languages per Q15); a consistent design system; usability tests with at least five non-technical people; a visible trust layer and a "public items" dashboard with one-click revoke. | R09 | Must | G-111 | all public services | [Planner addition] P006 |
-| FR-306 | **Reverse proxy and tunnel support.** Supported exposure methods (Q61): port forwarding to the NAS or a reverse proxy, the user's own VPS relay over WireGuard (G-072), and documented reverse proxies (Caddy, Traefik, nginx) with tested configurations. Third-party tunnels that terminate TLS are documented only with a warning; UPnP port opening is never used; an outside-in reachability test. | R09 | Must | G-112 | Immich, Nextcloud, PhotoPrism (docs) | [Planner addition] P006 |
-| FR-307 | **Operator tools and guidance for hosting other people.** Operator guidance: the NAS owner is the host of everything shared; a template of house rules for invited users; how to respond to a complaint. | R09 | Must | G-113 | Nextcloud | [Planner addition] P006 |
-
-#### R10: Media center (v2.1.0)
-
-| ID | Requirement | Release | Priority | Gap | Seen in | Notes |
-|---|---|---|---|---|---|---|
-| FR-308 | **Music library (tags, albums, playlists, speed).** Music library from the files area: tags (ID3, Vorbis), artists and albums, playlists, gapless playback, playback speed for podcasts. | R10 | Should | G-120 | pCloud | [Planner addition] P006 |
-| FR-309 | **Video library improvements (subtitles, resume, speed, audio tracks).** Video library features: subtitles (external SRT/VTT and embedded), resume where you stopped, playback speed, audio track selection, chapters. | R10 | Should | G-121 | pCloud, Immich (speed controls) | [Planner addition] P006 |
-| FR-310 | **DLNA/UPnP media server.** DLNA/UPnP media server for TVs on the LAN. DLNA has no user authentication, so only folders the admin marks as 'media for the household' are served (I5 respected by design). | R10 | Should | G-122 | Synology, general NAS practice | [Planner addition] P006 |
-| FR-311 | **Casting to TVs (Chromecast, AirPlay).** Cast to TVs from the web app: Chromecast (Default Media Receiver) and AirPlay (Safari), streaming through authenticated, short-lived URLs. | R10 | Should | G-123 | Google Photos, Amazon Photos, pCloud (Kodi) | [Planner addition] P006 |
-| FR-312 | **TV-friendly (10-foot) view.** TV-friendly full-screen view for slideshows and videos, usable with a remote or keyboard. | R10 | Should | G-124 | Amazon Photos, Google Photos | [Planner addition] P006 |
-| FR-313 | **Non-destructive photo editing.** Non-destructive photo editing: crop, rotate, flip, straighten, exposure, contrast, saturation, and filters, stored as an edit list in the sidecar; the original is never changed; revert any time; exports render the edit. Needs the NG3 change (Q57). | R10 | Should | G-125 | all photo services, Immich, Koofr | [Planner addition] P006 |
-| FR-314 | **360° panorama viewer.** 360° panorama and photo-sphere viewer. | R10 | Should | G-126 | Immich, PhotoPrism, Synology | [Planner addition] P006 |
-| FR-315 | **Collages, burst animations, photo videos.** collages, animations from bursts, and simple photo videos, saved as new items. | R10 | Could | G-127 | Google Photos | [Planner addition] P006 |
-| FR-316 | **Manual redaction (blur/pixelate) tool.** Manual redaction (blur or pixelate a region) as part of the editor, saved as a new copy for sharing. | R10 | Should | G-128 | Google Photos (Sept 2026) | [Planner addition] P006 |
-
-#### R11: Documents and office (v2.2.0)
-
-| ID | Requirement | Release | Priority | Gap | Seen in | Notes |
-|---|---|---|---|---|---|---|
-| FR-317 | **Office document previews.** Previews of Word, Excel, PowerPoint, and OpenDocument files by converting to PDF with LibreOffice as a separate program, cached in internal data. | R11 | Should | G-130 | Google Drive, Dropbox, Filen, Nextcloud | [Planner addition] P006 |
-| FR-318 | **Optional online co-editing (Collabora or ONLYOFFICE).** Optional online co-editing through a separate Collabora Online or ONLYOFFICE container using the WOPI protocol, opt-in, with the server's file locks (G-094). Engine by ADR (Q64); licenses verified. | R11 | Should | G-131 | Google, OneDrive, Nextcloud, Seafile, Proton, Koofr | [Planner addition] P006 |
-| FR-319 | **Text and Markdown editor, notes.** Built-in text and Markdown editor with autosave and versions, and a simple notes view. | R11 | Should | G-132 | Filen, Nextcloud, Seafile | [Planner addition] P006 |
-| FR-320 | **PDF tools (annotate, merge, split, forms); e-sign (Could).** PDF tools: annotate, merge, split, rotate pages, fill forms. E-signature as Could. | R11 | Should | G-133 | Dropbox, Tresorit | [Planner addition] P006 |
-| FR-321 | **Full-text search inside documents.** Full-text search inside PDF, Office, and text files, with extraction as background jobs into the index (unless already built in S06 because Q31 was 'yes'). | R11 | Should | G-134 | Google Drive, Nextcloud | [Planner addition] P006 |
-| FR-322 | **Text version comparison.** Compare two versions of a text or Markdown file. | R11 | Should | G-135 | Nextcloud Collectives | [Planner addition] P006 |
-
-#### R12: Automation and integrations (v2.3.0)
-
-| ID | Requirement | Release | Priority | Gap | Seen in | Notes |
-|---|---|---|---|---|---|---|
-| FR-323 | **Rules and workflows engine.** Rules and workflows: triggers (upload, tag, share, schedule), filters (any search query), and actions (add to album, move, tag, notify, run optimization policy), with a visual editor, dry run, and a log. | R12 | Should | G-140 | Immich (Workflows), Nextcloud (Flow) | [Planner addition] P006 |
-| FR-324 | **Signed webhooks for events.** Webhooks for events, signed with HMAC, with retries and a delivery log. | R12 | Should | G-141 | Nextcloud, general APIs | [Planner addition] P006 |
-| FR-325 | **API documentation portal and client SDKs.** An API documentation portal and generated client SDKs (TypeScript, Python, Go) from api/openapi.yaml; finer-grained token scopes. | R12 | Should | G-142 | Filen, Immich | [Planner addition] P006 |
-| FR-326 | **S3-compatible API.** an S3-compatible API over each user's files area, for backup tools and apps that speak S3. | R12 | Could | G-143 | MEGA S4, Filen | [Planner addition] P006 |
-| FR-327 | **Extension / plugin system.** a sandboxed extension system with a permission model and review; never able to bypass I5 or I9. | R12 | Could | G-144 | Nextcloud apps, Synology packages | [Planner addition] P006 |
 
 ---
 
@@ -731,10 +547,10 @@ Questions keep their numbers permanently. **★ = needed for S01**: none left (Q
 28. **Ownership and access data for the files area.** A visible sidecar per file, a hidden sidecar, or a central store? _Needed by: S07.3._ _Recommendation (per your stated approach): a hidden sidecar only for items that are actually shared, with the owner implied by the user's namespace for everything else. Full trade-offs in section 8.8._
 29. **Admin visibility.** Can the admin see all users' files and photos, or only manage accounts? _Needed by: S07.1._ _Recommendation: only manage accounts (privacy by default)._
 30. **Sharing scope.** Read-only as specified, or also write access? Should sharing with groups of users be possible? _Needed by: S07.5._
-31. **Document content search.** Include full-text search inside PDF, Word, and text files in the files area? _Needed by: S06.2 (design), later stage for implementation._ _(1.6.0, P006: the answer also decides G-134: in S06 if "yes" for the MVP, else in R11.)_
+31. **Document content search.** Include full-text search inside PDF, Word, and text files in the files area? _Needed by: S06.2 (design), later stage for implementation._
 32. **Network shares.** _Partly answered (P003, ADR-0015):_ **WebDAV first**. SMB via Samba later, Linux-only, optional (ADR-0019, Proposed). **Still open:** should the photos area be exposed over network shares, and if so, read-only? _Needed by: S09.3._ _Recommendation: photos read-only over shares._
-33. **Two-factor authentication.** Wanted? _Needed by: S03.7._ _(1.6.0, P006: the answer also decides G-060: in S03.7 if "yes", else in R05.)_
-34. **File versioning.** Wanted? _Needed by: S08.5._ _(1.6.0, P006: **recommended "yes"** (gap G-004): every competitor keeps versions, and from S09 files can be overwritten over WebDAV. R04 (rewind and ransomware recovery) and R11 depend on it.)_
+33. **Two-factor authentication.** Wanted? _Needed by: S03.7._
+34. **File versioning.** Wanted? _Needed by: S08.5._
 35. **AI opt-in scope.** Per installation or per user? _Needed by: S15.1._
 36. **Optional AI extensions.** Which are wanted: OCR for receipts and documents, semantic search? _Needed by: S15.10._ _(1.4.0, P005: duplicate and similar-photo detection is no longer an option here; its baseline is S11 and its AI enhancement S15.11.)_
 37. _Answered (S005, D-08):_ **none added now**. Mobile auto-backup, public share links, and remote access stay unscheduled (11a). Any later addition goes before S15 (I8).
@@ -755,26 +571,6 @@ Questions keep their numbers permanently. **★ = needed for S01**: none left (Q
 49. **Who applies optimization policies:** only each user to their own media (proposed), or can an admin apply policies to all users? _Needed by: S12.6._
 50. _Answered (S007, E010): now, with the current stage ("make sure to work on the new stuff too if they were meant to be part of current or previous stages"). ADR-0021 was Accepted in E013, and the three follow-up tasks were done in S007 (E017–E019)._ _(Planner-added, from fixing P005)_ **When are the S01 follow-up tasks done** (content hash at upload in both areas; storage-root checks), now that S01 is Done? _Recommendation:_ at the start of S04, before S04.2 needs the hashes; files uploaded before then are covered by the S11.1 backfill. The content-hash ADR (ADR-0021) must be decided first. _Needed by: S04._
 51. _(Planner-added)_ **Confirm the first usable release (M3)** as S01–S13, which now includes duplicates and look-alikes (S11) and storage optimization (S12), with drive pools (S14) after the release (section 11). _Needed by: S13._
-
-### New in 1.6.0 (P006)
-
-_(Planner-added from P006; Q54 and Q34 first, because they change the MVP, then Q52 and Q53.)_
-
-52. AI position: keep 'AI always last' so S15 comes after all releases R01–R12 (default, the current invariant I8), or change I8 so AI comes right after the drive pools and the releases follow AI?
-53. Drive pools (S14): keep them right after the MVP (default), or move them after the new releases, since you placed them 'in the end'?
-54. Confirm the MVP additions: Live Photos and motion photos, the phone auto-backup bridge, and alert delivery (email, webhook, ntfy). And answer Q34 (file versioning), recommended 'yes'.
-55. Reword NG1 so opt-in imports from other clouds and off-site backup to targets you choose are allowed?
-56. Mobile apps (reverses NG2): native apps (framework by ADR) or PWA only? Publish on app stores, F-Droid, or both? Allow Apple and Google push services as an opt-in?
-57. Reword NG3 to allow non-destructive photo editing (originals never changed)?
-58. External read-only libraries (index a folder on the host without copying it): exclude (default, keeps I1) or include?
-59. Map tiles: bundled low-detail offline tiles, a self-hosted tile file you download once, an opt-in online tile server, or a combination?
-60. Public release accounts: only accounts the admin creates, admin-approved invitations (recommended), or open registration?
-61. Public exposure methods to support: port forwarding with reverse proxy, your own VPS relay, both (recommended), and should third-party tunnels be documented?
-62. Locked folder: hidden and re-authenticated only (simpler), or also client-side encrypted (no server search or thumbnails inside it)?
-63. Release version labels: accept the suggested labels (v1.0.0 MVP, v1.1.0 pools, v1.2.0 R01, … v2.0.0 public release) or choose your own?
-64. Office co-editing engine for R11: Collabora Online, ONLYOFFICE, or none?
-65. Confirm the excluded features (X-01 to X-11); any to bring back?
-66. Approve the proposed invariant I11 (internet exposure is always an explicit, checked choice; admin interface LAN/VPN-only by default)?
 
 ### Carried over from 0.1.0
 
@@ -843,8 +639,6 @@ _(Planner-added from P006; Q54 and Q34 first, because they change the MVP, then 
 | **Storage helper (host, root)** | S14.2 | A small separate service on the Linux host (systemd). Allow-listed disk operations (discover, create RAID 0/1, format, mount, check, replace) over an authenticated local Unix socket, audit-logged (ADR-0029). The core stays unprivileged. |
 | **Pool manager** | S14 | Pool designer and capacity engine (RAID 0/1, built to take parity later), creation and migration wizards, monitoring and rebuilds, through the storage helper (ADR-0027, ADR-0028). |
 | **AI worker (optional)** | S15 | A separate process/container. Pulls AI jobs, reads media read-only, returns results. The core writes the results to sidecars and the index. |
-
-**Future components (1.6.0, P006; planned for releases, not built and not in the diagram):** a public edge for anonymous link traffic (R09); a WireGuard VPN service (R06); a sync protocol and its server side (R08); mobile and desktop clients (R07, R08); a notification service for alerts, email, and push (MVP alerts FR-221, then R03, R07); an off-site backup engine (R04, by ADR); an office connector (WOPI, R11); a map tile source (R02, Q59).
 
 ### 6.2 Diagram (concrete components, 0.3.0)
 
@@ -1616,7 +1410,6 @@ flowchart LR
   3. The user has reviewed it.
 - **Risks/notes:** It is revisited in S07 (multi-user), S09 (shares), S13.6, and S15 (AI worker).
 - **P005 change (1.4.0):** the threat model lists the future privileged storage helper (S14.2) as an attack surface: a root service on the host, reached over a Unix socket (ADR-0029, NFR-037).
-- **P006 addition (1.6.0, [Planner addition], pending Q54):** Threat model: the outbound connections of alert delivery (SMTP, webhook, ntfy) (FR-221).
 - **Status:** Not started
 
 #### S03.2: First-run setup and authentication
@@ -1647,7 +1440,6 @@ flowchart LR
   2. Revoking a session or using "log out everywhere" takes effect on the next request.
   3. API tokens can be created, scoped, listed, and revoked, and are stored only as hashes.
 - **Risks/notes:** None.
-- **P006 addition (1.6.0, [Planner addition], pending Q54):** Upload-only app passwords per device for the camera-upload endpoint (FR-219).
 - **Status:** Not started
 
 #### S03.4: Transport security
@@ -1772,7 +1564,6 @@ flowchart LR
   3. The photos API is separate from the files API and follows S01.5 conventions.
   4. The supported-format list matches the answer to Q26.
 - **Risks/notes:** HEIC/RAW decoders have licensing implications (ADR-0012, `dependencies.md`).
-- **P006 addition (1.6.0, [Planner addition], pending Q54):** Domain model: paired items, a Live Photo or motion photo as one library item (FR-217, FR-218).
 - **Status:** Not started
 
 #### S04.2: Media ingestion
@@ -1791,7 +1582,6 @@ flowchart LR
   4. Ingested items appear in the photos API with hash, size, type, and file timestamps.
 - **Risks/notes:** Post-processing (thumbnails) is queued through S04.3, which is built before S04.4 in the stage's execution order.
 - **P005 change (1.4.0):** exact-duplicate detection at ingest uses the stored content hash (FR-211), with the default "Skip and report" (FR-022, Q45). The full per-user policy arrives in S11.2 (FR-154). Resolution variants are never blocked at upload.
-- **P006 addition (1.6.0, [Planner addition], pending Q54):** Pairing at ingest, including a half that arrives late or in the other order (FR-217).
 - **Status:** Not started
 
 #### S04.3: Background job system
@@ -1855,7 +1645,6 @@ flowchart LR
   4. Name conflicts follow the S01.6 policy (fail, rename, overwrite).
   5. A move is atomic from the user's view: the item is in exactly one area at any time.
 - **Risks/notes:** Until S05 exists there are no sidecars to carry. S05.6 completes the metadata behavior.
-- **P006 addition (1.6.0, [Planner addition], pending Q54):** A pair is transferred as a unit (FR-218).
 - **Status:** Not started
 
 #### S04.7: Photos GUI
@@ -1874,7 +1663,6 @@ flowchart LR
   3. Albums can be created, renamed, deleted, and filled from a multi-selection.
   4. Cross-area copy and move exist only as explicit, confirmed actions in both GUIs.
 - **Risks/notes:** None.
-- **P006 addition (1.6.0, [Planner addition], pending Q54):** The "Live" badge and motion playback, with "play" and "still only" (FR-218).
 - **Status:** Not started
 
 #### S04.8: Video streaming and quality levels
@@ -1913,7 +1701,6 @@ flowchart LR
   3. Streaming tests pass on current Chrome, Edge, Firefox, and Safari (macOS and iOS): switching levels during playback, Auto, seeking, cache eviction under the size cap, and refusal of unauthorized segment requests.
   4. Documentation and the completion record are written, and the user's sign-off is recorded.
 - **Risks/notes:** Synthetic library generator needed (section 12).
-- **P006 addition (1.6.0, [Planner addition], pending Q54):** Fixtures: Apple pairs uploaded in both orders, Google and Samsung motion photos, unpaired MOV files (FR-217, FR-218).
 - **Status:** Not started
 
 **Design notes (S04):**
@@ -1951,7 +1738,6 @@ flowchart LR
   3. Every sidecar carries `schemaVersion` and the identifying marker.
 - **Risks/notes:** Schema churn (RK-14): review carefully before acceptance.
 - **P005 change (1.4.0):** schema v1 also reserves the sections `hashes` (content and perceptual hash), `stack` (stack ID, cover flag, user-locked decisions), `duplicates` (the "not duplicate of" list), `mergedFrom` (merged-metadata provenance), and `optimizationHistory` (8.7). Face boxes in the `ai` section use normalized coordinates (0–1), so resizing in S12 keeps them valid.
-- **P006 addition (1.6.0, [Planner addition], pending Q54):** A reserved `livePhoto` section in the sidecar schema: the motion component's file name, content hash, and source type (FR-218).
 - **Status:** Not started
 
 #### S05.2: Sidecar manager
@@ -1984,7 +1770,6 @@ flowchart LR
   4. Unreadable metadata is recorded as such without failing the item.
 - **Risks/notes:** External tool licenses and availability on native installs (ADR-0012, plan 8.20).
 - **P005 change (1.4.0, the user's burst request in S007):** extraction also records burst identifiers where present (Apple `BurstUUID` in the maker notes; Google `XMP-GCamera:BurstID` and `BurstPrimary`) and sub-second capture times, for burst grouping (FR-165, S11.4).
-- **P006 addition (1.6.0, [Planner addition], pending Q54):** Extract the content identifiers and the motion-photo markers with ExifTool (tags verified in research R001) (FR-217).
 - **Status:** Not started
 
 #### S05.4: Offline reverse geocoding
@@ -2054,7 +1839,6 @@ flowchart LR
   2. Round-trip tests (extract → write → read → edit → write) preserve every field.
   3. The completion record is written and the user's sign-off is recorded.
 - **Risks/notes:** None.
-- **P006 addition (1.6.0, [Planner addition], pending Q54):** Fixtures as in S04.9, through the metadata pipeline (FR-217).
 - **Status:** Not started
 
 **Design notes (S05):**
@@ -2344,7 +2128,6 @@ flowchart LR
   4. Trash contents are visible only to their owner.
 - **Risks/notes:** Trash must be on the storage root's filesystem so delete and restore are atomic renames (A18).
 - **P005 change (1.4.0):** the trash restores items removed through duplicate resolution (S11.3, S11.6) with their sidecars and memberships, and can hold originals replaced by optimization (S12.5) so they can be reverted within the retention period (ADR-0026).
-- **P006 addition (1.6.0, [Planner addition], pending Q54):** A pair goes to the trash and comes back as a unit (FR-218).
 - **Status:** Not started
 
 #### S08.2: Integrity verification
@@ -2467,7 +2250,6 @@ flowchart LR
   3. Network logins use NAS accounts and are audit-logged.
 - **Risks/notes:** None.
 - **P005 change (1.4.0):** the WebDAV FileSystem design leaves room for representing app-level shortcuts (S11.6, ADR-0024, Q46).
-- **P006 addition (1.6.0, [Planner addition], pending Q54):** The camera-upload endpoint, through the same policy and services as the shares (FR-219).
 - **Status:** Not started
 
 #### S09.3: Photos area exposure policy
@@ -2481,7 +2263,6 @@ flowchart LR
   2. No network operation can place an item in the other area.
   3. If `photos/` is writable over shares, media added this way gets sidecars through S09.4, and non-media is reported, not ingested.
 - **Risks/notes:** None.
-- **P006 addition (1.6.0, [Planner addition], pending Q54):** The Q32 policy plus this ingest-only exception: a client sees only its own uploads (FR-219).
 - **Status:** Not started
 
 #### S09.4: Real-time watcher and reconciliation
@@ -2508,7 +2289,6 @@ flowchart LR
   1. The admin enables and configures shares from the GUI.
   2. Each user sees connection instructions for their OS.
 - **Risks/notes:** None.
-- **P006 addition (1.6.0, [Planner addition], pending Q54):** Per-device setup with a QR code for the server address (FR-220).
 - **Status:** Not started
 
 #### S09.6: Testing and stage review
@@ -2522,7 +2302,6 @@ flowchart LR
   2. Cross-user tests over the network show no leaks.
   3. The completion record is written and the user's sign-off is recorded.
 - **Risks/notes:** macOS client testing needs a Mac.
-- **P006 addition (1.6.0, [Planner addition], pending Q54):** Tests with at least one Android and one iOS auto-upload app (FR-220).
 - **Status:** Not started
 
 **Design notes (S09):** With in-app WebDAV, every change goes through the service layer (policy, sidecars, index, audit). The watcher is essential only for Samba and for direct disk edits. The watcher reuses the reconciler and the job system.
@@ -2577,7 +2356,6 @@ flowchart LR
   2. Low-space and disk-failure warnings appear in the GUI and the logs.
 - **Risks/notes:** SMART access needs privileges and differs by OS and container (RK-24).
 - **P005 change (1.4.0):** disk health monitoring is designed to be reused by the drive pools (S14.3, S14.7).
-- **P006 addition (1.6.0, [Planner addition], pending Q54):** Alert rules and delivery channels: email, webhook, ntfy (FR-221).
 - **Status:** Not started
 
 #### S10.4: Background jobs monitor
@@ -2602,7 +2380,6 @@ flowchart LR
   1. Settings can be edited with validation, and invalid values are refused.
   2. Application and audit logs are viewable and filterable by the admin only.
 - **Risks/notes:** None.
-- **P006 addition (1.6.0, [Planner addition], pending Q54):** Channel settings and the "send test alert" button (FR-221).
 - **Status:** Not started
 
 #### S10.6: Testing and stage review
@@ -2615,7 +2392,6 @@ flowchart LR
   1. Quota tests cover every write path, including network shares.
   2. The completion record is written and the user's sign-off is recorded.
 - **Risks/notes:** None.
-- **P006 addition (1.6.0, [Planner addition], pending Q54):** Tests with a local SMTP test server and a webhook receiver (FR-221).
 - **Status:** Not started
 
 **Design notes (S10):** Quotas hook into the same service interface as trash and sharing. The dashboard reads accounting maintained by operation hooks, not directory scans.
@@ -2660,7 +2436,6 @@ flowchart LR
   2. No group ever contains items of two users (tested with two users and identical files).
   3. A new upload is checked incrementally; the upload policy behaves as set (skip and report, keep both, ask).
 - **Risks/notes:** Q43 (the same photo in both areas), Q45 (upload default).
-- **P006 addition (1.6.0, [Planner addition], pending Q54):** A pair is one item for duplicate detection; the still decides (FR-218).
 - **Status:** Not started
 
 #### S11.3: Photo duplicate review and resolution
@@ -2797,7 +2572,6 @@ flowchart LR
   1. Each filter, alone and combined, selects exactly the expected fixture items.
   2. The estimate is within a documented tolerance of the actual savings on the fixture library.
 - **Risks/notes:** None.
-- **P006 addition (1.6.0, [Planner addition], pending Q54):** Optimization keeps a pair's motion part unchanged by default, with an option to include it (FR-218).
 - **Status:** Not started
 
 #### S12.4: Live preview service
@@ -3270,7 +3044,6 @@ flowchart LR
   2. Results are stored and searched through the index, never computed at query time.
   3. It has its own evaluation.
 - **Risks/notes:** Items not approved are marked "not required".
-- **P006 extensions (1.6.0, Could, pending the user's decision like Q36):** G-150 pet recognition and grouping; G-151 smart memories from people, pets, and events; G-152 classification of documents in the files area (e.g. receipt PDFs); G-153 sensitive-content auto-hide suggestion; G-154 blurry photo and screenshot cleanup suggestions (extends S15.11); G-155 local speech-to-text subtitles and search for videos; G-156 sensitive-text redaction suggestions (needs OCR, Q36). They follow I4 (never at query time), I7, I9, and NG9.
 - **Status:** Not started
 
 #### S15.11: AI-assisted library cleanup (new in 1.4.0, P005)
@@ -3284,7 +3057,6 @@ flowchart LR
   2. A cover the user chose is never replaced by a suggestion.
   3. Face-group and classification scopes select the expected items; with AI off, S11 and S12 work unchanged (I7).
 - **Risks/notes:** Optional like all AI (I7). The previous evaluation substage becomes S15.12 and stays last.
-- **P006 (1.6.0):** G-154 (blurry photo and screenshot cleanup suggestions) extends this substage (Could).
 - **Status:** Not started
 
 #### S15.12: Evaluation, packaging, and stage review
@@ -3356,29 +3128,15 @@ Documents written before a change keep the IDs of their time. Session logs, prom
 
 **Decided by the user in S005 (Q38, D-08): the first usable release is milestone M3, then stages S01–S11 (through the pre-AI release). No not-scheduled candidates were added (Q37).**
 
-**Re-evaluated in 1.6.0 (P006):** M3 is S01–S13 **plus the P006 MVP additions** (FR-217–FR-221: Live Photos and motion photos, the phone auto-backup bridge, alert delivery), pending Q54. After M4 (drive pools) come the releases R01–R12 (section 11b), then AI (M5, I8). The order of pools, releases, and AI is asked in Q52 and Q53.
-
 **Re-evaluated in 1.4.0 (P005):** the pre-AI release is now S13, and the new stages S11 (duplicates and look-alikes) and S12 (storage optimization) come before it, so M3 is **S01–S13**. Drive pools (S14) come after the release, as the user placed them "in the end" (S007), so M3 does not wait for them. The user is asked to confirm this in **Q51**.
 
 | Milestone | Stages | What the user gets | Reasoning |
 |---|---|---|---|
 | **M1: Secure single-admin NAS** | S01–S03 | Files area over a GUI, secure on the LAN | First point where the NAS may leave localhost (NFR-020). Useful, but it is only a file store. |
 | **M2: First usable release (recommended MVP)** | S01–S06 | Files + photos library (timeline, albums, viewer, sidecar metadata, places) + forgiving search with operators; single admin | Delivers the README's core non-AI value, the user's first six stages, and a complete single-user experience. Deployable with the S01.1 Docker setup and documentation. |
-| **M3: Stable pre-AI release (chosen as the first usable release, S005)** | S01–S13 plus the P006 MVP additions (FR-217–FR-221, pending Q54) | Multi-user, sharing, trash and backups, network drives, admin, duplicates and look-alike stacks, storage optimization, packaging | The release the user's roadmap defines (S13.7). _1.4.0:_ includes S11 and S12 (to be confirmed, Q51). |
+| **M3: Stable pre-AI release (chosen as the first usable release, S005)** | S01–S13 | Multi-user, sharing, trash and backups, network drives, admin, duplicates and look-alike stacks, storage optimization, packaging | The release the user's roadmap defines (S13.7). _1.4.0:_ includes S11 and S12 (to be confirmed, Q51). |
 | **M4: Drive pools** _(1.4.0, P005)_ | S01–S14 | RAID 0 and RAID 1 pools from the GUI (Linux) | An update to the stable release; the complex RAID follows later (11a). |
-| **R01: Migration and portability** _(1.6.0, P006; planned)_ | M4 + R01 | Make switching from Google Photos, iCloud, and other clouds painless, and make leaving local-ai-nas just as easy. | Suggested label v1.2.0 (Q63). Becomes a stage just in time (11b.1). |
-| **R02: Everyday essentials** _(1.6.0, P006; planned)_ | M4 + R02 | Close the daily-use gaps in both areas that users notice in the first week. | Suggested label v1.3.0 (Q63). Becomes a stage just in time (11b.1). |
-| **R03: Family sharing and collaboration** _(1.6.0, P006; planned)_ | M4 + R03 | Match the family features of Google Photos, iCloud, and Google Drive inside the home. | Suggested label v1.4.0 (Q63). Becomes a stage just in time (11b.1). |
-| **R04: Data safety plus** _(1.6.0, P006; planned)_ | M4 + R04 | Protection on the level of Dropbox Rewind, OneDrive ransomware recovery, and Synology backup. | Suggested label v1.5.0 (Q63). Becomes a stage just in time (11b.1). |
-| **R05: Security and privacy hardening** _(1.6.0, P006; planned)_ | M4 + R05 | Account and data protection at the level expected before any remote access. | Suggested label v1.6.0 (Q63). Becomes a stage just in time (11b.1). |
-| **R06: Private remote access** _(1.6.0, P006; planned)_ | M4 + R06 | Reach your NAS from anywhere without exposing it to the whole internet. | Suggested label v1.7.0 (Q63). Becomes a stage just in time (11b.1). |
-| **R07: Mobile apps** _(1.6.0, P006; planned)_ | M4 + R07 | Native phone apps that replace the Google Photos, iCloud, and Drive apps. | Suggested label v1.8.0 (Q63). Becomes a stage just in time (11b.1). |
-| **R08: Desktop sync and command line** _(1.6.0, P006; planned)_ | M4 + R08 | Replace the Dropbox, OneDrive, and Google Drive desktop clients. | Suggested label v1.9.0 (Q63). Becomes a stage just in time (11b.1). |
-| **R09: Public internet release** _(1.6.0, P006; planned)_ | M4 + R09 | Safely expose local-ai-nas to the internet so it can fully replace cloud services, including sharing with people who have no account. | Suggested label v2.0.0 (a major milestone: the NAS can face the internet) (Q63). Becomes a stage just in time (11b.1). |
-| **R10: Media center** _(1.6.0, P006; planned)_ | M4 + R10 | Enjoy photos, videos, and music on every screen in the home. | Suggested label v2.1.0 (Q63). Becomes a stage just in time (11b.1). |
-| **R11: Documents and office** _(1.6.0, P006; planned)_ | M4 + R11 | Work with documents without Google Docs or Microsoft 365. | Suggested label v2.2.0 (Q63). Becomes a stage just in time (11b.1). |
-| **R12: Automation and integrations** _(1.6.0, P006; planned)_ | M4 + R12 | Let power users and other tools build on local-ai-nas. | Suggested label v2.3.0 (Q63). Becomes a stage just in time (11b.1). |
-| **M5: AI release** | S01–S15, after R01–R12 | Auto-classification, face grouping, AI-assisted cleanup, and the approved S15.10 extensions | Always last (I8; the order is asked in Q52). |
+| **M5: AI release** | S01–S15 | Auto-classification, face grouping, AI-assisted cleanup | Always last (I8). |
 
 **Caveat on M2:** there is **no trash until S08**, so deletes in M2 are permanent (the GUI warns about this). If M2 will hold real data, options are: (a) keep external backups (documented), or (b) move S08.1 (trash) before S07. Option (b) is a reorder that needs approval, and the trash would first be single-user and then extended in S07.
 
@@ -3390,163 +3148,11 @@ Not stages. If any is approved later, it is inserted **before** the AI stage and
 
 | Candidate | Notes |
 |---|---|
-| ~~Mobile app with automatic photo backup from phones~~ **Scheduled in 1.6.0 (P006)** as R07; the MVP bridges it with WebDAV auto-upload apps (FR-219, FR-220). | Would add a mobile client and a background upload protocol (tus fits). Photos go into the user's `photos/` namespace. |
-| ~~Public share links for people without an account~~ **Scheduled in 1.6.0 (P006)** in R09 (FR-294 and 11c). | Needs expiring, revocable tokens and a hardened unauthenticated surface. It weakens the LAN-only posture, so a threat model update is needed. |
-| ~~Secure remote access from outside the local network~~ **Scheduled in 1.6.0 (P006)** as R06 (private) and R09 (public). | Options: documented VPN (Tailscale/WireGuard), or a reverse proxy with HTTPS. Must not require any cloud service by default (I6). |
-| **Advanced drive pools ("complex RAID")** _(1.4.0; deferred by the user in S007: "leave complex raid for later as planned non implemented work")_ | **Planned, not implemented.** _(1.6.0: unchanged; it can become a release later, before AI, I8.)_ Specification kept from P005: dedicated parity, "RAID 4 style" (FR-197); distributed and double parity, RAID 5 and RAID 6 (FR-199); combining smaller drives end to end into a **virtual drive** that can be a member of a striped or parity pool (FR-198); nesting (e.g. RAID 10, parity over virtual drives); the unused space of larger members as a separate volume (FR-201); SnapRAID with mergerfs as the option for mixed-size media drives. **The user's example is the acceptance test:** drives of 2, 1, 1, 2, 2, 2 TB; the two 1 TB drives combined into a 2 TB virtual drive; the members 2, 2, 2, 2, 2 TB in a parity layout give 8 TB usable and survive one failed member. **Before building:** mdadm's parity write hole (a journal or the partial parity log, 8.25), nesting md arrays and their assembly at boot (only partly verified in S007), and whether SnapRAID fits. The S14 layout model is built so this candidate needs no migration of existing pools. If approved, it is inserted before the AI stage (I8). |
+| Mobile app with automatic photo backup from phones | Would add a mobile client and a background upload protocol (tus fits). Photos go into the user's `photos/` namespace. |
+| Public share links for people without an account | Needs expiring, revocable tokens and a hardened unauthenticated surface. It weakens the LAN-only posture, so a threat model update is needed. |
+| Secure remote access from outside the local network | Options: documented VPN (Tailscale/WireGuard), or a reverse proxy with HTTPS. Must not require any cloud service by default (I6). |
+| **Advanced drive pools ("complex RAID")** _(1.4.0; deferred by the user in S007: "leave complex raid for later as planned non implemented work")_ | **Planned, not implemented.** Specification kept from P005: dedicated parity, "RAID 4 style" (FR-197); distributed and double parity, RAID 5 and RAID 6 (FR-199); combining smaller drives end to end into a **virtual drive** that can be a member of a striped or parity pool (FR-198); nesting (e.g. RAID 10, parity over virtual drives); the unused space of larger members as a separate volume (FR-201); SnapRAID with mergerfs as the option for mixed-size media drives. **The user's example is the acceptance test:** drives of 2, 1, 1, 2, 2, 2 TB; the two 1 TB drives combined into a 2 TB virtual drive; the members 2, 2, 2, 2, 2 TB in a parity layout give 8 TB usable and survive one failed member. **Before building:** mdadm's parity write hole (a journal or the partial parity log, 8.25), nesting md arrays and their assembly at boot (only partly verified in S007), and whether SnapRAID fits. The S14 layout model is built so this candidate needs no migration of existing pools. If approved, it is inserted before the AI stage (I8). |
 | Video resolution variants as duplicates _(1.4.0, P005)_ | Finding the same video at another resolution (S11 covers exact video duplicates only). Needs a video fingerprint (e.g. perceptual hashes of sampled frames). |
-
-**Considered and excluded (1.6.0, P006).** Found in the research (R001) and left out on purpose; none is a requirement. The user can bring any back (Q65). X-04 (groupware) and X-06 (federation) stay as not-scheduled candidates.
-
-| ID | Feature | Seen in | Reason |
-|---|---|---|---|
-| X-01 | Generative AI: Ask Photos, Magic Eraser, Moods, Remix, AI summaries and chat over files | Google Photos, Google Drive, OneDrive, Nextcloud | Non-goal NG9 (generative AI) and I4 (no AI at query time). |
-| X-02 | Chat, video calls, meetings | MEGA, Nextcloud Talk | Outside the purpose of a NAS. |
-| X-03 | Password manager and general-purpose VPN service | MEGA Pass, MEGA VPN | Outside the purpose of a NAS. (The private-access VPN in R06 only reaches the NAS.) |
-| X-04 | Calendar, contacts, and mail (CalDAV, CardDAV, webmail) | Nextcloud | Groupware, not storage. Kept as a not-scheduled candidate in 11a. |
-| X-05 | Print store and photo books | Google Photos | A commercial fulfilment service, not software. |
-| X-06 | Federated sharing between separate servers | Nextcloud | Large security surface; kept as a not-scheduled candidate in 11a. |
-| X-07 | Enterprise governance: legal hold, eDiscovery, sensitivity labels, data rooms | Nextcloud Enterprise, Box, Tresorit | Outside the household and small-group scope. |
-| X-08 | Professional media review workflow (frame-accurate review and approvals) | Dropbox Replay | Niche; comments (G-045) cover the basics. |
-| X-09 | Hosting apps, containers, and virtual machines | Synology, TrueNAS | Outside scope; the plugin system (G-144) is the extension point. |
-| X-10 | Vendor-operated relay or account service (QuickConnect-style) | Synology | Conflicts with I6 and NG1. The self-hosted relay (G-072) covers the need. |
-| X-11 | Phone-number (SMS) two-factor authentication | Icedrive, Tresorit | Needs a paid SMS gateway and is weaker than TOTP and passkeys. |
-| G-016 | External read-only libraries (index a host folder in place) | Immich, Nextcloud | Conflicts with I1 and A3 (a third source of media); excluded unless the user decides otherwise (Q58). |
-
----
-
-## 11b. Release roadmap after the MVP (new in 1.6.0, P006)
-
-The user asked for this roadmap (quoted verbatim, P006):
-
-> "this is the current plan of the project, now, go through the internet, search for all kinds of cloud storage services, like google drive, onedrive, dropbox, proton drive, and everything, and record everyone's features in the apps, and make list of all the features that is not in my project, then make a detailed json prompt of adding the features as part of future releases, and that they should be developed and released in a planned manner like in versions, or you can say a set of features at a time of release, but they shouldnt be part of the first release (that is the mvp aka minimum viable product) but if they are something that should be a must have then include them in mvp."
-
-> "my project of nas should make every other (or atleast most of them) cloud storage services useless except that my project is currently limited to local hosting, add a future release of public release too but that is very crucial too due to severe UI/UX reasons and also severe security reasons"
-
-**Goal G13** (section 2). Features found in competitors but missing from the plan are planned as releases, each a fixed set of features, developed and shipped one release at a time. They are not part of the MVP, except the must-haves in section 3.1 (FR-217–FR-221). The research, with every source, is `research/R001-2026-09-28-cloud-storage-feature-research.md`.
-
-**Order** (default, keeping invariant I8 exactly as written): MVP (S01–S13, v1.0.0) → S14 drive pools (v1.1.0, milestone M4 as already planned) → R01 … R12 (v1.2.0 …) → S15 AI (always last). See Q52 and Q53 for the alternatives the user may choose.
-
-| ID | Suggested label | Theme | Goal | Features (FR IDs, section 3.3) | Prerequisites | Exit criteria | Status |
-|---|---|---|---|---|---|---|---|
-| R01 | v1.2.0 | Migration and portability | Make switching from Google Photos, iCloud, and other clouds painless, and make leaving local-ai-nas just as easy. | FR-222–FR-227 (6) | MVP; G-001 Live Photos | A 50,000-item Takeout archive imports with correct dates, places, descriptions, albums, and favorites on the fixture set<br>An exported library re-imports into a fresh install with nothing lost<br>Every import shows a dry-run report and can be undone within the trash window | Planned |
-| R02 | v1.3.0 | Everyday essentials | Close the daily-use gaps in both areas that users notice in the first week. | FR-228–FR-243 (16) | MVP | Each feature works in both light and dark themes and on phone layouts<br>Map and memories work with no internet access<br>Archive extraction passes zip-bomb and traversal tests | Planned |
-| R03 | v1.4.0 | Family sharing and collaboration | Match the family features of Google Photos, iCloud, and Google Drive inside the home. | FR-244–FR-253 (10) | MVP (S07); R02 recommended (smart albums, recent files) | Cross-user leak tests (S07.7 suite) extended to groups, partner sharing, collaborative albums, comments, and activity pass<br>Revoking access removes items from search, feeds, and notifications immediately | Planned |
-| R04 | v1.5.0 | Data safety plus | Protection on the level of Dropbox Rewind, OneDrive ransomware recovery, and Synology backup. | FR-254–FR-261 (8) | MVP; File versioning (G-004 / Q34); Alert delivery (G-003) | A simulated ransomware run over WebDAV is detected, paused, and fully rewound in tests<br>A full restore from an off-site backup to a fresh install passes<br>Recovery documentation is tested by following it step by step | Planned |
-| R05 | v1.6.0 | Security and privacy hardening | Account and data protection at the level expected before any remote access. | FR-262–FR-271 (10) | MVP | Threat model updated; security tests for every login path, including SSO and passkeys, pass<br>Locked-folder items never appear in any listing, search, share, or network share in leak tests | Planned |
-| R06 | v1.7.0 | Private remote access | Reach your NAS from anywhere without exposing it to the whole internet. | FR-272–FR-277 (6) | R05 (2FA and brute-force protection) | A phone on mobile data behind CGNAT reaches the NAS over the VPN and through the relay in tests<br>No port is opened to the public internet by any R06 feature | Planned |
-| R07 | v1.8.0 | Mobile apps | Native phone apps that replace the Google Photos, iCloud, and Drive apps. | FR-278–FR-287 (10) | R06 (remote access for backup away from home); NG2 change (Q56) | Backup of 10,000 phone photos completes in the background on both platforms with no duplicates and no missing items<br>App store and F-Droid publishing requirements reviewed (user decides where to publish) | Planned |
-| R08 | v1.9.0 | Desktop sync and command line | Replace the Dropbox, OneDrive, and Google Drive desktop clients. | FR-288–FR-293 (6) | R04 (versions and rewind protect against sync mistakes); R06 recommended | Sync stress tests (renames, moves, conflicts, offline edits, interrupted transfers) end with identical trees and no data loss<br>The client never deletes server data because of a local error; mass deletions ask for confirmation | Planned |
-| R09 | v2.0.0 (a major milestone: the NAS can face the internet) | Public internet release | Safely expose local-ai-nas to the internet so it can fully replace cloud services, including sharing with people who have no account. | FR-294–FR-307 (14) | R03 (sharing model); R04 (rewind and off-site backup); R05 (2FA, passkeys, malware scanning, brute-force protection); R06 (certificates and connectivity); R07 and R08 recommended (clients benefit most) | See 11c, release gates | Planned |
-| R10 | v2.1.0 | Media center | Enjoy photos, videos, and music on every screen in the home. | FR-308–FR-316 (9) | MVP (video streaming); Q57 for editing | The stage's testing substage (11b.1) | Planned |
-| R11 | v2.2.0 | Documents and office | Work with documents without Google Docs or Microsoft 365. | FR-317–FR-322 (6) | R08 (file locks); G-004 versions | The stage's testing substage (11b.1) | Planned |
-| R12 | v2.3.0 | Automation and integrations | Let power users and other tools build on local-ai-nas. | FR-323–FR-327 (5) | R05 (token scopes and security) | The stage's testing substage (11b.1) | Planned |
-
-### 11b.1 Release process
-
-The rules below are also rule **R13** in `RULES.md` (pre-approved in P006).
-
-1. Release IDs R01, R02, … are permanent, like FR IDs. A release has: a theme, a goal, a fixed feature set (gap IDs and FR IDs), prerequisites, exit criteria, and a suggested version label.
-2. The MVP is milestone M3 (S01–S13 plus mvp_additions) and ships as the first stable release. Suggested label v1.0.0; the user decides (S13.7).
-3. Feature releases bump the MINOR version (v1.1.0, v1.2.0, …). Fix-only releases bump PATCH and can ship at any time between feature releases. A release that breaks the data format or the upgrade path bumps MAJOR and needs the user's approval.
-4. One feature release is in progress at a time. Security fixes take priority over all feature work.
-5. Just-in-time conversion: when a release is next, its features become one stage (or several), with substages written into plan.md, inserted before the AI stage as I8 requires, and the AI stage is renumbered (record it in the 10.18 table). Then the stage document is written and approved before any code (R3).
-6. Feature freeze: once a release's stage document is approved, adding a feature to it needs the user's approval. Otherwise the feature goes to a later release.
-7. Every release ends with its stage's testing and review substage, plus: an upgrade test from the previous release with real migrated data, a security review of every new surface (threat model updated), release notes and a changelog, updated user and admin guides, the R12 documentation audit, a tagged release, and the user's sign-off.
-8. Every release keeps the system upgradeable from the previous release (NFR-017) and keeps the NAS fully working with AI disabled (I7).
-9. Features that use the network (imports from other clouds, off-site backup, ACME certificates, DDNS, email, push, tunnels) are off by default and switched on explicitly by the user (I6).
-10. Reordering releases, splitting them, or moving a feature between releases needs the user's approval and a plan revision (R4).
-11. Features in a release that depend on an AI result (e.g. smart albums by person) work without AI, and gain the AI filter when S15 lands.
-
-### 11b.2 Conflicts and decisions
-
-Recorded where they apply; none is resolved silently. Features that depend on an unapproved change are marked with their question and stay planned.
-
-- **I8 (AI always last) and the new releases:** Keep I8 exactly: releases R01–R12 come before S15 by default. This delays AI until after all releases. Ask Q52.
-- **Position of the new releases relative to S14 (pools):** Default: S14 stays right after the MVP (milestone M4), and the releases follow it. The user earlier placed pools 'in the end'. Ask Q53.
-- **NG5 (no remote access, no public links):** Reversed by the user's message 2 (public release). Change NG5 to point to R06 and R09, quoting the user. This is approved by this prompt.
-- **NG1 (no cloud sync, cloud backup, or hosted component):** R01 (imports from clouds) and R04 (off-site backup) use remote services the user chooses. Propose rewording NG1: 'No hosted service operated by the project and no dependency on one; connections to third-party or user-owned remote services only as explicit opt-in features (I6).' Ask Q55.
-- **NG2 (no native mobile apps):** R07 needs it reversed. Recommended, given the goal of replacing cloud services. Ask Q56.
-- **NG3 (no photo editing):** R10 editing is non-destructive and never touches originals. Propose rewording NG3 to 'no destructive editing'. Ask Q57.
-- **I1 and A3 (two areas only):** External read-only libraries (G-016) would add a third source of media. Excluded by default. Ask Q58.
-- **I5 with groups, partner sharing, public links, DLNA:** All remain explicit shares, enforced server-side. DLNA serves only folders the admin marks for the household.
-- **I6 (no network calls unless enabled):** Every network-using feature is off by default: email and webhook alerts, cloud imports, off-site backup, ACME, DDNS, push, map tiles online, update check, tunnels.
-- **I10 (preview, confirmation, undo):** Applies to imports, batch rename, rewind, free-up-space on phones, bulk metadata edits, and account deletion.
-- **NG9 (no generative AI):** Unchanged. Generative features are excluded (X-01).
-
----
-
-## 11c. Public release specification (R09) (new in 1.6.0, P006)
-
-**Principle.** [User requirement, emphasized] Security and UI/UX are release-blocking for R09, not polish. R09 ships only when every gate in release_gates passes. If a gate cannot be met, the release is delayed, never shipped with a known gap.
-
-Gaps covered: G-100 to G-107, G-113 → public sharing features; G-108 internet-facing hardening → security design; G-109 go-public readiness gate → go public wizard; G-110 external audit and staged beta → release gates; G-111 UX overhaul for public use → ui ux requirements; G-112 reverse proxy and tunnel support → connectivity. FR-294–FR-307 (section 3.3) and NFR-040–NFR-043.
-
-### Security design
-
-- Threat model rewritten for internet exposure: anonymous attackers, credential stuffing, automated scanners, abuse of public links and upload links, denial of service, stolen phones, malicious invited users, and compromise of the relay VPS.
-- Public edge separation (ADR): anonymous public-link traffic is handled by a restricted handler (or a separate process or port) that can only resolve link tokens and serve the linked items. It cannot reach admin, user-management, or internal APIs.
-- The admin interface and admin API are reachable only from the LAN or the VPN by default. Changing this needs an explicit setting with a warning.
-- Mandatory 2FA (TOTP or passkey) for every admin before exposure; the admin chooses whether it is mandatory for all users (recommended).
-- HTTPS only, with a trusted certificate (R06), HSTS, modern TLS settings, a strict Content Security Policy, and all security headers; HTTP only redirects.
-- Rate limits and brute-force protection per IP, per account, and per link (R05), with progressive delays and temporary bans; request size limits, timeouts against slow-request attacks, and limits on concurrent transfers per user and per link.
-- Trusted-proxy configuration so client IPs are correct behind a reverse proxy or relay (G-069).
-- Malware scanning (R05) is required for every file received through public upload links, with quarantine before it becomes visible to the owner.
-- Server-side request forgery protection for any feature that fetches URLs (imports, webhooks, link previews).
-- Session security for the internet: shorter idle timeouts for new devices, re-authentication for sensitive actions (change password, 2FA, create public link to a whole folder, delete account), and login alerts (R05).
-- Signed releases, a software bill of materials, and an optional, explicit update check that only downloads a signed version manifest (I6: off by default, switched on in the go-public wizard). A security advisory must be able to reach admins who opt in.
-- SECURITY.md with a disclosure policy, a security.txt, and an incident-response runbook (revoke all links, force logout, rotate secrets, restore from backup).
-- Fuzzing of every unauthenticated endpoint (link tokens, login, upload links) in CI.
-
-### Public sharing features
-
-- G-100 Public links: unguessable tokens of at least 128 bits; optional password; expiry on by default (e.g. 30 days, configurable, 'never' possible only with a warning); download limit; view-only mode that hides download buttons (stated honestly as best-effort); revoke; optional custom readable slug; QR code; public album pages with a clean gallery.
-- G-101 File requests: upload-only links with size, type, and count limits, uploader name and optional email, expiry, a per-link quota counted against the owner, malware scanning, and a notification to the owner; uploaders never see other uploads.
-- G-102 Send large files: an expiring transfer with optional password and a notification when downloaded; stored in internal data until expiry and counted against the sender's quota.
-- G-103 Optional guest verification by email code before a link opens (uses the MVP email channel).
-- G-104 Per-link access log (time, approximate client, action) visible to the owner, and optional notifications on first open and each download.
-- G-105 Could: watermarks on previews of shared items (viewer email or custom text).
-- G-106 Could: share pages with the owner's name and optional logo and colors.
-- G-107 Accounts for people outside the home: invitation links created by the admin (no open registration by default, Q60), email verification, per-user bandwidth and transfer limits, and admin tools to disable a link or user and see abuse reports.
-- G-113 Operator guidance: the NAS owner is the host of everything shared; a template of house rules for invited users; how to respond to a complaint.
-
-### Connectivity
-
-- Supported exposure methods (Q61): (1) port forwarding to the NAS or to a reverse proxy, (2) the user's own VPS relay over WireGuard (G-072, works behind CGNAT), (3) documented reverse proxies (Caddy, Traefik, nginx) with tested configurations (G-112).
-- Third-party tunnels that terminate TLS (e.g. Cloudflare Tunnel) are documented only with a clear warning that the provider can see the traffic (I6).
-- Never use UPnP automatic port opening.
-- An outside-in reachability test through the user's own relay or by guiding the user to open the site on mobile data.
-
-### Go-public wizard
-
-- G-109 A step-by-step wizard in plain language that explains the risks and checks readiness before exposure is switched on: admin 2FA enabled, trusted certificate valid, off-site backup configured and recent (R04), software current with no known security advisories, malware scanning on, strong passwords for all users, link defaults (expiry on) reviewed, alert channel working.
-- The wizard refuses to enable exposure until every required check passes, shows how to fix each failed check, and keeps monitoring afterwards (certificate expiry, failed-login spikes, overdue backups), alerting and offering a one-click 'go private again'.
-
-### UI and UX requirements
-
-- Design for two audiences: the owner, and recipients who have no account, are often on a phone, on a slow network, and have never heard of the NAS. A recipient must understand within seconds who shared what, until when, and how to view or download it.
-- Mobile-first share and upload pages with performance budgets on a mid-range phone over a throttled 4G profile (e.g. first view under 2.5 s, set in the stage document) and progressive image loading.
-- Clear, human error and permission messages everywhere (expired link, wrong password, upload too large, account locked), with no technical jargon or stack traces.
-- Accessibility: WCAG 2.2 AA audit of all public pages and main owner flows.
-- Internationalization framework with right-to-left support; the first extra languages are decided by the user (Q15; Urdu recommended since the user is in Pakistan).
-- A consistent design system across web, mobile apps, and share pages; empty states and onboarding for new invited users; a help center in the documentation.
-- Moderated usability tests with at least five non-technical people for: opening a shared album on a phone, uploading through a file request, and an owner creating and revoking a link. Fix every blocking issue before release.
-- A visible trust layer: link expiry and access information shown to recipients, 'shared by' identity, and a clear indicator for the owner of everything currently public (a 'public items' dashboard with one-click revoke).
-
-### Release gates (all must pass)
-
-- An independent penetration test or security audit of the internet-facing surface, by someone other than the implementing agent, with no open critical or high findings.
-- The updated threat model has every item mitigated or documented as an accepted risk by the user.
-- Automated security tests (authorization on every public route, link-token brute force, upload abuse, rate limits, header checks) and fuzzing pass.
-- The go-public wizard blocks exposure on an unprepared system in tests.
-- Usability tests completed and blocking issues fixed; the accessibility audit has no open AA failures.
-- A private beta with invited external users for an agreed period (e.g. four weeks) with no data-loss or security incident, then a staged rollout.
-- Upgrade from the previous release tested; rollback ('go private again') tested.
-- Documentation: exposure guide per method, hardening guide, incident runbook, recipient help page.
-
-### Proposed invariant I11
-
-**Proposed only, not in force** (Q66): "Internet exposure is always an explicit admin choice that passes the readiness checks. The admin interface stays reachable only from the LAN or VPN unless the admin separately enables it, and anonymous access is limited to explicit, revocable links." It is added to `RULES.md` and section 2a only after the user approves it.
 
 ---
 
@@ -3575,8 +3181,6 @@ Gaps covered: G-100 to G-107, G-113 → public sharing features; G-108 internet-
 Each final substage above **writes the stage's tests** (S006): unit, integration, and system/application tests for everything the stage built, plus the regression tests for bugs recorded during the stage. Tests named in the deliverables or acceptance criteria of earlier substages are written and checked there. The stage's code is written first, to be testable. Coverage of at least 80% (Go: `internal/...`) is an exit criterion.
 
 Each final review substage above also runs a **documentation audit** (R12, `templates/audit-checklist.md`).
-
-**Releases (1.6.0, P006).** Each release R01–R12 becomes one or more stages just in time (11b.1); its testing substage adds the release's own focus (the exit criteria in 11b, and for R09 the gates in 11c) and an **upgrade test from the previous release with real migrated data** (NFR-017).
 
 ### 12.2 Test levels (all stages)
 
@@ -3653,11 +3257,6 @@ CI runs on Linux and Windows from S01.1. _Since S007 (the user's preference):_ C
 | RK-34 | **Disk-level data loss during pool operations** (erasing the wrong drive, a failed rebuild, RAID 0 member loss). _(1.4.0, P005)_ | Data | The helper refuses the OS drive and drives with NAS data; model and serial list plus a typed phrase (I10); SMART check first; migration verified before switching; simulated-disk tests (NFR-038); recovery drill; "RAID is not a backup" in the GUI and docs (S08.6). |
 | RK-35 | **Security of the privileged storage helper** (a root service is a high-value target). _(1.4.0, P005)_ | Security | Narrow allow list; Unix-socket authentication; audit log; the core never runs as root (NFR-037); threat model entries (S03.1, S14.2); review in S14.10. |
 | RK-36 | **Encoder licenses in optimization**: x264 and x265 are GPL (a GPL FFmpeg build), HEIC output needs an HEVC encoder in libheif (x265 GPL, or kvazaar BSD), AV1 encoders carry the AOMedia patent license. _(1.4.0, P005)_ | Legal | All run as separate programs, never linked (as D-04); recorded in `dependencies.md`; H.264 by default (ADR-0025, Q48); the user decides any other encoder. |
-| RK-37 | **Scope explosion** from twelve releases after the MVP (1.6.0, P006). | Scope | Release gates; one release at a time (11b.1); Could items removable; every release needs the user's approval to change. |
-| RK-38 | **Internet exposure** (R09): anonymous attackers, credential stuffing, abuse of public links. | Security | The R09 gates (11c, NFR-040, NFR-043): independent audit, go-public wizard, admin interface LAN/VPN-only by default, private beta. |
-| RK-39 | **Mobile platform restrictions** on background backup (R07). | Technical | Platform testing on both systems; the MVP's WebDAV bridge (FR-219) stays as a fallback. |
-| RK-40 | **Sync-client data loss** (R08). | Data | R04 first (versions and rewind); conflict copies instead of overwrites; sync stress tests; mass deletions ask first. |
-| RK-41 | **Dependency licenses** of rclone, ClamAV, WireGuard tools, office engines, and map data (ONLYOFFICE AGPL-3.0, OpenStreetMap ODbL 1.0; research R001). | Legal | License checks per release; separate programs only; the register's candidate section (13). |
 
 ---
 
@@ -3683,4 +3282,3 @@ CI runs on Linux and Windows from S01.1. _Since S007 (the user's preference):_ C
 | 1.4.1 | 2026-09-28 | Decisions (PATCH): **ADR-0021 Accepted** (SHA-256; section 7, 7.1, A23). 12.2 names the CI trigger: a stage-completion tag or a manual run. No requirement or scope change. | The user's answers in S007 (E013): "SHA-256 (Recommended)", "Stage tag + manual (Recommended)" | `logs/sessions/2026-09-28_S007.md` |
 | 1.4.2 | 2026-09-28 | Clarification (PATCH), documentation audit A003 (F-002): Q50 and the three P005 follow-up notes of S01.2, S01.3, and S01.4 no longer say that ADR-0021 must still be Accepted; they say the follow-ups were done in S007. No requirement, scope, or decision change. | Audit A003 (R12, the S02 final review, S02.8-T04) | `audits/A003-2026-09-28-documentation-audit.md`; `logs/sessions/2026-09-28_S007.md` |
 | 1.5.0 | 2026-09-28 | Requirements (MINOR), from the user's walkthrough of S02: **FR-008** gets the user's 30-day trash retention (S08.1 scope and criterion 3); the trash stays in S08.1, as the user decided. New **FR-214** (folder sizes), **FR-215** (added and modified dates, both shown), **FR-216** (finished uploads appear at once; a single uploaded item is scrolled into view and blinks twice). S02.3 and S02.4 get follow-up notes and requirements; their tasks S02.3-T05 and S02.4-T05 are in the stage document. | The user's messages in S007 (E030, E031) and answer "Both" (E032) | `logs/sessions/2026-09-28_S007.md`; `stages/S02-nas-gui.md` |
-| 1.6.0 | 2026-09-29 | **Competitor research and release roadmap** (MINOR, R4): research R001 (18 services, 118 gaps, each with one destination); goal G13; NG5 changed, NG1–NG3 marked pending Q55–Q57; MVP additions FR-217–FR-221 (Live Photos and motion photos, phone auto-backup bridge, alert delivery; pending Q54) with P006 labels in S03.1, S03.3, S04.1, S04.2, S04.6, S04.7, S04.9, S05.1, S05.3, S05.8, S08.1, S09.2, S09.3, S09.5, S09.6, S10.3, S10.5, S10.6, S11.2, S12.3; section 3.3 with FR-222–FR-327 for releases R01–R12 and NFR-040–NFR-043; 11b (roadmap, release process = RULES R13, conflicts), 11c (public release specification, I11 proposed only); Q52–Q66; S15.10 extensions; future components; milestones; risks RK-37–RK-41. Written against 1.4.2 and adapted to 1.5.0 (FR IDs from FR-217; folder sizes and the added date already in FR-214, FR-215). No stage created for R01–R12. | Plan change request #6 (the user's messages quoted in 11b) | `prompts/P006-competitor-research-release-roadmap.json`; `research/R001-2026-09-28-cloud-storage-feature-research.md`; `logs/sessions/2026-09-28_S007.md` |

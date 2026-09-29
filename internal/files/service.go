@@ -48,6 +48,9 @@ type Service interface {
 	// archive, and WriteArchive streams that archive (S02.4-T03).
 	PlanArchive(ctx context.Context, owner string, paths []string) (ArchivePlan, error)
 	WriteArchive(ctx context.Context, plan ArchivePlan, w io.Writer) error
+	// Usage adds up the size of the folder at path, at any depth
+	// (S02.3-T05, FR-214).
+	Usage(ctx context.Context, owner, path string) (Usage, error)
 }
 
 // Op names a file operation, for hooks and logs.
@@ -65,6 +68,7 @@ const (
 	OpCopy         Op = "copy"
 	OpDelete       Op = "delete"
 	OpArchive      Op = "archive"
+	OpUsage        Op = "usage"
 )
 
 // Event describes one operation for the hooks.
@@ -202,7 +206,9 @@ func (s *Local) Stat(ctx context.Context, owner, path string) (Item, error) {
 			if err != nil {
 				return fsError(err, path)
 			}
-			it, err = withDetails(root, NewItem(owner, rel, info), path)
+			it = NewItem(owner, rel, info)
+			stampAdded(root, &it, info)
+			it, err = withDetails(root, it, path)
 			if err == nil && it.Kind == KindFile {
 				it.ContentHash, _ = s.hashes.Lookup(ctx, owner, rel, it.ETag) // none on failure
 			}

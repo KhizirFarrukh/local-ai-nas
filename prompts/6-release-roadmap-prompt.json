@@ -1,0 +1,844 @@
+{
+  "prompt_meta": {
+    "name": "local-ai-nas: Competitor Feature Research and Post-MVP Release Roadmap (Plan Change Request #6)",
+    "prompt_version": "1.0",
+    "type": "Plan change request, handled under code-agent-docs/RULES.md R4 (plan changes) and R5 (decision records)",
+    "research_date": "2026-09-28",
+    "plan_version_this_prompt_was_written_against": "1.4.2",
+    "how_to_read_this": "Read this entire prompt before acting. Every field is an instruction. The research record and gap list are the input; the MVP additions and the release roadmap are the output you write into the plan. Items marked [User requirement] come from the user and must not be changed or dropped. Items marked [Planner addition] were added by the planner; record them with that label so the user can accept or remove them individually. Where this prompt conflicts with an invariant, a non-goal, or an Accepted ADR, follow conflicts_and_decisions: never resolve a conflict silently."
+  },
+
+  "user_requirements": {
+    "note": "Quote these verbatim in plan.md where the release roadmap is introduced, and in the session log.",
+    "message_1": "this is the current plan of the project, now, go through the internet, search for all kinds of cloud storage services, like google drive, onedrive, dropbox, proton drive, and everything, and record everyone's features in the apps, and make list of all the features that is not in my project, then make a detailed json prompt of adding the features as part of future releases, and that they should be developed and released in a planned manner like in versions, or you can say a set of features at a time of release, but they shouldnt be part of the first release (that is the mvp aka minimum viable product) but if they are something that should be a must have then include them in mvp.",
+    "message_2": "my project of nas should make every other (or atleast most of them) cloud storage services useless except that my project is currently limited to local hosting, add a future release of public release too but that is very crucial too due to severe UI/UX reasons and also severe security reasons",
+    "interpretation": [
+      "Product goal (new, from message 2): local-ai-nas should make most commercial cloud storage and photo services unnecessary for its users. Add this as goal G13 in plan.md section 2.",
+      "Features found in competitors but missing from the plan are added as planned future releases, each a fixed set of features, developed and shipped one release at a time.",
+      "They are not part of the MVP, except the few that are genuinely must-have (mvp_additions).",
+      "A dedicated 'public release' makes the NAS safely reachable from the internet. It is release-gated by strict security and UI/UX requirements (release R09)."
+    ]
+  },
+
+  "before_you_start": [
+    "Run the full session start protocol from code-agent-docs/RULES.md (R1) before acting on anything in this prompt.",
+    "Save this entire prompt, unchanged, to code-agent-docs/prompts/P006-competitor-research-release-roadmap.json. If P006 is already taken, use the next free number and use that number everywhere this prompt says P006. In the session log, record the USER entries as the two messages in user_requirements, plus: 'Plan change request #6, archived verbatim at code-agent-docs/prompts/P006-competitor-research-release-roadmap.json'.",
+    "In CURRENT_STATE.md under 'In progress', write: 'Applying plan change request #6 (competitor research, MVP additions, post-MVP release roadmap)'.",
+    "This prompt was written against plan 1.4.2. If plan.md has changed since then, run the impact analysis (step 2) against the current version and adapt IDs. Never overwrite a decision the user made after 1.4.2.",
+    "S02 is In Progress. Do not change any application code in this session. If an MVP addition affects a substage that is already In Progress or Done, list the impact in your report instead of changing the work."
+  ],
+
+  "objective": "Record the competitor feature research, add the gap analysis to the plan, add the must-have features to the MVP, and add a versioned post-MVP release roadmap (R01 to R12) with every missing feature assigned to exactly one release, the S15 AI extensions, or the excluded list. Detail the public internet release (R09) with release-blocking security and UI/UX gates. Then report to the user and stop.",
+
+  "out_of_scope": [
+    "Writing application source code, prototypes, or spikes",
+    "Installing dependencies",
+    "Creating stages or stage documents for post-MVP releases now. Releases become stages just in time (release_process_rules).",
+    "Changing the MVP beyond the items in mvp_additions",
+    "Accepting any new ADR on the user's behalf",
+    "Re-verifying competitor features beyond the checks in verification_tasks. The research is a dated snapshot."
+  ],
+
+  "research_record": {
+    "file": "Write this as code-agent-docs/research/R001-2026-09-28-cloud-storage-feature-research.md (new folder, pre-approved below). Include: method, date, every service with its features and sources, the coverage matrix, the gap list, and the excluded list. plan.md links to it instead of copying it.",
+    "method": "Web research on 2026-09-28 across commercial cloud storage, photo services, and self-hosted alternatives (the project's direct competitors). Features were taken from official product pages, help centers, release notes, and independent reviews. Enterprise-only features were noted but weighed low, because local-ai-nas targets households and small groups.",
+    "caveat": "Products change often. Before a release that depends on a competitor's behavior is planned in detail, re-check that behavior. Never copy a competitor's branding, UI, or text; features are ideas, not designs.",
+    "services": [
+      {
+        "name": "Google Drive",
+        "category": "Commercial cloud storage",
+        "features": ["Share with people or by link with viewer, commenter, and editor roles", "Transferable ownership", "Shared drives owned by a team", "Version history (up to 100 versions / 30 days, named versions)", "Trash with retention", "Desktop client with stream (on-demand) or mirror modes", "Backup of computer folders", "Offline files on desktop and mobile", "Mobile document scanning with OCR", "Search by file type, owner, date, and content; OCR of images and PDFs", "Quick Access / recent files, starred files, descriptions", "Activity log", "Previews of 30+ file types including Office and archives", "Real-time collaborative editing (Docs, Sheets, Slides) and comments", "Block users and spam folder for shares", "2FA; client-side encryption only on enterprise tiers", "AI summaries and natural-language search (Gemini)"],
+        "sources": ["https://www.cloudwards.net/review/google-drive/", "https://en.wikipedia.org/wiki/Google_Drive"]
+      },
+      {
+        "name": "Google Photos",
+        "category": "Commercial photo service",
+        "features": ["Automatic phone backup with Original, Storage saver, and Express quality", "Free up space on the phone", "People and pets grouping, auto-updating albums", "Shared albums with contributors, comments, and likes", "Partner sharing (share all photos, or from a date or of chosen people)", "Locked Folder (PIN/biometric protected, hidden)", "Memories carousel and recaps", "Map / places", "Editing: crop, adjust, filters, portrait blur, AI tools (Magic Eraser, Unblur, Moods, Remix)", "Redact tool to blur sensitive info in screenshots (Sept 2026)", "Collages, animations, movies, cinematic photos", "Archive", "TV casting and slideshows", "Print store and photo books", "Ask Photos natural-language AI search"],
+        "sources": ["https://www.androidheadlines.com/google-photos", "https://www.androidpolice.com/google-photos-explainer/", "https://9to5google.com/2026/09/24/google-photos-redact-moods/"]
+      },
+      {
+        "name": "Microsoft OneDrive",
+        "category": "Commercial cloud storage",
+        "features": ["Files On-Demand", "PC folder backup (Desktop, Documents, Pictures)", "Personal Vault (identity-verified, auto-locking folder)", "Ransomware detection and 'Restore your OneDrive' to a point in the last 30 days", "Version history", "Sharing links with expiry and passwords", "Mobile scanning", "Photo auto-backup, albums, Memories", "New Photos app with people, AI slideshows, and photo stacks that group duplicates or blurry shots with cleanup suggestions", "Office co-authoring", "Copilot summaries, file comparison, natural-language photo agent"],
+        "sources": ["https://www.microsoft.com/en-us/microsoft-365/onedrive/online-cloud-storage", "https://www.thurrott.com/a-i/328079/onedrive-is-getting-new-copilot-features-photos-agent-more"]
+      },
+      {
+        "name": "Dropbox",
+        "category": "Commercial cloud storage",
+        "features": ["Block-level sync, selective sync, online-only (smart sync) files, bandwidth limits", "Share links with password, expiry, and download limits", "File requests (upload links)", "Dropbox Transfer: send large files with expiry, password, and custom branding; recipients need no account", "Rewind: restore a folder or the whole account to a point in time", "Version history and deleted-file recovery", "Document scanning, PDF editing, e-signature", "Replay: frame-accurate review comments on video, image, and audio, with versions and approvals", "Office and Google Docs integration", "Camera uploads", "WebDAV", "2FA"],
+        "sources": ["https://www.cloudwards.net/review/dropbox/", "https://help.dropbox.com/delete-restore/rewind", "https://help.dropbox.com/share/dropbox-transfer", "https://help.dropbox.com/installs/dropbox-replay"]
+      },
+      {
+        "name": "Proton Drive",
+        "category": "Privacy-focused cloud storage",
+        "features": ["End-to-end encryption", "Photo backup and gallery", "Secure share links", "Large file transfers", "Collaborative Docs and Sheets", "Desktop apps (Windows, macOS), Linux client on the roadmap, CLI (launched June 2026)", "Document scanning on Android and iOS", "Folder upload from Android", "Shared SDK for consistent performance across platforms"],
+        "sources": ["https://proton.me/drive/roadmap", "https://proton.me/blog/drive-2026-q1-recap"]
+      },
+      {
+        "name": "iCloud Photos / iCloud Drive",
+        "category": "Commercial photo and storage service",
+        "features": ["iCloud Shared Photo Library for up to 6 people (add manually, by date, by people, or automatically from the camera)", "All participants can add, edit, caption, favorite, and delete; deleted items go to Recently Deleted and the contributor is notified", "Shared Albums (reduced resolution)", "Memories and Featured Photos", "Duplicate detection when merging libraries", "Hidden album, Recently Deleted"],
+        "sources": ["https://www.macrumors.com/guide/icloud-shared-photo-library/"]
+      },
+      {
+        "name": "pCloud",
+        "category": "Commercial cloud storage",
+        "features": ["pCloud Drive virtual drive", "Crypto folder (client-side encryption add-on)", "Rewind (account-wide snapshot restore)", "Versioning (30 days, 1 year add-on)", "Share links with password, expiry, download limits, and branding", "Upload links", "Audio player with playlists and podcast speed", "Video player with quality selection", "Automatic photo upload", "Public folder hosting", "pCloud Transfer", "Kodi integration", "WebDAV"],
+        "sources": ["https://www.cloudwards.net/review/pcloud/"]
+      },
+      {
+        "name": "MEGA",
+        "category": "Encrypted cloud storage",
+        "features": ["End-to-end encryption", "Desktop sync and backup for Windows, macOS, Linux", "CLI", "Camera uploads", "File requests", "Share links with password and expiry, QR code sharing", "Versioning and rubbish bin", "Encrypted chat and calls", "Password manager (MEGA Pass) and VPN bundles", "S4 object storage (S3-compatible)", "WebDAV", "Recovery key"],
+        "sources": ["https://www.cloudwards.net/review/mega/"]
+      },
+      {
+        "name": "Sync.com",
+        "category": "Encrypted cloud storage",
+        "features": ["Zero-knowledge encryption", "Vault (cloud-only storage outside sync)", "Version history (180–365 days)", "Account rewind", "Share links with access management and tracking", "Team shared folders with permissions", "Event/activity log", "2FA", "Custom branding"],
+        "sources": ["https://cyberinsider.com/cloud-storage/reviews/sync-com/"]
+      },
+      {
+        "name": "Icedrive",
+        "category": "Cloud storage",
+        "features": ["Virtual drive for Windows, macOS, Linux; portable app", "Color-coded folders, favorites", "Share links with password, expiry, and download limits", "File requests", "Client-side encrypted folder", "2FA including FIDO/U2F keys", "Version history and trash", "WebDAV, NAS sync"],
+        "sources": ["https://www.cloudwards.net/review/icedrive/"]
+      },
+      {
+        "name": "Filen",
+        "category": "Encrypted cloud storage",
+        "features": ["End-to-end encryption for all accounts", "Five sync modes (two-way, one-way, backup) with .fileignore", "Unlimited versioning", "Built-in text editor", "Offline files", "Share links with password, expiry, download limits; upload links", "Network drive, WebDAV, S3", "2FA, master key export", "Account data export and deletion", "REST API"],
+        "sources": ["https://www.cloudwards.net/review/filen/"]
+      },
+      {
+        "name": "Koofr",
+        "category": "Cloud storage",
+        "features": ["Connect other clouds (Dropbox, Google Drive, OneDrive) and search across them", "Duplicate file finder", "Space usage analysis", "Advanced (batch) renaming", "Browser image editor (resize, crop, effects)", "Vault (client-side encrypted)", "Import from Facebook/Instagram", "WebDAV and rclone support", "2FA with TOTP and passkeys"],
+        "sources": ["https://koofr.eu/features/"]
+      },
+      {
+        "name": "Tresorit",
+        "category": "Encrypted business storage",
+        "features": ["End-to-end encryption", "File requests", "Link restrictions (password, expiry, download limits, email verification)", "Link access logs", "eSign", "Remote device wipe", "User groups and roles", "Version history", "Email integration for encrypted attachments", "Document scanner"],
+        "sources": ["https://www.cloudwards.net/tresorit-review/"]
+      },
+      {
+        "name": "Box",
+        "category": "Business cloud storage",
+        "features": ["Customizable watermarks on files and folders (user email, IP, or custom text)", "Metadata and retention (enterprise)"],
+        "sources": ["https://support.box.com/hc/en-us/articles/42817901880851-Box-is-launching-customizable-watermarking-for-files-and-folders"]
+      },
+      {
+        "name": "Amazon Photos",
+        "category": "Commercial photo service",
+        "features": ["Family Vault shared with up to 6 members", "Auto-save from phones and computers", "Recognition of people, things, and places with filtering and search", "Albums", "Viewing on TVs, smart displays, and tablets (Fire TV, Echo Show)"],
+        "sources": ["https://www.pocket-lint.com/what-is-amazon-photos-and-how-do-you-use-it/"]
+      },
+      {
+        "name": "Nextcloud (Hub 26)",
+        "category": "Self-hosted platform (direct competitor)",
+        "features": ["Sync clients with selective sync and virtual files", "File locking", "Version history", "External storage (S3, SMB, SFTP, other clouds)", "Share links with password, expiry, download restrictions, one-time-password verification", "Server-side and per-folder end-to-end encryption", "Photos: adjustable grid, map, trip memories, slideshow, year recap, EXIF editor, video transcoding, Google Photos import", "Activity heatmap and filters", "Office (Collabora, Euro-Office), Text, Notes, Talk, Calendar, Contacts, Mail", "Flow workflow automation", "LDAP, SAML/OIDC SSO, TOTP, WebAuthn passwordless", "Brute-force protection, rate limiting, suspicious-login detection, breached-password checks", "Ransomware protection app, antivirus app", "Remote wipe"],
+        "sources": ["https://nextcloud.com/blog/nextcloud-hub26-summer/", "https://bestcloudstorageguide.com/blog/nextcloud-features-guide-2026", "https://nextcloud.com/secure/"]
+      },
+      {
+        "name": "Seafile",
+        "category": "Self-hosted file sync",
+        "features": ["Encrypted libraries (client-side)", "Virtual drive (SeaDrive)", "Custom metadata properties and views (table, gallery, Kanban, map)", "Hierarchical tags", "Granular permissions (upload, download, preview-only)", "Share links with password, expiry, and email authentication", "SeaDoc co-authoring, OnlyOffice/Office Online integration", "Wiki", "Server-side virus scanning", "Remote wipe", "Audit logging"],
+        "sources": ["https://www.seafile.com/en/features/"]
+      },
+      {
+        "name": "Synology (DSM, Photos, Drive, Snapshots, Hyper Backup, Active Backup)",
+        "category": "NAS vendor (direct competitor)",
+        "features": ["Photos: timeline or folder view, similar-photo stacking, conditional (rule-based) albums, people and object recognition, shared space, photo request (public upload) links, public folder links with password and expiry, Live Photos, 360° video, slideshow, map, mobile backup, widgets", "Btrfs snapshots with retention and immutable (WORM) snapshots against ransomware; users restore via a snapshot folder or Windows Previous Versions", "Snapshot replication to a second NAS", "Hyper Backup: backup to USB, remote NAS, file servers, or cloud with scheduling, compression, integrity checks, retention", "Active Backup: back up PCs, servers, and VMs to the NAS", "Drive: sync client, team folders, NAS-to-NAS sync"],
+        "sources": ["https://www.synology.com/en-us/dsm/7.3/software_spec/synology_photos", "https://ifeeltech.com/blog/synology-snapshots-explained", "https://www.vinchin.com/nas-tips/synology-drive-vs-active-backup-for-business-vs-hyper-backup.html"]
+      },
+      {
+        "name": "Immich (v3)",
+        "category": "Self-hosted photo platform (direct competitor)",
+        "features": ["Mobile apps with background backup, automatic LAN/remote URL switching, free up space", "Timeline, folders view, archive, trash, stacking, tags, star ratings, recently added view", "Public links (custom slugs), shared albums (read-write or read-only), partner sharing", "CLIP smart search, map, explore, memories", "Faces with merge, duplicate and similar detection, OCR", "Live Photos, motion photos, RAW, 360°, HDR video", "External libraries with watching, custom storage structure, XMP sidecars", "Non-destructive editing (crop, rotate, mirror)", "Workflows automation (triggers, filters, actions)", "HLS real-time transcoding", "Integrity report (untracked, missing, checksum mismatch)", "Database backup and restore from the web UI", "Fine-grained API permissions", "Planned: user groups, automatic stacking, smart memories, smart albums, iCloud import"],
+        "sources": ["https://immich.app/roadmap", "https://linuxiac.com/immich-3-0-released-with-big-upgrades-for-self-hosted-photo-libraries/", "https://chrislongros.com/2026/01/28/immich-v2-5-0-the-90000-stars-release-major-features-for-self-hosted-photo-management/"]
+      },
+      {
+        "name": "PhotoPrism",
+        "category": "Self-hosted photo platform",
+        "features": ["Search filters (color, quality, resolution, label, place)", "Places map, moments, calendar view", "Faces, labels, NSFW detection", "Batch metadata editing", "Live and motion photos, 360° panoramas, RAW, JPEG XL", "Private flag, archive, review queue", "YAML sidecars", "WebDAV sync, ZIP download, secret share links with expiry", "PWA install"],
+        "sources": ["https://www.photoprism.app/features/"]
+      },
+      {
+        "name": "Ente Photos",
+        "category": "Encrypted photo service (open source)",
+        "features": ["End-to-end encryption with on-device ML (faces, semantic search)", "Shared albums and public links", "Collect: anyone with a link can add photos from a browser without an account", "Continuous incremental local export with metadata and album structure", "CLI", "Apps for iOS, Android, web, Windows, macOS, Linux"],
+        "sources": ["https://ente.com/compare/ente-vs-google-photos/"]
+      }
+    ],
+    "remote_access_research": {
+      "summary": "Many home connections are behind CGNAT, so port forwarding is often impossible. The self-hosted pattern that needs no third party is a WireGuard tunnel from the home server to a small public VPS the user controls, which relays traffic. Mesh VPNs (Tailscale, or self-hosted Headscale) give private access without exposing anything publicly. Third-party tunnels that terminate TLS let the provider see traffic, which conflicts with the project's privacy stance unless the user opts in knowingly.",
+      "sources": ["https://community.hetzner.com/tutorials/bypass-cgnat-with-a-wireguard-vps-relay/"]
+    }
+  },
+
+  "already_covered_by_the_plan": {
+    "note": "Record in the research file so the user sees the research was compared, not just listed. Cite the FR IDs.",
+    "items": [
+      "Resumable uploads, range downloads, ZIP download, file operations (FR-004–FR-007)",
+      "Previews of images, text, PDF, audio, video (FR-082)",
+      "Per-user trash (FR-008); file versioning (FR-122, Could, pending Q34)",
+      "WebDAV network drive; SMB proposed (FR-009, FR-124)",
+      "Timeline, albums, favorites, hide/archive, lightbox viewer (FR-013–FR-016, FR-096)",
+      "Video streaming with quality switching (FR-144–FR-148)",
+      "HEIC (Should), RAW (Could) (FR-018, FR-020)",
+      "Metadata editing: description, tags, date, location (FR-015, FR-099); offline place names (FR-062)",
+      "Forgiving search with synonyms, typos, operators (FR-047–FR-063, FR-104–FR-110)",
+      "Exact and near duplicates, look-alike stacks, bursts, file duplicates and shortcuts (FR-150–FR-175)",
+      "Storage saver: resolution and quality reduction, upload policies (FR-176–FR-194)",
+      "Multi-user, private namespaces, read sharing, shared with me (FR-112–FR-118)",
+      "Admin dashboard, quotas, disk health, jobs, logs (FR-127–FR-130)",
+      "Integrity scans, metadata backup, disaster recovery, local external backup (FR-119–FR-123)",
+      "RAID 0 and RAID 1 pools (FR-195–FR-210)",
+      "Face grouping, auto-classification, AI cleanup; OCR and semantic search as options (S15)",
+      "Docker, per-platform setup scripts, safe updates (FR-131–FR-135, FR-149)",
+      "HTTPS, sessions, API tokens, audit log, TOTP (Could, Q33) (FR-064–FR-091)"
+    ]
+  },
+
+  "gap_list": {
+    "note": "Every feature below is missing or only partly covered. Each has exactly one destination: MVP, a release (R01–R12), S15 (AI extension), or EXCLUDED. When writing plan.md, give each gap one or more new FR IDs (continue from the highest existing FR ID, FR-213 at plan 1.4.2) and keep the gap ID as a cross-reference. 'Seen in' lists competitors from research_record. Labels: [Planner addition] for every gap; the destination is the planner's proposal.",
+    "gaps": [
+      { "id": "G-001", "name": "Live Photos and Motion Photos", "status_in_plan": "Missing", "seen_in": ["Immich", "Synology", "PhotoPrism", "iCloud"], "destination": "MVP", "summary": "Pair a still image with its motion clip and treat them as one library item." },
+      { "id": "G-002", "name": "Phone photo auto-backup (bridge until native apps)", "status_in_plan": "Missing (native app is candidate in 11a)", "seen_in": ["Google Photos", "iCloud", "OneDrive", "Dropbox", "Amazon Photos", "Immich", "Synology", "MEGA", "pCloud"], "destination": "MVP", "summary": "An upload-only camera inbox that third-party auto-upload apps can target, feeding the normal photo ingest." },
+      { "id": "G-003", "name": "Alert delivery (email, webhook, ntfy)", "status_in_plan": "Partial (alerts only in GUI and logs, FR-129)", "seen_in": ["Synology", "Nextcloud", "Dropbox (Rewind emails)"], "destination": "MVP", "summary": "Critical events reach the admin when nobody is looking at the GUI." },
+      { "id": "G-004", "name": "File versioning", "status_in_plan": "Partial (FR-122 Could, pending Q34)", "seen_in": ["Google Drive", "OneDrive", "Dropbox", "pCloud", "Sync.com", "Filen", "Icedrive", "Nextcloud", "Seafile"], "destination": "MVP (recommendation: answer Q34 'yes'; the user decides)", "summary": "Every competitor keeps versions. Overwrites over WebDAV and later sync clients make it essential." },
+
+      { "id": "G-010", "name": "Google Takeout import", "status_in_plan": "Missing (Q11 mentions Takeout metadata)", "seen_in": ["Nextcloud (Google Photos import)", "Immich (tools)"], "destination": "R01" },
+      { "id": "G-011", "name": "Apple Photos / iCloud export import", "status_in_plan": "Missing", "seen_in": ["Immich (planned iCloud import)"], "destination": "R01" },
+      { "id": "G-012", "name": "Import from other clouds (rclone remotes)", "status_in_plan": "Missing", "seen_in": ["Koofr", "Nextcloud external storage"], "destination": "R01" },
+      { "id": "G-013", "name": "USB drive and camera card import", "status_in_plan": "Missing", "seen_in": ["Synology (USB Copy)"], "destination": "R01" },
+      { "id": "G-014", "name": "Export all my data and account deletion", "status_in_plan": "Missing", "seen_in": ["Ente", "Filen", "MEGA", "Google (Takeout)"], "destination": "R01" },
+      { "id": "G-015", "name": "XMP sidecar export for other photo tools", "status_in_plan": "Missing (Q19 asks)", "seen_in": ["Immich", "PhotoPrism (YAML)"], "destination": "R01" },
+      { "id": "G-016", "name": "External read-only libraries (index a host folder in place)", "status_in_plan": "Superseded by the two-area design (A3)", "seen_in": ["Immich", "Nextcloud"], "destination": "EXCLUDED unless the user decides otherwise (conflicts with I1 and A3; Q58)" },
+
+      { "id": "G-020", "name": "Files area: stars, color labels, tags, descriptions", "status_in_plan": "Missing (photos only)", "seen_in": ["Google Drive", "Icedrive", "Seafile", "Filen"], "destination": "R02" },
+      { "id": "G-021", "name": "Recent files and quick access", "status_in_plan": "Missing", "seen_in": ["Google Drive"], "destination": "R02" },
+      { "id": "G-022", "name": "Saved searches and recent searches", "status_in_plan": "Missing", "seen_in": ["Google Drive", "Seafile (custom views)"], "destination": "R02" },
+      { "id": "G-023", "name": "Server-side archive create and extract", "status_in_plan": "Missing", "seen_in": ["Synology File Station", "Google Drive (archive preview)"], "destination": "R02" },
+      { "id": "G-024", "name": "Batch rename with patterns", "status_in_plan": "Missing", "seen_in": ["Koofr"], "destination": "R02" },
+      { "id": "G-025", "name": "Personal storage analyzer and folder sizes", "status_in_plan": "Missing (admin dashboard only)", "seen_in": ["Koofr", "Google Photos (storage management)"], "destination": "R02" },
+      { "id": "G-026", "name": "Recently added view", "status_in_plan": "Missing", "seen_in": ["Immich"], "destination": "R02" },
+      { "id": "G-027", "name": "Slideshow", "status_in_plan": "Missing", "seen_in": ["Google Photos", "Immich", "Synology", "Nextcloud", "OneDrive"], "destination": "R02" },
+      { "id": "G-028", "name": "Star ratings", "status_in_plan": "Missing", "seen_in": ["Immich", "Synology"], "destination": "R02" },
+      { "id": "G-029", "name": "Smart (rule-based) albums", "status_in_plan": "Missing", "seen_in": ["Synology (conditional albums)", "Immich (planned)", "Google Photos (auto-updating albums)"], "destination": "R02" },
+      { "id": "G-030", "name": "Memories without AI (on this day, year recap, trips)", "status_in_plan": "Missing", "seen_in": ["Google Photos", "iCloud", "OneDrive", "Immich", "Nextcloud"], "destination": "R02" },
+      { "id": "G-031", "name": "Map view of photos", "status_in_plan": "Missing (GPS and places exist; no map)", "seen_in": ["Google Photos", "Immich", "Synology", "PhotoPrism", "Nextcloud"], "destination": "R02" },
+      { "id": "G-032", "name": "Folder view of photos", "status_in_plan": "Missing (depends on Q40)", "seen_in": ["Synology", "Immich", "PhotoPrism"], "destination": "R02" },
+      { "id": "G-033", "name": "Grid density, year/month scrubber, calendar view", "status_in_plan": "Missing", "seen_in": ["Nextcloud", "PhotoPrism", "Synology"], "destination": "R02" },
+      { "id": "G-034", "name": "Batch metadata editing (shift dates, set location)", "status_in_plan": "Partial (single-item edits)", "seen_in": ["PhotoPrism", "Synology"], "destination": "R02" },
+      { "id": "G-035", "name": "Download as compatible format (HEIC to JPEG)", "status_in_plan": "Missing", "seen_in": ["iCloud (export)", "Google Photos"], "destination": "R02" },
+
+      { "id": "G-040", "name": "Edit (write) sharing and reshare control", "status_in_plan": "Partial (FR-117 Could, pending Q30)", "seen_in": ["Google Drive", "Dropbox", "Nextcloud", "Seafile", "Immich (read-write albums)"], "destination": "R03" },
+      { "id": "G-041", "name": "User groups and sharing with groups", "status_in_plan": "Partial (FR-117 Could)", "seen_in": ["Immich (planned)", "Tresorit", "Nextcloud"], "destination": "R03" },
+      { "id": "G-042", "name": "Shared family/team folders owned by a group", "status_in_plan": "Missing", "seen_in": ["Google shared drives", "Nextcloud Teams", "Synology shared space", "Sync.com team folders"], "destination": "R03" },
+      { "id": "G-043", "name": "Partner sharing / shared library", "status_in_plan": "Missing", "seen_in": ["Google Photos", "iCloud Shared Library", "Immich", "Amazon Family Vault"], "destination": "R03" },
+      { "id": "G-044", "name": "Collaborative albums with contributors", "status_in_plan": "Missing", "seen_in": ["Google Photos", "Immich", "Synology"], "destination": "R03" },
+      { "id": "G-045", "name": "Comments and reactions on shared items", "status_in_plan": "Missing", "seen_in": ["Google Photos", "Google Drive", "Nextcloud", "Dropbox"], "destination": "R03" },
+      { "id": "G-046", "name": "Activity feed and item history", "status_in_plan": "Partial (admin audit log only)", "seen_in": ["Google Drive", "Nextcloud", "Seafile", "Sync.com"], "destination": "R03" },
+      { "id": "G-047", "name": "Notification center and per-user email notifications", "status_in_plan": "Partial (transient GUI notifications)", "seen_in": ["Nextcloud", "Dropbox", "Google"], "destination": "R03" },
+      { "id": "G-048", "name": "Ownership transfer", "status_in_plan": "Missing", "seen_in": ["Google Drive"], "destination": "R03" },
+      { "id": "G-049", "name": "Decline shares and block a user from sharing with you", "status_in_plan": "Missing", "seen_in": ["Google Drive (block users, spam)"], "destination": "R03" },
+
+      { "id": "G-050", "name": "Point-in-time restore (rewind) of a folder or account", "status_in_plan": "Missing", "seen_in": ["Dropbox", "OneDrive", "pCloud", "Sync.com"], "destination": "R04" },
+      { "id": "G-051", "name": "Ransomware / mass-change detection", "status_in_plan": "Missing", "seen_in": ["OneDrive", "Nextcloud (apps)", "Synology (immutable snapshots)"], "destination": "R04" },
+      { "id": "G-052", "name": "Filesystem snapshots with immutable retention", "status_in_plan": "Missing (pools use ext4/XFS)", "seen_in": ["Synology"], "destination": "R04 (Could; needs a filesystem ADR)" },
+      { "id": "G-053", "name": "Off-site encrypted backup to user-owned targets", "status_in_plan": "Missing (local targets only, S08.6)", "seen_in": ["Synology Hyper Backup", "Nextcloud"], "destination": "R04" },
+      { "id": "G-054", "name": "NAS-to-NAS replication", "status_in_plan": "Missing", "seen_in": ["Synology (Snapshot Replication, ShareSync)"], "destination": "R04" },
+      { "id": "G-055", "name": "UPS integration and graceful shutdown", "status_in_plan": "Missing", "seen_in": ["Synology", "TrueNAS (general NAS practice)"], "destination": "R04" },
+      { "id": "G-056", "name": "Backup health dashboard and scheduled restore tests", "status_in_plan": "Partial (restore tested in S08)", "seen_in": ["Synology Hyper Backup (integrity checks)"], "destination": "R04" },
+      { "id": "G-057", "name": "Encrypted local backup targets", "status_in_plan": "Missing", "seen_in": ["Synology Hyper Backup"], "destination": "R04" },
+
+      { "id": "G-060", "name": "TOTP 2FA with recovery codes, enforceable", "status_in_plan": "Partial (FR-091 Could, pending Q33)", "seen_in": ["all services"], "destination": "R05 (or MVP if Q33 is answered 'yes')" },
+      { "id": "G-061", "name": "Passkeys and security keys (WebAuthn/FIDO2)", "status_in_plan": "Missing", "seen_in": ["Nextcloud", "Koofr", "Icedrive"], "destination": "R05" },
+      { "id": "G-062", "name": "SSO with OIDC; LDAP (Could)", "status_in_plan": "Missing", "seen_in": ["Nextcloud", "Seafile", "Filen (enterprise)"], "destination": "R05" },
+      { "id": "G-063", "name": "Locked folder / private vault", "status_in_plan": "Partial (hide/archive only)", "seen_in": ["Google Photos", "OneDrive", "Koofr", "pCloud Crypto", "Icedrive", "Sync.com Vault"], "destination": "R05" },
+      { "id": "G-064", "name": "Encryption at rest of the storage (full disk)", "status_in_plan": "Missing", "seen_in": ["Nextcloud (server-side encryption)", "Synology (encrypted volumes)"], "destination": "R05" },
+      { "id": "G-065", "name": "Malware scanning of uploads", "status_in_plan": "Missing", "seen_in": ["Seafile", "Nextcloud"], "destination": "R05" },
+      { "id": "G-066", "name": "Password policy with strength and breached-password checks (offline)", "status_in_plan": "Missing", "seen_in": ["Nextcloud"], "destination": "R05" },
+      { "id": "G-067", "name": "New-login alerts, suspicious-login heuristics, per-user security page", "status_in_plan": "Partial (sessions list)", "seen_in": ["Nextcloud", "Google"], "destination": "R05" },
+      { "id": "G-068", "name": "Admin security checklist", "status_in_plan": "Missing", "seen_in": ["Nextcloud (security scan)"], "destination": "R05" },
+      { "id": "G-069", "name": "Per-IP brute-force protection with trusted-proxy awareness", "status_in_plan": "Partial (per-account lockout, FR-085)", "seen_in": ["Nextcloud"], "destination": "R05" },
+
+      { "id": "G-070", "name": "Built-in WireGuard VPN for private remote access", "status_in_plan": "Missing (11a candidate)", "seen_in": ["Synology (VPN Server)", "general NAS practice"], "destination": "R06" },
+      { "id": "G-071", "name": "Mesh VPN guidance (Headscale self-hosted; Tailscale opt-in)", "status_in_plan": "Missing", "seen_in": ["remote access research"], "destination": "R06" },
+      { "id": "G-072", "name": "CGNAT relay through the user's own VPS", "status_in_plan": "Missing", "seen_in": ["remote access research"], "destination": "R06" },
+      { "id": "G-073", "name": "Dynamic DNS and IPv6", "status_in_plan": "Missing", "seen_in": ["Synology", "general NAS practice"], "destination": "R06" },
+      { "id": "G-074", "name": "Trusted TLS certificates via ACME with auto-renewal", "status_in_plan": "Missing (self-signed or user-provided only, FR-088)", "seen_in": ["Synology", "Nextcloud (deployment guides)"], "destination": "R06" },
+      { "id": "G-075", "name": "Slow-link performance (WAN-aware thumbnails and transfers)", "status_in_plan": "Partial (HLS Auto)", "seen_in": ["all mobile-first services"], "destination": "R06" },
+
+      { "id": "G-080", "name": "Installable web app (PWA) with share target", "status_in_plan": "Missing", "seen_in": ["PhotoPrism"], "destination": "R07" },
+      { "id": "G-081", "name": "Native Android and iOS apps", "status_in_plan": "Missing (NG2; 11a candidate)", "seen_in": ["all services"], "destination": "R07" },
+      { "id": "G-082", "name": "Background automatic photo and video backup in the app", "status_in_plan": "Missing", "seen_in": ["Google Photos", "iCloud", "OneDrive", "Immich", "Ente", "Synology", "Amazon"], "destination": "R07" },
+      { "id": "G-083", "name": "Free up space on the phone", "status_in_plan": "Missing", "seen_in": ["Google Photos", "Immich"], "destination": "R07" },
+      { "id": "G-084", "name": "Offline files and albums on mobile", "status_in_plan": "Missing", "seen_in": ["Google Drive", "Dropbox", "Synology Photos"], "destination": "R07" },
+      { "id": "G-085", "name": "Document scanner to PDF", "status_in_plan": "Missing", "seen_in": ["Google Drive", "Dropbox", "OneDrive", "Proton", "Tresorit"], "destination": "R07" },
+      { "id": "G-086", "name": "App lock (biometrics or PIN)", "status_in_plan": "Missing", "seen_in": ["Google Drive iOS", "Google Photos Locked Folder"], "destination": "R07" },
+      { "id": "G-087", "name": "Widgets and OS share-sheet integration", "status_in_plan": "Missing", "seen_in": ["Synology Photos", "Google Photos"], "destination": "R07" },
+      { "id": "G-088", "name": "LAN discovery and automatic LAN/remote address switching", "status_in_plan": "Missing", "seen_in": ["Immich"], "destination": "R07" },
+      { "id": "G-089", "name": "Push notifications without a vendor cloud where possible", "status_in_plan": "Missing", "seen_in": ["all mobile apps"], "destination": "R07" },
+
+      { "id": "G-090", "name": "Desktop sync client (two-way, selective, conflicts, bandwidth)", "status_in_plan": "Missing", "seen_in": ["all services"], "destination": "R08" },
+      { "id": "G-091", "name": "Files on demand / virtual files", "status_in_plan": "Missing", "seen_in": ["OneDrive", "Google Drive", "Dropbox", "Nextcloud", "pCloud", "Icedrive", "Seafile"], "destination": "R08" },
+      { "id": "G-092", "name": "PC folder backup", "status_in_plan": "Missing", "seen_in": ["OneDrive", "Google Drive", "Synology Active Backup"], "destination": "R08" },
+      { "id": "G-093", "name": "User CLI (upload, download, sync, share, search)", "status_in_plan": "Missing (admin CLI only)", "seen_in": ["MEGA", "Proton", "Ente", "Immich"], "destination": "R08" },
+      { "id": "G-094", "name": "File locking for sync and co-editing", "status_in_plan": "Partial (WebDAV locks, S09.1)", "seen_in": ["Nextcloud", "Seafile"], "destination": "R08" },
+      { "id": "G-095", "name": "Device list with remote sign-out and wipe of synced data", "status_in_plan": "Partial (sessions)", "seen_in": ["Tresorit", "Seafile", "Nextcloud"], "destination": "R08" },
+
+      { "id": "G-100", "name": "Public share links for people without an account", "status_in_plan": "Missing (NG5; 11a)", "seen_in": ["all services"], "destination": "R09" },
+      { "id": "G-101", "name": "File requests / upload-only links", "status_in_plan": "Missing", "seen_in": ["Dropbox", "pCloud", "MEGA", "Icedrive", "Filen", "Tresorit", "Synology", "Ente (Collect)", "Seafile"], "destination": "R09" },
+      { "id": "G-102", "name": "Large file transfer (send files that expire)", "status_in_plan": "Missing", "seen_in": ["Dropbox Transfer", "pCloud Transfer", "Proton", "MEGA"], "destination": "R09" },
+      { "id": "G-103", "name": "Guest verification by email code", "status_in_plan": "Missing", "seen_in": ["Nextcloud (OTP)", "Seafile", "Tresorit"], "destination": "R09" },
+      { "id": "G-104", "name": "Link access logs and download notifications", "status_in_plan": "Missing", "seen_in": ["Tresorit", "Sync.com"], "destination": "R09" },
+      { "id": "G-105", "name": "Watermarks on shared previews", "status_in_plan": "Missing", "seen_in": ["Box"], "destination": "R09 (Could)" },
+      { "id": "G-106", "name": "Branded share pages", "status_in_plan": "Missing", "seen_in": ["pCloud", "Dropbox Transfer", "Sync.com"], "destination": "R09 (Could)" },
+      { "id": "G-107", "name": "Invite-based registration, per-user bandwidth limits, abuse tools", "status_in_plan": "Missing", "seen_in": ["MEGA (transfer quota)", "Nextcloud"], "destination": "R09" },
+      { "id": "G-108", "name": "Internet-facing hardening", "status_in_plan": "Missing (LAN-only posture)", "seen_in": ["Nextcloud", "all public services"], "destination": "R09" },
+      { "id": "G-109", "name": "Go-public readiness gate", "status_in_plan": "Missing", "seen_in": ["Nextcloud (security scan)"], "destination": "R09" },
+      { "id": "G-110", "name": "External security audit and staged beta before general availability", "status_in_plan": "Missing", "seen_in": ["Proton", "Ente (independent audits)"], "destination": "R09" },
+      { "id": "G-111", "name": "UX overhaul for public use (recipients, phones, slow networks, languages)", "status_in_plan": "Partial (accessibility NFR-015)", "seen_in": ["all public services"], "destination": "R09" },
+      { "id": "G-112", "name": "Reverse proxy and tunnel support", "status_in_plan": "Missing", "seen_in": ["Immich", "Nextcloud", "PhotoPrism (docs)"], "destination": "R09" },
+      { "id": "G-113", "name": "Operator tools and guidance for hosting other people", "status_in_plan": "Missing", "seen_in": ["Nextcloud"], "destination": "R09" },
+
+      { "id": "G-120", "name": "Music library (tags, albums, playlists, speed)", "status_in_plan": "Partial (audio preview)", "seen_in": ["pCloud"], "destination": "R10" },
+      { "id": "G-121", "name": "Video library improvements (subtitles, resume, speed, audio tracks)", "status_in_plan": "Partial (streaming)", "seen_in": ["pCloud", "Immich (speed controls)"], "destination": "R10" },
+      { "id": "G-122", "name": "DLNA/UPnP media server", "status_in_plan": "Missing", "seen_in": ["Synology", "general NAS practice"], "destination": "R10" },
+      { "id": "G-123", "name": "Casting to TVs (Chromecast, AirPlay)", "status_in_plan": "Missing", "seen_in": ["Google Photos", "Amazon Photos", "pCloud (Kodi)"], "destination": "R10" },
+      { "id": "G-124", "name": "TV-friendly (10-foot) view", "status_in_plan": "Missing", "seen_in": ["Amazon Photos", "Google Photos"], "destination": "R10" },
+      { "id": "G-125", "name": "Non-destructive photo editing", "status_in_plan": "Missing (NG3)", "seen_in": ["all photo services", "Immich", "Koofr"], "destination": "R10 (needs the NG3 change, Q57)" },
+      { "id": "G-126", "name": "360° panorama viewer", "status_in_plan": "Missing", "seen_in": ["Immich", "PhotoPrism", "Synology"], "destination": "R10" },
+      { "id": "G-127", "name": "Collages, burst animations, photo videos", "status_in_plan": "Missing", "seen_in": ["Google Photos"], "destination": "R10 (Could)" },
+      { "id": "G-128", "name": "Manual redaction (blur/pixelate) tool", "status_in_plan": "Missing", "seen_in": ["Google Photos (Sept 2026)"], "destination": "R10 (part of G-125)" },
+
+      { "id": "G-130", "name": "Office document previews", "status_in_plan": "Missing (PDF and text only)", "seen_in": ["Google Drive", "Dropbox", "Filen", "Nextcloud"], "destination": "R11" },
+      { "id": "G-131", "name": "Optional online co-editing (Collabora or ONLYOFFICE)", "status_in_plan": "Missing", "seen_in": ["Google", "OneDrive", "Nextcloud", "Seafile", "Proton", "Koofr"], "destination": "R11" },
+      { "id": "G-132", "name": "Text and Markdown editor, notes", "status_in_plan": "Missing", "seen_in": ["Filen", "Nextcloud", "Seafile"], "destination": "R11" },
+      { "id": "G-133", "name": "PDF tools (annotate, merge, split, forms); e-sign (Could)", "status_in_plan": "Missing", "seen_in": ["Dropbox", "Tresorit"], "destination": "R11" },
+      { "id": "G-134", "name": "Full-text search inside documents", "status_in_plan": "Partial (FR-111 Could, pending Q31)", "seen_in": ["Google Drive", "Nextcloud"], "destination": "R11 (or S06 if Q31 is answered 'yes' for the MVP)" },
+      { "id": "G-135", "name": "Text version comparison", "status_in_plan": "Missing", "seen_in": ["Nextcloud Collectives"], "destination": "R11" },
+
+      { "id": "G-140", "name": "Rules and workflows engine", "status_in_plan": "Missing", "seen_in": ["Immich (Workflows)", "Nextcloud (Flow)"], "destination": "R12" },
+      { "id": "G-141", "name": "Signed webhooks for events", "status_in_plan": "Missing", "seen_in": ["Nextcloud", "general APIs"], "destination": "R12" },
+      { "id": "G-142", "name": "API documentation portal and client SDKs", "status_in_plan": "Partial (OpenAPI + Redoc)", "seen_in": ["Filen", "Immich"], "destination": "R12" },
+      { "id": "G-143", "name": "S3-compatible API", "status_in_plan": "Missing", "seen_in": ["MEGA S4", "Filen"], "destination": "R12 (Could)" },
+      { "id": "G-144", "name": "Extension / plugin system", "status_in_plan": "Missing", "seen_in": ["Nextcloud apps", "Synology packages"], "destination": "R12 (Could)" },
+
+      { "id": "G-150", "name": "Pet recognition and grouping", "status_in_plan": "Missing", "seen_in": ["Google Photos", "Amazon Photos"], "destination": "S15 (AI extension, Could)" },
+      { "id": "G-151", "name": "Smart memories using people, pets, and events", "status_in_plan": "Missing", "seen_in": ["Google Photos", "Immich (planned)"], "destination": "S15 (AI extension, Could)" },
+      { "id": "G-152", "name": "AI classification of documents in the files area", "status_in_plan": "Missing (AI is photos-only)", "seen_in": ["Google Drive (AI search)", "OneDrive (Copilot)"], "destination": "S15 (AI extension, Could)" },
+      { "id": "G-153", "name": "Sensitive-content auto-hide suggestion", "status_in_plan": "Missing", "seen_in": ["PhotoPrism (NSFW)"], "destination": "S15 (AI extension, Could)" },
+      { "id": "G-154", "name": "Blurry photo and screenshot cleanup suggestions", "status_in_plan": "Partial (S15.11 smart cover)", "seen_in": ["OneDrive photo stacks", "Google Photos storage management"], "destination": "S15 (extend S15.11)" },
+      { "id": "G-155", "name": "Local speech-to-text subtitles and search for videos", "status_in_plan": "Missing", "seen_in": ["Nextcloud Assistant (transcription)"], "destination": "S15 (AI extension, Could)" },
+      { "id": "G-156", "name": "Sensitive-text redaction suggestions from OCR", "status_in_plan": "Missing", "seen_in": ["Google Photos (Redact)"], "destination": "S15 (AI extension, Could; needs OCR, Q36)" }
+    ]
+  },
+
+  "excluded_features": {
+    "note": "Record in the research file and in plan.md section 11a as 'Considered and excluded', each with its reason, so the user can pull any of them in. None of these become requirements.",
+    "items": [
+      { "id": "X-01", "feature": "Generative AI: Ask Photos, Magic Eraser, Moods, Remix, AI summaries and chat over files", "seen_in": ["Google Photos", "Google Drive", "OneDrive", "Nextcloud"], "reason": "Non-goal NG9 (generative AI) and I4 (no AI at query time)." },
+      { "id": "X-02", "feature": "Chat, video calls, meetings", "seen_in": ["MEGA", "Nextcloud Talk"], "reason": "Outside the purpose of a NAS." },
+      { "id": "X-03", "feature": "Password manager and general-purpose VPN service", "seen_in": ["MEGA Pass", "MEGA VPN"], "reason": "Outside the purpose of a NAS. (The private-access VPN in R06 only reaches the NAS.)" },
+      { "id": "X-04", "feature": "Calendar, contacts, and mail (CalDAV, CardDAV, webmail)", "seen_in": ["Nextcloud"], "reason": "Groupware, not storage. Kept as a not-scheduled candidate in 11a." },
+      { "id": "X-05", "feature": "Print store and photo books", "seen_in": ["Google Photos"], "reason": "A commercial fulfilment service, not software." },
+      { "id": "X-06", "feature": "Federated sharing between separate servers", "seen_in": ["Nextcloud"], "reason": "Large security surface; kept as a not-scheduled candidate in 11a." },
+      { "id": "X-07", "feature": "Enterprise governance: legal hold, eDiscovery, sensitivity labels, data rooms", "seen_in": ["Nextcloud Enterprise", "Box", "Tresorit"], "reason": "Outside the household and small-group scope." },
+      { "id": "X-08", "feature": "Professional media review workflow (frame-accurate review and approvals)", "seen_in": ["Dropbox Replay"], "reason": "Niche; comments (G-045) cover the basics." },
+      { "id": "X-09", "feature": "Hosting apps, containers, and virtual machines", "seen_in": ["Synology", "TrueNAS"], "reason": "Outside scope; the plugin system (G-144) is the extension point." },
+      { "id": "X-10", "feature": "Vendor-operated relay or account service (QuickConnect-style)", "seen_in": ["Synology"], "reason": "Conflicts with I6 and NG1. The self-hosted relay (G-072) covers the need." },
+      { "id": "X-11", "feature": "Phone-number (SMS) two-factor authentication", "seen_in": ["Icedrive", "Tresorit"], "reason": "Needs a paid SMS gateway and is weaker than TOTP and passkeys." }
+    ]
+  },
+
+  "mvp_additions": {
+    "note": "These are the only MVP changes. They are [Planner addition] items proposed as must-haves under the user's instruction ('if they are something that should be a must have then include them in mvp'). Apply them to the named substages, label each with P006, and list them first in your report for the user's confirmation (Q54). If the user rejects one, move it to the release named in 'fallback_release'.",
+    "items": [
+      {
+        "gap": "G-001",
+        "name": "Live Photos and Motion Photos",
+        "why_must_have": "iPhones capture Live Photos by default and many Android phones capture motion photos. Without pairing, every Live Photo appears as two items (a still and a short video), which clutters the timeline and breaks duplicates, optimization, transfer, and trash. It is a data-model decision that is expensive to retrofit after libraries exist.",
+        "fallback_release": "R02",
+        "requirements": [
+          "Apple Live Photos: pair the still (HEIC or JPEG) and the video (MOV) by the Apple content identifier stored in both files, whether they are uploaded together, separately, or in any order. Pairing waits a short, configurable window for the other half.",
+          "Google and Samsung motion photos: detect a still image with an embedded video (XMP motion-photo markers). The embedded clip is played through a byte range of the original or extracted to internal app data (I2). The original file is never modified.",
+          "The pair is one library item: one timeline tile with a 'Live' badge. The viewer plays the motion part on press or hover and offers 'play' and 'still only' toggles.",
+          "Every operation treats the pair as a unit: albums, favorites, sharing, cross-area transfer (S04.6), trash and restore (S08.1), duplicates (S11: the pair's still decides), optimization (S12: the motion component is kept unchanged by default, with an option to include it), download (both files, or the still only), and export.",
+          "The sidecar of the still records the pair (motion component file name, content hash, source type). The motion file of an Apple pair has no separate library entry."
+        ],
+        "substage_changes": ["S04.1 (domain model: paired items)", "S04.2 (pairing at ingest, including late arrival)", "S04.6 (transfer as a unit)", "S04.7 (Live badge and playback)", "S05.1 (reserved 'livePhoto' sidecar section)", "S05.3 (extract content identifiers and motion-photo markers with ExifTool)", "S08.1, S11.2, S12.3 (treat as a unit)", "S04.9 and S05.8 (fixtures: Apple pairs uploaded in both orders, Google motion photos, unpaired MOV files)"],
+        "verification": "Confirm the exact tag names and the Google motion-photo format from ExifTool's tag documentation and the Android motion photo format specification before writing the S04 stage document."
+      },
+      {
+        "gap": "G-002",
+        "name": "Phone photo auto-backup bridge",
+        "why_must_have": "Automatic phone backup is the first thing people use Google Photos and iCloud for. The native app is a large project (R07), but the MVP can support existing auto-upload apps through the WebDAV server already planned in S09, so the MVP can replace a cloud photo service on the home network from day one.",
+        "fallback_release": "R07",
+        "requirements": [
+          "A per-user camera-upload endpoint over WebDAV that accepts media only and feeds the normal photo ingest pipeline (content-type check, content hash, duplicate policy, sidecar, thumbnails, index).",
+          "It never exposes the rest of the library: a client sees only what it uploaded through that endpoint, enough for apps that check whether a file already exists before uploading. This keeps the photos library read-only over network shares as recommended in Q32.",
+          "Per-device app passwords (scoped API tokens from FR-087) that can only upload to that endpoint and can be revoked individually.",
+          "Upload of many photos from a phone browser (mobile-friendly multi-select upload page) as a fallback.",
+          "A guide listing tested Android and iOS apps that support automatic WebDAV upload, with the exact settings. Verify current app names, support, licenses, and costs at S09 time; never recommend an app you have not verified."
+        ],
+        "substage_changes": ["S09.2 (camera-upload endpoint through the same policy and services)", "S09.3 (the Q32 policy plus this ingest-only exception)", "S09.5 (per-device setup with QR code for the server address)", "S03.3 (upload-only app passwords)", "S09.6 (tests with at least one Android and one iOS app)"]
+      },
+      {
+        "gap": "G-003",
+        "name": "Alert delivery channels",
+        "why_must_have": "A failing disk, a full disk, or failed backups shown only inside the GUI will usually go unnoticed on a headless NAS, and that leads to data loss. Every NAS product sends alerts.",
+        "fallback_release": "R04",
+        "requirements": [
+          "Channels, each opt-in (I6): email through a user-configured SMTP server (TLS or STARTTLS), a generic webhook (JSON, signed with HMAC), and ntfy (which can be self-hosted).",
+          "Events: disk health failure or pre-failure (SMART), low free space, integrity-scan errors, backup failed or overdue, repeated failed logins or lockouts, a background job failing repeatedly, and (from S14) a degraded pool.",
+          "A 'send test alert' button, deduplication and rate limiting so one problem does not send hundreds of messages, and a record of delivered and failed alerts.",
+          "Channel secrets (SMTP password, webhook secret) are never logged and never stored in plaintext in backups (S08.3).",
+          "In the MVP, alerts go to the admin. Per-user notifications come in R03."
+        ],
+        "substage_changes": ["S10.3 (alert rules and channels)", "S10.5 (channel settings)", "S03.1 (threat model: outbound connections)", "S10.6 (tests with a local SMTP test server and a webhook receiver)"]
+      },
+      {
+        "gap": "G-004",
+        "name": "File versioning (recommendation for Q34)",
+        "why_must_have": "Every competitor keeps previous versions. From S09, files can be overwritten over WebDAV, and without versions one bad save or an infected PC destroys the only copy.",
+        "fallback_release": "R04",
+        "requirements": ["Do not change FR-122 or S08.5 yourself. In your report, recommend answering Q34 with 'yes', and say that R04 depends on versioning (rewind and ransomware recovery)."]
+      }
+    ]
+  },
+
+  "release_process_rules": {
+    "note": "Add these to plan.md as section '11b.1 Release process' and as a new rule R13 in RULES.md (pre-approved below). They answer the user's request that features be developed and released 'in a planned manner like in versions … a set of features at a time'.",
+    "rules": [
+      "Release IDs R01, R02, … are permanent, like FR IDs. A release has: a theme, a goal, a fixed feature set (gap IDs and FR IDs), prerequisites, exit criteria, and a suggested version label.",
+      "The MVP is milestone M3 (S01–S13 plus mvp_additions) and ships as the first stable release. Suggested label v1.0.0; the user decides (S13.7).",
+      "Feature releases bump the MINOR version (v1.1.0, v1.2.0, …). Fix-only releases bump PATCH and can ship at any time between feature releases. A release that breaks the data format or the upgrade path bumps MAJOR and needs the user's approval.",
+      "One feature release is in progress at a time. Security fixes take priority over all feature work.",
+      "Just-in-time conversion: when a release is next, its features become one stage (or several), with substages written into plan.md, inserted before the AI stage as I8 requires, and the AI stage is renumbered (record it in the 10.18 table). Then the stage document is written and approved before any code (R3).",
+      "Feature freeze: once a release's stage document is approved, adding a feature to it needs the user's approval. Otherwise the feature goes to a later release.",
+      "Every release ends with its stage's testing and review substage, plus: an upgrade test from the previous release with real migrated data, a security review of every new surface (threat model updated), release notes and a changelog, updated user and admin guides, the R12 documentation audit, a tagged release, and the user's sign-off.",
+      "Every release keeps the system upgradeable from the previous release (NFR-017) and keeps the NAS fully working with AI disabled (I7).",
+      "Features that use the network (imports from other clouds, off-site backup, ACME certificates, DDNS, email, push, tunnels) are off by default and switched on explicitly by the user (I6).",
+      "Reordering releases, splitting them, or moving a feature between releases needs the user's approval and a plan revision (R4).",
+      "Features in a release that depend on an AI result (e.g. smart albums by person) work without AI, and gain the AI filter when S15 lands."
+    ]
+  },
+
+  "release_roadmap": {
+    "position_rule": "Default order, keeping invariant I8 exactly as written: MVP (S01–S13, v1.0.0) → S14 drive pools (v1.1.0, milestone M4 as already planned) → R01 … R12 (v1.2.0 …) → S15 AI (always last). See Q52 and Q53 for the alternatives the user may choose.",
+    "releases": [
+      {
+        "id": "R01",
+        "suggested_label": "v1.2.0",
+        "theme": "Migration and portability",
+        "goal": "Make switching from Google Photos, iCloud, and other clouds painless, and make leaving local-ai-nas just as easy.",
+        "why_this_position": "People can only drop a cloud service after they can move their library out of it. This comes first after the MVP.",
+        "features": [
+          { "gap": "G-010", "detail": "Import a Google Takeout archive (zip or tgz, multi-part, resumable, very large) into the user's photos area. Merge each photo's Takeout JSON: date taken when EXIF lacks it, GPS, description, favorites, archived state, and albums. Handle '-edited' copies (keep both, stack them), truncated file names, and media without JSON. Show a dry-run report first (I10)." },
+          { "gap": "G-011", "detail": "Import Apple Photos / iCloud exports: iCloud 'Download your data' archives and folder exports, keeping Live Photo pairs (G-001), albums where available, and dates. Verify the current export formats before the stage document." },
+          { "gap": "G-012", "detail": "Import from other clouds through rclone remotes the user configures (Google Drive, OneDrive, Dropbox, pCloud, MEGA, Proton Drive, WebDAV, S3, SFTP): one-time or scheduled, into the files or photos area, resumable, deduplicated by hash. rclone runs as a separate program; its license is verified and recorded. Off by default (I6)." },
+          { "gap": "G-013", "detail": "USB drive and camera card import: detect a connected card or drive (on Linux via the storage helper), import new media into photos with duplicate skipping, optionally eject. Only media is imported into photos (I1)." },
+          { "gap": "G-014", "detail": "Export all my data: a per-user archive (or a folder on an external drive) with all files, all photos with their sidecars, albums and stacks as JSON, and a manifest; resumable and verifiable. Account deletion by the user with a waiting period, and by the admin, with ownership transfer of shared items (G-048 prerequisite noted)." },
+          { "gap": "G-015", "detail": "Optional XMP sidecar export alongside the JSON sidecars (or on demand in the export), so tools like digiKam and Lightroom can read tags, ratings, and descriptions. Originals are never written (Q19)." }
+        ],
+        "prerequisites": ["MVP", "G-001 Live Photos"],
+        "exit_criteria": ["A 50,000-item Takeout archive imports with correct dates, places, descriptions, albums, and favorites on the fixture set", "An exported library re-imports into a fresh install with nothing lost", "Every import shows a dry-run report and can be undone within the trash window"]
+      },
+      {
+        "id": "R02",
+        "suggested_label": "v1.3.0",
+        "theme": "Everyday essentials",
+        "goal": "Close the daily-use gaps in both areas that users notice in the first week.",
+        "features": [
+          { "gap": "G-020", "detail": "Files area: stars, color labels, tags, and descriptions, stored in the internal database per the Q28 decision (files have no sidecars), searchable, and included in backups and exports." },
+          { "gap": "G-021", "detail": "Recent files and a quick-access list (recently opened, modified, uploaded), per user, privacy-respecting (never shows unshared items of others)." },
+          { "gap": "G-022", "detail": "Saved searches (any query with operators) pinned in the sidebar, and recent searches per user with a clear option." },
+          { "gap": "G-023", "detail": "Create zip archives on the server and extract zip, tar, tar.gz, and 7z into a chosen folder, as background jobs with limits against archive bombs (size, count, ratio, path traversal). Browse archive contents before extracting." },
+          { "gap": "G-024", "detail": "Batch rename with patterns (sequence numbers, date taken, find and replace, case), with a preview of every new name and undo (I10)." },
+          { "gap": "G-025", "detail": "Personal storage analyzer: folder sizes, largest files, usage by type, trash and versions usage, and space reclaimable from duplicates (links to S11)." },
+          { "gap": "G-026", "detail": "Recently added view in photos (sorted by upload date)." },
+          { "gap": "G-027", "detail": "Slideshow for albums, searches, and the timeline: full screen, speed, loop, shuffle, videos included or skipped, keyboard and touch control." },
+          { "gap": "G-028", "detail": "Star ratings (0–5) for photos, stored in the sidecar, with a 'rating:' search operator." },
+          { "gap": "G-029", "detail": "Smart albums defined by a saved query (e.g. 'place:lahore after:2025 type:video'), updating automatically; with S15 they can use face: and AI tags." },
+          { "gap": "G-030", "detail": "Memories without AI: 'On this day', year in review, and trips (clusters of photos taken away from the user's usual places within a date range, from GPS and dates). Users can hide a memory, a date, or never show certain albums." },
+          { "gap": "G-031", "detail": "Map view: clustered markers, select an area to see its photos, and a search operator for an area. Offline-capable: decide in an ADR between bundled low-detail tiles, a self-hosted tile file (e.g. PMTiles), and an opt-in online tile server (Q59). Map data licenses (e.g. OpenStreetMap ODbL attribution) are recorded." },
+          { "gap": "G-032", "detail": "Folder view of the photos area, matching the on-disk layout decided in Q40." },
+          { "gap": "G-033", "detail": "Adjustable grid density, a year and month scrubber on the timeline, and a calendar view." },
+          { "gap": "G-034", "detail": "Batch metadata editing for many photos at once: shift dates by an offset (camera clock wrong), set a date, set a location, add tags; written to sidecars with undo." },
+          { "gap": "G-035", "detail": "Download in a compatible format: HEIC to JPEG and HEVC video to H.264 on download, with metadata kept; the original is always available too." }
+        ],
+        "prerequisites": ["MVP"],
+        "exit_criteria": ["Each feature works in both light and dark themes and on phone layouts", "Map and memories work with no internet access", "Archive extraction passes zip-bomb and traversal tests"]
+      },
+      {
+        "id": "R03",
+        "suggested_label": "v1.4.0",
+        "theme": "Family sharing and collaboration",
+        "goal": "Match the family features of Google Photos, iCloud, and Google Drive inside the home.",
+        "features": [
+          { "gap": "G-040", "detail": "Write access when sharing (upload, rename, delete inside a shared folder or album), with the option to allow or forbid resharing. Changes are attributed to the user who made them (FR-117 promoted)." },
+          { "gap": "G-041", "detail": "User groups (e.g. 'Family') managed by the admin; share with a group; membership changes update access immediately (I5)." },
+          { "gap": "G-042", "detail": "Shared folders owned by a group rather than a person, with a group quota. Needs an ADR on group namespaces in files/ and photos/ that keeps I1 and I5." },
+          { "gap": "G-043", "detail": "Partner sharing: automatically share all photos, or photos from a start date, or (after S15) photos of chosen people, with one partner; the partner can show them in their own timeline. Either side can stop it at any time." },
+          { "gap": "G-044", "detail": "Collaborative albums: contributors add their own photos while keeping ownership; the album owner can remove items from the album (not delete the contributor's photos)." },
+          { "gap": "G-045", "detail": "Comments and reactions on shared photos, albums, and files, with mentions, edit and delete of one's own comments, and moderation by the owner." },
+          { "gap": "G-046", "detail": "Activity feed: what changed in items shared with me and by me, and a history panel per item (uploads, renames, moves, shares, comments)." },
+          { "gap": "G-047", "detail": "A persistent notification center plus per-user email and push preferences (using the MVP channels): shared with you, new comment, new photos in a shared album, storage almost full." },
+          { "gap": "G-048", "detail": "Ownership transfer of files, folders, and albums to another user, and an admin tool to transfer everything when a user leaves." },
+          { "gap": "G-049", "detail": "Decline or leave a share, and block a user from sharing with you." }
+        ],
+        "prerequisites": ["MVP (S07)", "R02 recommended (smart albums, recent files)"],
+        "exit_criteria": ["Cross-user leak tests (S07.7 suite) extended to groups, partner sharing, collaborative albums, comments, and activity pass", "Revoking access removes items from search, feeds, and notifications immediately"]
+      },
+      {
+        "id": "R04",
+        "suggested_label": "v1.5.0",
+        "theme": "Data safety plus",
+        "goal": "Protection on the level of Dropbox Rewind, OneDrive ransomware recovery, and Synology backup.",
+        "features": [
+          { "gap": "G-050", "detail": "Rewind: restore a folder, an album, or a whole user account to how it was at a chosen moment, using versions, trash, and a change journal; preview of what will change; runs as a job; itself undoable (I10)." },
+          { "gap": "G-051", "detail": "Mass-change detection: many modifications, deletions, renames to unusual extensions, or high-entropy rewrites in a short time from one client (WebDAV, SMB, sync client) pause that client's write access, alert the user and admin, and offer a one-click rewind to before the burst. Thresholds are configurable and tested against normal bulk work." },
+          { "gap": "G-052", "detail": "Could: scheduled filesystem snapshots with immutable retention on Linux, which needs a snapshot-capable filesystem (btrfs or ZFS) through a new ADR that revisits ADR-0028. Users restore through the GUI; admins cannot delete immutable snapshots before their retention ends." },
+          { "gap": "G-053", "detail": "Off-site backup to targets the user owns or chooses: another local-ai-nas, an S3-compatible bucket, SFTP, or rclone remotes. Client-side encrypted, deduplicated, incremental, versioned with retention rules (e.g. daily, weekly, monthly), verified, bandwidth-limited, and restorable from a fresh install. The backup engine is chosen by ADR (e.g. restic, Kopia, or built-in). Off by default (I6); needs the NG1 change (Q55)." },
+          { "gap": "G-054", "detail": "NAS-to-NAS replication for a second box at a relative's house, over the R06 VPN or the internet with mutual authentication." },
+          { "gap": "G-055", "detail": "UPS support through Network UPS Tools: show battery status, alert on power loss, and shut down cleanly (jobs paused, database checkpointed) before the battery runs out." },
+          { "gap": "G-056", "detail": "Backup health page: last success, age, size, and a scheduled automatic test restore of random samples, with alerts when a backup is overdue or a test restore fails." },
+          { "gap": "G-057", "detail": "Encrypted local backup targets (external drives), with the key escrow and recovery process documented." }
+        ],
+        "prerequisites": ["MVP", "File versioning (G-004 / Q34)", "Alert delivery (G-003)"],
+        "exit_criteria": ["A simulated ransomware run over WebDAV is detected, paused, and fully rewound in tests", "A full restore from an off-site backup to a fresh install passes", "Recovery documentation is tested by following it step by step"]
+      },
+      {
+        "id": "R05",
+        "suggested_label": "v1.6.0",
+        "theme": "Security and privacy hardening",
+        "goal": "Account and data protection at the level expected before any remote access.",
+        "features": [
+          { "gap": "G-060", "detail": "TOTP two-factor authentication with recovery codes; the admin can require it for admins or for everyone (earlier, in S03.7, if Q33 is 'yes')." },
+          { "gap": "G-061", "detail": "Passkeys and security keys (WebAuthn/FIDO2), usable as a second factor or for passwordless login." },
+          { "gap": "G-062", "detail": "Single sign-on with OpenID Connect (e.g. Authelia, Authentik, Keycloak). LDAP as Could." },
+          { "gap": "G-063", "detail": "Locked folder: photos and files that need fresh authentication (passkey or PIN) to open, and are excluded from the timeline, search, memories, sharing, network shares, previews in notifications, and AI. Optional client-side encryption for the vault with the trade-offs stated clearly (no server-side thumbnails, search, or recovery without the key) (Q62)." },
+          { "gap": "G-064", "detail": "Encryption at rest: full-disk encryption of the storage root or pools on Linux (LUKS through the storage helper), with unlock at boot by passphrase, key file, or TPM, and documented recovery. On Windows, documented BitLocker use." },
+          { "gap": "G-065", "detail": "Malware scanning of uploads with ClamAV as a separate program (opt-in): scan on upload and on schedule, quarantine instead of deleting, alert the owner. Required before public upload links (R09)." },
+          { "gap": "G-066", "detail": "Password policy: minimum strength by an offline estimator, and an optional offline breached-password list downloaded once with consent. No password reuse across the last N changes." },
+          { "gap": "G-067", "detail": "New-device login alerts, simple suspicious-login heuristics (new device, unusual time, many failures), and a per-user security page: sessions, devices, app passwords, 2FA status." },
+          { "gap": "G-068", "detail": "Admin security checklist: HTTPS, 2FA on admins, default settings, backups, update status, exposed services; each with a fix link. It becomes the core of the R09 readiness gate." },
+          { "gap": "G-069", "detail": "Per-IP brute-force protection with progressive delays, plus a trusted-proxy setting so the real client IP is used only when the request comes from a configured proxy." }
+        ],
+        "prerequisites": ["MVP"],
+        "exit_criteria": ["Threat model updated; security tests for every login path, including SSO and passkeys, pass", "Locked-folder items never appear in any listing, search, share, or network share in leak tests"]
+      },
+      {
+        "id": "R06",
+        "suggested_label": "v1.7.0",
+        "theme": "Private remote access",
+        "goal": "Reach your NAS from anywhere without exposing it to the whole internet.",
+        "features": [
+          { "gap": "G-070", "detail": "Built-in WireGuard VPN that reaches only the NAS: per-device configurations with QR codes, revocable per device, audit-logged. Implementation (kernel WireGuard through the storage/system helper, or userspace) by ADR." },
+          { "gap": "G-071", "detail": "Guides for mesh VPNs: self-hosted Headscale, and Tailscale as an opt-in third-party service, with the privacy trade-off stated." },
+          { "gap": "G-072", "detail": "CGNAT relay: a guided setup that connects the NAS to a small VPS the user rents, by WireGuard, so it works behind carrier-grade NAT without any third party seeing the traffic; includes VPS hardening steps." },
+          { "gap": "G-073", "detail": "Dynamic DNS client for common providers (opt-in) and IPv6 support throughout." },
+          { "gap": "G-074", "detail": "Trusted certificates through ACME (e.g. Let's Encrypt) with HTTP-01 or DNS-01 validation and automatic renewal, including DNS-01 for private hostnames used only over the VPN. Library choice by ADR." },
+          { "gap": "G-075", "detail": "Slow-link behavior: smaller thumbnail sizes and lower default video levels on slow connections, HTTP/2, compression, and resumable transfers everywhere." }
+        ],
+        "prerequisites": ["R05 (2FA and brute-force protection)"],
+        "exit_criteria": ["A phone on mobile data behind CGNAT reaches the NAS over the VPN and through the relay in tests", "No port is opened to the public internet by any R06 feature"]
+      },
+      {
+        "id": "R07",
+        "suggested_label": "v1.8.0",
+        "theme": "Mobile apps",
+        "goal": "Native phone apps that replace the Google Photos, iCloud, and Drive apps.",
+        "features": [
+          { "gap": "G-080", "detail": "Installable web app (PWA): home-screen install, share target so other apps can send files to the NAS, offline shell." },
+          { "gap": "G-081", "detail": "Native Android and iOS apps (framework by ADR, e.g. Flutter, React Native, or fully native; license-checked): browse files and photos, upload, download, share, search, viewer with video streaming." },
+          { "gap": "G-082", "detail": "Background automatic backup of chosen phone albums: Wi-Fi only and charging-only options, hash check before upload to skip duplicates, reliable background scheduling on both platforms, Live Photos kept as pairs, progress and error reporting." },
+          { "gap": "G-083", "detail": "Free up space: delete local copies that are verified as backed up (hash match), with filters and confirmation (I10)." },
+          { "gap": "G-084", "detail": "Offline files and albums pinned on the phone." },
+          { "gap": "G-085", "detail": "Document scanner: edge detection, multi-page PDF, saved into the files area." },
+          { "gap": "G-086", "detail": "App lock with biometrics or PIN; hide app content in the task switcher." },
+          { "gap": "G-087", "detail": "Home-screen widgets (e.g. memories) and OS share-sheet integration." },
+          { "gap": "G-088", "detail": "Find the NAS on the LAN (mDNS), and switch automatically between the LAN address and the remote address (R06)." },
+          { "gap": "G-089", "detail": "Push notifications: UnifiedPush/ntfy where possible; Apple and Google push services only as an opt-in with the privacy trade-off stated (Q56)." }
+        ],
+        "prerequisites": ["R06 (remote access for backup away from home)", "NG2 change (Q56)"],
+        "exit_criteria": ["Backup of 10,000 phone photos completes in the background on both platforms with no duplicates and no missing items", "App store and F-Droid publishing requirements reviewed (user decides where to publish)"]
+      },
+      {
+        "id": "R08",
+        "suggested_label": "v1.9.0",
+        "theme": "Desktop sync and command line",
+        "goal": "Replace the Dropbox, OneDrive, and Google Drive desktop clients.",
+        "features": [
+          { "gap": "G-090", "detail": "Desktop sync client for Windows, macOS, and Linux: two-way sync of chosen folders, selective sync, conflict copies instead of silent overwrites, pause, bandwidth limits, ignore patterns, and change detection by content hash." },
+          { "gap": "G-091", "detail": "Files on demand: placeholders that download when opened (Windows Cloud Files API, macOS File Provider, Linux FUSE); Should on Windows, Could elsewhere." },
+          { "gap": "G-092", "detail": "PC folder backup (Desktop, Documents, Pictures) with versions, separate from two-way sync." },
+          { "gap": "G-093", "detail": "User command-line tool: login with an app password, upload, download, sync, search, share, and export, suitable for scripts." },
+          { "gap": "G-094", "detail": "Server-side file locks shared by the sync client, WebDAV, and (later) office editing." },
+          { "gap": "G-095", "detail": "Device list per user with remote sign-out; on the next connection a signed-out client removes its local copy of synced data if the user chose that." }
+        ],
+        "prerequisites": ["R04 (versions and rewind protect against sync mistakes)", "R06 recommended"],
+        "exit_criteria": ["Sync stress tests (renames, moves, conflicts, offline edits, interrupted transfers) end with identical trees and no data loss", "The client never deletes server data because of a local error; mass deletions ask for confirmation"]
+      },
+      {
+        "id": "R09",
+        "suggested_label": "v2.0.0 (a major milestone: the NAS can face the internet)",
+        "theme": "Public internet release",
+        "user_requirement": "[User requirement] 'add a future release of public release too but that is very crucial too due to severe UI/UX reasons and also severe security reasons'",
+        "goal": "Safely expose local-ai-nas to the internet so it can fully replace cloud services, including sharing with people who have no account.",
+        "features": "See public_release_specification. It is too important to summarize here.",
+        "prerequisites": ["R03 (sharing model)", "R04 (rewind and off-site backup)", "R05 (2FA, passkeys, malware scanning, brute-force protection)", "R06 (certificates and connectivity)", "R07 and R08 recommended (clients benefit most)"],
+        "exit_criteria": "See public_release_specification.release_gates."
+      },
+      {
+        "id": "R10",
+        "suggested_label": "v2.1.0",
+        "theme": "Media center",
+        "goal": "Enjoy photos, videos, and music on every screen in the home.",
+        "features": [
+          { "gap": "G-120", "detail": "Music library from the files area: tags (ID3, Vorbis), artists and albums, playlists, gapless playback, playback speed for podcasts." },
+          { "gap": "G-121", "detail": "Video library features: subtitles (external SRT/VTT and embedded), resume where you stopped, playback speed, audio track selection, chapters." },
+          { "gap": "G-122", "detail": "DLNA/UPnP media server for TVs on the LAN. DLNA has no user authentication, so only folders the admin marks as 'media for the household' are served (I5 respected by design)." },
+          { "gap": "G-123", "detail": "Cast to TVs from the web app: Chromecast (Default Media Receiver) and AirPlay (Safari), streaming through authenticated, short-lived URLs." },
+          { "gap": "G-124", "detail": "TV-friendly full-screen view for slideshows and videos, usable with a remote or keyboard." },
+          { "gap": "G-125", "detail": "Non-destructive photo editing: crop, rotate, flip, straighten, exposure, contrast, saturation, and filters, stored as an edit list in the sidecar; the original is never changed; revert any time; exports render the edit. Needs the NG3 change (Q57)." },
+          { "gap": "G-126", "detail": "360° panorama and photo-sphere viewer." },
+          { "gap": "G-127", "detail": "Could: collages, animations from bursts, and simple photo videos, saved as new items." },
+          { "gap": "G-128", "detail": "Manual redaction (blur or pixelate a region) as part of the editor, saved as a new copy for sharing." }
+        ],
+        "prerequisites": ["MVP (video streaming)", "Q57 for editing"]
+      },
+      {
+        "id": "R11",
+        "suggested_label": "v2.2.0",
+        "theme": "Documents and office",
+        "goal": "Work with documents without Google Docs or Microsoft 365.",
+        "features": [
+          { "gap": "G-130", "detail": "Previews of Word, Excel, PowerPoint, and OpenDocument files by converting to PDF with LibreOffice as a separate program, cached in internal data." },
+          { "gap": "G-131", "detail": "Optional online co-editing through a separate Collabora Online or ONLYOFFICE container using the WOPI protocol, opt-in, with the server's file locks (G-094). Engine by ADR (Q64); licenses verified." },
+          { "gap": "G-132", "detail": "Built-in text and Markdown editor with autosave and versions, and a simple notes view." },
+          { "gap": "G-133", "detail": "PDF tools: annotate, merge, split, rotate pages, fill forms. E-signature as Could." },
+          { "gap": "G-134", "detail": "Full-text search inside PDF, Office, and text files, with extraction as background jobs into the index (unless already built in S06 because Q31 was 'yes')." },
+          { "gap": "G-135", "detail": "Compare two versions of a text or Markdown file." }
+        ],
+        "prerequisites": ["R08 (file locks)", "G-004 versions"]
+      },
+      {
+        "id": "R12",
+        "suggested_label": "v2.3.0",
+        "theme": "Automation and integrations",
+        "goal": "Let power users and other tools build on local-ai-nas.",
+        "features": [
+          { "gap": "G-140", "detail": "Rules and workflows: triggers (upload, tag, share, schedule), filters (any search query), and actions (add to album, move, tag, notify, run optimization policy), with a visual editor, dry run, and a log." },
+          { "gap": "G-141", "detail": "Webhooks for events, signed with HMAC, with retries and a delivery log." },
+          { "gap": "G-142", "detail": "An API documentation portal and generated client SDKs (TypeScript, Python, Go) from api/openapi.yaml; finer-grained token scopes." },
+          { "gap": "G-143", "detail": "Could: an S3-compatible API over each user's files area, for backup tools and apps that speak S3." },
+          { "gap": "G-144", "detail": "Could: a sandboxed extension system with a permission model and review; never able to bypass I5 or I9." }
+        ],
+        "prerequisites": ["R05 (token scopes and security)"]
+      }
+    ],
+    "s15_ai_extensions": {
+      "note": "Add these to S15.10 (optional AI extensions) as Could items pending the user's decision, like OCR and semantic search. They follow I4 (never at query time), I7, I9, and NG9.",
+      "items": ["G-150 pet recognition and grouping", "G-151 smart memories from people, pets, and events", "G-152 classification of documents in the files area (e.g. receipt PDFs)", "G-153 sensitive-content auto-hide suggestion", "G-154 blurry photo and screenshot cleanup suggestions (extends S15.11)", "G-155 local speech-to-text subtitles and search for videos", "G-156 sensitive-text redaction suggestions (needs OCR, Q36)"]
+    },
+    "existing_candidates_in_11a": {
+      "note": "Update section 11a.",
+      "changes": [
+        "'Mobile app with automatic photo backup' → scheduled as R07 (bridge in the MVP, G-002).",
+        "'Public share links' → scheduled in R09.",
+        "'Secure remote access' → scheduled as R06 (private) and R09 (public).",
+        "'Advanced drive pools (complex RAID)' → stays in 11a unchanged (the user's decision in S007). Mention that it can become a release later, before AI (I8).",
+        "'Video resolution variants as duplicates' → stays in 11a.",
+        "Add 'Considered and excluded' (excluded_features) and the not-scheduled candidates X-04 (groupware) and X-06 (federation)."
+      ]
+    }
+  },
+
+  "public_release_specification": {
+    "release": "R09",
+    "principle": "[User requirement, emphasized] Security and UI/UX are release-blocking for R09, not polish. R09 ships only when every gate in release_gates passes. If a gate cannot be met, the release is delayed, never shipped with a known gap.",
+    "gaps_covered": {
+      "G-100 to G-107, G-113": "public_sharing_features",
+      "G-108 internet-facing hardening": "security_design",
+      "G-109 go-public readiness gate": "go_public_wizard",
+      "G-110 external audit and staged beta": "release_gates",
+      "G-111 UX overhaul for public use": "ui_ux_requirements",
+      "G-112 reverse proxy and tunnel support": "connectivity"
+    },
+    "security_design": [
+      "Threat model rewritten for internet exposure: anonymous attackers, credential stuffing, automated scanners, abuse of public links and upload links, denial of service, stolen phones, malicious invited users, and compromise of the relay VPS.",
+      "Public edge separation (ADR): anonymous public-link traffic is handled by a restricted handler (or a separate process or port) that can only resolve link tokens and serve the linked items. It cannot reach admin, user-management, or internal APIs.",
+      "The admin interface and admin API are reachable only from the LAN or the VPN by default. Changing this needs an explicit setting with a warning.",
+      "Mandatory 2FA (TOTP or passkey) for every admin before exposure; the admin chooses whether it is mandatory for all users (recommended).",
+      "HTTPS only, with a trusted certificate (R06), HSTS, modern TLS settings, a strict Content Security Policy, and all security headers; HTTP only redirects.",
+      "Rate limits and brute-force protection per IP, per account, and per link (R05), with progressive delays and temporary bans; request size limits, timeouts against slow-request attacks, and limits on concurrent transfers per user and per link.",
+      "Trusted-proxy configuration so client IPs are correct behind a reverse proxy or relay (G-069).",
+      "Malware scanning (R05) is required for every file received through public upload links, with quarantine before it becomes visible to the owner.",
+      "Server-side request forgery protection for any feature that fetches URLs (imports, webhooks, link previews).",
+      "Session security for the internet: shorter idle timeouts for new devices, re-authentication for sensitive actions (change password, 2FA, create public link to a whole folder, delete account), and login alerts (R05).",
+      "Signed releases, a software bill of materials, and an optional, explicit update check that only downloads a signed version manifest (I6: off by default, switched on in the go-public wizard). A security advisory must be able to reach admins who opt in.",
+      "SECURITY.md with a disclosure policy, a security.txt, and an incident-response runbook (revoke all links, force logout, rotate secrets, restore from backup).",
+      "Fuzzing of every unauthenticated endpoint (link tokens, login, upload links) in CI."
+    ],
+    "public_sharing_features": [
+      "G-100 Public links: unguessable tokens of at least 128 bits; optional password; expiry on by default (e.g. 30 days, configurable, 'never' possible only with a warning); download limit; view-only mode that hides download buttons (stated honestly as best-effort); revoke; optional custom readable slug; QR code; public album pages with a clean gallery.",
+      "G-101 File requests: upload-only links with size, type, and count limits, uploader name and optional email, expiry, a per-link quota counted against the owner, malware scanning, and a notification to the owner; uploaders never see other uploads.",
+      "G-102 Send large files: an expiring transfer with optional password and a notification when downloaded; stored in internal data until expiry and counted against the sender's quota.",
+      "G-103 Optional guest verification by email code before a link opens (uses the MVP email channel).",
+      "G-104 Per-link access log (time, approximate client, action) visible to the owner, and optional notifications on first open and each download.",
+      "G-105 Could: watermarks on previews of shared items (viewer email or custom text).",
+      "G-106 Could: share pages with the owner's name and optional logo and colors.",
+      "G-107 Accounts for people outside the home: invitation links created by the admin (no open registration by default, Q60), email verification, per-user bandwidth and transfer limits, and admin tools to disable a link or user and see abuse reports.",
+      "G-113 Operator guidance: the NAS owner is the host of everything shared; a template of house rules for invited users; how to respond to a complaint."
+    ],
+    "connectivity": [
+      "Supported exposure methods (Q61): (1) port forwarding to the NAS or to a reverse proxy, (2) the user's own VPS relay over WireGuard (G-072, works behind CGNAT), (3) documented reverse proxies (Caddy, Traefik, nginx) with tested configurations (G-112).",
+      "Third-party tunnels that terminate TLS (e.g. Cloudflare Tunnel) are documented only with a clear warning that the provider can see the traffic (I6).",
+      "Never use UPnP automatic port opening.",
+      "An outside-in reachability test through the user's own relay or by guiding the user to open the site on mobile data."
+    ],
+    "go_public_wizard": [
+      "G-109 A step-by-step wizard in plain language that explains the risks and checks readiness before exposure is switched on: admin 2FA enabled, trusted certificate valid, off-site backup configured and recent (R04), software current with no known security advisories, malware scanning on, strong passwords for all users, link defaults (expiry on) reviewed, alert channel working.",
+      "The wizard refuses to enable exposure until every required check passes, shows how to fix each failed check, and keeps monitoring afterwards (certificate expiry, failed-login spikes, overdue backups), alerting and offering a one-click 'go private again'."
+    ],
+    "ui_ux_requirements": [
+      "Design for two audiences: the owner, and recipients who have no account, are often on a phone, on a slow network, and have never heard of the NAS. A recipient must understand within seconds who shared what, until when, and how to view or download it.",
+      "Mobile-first share and upload pages with performance budgets on a mid-range phone over a throttled 4G profile (e.g. first view under 2.5 s, set in the stage document) and progressive image loading.",
+      "Clear, human error and permission messages everywhere (expired link, wrong password, upload too large, account locked), with no technical jargon or stack traces.",
+      "Accessibility: WCAG 2.2 AA audit of all public pages and main owner flows.",
+      "Internationalization framework with right-to-left support; the first extra languages are decided by the user (Q15; Urdu recommended since the user is in Pakistan).",
+      "A consistent design system across web, mobile apps, and share pages; empty states and onboarding for new invited users; a help center in the documentation.",
+      "Moderated usability tests with at least five non-technical people for: opening a shared album on a phone, uploading through a file request, and an owner creating and revoking a link. Fix every blocking issue before release.",
+      "A visible trust layer: link expiry and access information shown to recipients, 'shared by' identity, and a clear indicator for the owner of everything currently public (a 'public items' dashboard with one-click revoke)."
+    ],
+    "release_gates": [
+      "An independent penetration test or security audit of the internet-facing surface, by someone other than the implementing agent, with no open critical or high findings.",
+      "The updated threat model has every item mitigated or documented as an accepted risk by the user.",
+      "Automated security tests (authorization on every public route, link-token brute force, upload abuse, rate limits, header checks) and fuzzing pass.",
+      "The go-public wizard blocks exposure on an unprepared system in tests.",
+      "Usability tests completed and blocking issues fixed; the accessibility audit has no open AA failures.",
+      "A private beta with invited external users for an agreed period (e.g. four weeks) with no data-loss or security incident, then a staged rollout.",
+      "Upgrade from the previous release tested; rollback ('go private again') tested.",
+      "Documentation: exposure guide per method, hardening guide, incident runbook, recipient help page."
+    ],
+    "new_invariant_proposal": {
+      "id": "I11",
+      "text": "Internet exposure is always an explicit admin choice that passes the readiness checks. The admin interface stays reachable only from the LAN or VPN unless the admin separately enables it, and anonymous access is limited to explicit, revocable links.",
+      "status": "Proposed. Add to RULES.md and plan.md only after the user approves it (Q66)."
+    }
+  },
+
+  "conflicts_and_decisions": {
+    "note": "Record each in plan.md where it applies, and list them in your report. Features that depend on an unapproved change are marked 'pending Qnn' and are not removed.",
+    "items": [
+      { "item": "I8 (AI always last) and the new releases", "handling": "Keep I8 exactly: releases R01–R12 come before S15 by default. This delays AI until after all releases. Ask Q52." },
+      { "item": "Position of the new releases relative to S14 (pools)", "handling": "Default: S14 stays right after the MVP (milestone M4), and the releases follow it. The user earlier placed pools 'in the end'. Ask Q53." },
+      { "item": "NG5 (no remote access, no public links)", "handling": "Reversed by the user's message 2 (public release). Change NG5 to point to R06 and R09, quoting the user. This is approved by this prompt." },
+      { "item": "NG1 (no cloud sync, cloud backup, or hosted component)", "handling": "R01 (imports from clouds) and R04 (off-site backup) use remote services the user chooses. Propose rewording NG1: 'No hosted service operated by the project and no dependency on one; connections to third-party or user-owned remote services only as explicit opt-in features (I6).' Ask Q55." },
+      { "item": "NG2 (no native mobile apps)", "handling": "R07 needs it reversed. Recommended, given the goal of replacing cloud services. Ask Q56." },
+      { "item": "NG3 (no photo editing)", "handling": "R10 editing is non-destructive and never touches originals. Propose rewording NG3 to 'no destructive editing'. Ask Q57." },
+      { "item": "I1 and A3 (two areas only)", "handling": "External read-only libraries (G-016) would add a third source of media. Excluded by default. Ask Q58." },
+      { "item": "I5 with groups, partner sharing, public links, DLNA", "handling": "All remain explicit shares, enforced server-side. DLNA serves only folders the admin marks for the household." },
+      { "item": "I6 (no network calls unless enabled)", "handling": "Every network-using feature is off by default: email and webhook alerts, cloud imports, off-site backup, ACME, DDNS, push, map tiles online, update check, tunnels." },
+      { "item": "I10 (preview, confirmation, undo)", "handling": "Applies to imports, batch rename, rewind, free-up-space on phones, bulk metadata edits, and account deletion." },
+      { "item": "NG9 (no generative AI)", "handling": "Unchanged. Generative features are excluded (X-01)." }
+    ]
+  },
+
+  "new_open_questions": {
+    "note": "Add to plan.md section 5 under 'New in <version> (P006)', continuing from Q51.",
+    "questions": [
+      "Q52. AI position: keep 'AI always last' so S15 comes after all releases R01–R12 (default, the current invariant I8), or change I8 so AI comes right after the drive pools and the releases follow AI?",
+      "Q53. Drive pools (S14): keep them right after the MVP (default), or move them after the new releases, since you placed them 'in the end'?",
+      "Q54. Confirm the MVP additions: Live Photos and motion photos, the phone auto-backup bridge, and alert delivery (email, webhook, ntfy). And answer Q34 (file versioning), recommended 'yes'.",
+      "Q55. Reword NG1 so opt-in imports from other clouds and off-site backup to targets you choose are allowed?",
+      "Q56. Mobile apps (reverses NG2): native apps (framework by ADR) or PWA only? Publish on app stores, F-Droid, or both? Allow Apple and Google push services as an opt-in?",
+      "Q57. Reword NG3 to allow non-destructive photo editing (originals never changed)?",
+      "Q58. External read-only libraries (index a folder on the host without copying it): exclude (default, keeps I1) or include?",
+      "Q59. Map tiles: bundled low-detail offline tiles, a self-hosted tile file you download once, an opt-in online tile server, or a combination?",
+      "Q60. Public release accounts: only accounts the admin creates, admin-approved invitations (recommended), or open registration?",
+      "Q61. Public exposure methods to support: port forwarding with reverse proxy, your own VPS relay, both (recommended), and should third-party tunnels be documented?",
+      "Q62. Locked folder: hidden and re-authenticated only (simpler), or also client-side encrypted (no server search or thumbnails inside it)?",
+      "Q63. Release version labels: accept the suggested labels (v1.0.0 MVP, v1.1.0 pools, v1.2.0 R01, … v2.0.0 public release) or choose your own?",
+      "Q64. Office co-editing engine for R11: Collabora Online, ONLYOFFICE, or none?",
+      "Q65. Confirm the excluded features (X-01 to X-11); any to bring back?",
+      "Q66. Approve the proposed invariant I11 (internet exposure is always an explicit, checked choice; admin interface LAN/VPN-only by default)?"
+    ]
+  },
+
+  "pre_approved_documentation_changes": {
+    "note": "The user approves these through this prompt. Record each in the RULES.md changelog, citing P006.",
+    "changes": [
+      "Create the folder code-agent-docs/research/ and add it to the RULES.md documentation map, with the research file R001.",
+      "Add rule R13 (Releases) to RULES.md with the content of release_process_rules.",
+      "Add goal G13 to plan.md: 'local-ai-nas replaces most commercial cloud storage and photo services for its users: first on the home network (MVP), then from anywhere through private remote access (R06), and finally through a hardened public release (R09).' (the user's message 2).",
+      "Change NG5 to point to R06 and R09, quoting the user's message 2.",
+      "Add plan sections 3.3 (post-MVP requirements), 11b (release roadmap, including 11b.1 release process), and the public release specification as 11c.",
+      "Update the audit checklist template so group D checks: every gap in the research file has exactly one destination, every release feature has an FR ID, and every FR of a release names its release."
+    ]
+  },
+
+  "plan_md_updates": [
+    "Header: archive the current version, bump MINOR per R4, update the date.",
+    "Section 1: mention the product goal (G13) and the release roadmap in one short paragraph.",
+    "Section 2: add G13; change NG5; mark NG1, NG2, NG3 as 'change proposed, pending Q55/Q56/Q57' without rewording them yet.",
+    "Section 3.1: add the MVP additions as new FR IDs (continuing after FR-213), labelled [Planner addition] P006, in the S04, S05, S09, and S10 groups.",
+    "New section 3.3 'Post-MVP requirements': one table per release with columns ID, requirement, release, priority within the release (Must/Should/Could), gap ID, seen in, notes. Every gap assigned to a release gets at least one FR ID. Add NFRs for the public release (security gates, performance budgets over WAN, WCAG 2.2 AA for public pages) with IDs after NFR-039.",
+    "Section 5: add Q52–Q66; add a note to Q33, Q34, and Q31 that their answers now also decide G-060, G-004, and G-134.",
+    "Section 6: add a short 'future components' list (public edge, VPN, sync protocol, mobile and desktop clients, notification service, backup engine, office connector), marked as future, without changing the current diagram.",
+    "Section 10: apply the MVP additions to the named substages with 'P006' labels. Do not add stages for R01–R12 now.",
+    "Section 11: update M3 to 'S01–S13 plus the P006 MVP additions'; add milestones for R01–R12 after M4 and before M5 (AI), following release_roadmap.position_rule.",
+    "Section 11a: apply existing_candidates_in_11a and add the excluded list.",
+    "New section 11b: the release roadmap table (ID, label, theme, goal, features by gap and FR ID, prerequisites, exit criteria, status 'Planned'), then 11b.1 release process rules.",
+    "New section 11c: the public release specification in full (security design, sharing features, connectivity, wizard, UI/UX, gates, proposed I11).",
+    "Section 12: note that each release adds its own test focus; add upgrade-from-previous-release tests to 12.1.",
+    "Section 13: add risks: scope explosion from twelve releases (mitigation: release gates, one release at a time, Could items removable); internet exposure (mitigation: R09 gates); mobile platform restrictions on background backup (mitigation: platform testing, bridge fallback); sync-client data loss (mitigation: R04 first, conflict copies, stress tests); dependency licenses for rclone, ClamAV, WireGuard, office engines, and map data (mitigation: license checks per release).",
+    "Section 14: revision entry referencing P006, the research file, and the session log."
+  ],
+
+  "verification_tasks": {
+    "note": "Only these checks now; everything else is verified when its release is planned in detail. Record results in the research file; mark anything you could not verify as 'Unverified'.",
+    "tasks": [
+      "For G-001: confirm from ExifTool documentation the tags that carry the Apple Live Photo content identifier in the still and in the video, and the XMP markers of Google motion photos.",
+      "For G-002: confirm that at least one Android app and one iOS app currently support automatic photo upload to a WebDAV server, and note their licenses and costs. Do not recommend any unverified app.",
+      "Record the licenses of tools the releases would add as separate programs, as a preliminary note only: rclone, ClamAV, Network UPS Tools, WireGuard tools, LibreOffice, Collabora Online, ONLYOFFICE Docs, and OpenStreetMap data. Flag any that could affect the AGPL-3.0-or-later project (Q22) for the user."
+    ]
+  },
+
+  "execution_steps": [
+    { "step": 1, "action": "Run R1, archive this prompt, log it, and write the in-progress entry.", "details": "See before_you_start." },
+    { "step": 2, "action": "Impact analysis.", "details": "In the session log: affected plan sections and substages, the highest FR, NFR, and Q IDs, whether any MVP addition touches a substage that is In Progress or Done, and every conflict in conflicts_and_decisions." },
+    { "step": 3, "action": "Verification.", "details": "Complete verification_tasks and record the results." },
+    { "step": 4, "action": "Write the research file.", "details": "Create code-agent-docs/research/R001-2026-09-28-cloud-storage-feature-research.md from research_record, already_covered_by_the_plan, gap_list, and excluded_features, with every source linked." },
+    { "step": 5, "action": "Archive the current plan.", "details": "Copy plan.md to code-agent-docs/archive/plan-history/ before editing." },
+    { "step": 6, "action": "Apply the pre-approved documentation changes.", "details": "See pre_approved_documentation_changes." },
+    { "step": 7, "action": "Update plan.md.", "details": "Apply mvp_additions and every item in plan_md_updates. Every gap in gap_list must end with exactly one destination and, if assigned to MVP or a release, at least one FR ID." },
+    { "step": 8, "action": "Update the dependency register.", "details": "Add the preliminary license notes from verification_tasks as 'Candidate (release RNN), not a dependency yet', in a separate section so they are not mistaken for current dependencies." },
+    { "step": 9, "action": "Update CURRENT_STATE.md.", "details": "Remove the in-progress entry. Next steps: the user answers Q52–Q66 (Q54 and Q34 first, because they change the MVP); S02 work continues unchanged." },
+    { "step": 10, "action": "Consistency check.", "details": "Run audit checklist groups D, F, G, I, and K on everything you changed, including the new group D checks. Fix what is safe to fix and record the rest." },
+    { "step": 11, "action": "Git.", "details": "Commit according to the preference in RULES.md, e.g. 'docs(plan): competitor research, MVP additions, release roadmap R01–R12 [P006]'." },
+    { "step": 12, "action": "Report to the user and stop.", "details": "Keep it short, as the user prefers: (a) the MVP additions and the decision needed (Q54, Q34); (b) the release list, one line each; (c) the public release gates in three lines; (d) the decisions in order of urgency (Q54, Q52, Q53, then the rest); (e) verification results and license flags; (f) the path to the research file. Log this and close the session log with a summary." }
+  ],
+
+  "definition_of_done": [
+    "This prompt is archived as P006 (or the next free number).",
+    "The research file exists with every service, source, the coverage list, the gap list, and the excluded list.",
+    "Every gap has exactly one destination; every MVP or release gap has at least one FR ID naming its release.",
+    "MVP additions are applied to the named substages with P006 labels and listed for confirmation (Q54).",
+    "Sections 3.3, 11b (with release process rules), and 11c (public release specification) exist; section 11 has milestones for R01–R12 ordered as position_rule says; 11a is updated.",
+    "R13 is in RULES.md; the research folder is in the documentation map; the audit checklist has the new group D checks; changelog entries cite P006.",
+    "G13 and the NG5 change are in plan.md; NG1, NG2, NG3 are marked pending their questions; I11 is recorded as proposed only.",
+    "Q52–Q66 are in section 5.",
+    "The previous plan version is archived; version and revision history are updated.",
+    "CURRENT_STATE.md and the session log are current, with a closing summary.",
+    "No application code was written and no stage was created for R01–R12.",
+    "The user has received the report described in step 12."
+  ],
+
+  "final_instruction": "Begin with the R1 startup protocol. Work through the execution steps in order, recording as you go. When everything in definition_of_done is complete, report to the user and stop."
+}

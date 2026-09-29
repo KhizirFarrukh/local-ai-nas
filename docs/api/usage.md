@@ -112,7 +112,7 @@ curl.exe -s -T report.txt "$API/files/content?path=/docs/report.txt&on_conflict=
 The first upload answers `201` with the file:
 
 ```json
-{"content_hash":"sha256:c46cfe1b5f258414d5b96f5eadb1fd9def960877cde6bd3f37d2916f18665233","etag":"\"32643e0e8b822164bfb11738\"","kind":"file","mime":"text/plain; charset=utf-8","mod_time":"2026-09-28T06:52:16.4935751Z","name":"report.txt","path":"/docs/report.txt","size":11}
+{"added_time":"2026-09-28T06:52:16.4926512Z","content_hash":"sha256:c46cfe1b5f258414d5b96f5eadb1fd9def960877cde6bd3f37d2916f18665233","etag":"\"32643e0e8b822164bfb11738\"","kind":"file","mime":"text/plain; charset=utf-8","mod_time":"2026-09-28T06:52:16.4935751Z","name":"report.txt","path":"/docs/report.txt","size":11}
 ```
 
 `content_hash` is the SHA-256 of the content, computed while the file arrived. The file's details (`GET /files/items?path=...`) show it as long as the file is unchanged; a file changed without the NAS has none.
@@ -140,8 +140,26 @@ The answer has `item`, the folder itself, and `items`, one page of what is in it
 ```
 
 - A page has at most `limit` items (default 100, at most 1000). When more follow, the answer also has `next_cursor`. Add `&cursor=<next_cursor>` to the same request to get the next page.
-- `sort` is `name` (default), `size`, `mod_time`, or `kind`, and `order` is `asc` or `desc`.
+- `sort` is `name` (default), `size`, `mod_time`, `added_time`, or `kind`, and `order` is `asc` or `desc`. `added_time` is when an item was added to the NAS; renames, moves, and edits keep it.
 - For a file, such as `?path=/docs/report.txt`, the answer is just `item`: the file's details.
+
+### The size of a folder
+
+A folder's `size` in a listing is 0. To add up everything in it, at any depth:
+
+```sh
+curl -s "$API/files/usage?path=/docs"
+```
+
+```powershell
+curl.exe -s "$API/files/usage?path=/docs"
+```
+
+```json
+{"files":2,"folders":0,"path":"/docs","size":22}
+```
+
+The server reads the whole tree, so a large folder takes a moment. Links are neither followed nor counted.
 
 ## Download
 
