@@ -1272,7 +1272,7 @@ Work is **stage-gated** and governed by `code-agent-docs/RULES.md`.
 | ID | Name | Origin | Goal | Depends on | Status |
 |---|---|---|---|---|---|
 | S01 | Basic NAS implementation | User-defined | A reliable storage service that manages the files area through an API, with the two-area layout in place. | Plan baseline approval | Done |
-| S02 | NAS GUI | User-defined | A graphical application that lets people use the NAS without touching the API. | S01 | In Progress |
+| S02 | NAS GUI | User-defined | A graphical application that lets people use the NAS without touching the API. | S01 | **Done** |
 | S03 | Security | User-defined | Comprehensive security so the NAS can be safely reached from the local network (single admin). | S01, S02 | Not started |
 | S04 | Media management | User-defined | A separate photos area with Google Photos style management. | S03 | Not started |
 | S05 | Media metadata | User-defined | Every photo has a sidecar JSON file that is the source of truth for its metadata. | S04 | Not started |
@@ -1465,7 +1465,7 @@ flowchart LR
 - **Goal:** A graphical application that lets people use the NAS without touching the API.
 - **User requirements (quoted):**
   > "Stage 2 is the NAS software (GUI) that helps in interacting with the actual NAS."
-- **Status:** **In Progress** (stage document `stages/S02-nas-gui.md` approved by the user in S006; work started in S006)
+- **Status:** **Done** (S007, 2026-09-29; signed off by the user: "you know what, assume its tested, continue to next stage"; completion record in `stages/S02-nas-gui.md` section 13)
 
 #### S02.1: GUI technology and design foundation
 - **Goal:** Choose the GUI approach and build the design system and API client that every screen uses.
@@ -1581,7 +1581,7 @@ flowchart LR
   3. The GUI user guide section is written.
   4. The completion record is written and the user's sign-off is recorded.
 - **Risks/notes:** Safari testing may need a Mac or a cloud device service. That is a local tooling question, not a runtime dependency.
-- **Status:** In Progress (S007, 2026-09-28; T01–T04 done, details in `stages/S02-nas-gui.md`)
+- **Status:** Done (S007, 2026-09-29; details in `stages/S02-nas-gui.md`)
 
 **Design notes (S02):**
 - The GUI uses only the public API, so S03 adds authentication without GUI rewrites.
