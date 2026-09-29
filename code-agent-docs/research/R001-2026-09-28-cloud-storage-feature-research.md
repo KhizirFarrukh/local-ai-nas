@@ -399,14 +399,14 @@ The research was compared with the plan, not only listed. These competitor featu
 - Admin dashboard, quotas, disk health, jobs, logs (FR-127–FR-130)
 - Integrity scans, metadata backup, disaster recovery, local external backup (FR-119–FR-123)
 - RAID 0 and RAID 1 pools (FR-195–FR-210)
-- Face grouping, auto-classification, AI cleanup; OCR and semantic search as options (S15)
+- Face grouping, auto-classification, AI cleanup; OCR and semantic search as options (S16)
 - Docker, per-platform setup scripts, safe updates (FR-131–FR-135, FR-149)
 - HTTPS, sessions, API tokens, audit log, TOTP (Could, Q33) (FR-064–FR-091)
 - **Added in plan 1.5.0** (the user's walkthrough, S007 E030–E032): trash items deleted automatically after 30 days (FR-008, S08.1); every item shows its size, folders too (FR-214, S02.3-T05); the date an item was added, shown with the modified date and sortable (FR-215, S02.3-T05); finished uploads appear at once, and a single uploaded item is shown with two blinks (FR-216, S02.4-T05).
 
 ## Gap list (coverage matrix)
 
-Every feature below is missing from the plan or only partly covered. Each has exactly one destination: the MVP, a release (R01–R12, plan section 11b), the AI stage S15 (as an optional extension), or excluded. The FR IDs are in plan section 3.1 (MVP) and 3.3 (releases).
+Every feature below is missing from the plan or only partly covered. Each has exactly one destination: the MVP, a release (R01–R12, plan section 11b), the AI stage S16 (as an optional extension), or excluded. The FR IDs are in plan section 3.1 (MVP) and 3.3 (releases).
 
 | Gap | Feature | In the plan before P006 | Seen in | Destination | FR |
 |---|---|---|---|---|---|
@@ -521,15 +521,15 @@ Every feature below is missing from the plan or only partly covered. Each has ex
 | G-142 | API documentation portal and client SDKs | Partial (OpenAPI + Redoc) | Filen, Immich | R12 | FR-325 |
 | G-143 | S3-compatible API | Missing | MEGA S4, Filen | R12 (Could) | FR-326 |
 | G-144 | Extension / plugin system | Missing | Nextcloud apps, Synology packages | R12 (Could) | FR-327 |
-| G-150 | Pet recognition and grouping | Missing | Google Photos, Amazon Photos | S15 (AI extension, Could) | S15.10 (Could) |
-| G-151 | Smart memories using people, pets, and events | Missing | Google Photos, Immich (planned) | S15 (AI extension, Could) | S15.10 (Could) |
-| G-152 | AI classification of documents in the files area | Missing (AI is photos-only) | Google Drive (AI search), OneDrive (Copilot) | S15 (AI extension, Could) | S15.10 (Could) |
-| G-153 | Sensitive-content auto-hide suggestion | Missing | PhotoPrism (NSFW) | S15 (AI extension, Could) | S15.10 (Could) |
-| G-154 | Blurry photo and screenshot cleanup suggestions | Partial (S15.11 smart cover) | OneDrive photo stacks, Google Photos storage management | S15 (extend S15.11) | S15.10 (Could) |
-| G-155 | Local speech-to-text subtitles and search for videos | Missing | Nextcloud Assistant (transcription) | S15 (AI extension, Could) | S15.10 (Could) |
-| G-156 | Sensitive-text redaction suggestions from OCR | Missing | Google Photos (Redact) | S15 (AI extension, Could; needs OCR, Q36) | S15.10 (Could) |
+| G-150 | Pet recognition and grouping | Missing | Google Photos, Amazon Photos | S16 (AI extension, Could) | S16.10 (Could) |
+| G-151 | Smart memories using people, pets, and events | Missing | Google Photos, Immich (planned) | S16 (AI extension, Could) | S16.10 (Could) |
+| G-152 | AI classification of documents in the files area | Missing (AI is photos-only) | Google Drive (AI search), OneDrive (Copilot) | S16 (AI extension, Could) | S16.10 (Could) |
+| G-153 | Sensitive-content auto-hide suggestion | Missing | PhotoPrism (NSFW) | S16 (AI extension, Could) | S16.10 (Could) |
+| G-154 | Blurry photo and screenshot cleanup suggestions | Partial (S16.11 smart cover) | OneDrive photo stacks, Google Photos storage management | S16 (extend S16.11) | S16.10 (Could) |
+| G-155 | Local speech-to-text subtitles and search for videos | Missing | Nextcloud Assistant (transcription) | S16 (AI extension, Could) | S16.10 (Could) |
+| G-156 | Sensitive-text redaction suggestions from OCR | Missing | Google Photos (Redact) | S16 (AI extension, Could; needs OCR, Q36) | S16.10 (Could) |
 
-**Destinations:** EXCLUDED: 1, MVP: 4, R01: 6, R02: 16, R03: 10, R04: 8, R05: 10, R06: 6, R07: 10, R08: 6, R09: 14, R10: 9, R11: 6, R12: 5, S15: 7 (total 118).
+**Destinations:** EXCLUDED: 1, MVP: 4, R01: 6, R02: 16, R03: 10, R04: 8, R05: 10, R06: 6, R07: 10, R08: 6, R09: 14, R10: 9, R11: 6, R12: 5, S16: 7 (total 118).
 
 ## Considered and excluded
 

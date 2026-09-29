@@ -7,6 +7,7 @@ Updated in audit A002 (session S005): checks for the product documentation (docs
 Updated in session S007 (P005, pre-approved): group K checks historical documents against the plan's "Stage ID changes" table (plan.md 10.18).
 Updated in audit A003 (session S007): group G also covers the tools the tests use; group H checks the files table against what was built; group J checks task-start entries.
 Updated in session S007 (P006, pre-approved): group D checks the research files and the release roadmap.
+Updated in session S007 (P007, the admin console, the Raspberry Pi, the deployers): groups G, H, K.
 UPDATE THIS CHECKLIST whenever a new document type, folder, rule, or invariant is added (R12 / P004).
 
 How to use:
@@ -109,6 +110,7 @@ How to use:
 - [ ] Every dependency, external tool, dataset, and model named in plan.md, an ADR, or a stage document is in the register (alternatives named only in "Options considered" go in the alternatives list).
 - [ ] Versions and licenses match the ADRs and stage documents.
 - [ ] Every row has a verification status. License items needing the user's attention are flagged (⚠).
+- [ ] Section 12 has a column for each focus platform (Debian or Ubuntu, Arch Linux, Raspberry Pi, Windows 11) and the Docker image, with package names checked against each platform's package index or marked Unverified.
 - [ ] The tools the tests and fixtures use are listed too: test browsers, fixture generators, and anything CI installs (A003 F-005).
 
 ### H. Stage documents
@@ -118,6 +120,8 @@ How to use:
 - [ ] No placeholders remain.
 - [ ] Every listed dependency has an ADR link and a register entry.
 - [ ] Its status is consistent with CURRENT_STATE.md.
+- [ ] Every admin function the stage built is a page of the admin console (plan 6.6), and the console map is up to date (the user's requirement, S007).
+- [ ] The stage states its Raspberry Pi memory and speed budgets and their measurement (plan NFR-051).
 - [ ] Its files table names what was built: no alternatives left open ("X (or Y)"), and every file the stage created or changed is covered (A003 F-001).
 
 ### I. CURRENT_STATE.md
@@ -136,7 +140,7 @@ How to use:
 
 ### K. Cross-document consistency
 - [ ] Stage, substage, task, requirement, ADR, and invariant IDs are identical everywhere.
-- [ ] **Stage ID changes** (plan.md 10.18): documents written before a renumbering (session logs, prompts, archived plans, completion records, ADR history, changelog and revision-history rows) keep the old IDs and are **not** findings; check that their IDs are correct for their date by translating through the table. Current documents must use the new IDs, and no current document may use a reused ID (e.g. S11, S12 before and after 1.4.0) in its old meaning. Every current document that mentions a renumbered stage uses its current ID.
+- [ ] **Stage ID changes** (plan.md 10.18): documents written before a renumbering (session logs, prompts, archived plans, completion records, ADR history, changelog and revision-history rows) keep the old IDs and are **not** findings; check that their IDs are correct for their date by translating through the table. Current documents must use the new IDs, and no current document may use a reused ID (e.g. S11, S12 before and after 1.4.0; S15 before and after 1.7.0, AI then, SSD caching now) in its old meaning. Every current document that mentions a renumbered stage uses its current ID.
 - [ ] Terminology is consistent (areas, sidecar naming, operators, component names).
 - [ ] All relative links and backticked `code-agent-docs/…` paths resolve.
 - [ ] Product documentation (`docs/`, `scripts/README.md`, the README's Development section): links and anchors resolve, and every command it shows was run as written (for example by extracting its code blocks into a script), or the report says which were not.

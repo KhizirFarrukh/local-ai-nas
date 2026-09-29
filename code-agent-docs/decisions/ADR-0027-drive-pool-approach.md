@@ -57,7 +57,7 @@
 ## Consequences
 
 - **Easier:** mature, documented tooling; the deferred layouts can later use the same tool.
-- **Harder:** Linux-only; loop-device tests need root on the test machine (S14.10).
+- **Harder:** Linux-only; loop-device tests need root on the test machine (S14.13).
 - **Required (follow-up work, constraints this imposes):** S14.1 re-verifies every mdadm capability used against the current man page and records it here; `dependencies.md` rows for mdadm, util-linux, smartmontools, e2fsprogs/xfsprogs (Linux section 12, optional component).
 
 ## Approval record

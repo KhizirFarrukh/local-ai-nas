@@ -102,3 +102,29 @@ IDs continue from A002 (R-01 to R-12).
 ---
 
 **Recommendation:** approve R-13, R-14 option A, and R-15, and apply them right after the S02 sign-off.
+
+---
+
+### R-16: Deployment options and the Raspberry Pi _(added after A003, S007 E047)_
+
+**Current (Installation section):**
+```
+Planned deployment options:
+- [ ] Docker Compose (primary), with images for x86-64 and ARM64 (e.g. Raspberry Pi); optional AI component enabled with a Compose profile
+- [ ] Native install on Linux (single binary + systemd)
+- [ ] Native install on Windows and macOS (under consideration)
+```
+
+**Proposed:**
+```
+Planned deployment options, each with its own easy deployer (one command or a double-click):
+- [ ] Debian and Ubuntu
+- [ ] Arch Linux
+- [ ] Raspberry Pi (Raspberry Pi OS 64-bit), the main target: the NAS is tuned to run well on a Pi
+- [ ] Windows 11
+- [ ] Docker Compose for any other system, with images for x86-64 and ARM64; optional AI with a Compose profile
+```
+
+**Reason:** the user's requirements in S007 (E046): "this project should be very optimized on a raspberry pi, i will run it on a pi" and "deployable on debian, arch, windows, pi and more (but these 4 mentioned must be focused) … a different deployment script … very user friendly" (plan FR-149, NFR-051, NFR-052).
+
+**When:** any time; asked with R-13–R-15.

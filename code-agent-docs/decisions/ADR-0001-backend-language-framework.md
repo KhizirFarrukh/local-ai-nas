@@ -66,7 +66,7 @@ The core server is a long-running NAS process. Its work is mostly disk and netwo
 ## Consequences
 
 - **Easier:** single-binary distribution; low RAM; cross-compiling for arm64; streaming performance; embedding the web UI (`go:embed`, ADR-0009).
-- **Harder:** two languages once S15 arrives. The contract between the core and the AI worker must be specified (JSON, versioned) and contract-tested (ADR-0017).
+- **Harder:** two languages once S16 arrives. The contract between the core and the AI worker must be specified (JSON, versioned) and contract-tested (ADR-0017).
 - **Required:**
   - Go toolchain pinning.
   - `CGO_ENABLED=0` in release builds. The race detector (`-race`) needs cgo, so it runs only in CI test jobs.

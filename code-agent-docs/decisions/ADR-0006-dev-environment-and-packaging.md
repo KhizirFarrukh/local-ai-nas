@@ -60,5 +60,5 @@
 
 - **Related requirements:** NFR-008, NFR-009, NFR-030, FR-131, FR-132
 - **Related ADRs:** ADR-0001, ADR-0004, ADR-0005, ADR-0012, ADR-0016, ADR-0017
-- **Related stages:** S01.1 (dev environment), S13.1, S13.2, S15.12
+- **Related stages:** S01.1 (dev environment), S13.1, S13.2, S16.12
 - **Plan version:** 0.3.0
