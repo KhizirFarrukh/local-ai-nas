@@ -327,7 +327,7 @@ The main navigation gets a user menu (account, sign out) and the Admin entry for
 | S03.9 | Admin console foundation | Not started | S03.2, S03.3, S03.6, S03.8 | FR-342, FR-344, NFR-050, NFR-051 |
 | S03.10 | Security testing and stage review | Not started | S03.1–S03.9 | NFR-023, NFR-010, NFR-050, NFR-051 |
 
-**Execution order:** S03.1 → S03.2 → S03.3 → **S03.8-T01** (sign-in pages, so the GUI stays usable once routes need a session) → S03.5 → S03.6 → S03.4 → S03.7 → S03.8-T02 → S03.9 → S03.10.
+**Execution order:** S03.1 → S03.2-T01, T02 → **the Host allow-list and the Origin check of S03.5-T02** (moved forward in 2026-09-30: bug S03-B01 is open now, and external review #1 asks for this protection before full authentication) → S03.2-T03 … T05 → S03.3 (Q79 decides the database durability before S03.3-T01) → **S03.8-T01** (sign-in pages, so the GUI stays usable once routes need a session) → S03.5 (the rest of T02 is the CSRF token) → S03.6 → S03.4 → S03.7 → S03.8-T02 → S03.9 → S03.10.
 
 **Rule (R6):** the tasks in S03.1–S03.9 deliver code (or, in S03.1, documents), written to be testable. Such a task is Done when:
 - it builds;
@@ -588,6 +588,7 @@ cd web && pnpm test:e2e        # when the task touches the GUI or the routes
 | Self-signed certificate warnings confuse users | High | Low | Fingerprint shown in the console; step-by-step guide; own certificate possible | — |
 | A strict CSP or new headers break GUI features | Low | Medium | Checked in Edge and Firefox in the task; system tests | Relax the one header with a recorded reason |
 | Session and audit writes wear an SD card | Medium | Medium | Throttled writes; nothing written while idle; the database on a real drive (8.33) | — |
+| A power cut rolls back security writes (threat T-59) | Low | Medium | Q79: `synchronous=FULL` for the database, decided before S03.3-T01 | — |
 | The TOTP library is unmaintained | Medium | Low | Maintenance check at S03.7; RFC 6238 fallback (ADR-0010) | New ADR |
 | The console grows beyond its foundation in S03 | Medium | Medium | Only the listed sections; others come with their stages (registry, no dead links) | — |
 | Rate limits hit normal use | Low | Medium | Generous defaults; console-managed; system tests with large folders and uploads | Raise the limit in the console |
@@ -615,6 +616,7 @@ cd web && pnpm test:e2e        # when the task touches the GUI or the routes
 | 2026-09-29 | S007 | **Approved** (E050); decisions D-1–D-6 recorded (section 11); the Q33 and Q74 conditions resolved in the text (two-factor is built; ADR-0039 Accepted); plan 1.8.0 | The user's approval | Given |
 | 2026-09-30 | S007 | S03.1-T01 (threat model, E051): the Host allow-list against DNS rebinding added to 4.5 and S03.5-T02 (T-19); owner binding of archive tickets and tus uploads and restrictive file permissions added to S03.5-T05 (T-29, T-30, T-42); the `?next=` rule added to S03.8-T01 (T-23) | Threats found by the threat model, inside the approved scope ("close common web-application attack classes") | No (small internal adjustment, recorded, R3) |
 | 2026-09-30 | S007 | S03.1-T02 (code review, E052): findings F-01–F-08 in the threat model; bugs S03-B01 and S03-B02 recorded (section 12); S03.5-T04 gains the per-address request limit (F-06); S03.5-T05 gains the file modes and the pdf.js option (F-02, F-08) | Findings of the review, inside the approved scope | No (recorded, R3) |
+| 2026-09-30 | S007 | External review #1 (CR001, E057): the Host allow-list and the Origin check of S03.5-T02 moved to the front of the remaining work (bug S03-B01); a risk row for T-59 (Q79) | The review's point 6 and the open bug; the task itself is unchanged | No (order only, recorded, R3) |
 
 ### Bugs found during the stage
 

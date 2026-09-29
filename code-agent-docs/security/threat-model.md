@@ -3,9 +3,9 @@
 | Field | Value |
 |---|---|
 | Requirement | FR-084: a documented threat model, maintained through the project |
-| Version | 1.1 |
+| Version | 1.2 |
 | Created | 2026-09-30 (session S007, task S03.1-T01) |
-| Last updated | 2026-09-30 (session S007, S03.1-T02) |
+| Last updated | 2026-09-30 (session S007, external review #1) |
 | Status | **Draft for the user's review** (S03.1 criterion 3) |
 | Maintained by | Every stage that adds an attack surface updates this file (RULES documentation map; audit checklist group H) |
 
@@ -209,6 +209,8 @@ flowchart LR
 | T-55 | Users read each other's data through IDs (uploads, archives, jobs, shares) | I | E-01–E-04 | Ownership rules in `authz`; IDs bound to their owner (prepared in S03.5-T05) | Future → S07 |
 | T-56 | The console is reachable from the internet once the NAS is exposed | E | E-09 | A setting that limits `/admin` and `/api/v1/admin` to the LAN or VPN (ADR-0039) | Future → R09 |
 | T-57 | A tampered release or update is installed | E | E-19 | Published checksums and signatures; the deployers verify them | Future → S13 |
+| T-58 | Access data kept in sidecars or hidden files is changed outside the app (on the filesystem, over a network share with write access, by restoring an old backup) and grants access | E | E-11, E-13 | The database is the authority for owners, ACLs, and shares; sidecars only mirror it (plan 8.36) | Future → S05.1, S07.3 (decision **Q78**; external review #1) |
+| T-59 | A power cut rolls back the last committed security changes (a revoked session or token, a password change, audit events), because SQLite in WAL mode with `synchronous=NORMAL` flushes only at checkpoints | S, R | E-11 | `synchronous=FULL` (plan 8.37) | Open → decision **Q79**, before S03.3-T01 (external review #1) |
 
 ## 7. Review of existing code (S03.1-T02)
 
@@ -249,3 +251,4 @@ _None yet. Candidates are marked in section 6 (T-33, T-37, T-44, T-45). Each bec
 |---|---|---|
 | 2026-09-30 | S007 | Version 1.0 (S03.1-T01): assets, attackers, surfaces, threats T-01–T-57 |
 | 2026-09-30 | S007 | Version 1.1 (S03.1-T02): section 7, the review of the S01 and S02 code: findings F-01–F-08 (bugs S03-B01, S03-B02) and what was found sound |
+| 2026-09-30 | S007 | Version 1.2: T-58 (access data edited outside the app) and T-59 (security writes rolled back by a power cut), from external review #1 (CR001, research R002) |
