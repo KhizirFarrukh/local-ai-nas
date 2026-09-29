@@ -8,6 +8,7 @@ Updated in session S007 (P005, pre-approved): group K checks historical document
 Updated in audit A003 (session S007): group G also covers the tools the tests use; group H checks the files table against what was built; group J checks task-start entries.
 Updated in session S007 (P006, pre-approved): group D checks the research files and the release roadmap.
 Updated in session S007 (P007, the admin console, the Raspberry Pi, the deployers): groups G, H, K.
+Updated in session S007 (S03 approval): the threat model check (group H).
 UPDATE THIS CHECKLIST whenever a new document type, folder, rule, or invariant is added (R12 / P004).
 
 How to use:
@@ -114,6 +115,7 @@ How to use:
 - [ ] The tools the tests and fixtures use are listed too: test browsers, fixture generators, and anything CI installs (A003 F-005).
 
 ### H. Stage documents
+- [ ] From S03: `security/threat-model.md` exists; every threat has a status (mitigated with its test, accepted risk with the user's approval, or open with the stage that handles it); the stage under audit updated it for every attack surface it added (FR-084).
 - [ ] Only the active or next stage has a stage document (just-in-time rule). Any others are flagged.
 - [ ] Each stage document covers all of its substages, with tasks `S<NN>.<n>-T<NN>`, each with acceptance criteria.
 - [ ] It contains every R3 section, including the approval record (empty if not approved) and the R12 audit task in the final substage.

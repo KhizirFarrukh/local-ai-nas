@@ -3,7 +3,7 @@
 | Field | Value |
 |---|---|
 | Number | ADR-0039 |
-| Status | Proposed |
+| Status | **Accepted** (2026-09-29, session S007, with the S03 approval) |
 | Date proposed | 2026-09-29 (session S007) |
 | Date of last status change | 2026-09-29 (session S007) |
 | Supersedes | none |
@@ -29,7 +29,7 @@ The console lives at `/admin/…` in the same SvelteKit app (ADR-0009), shown on
 
 ## Decision
 
-**Recommended: Option A.**
+**Option A** (recommended, and chosen by the user with the S03 approval).
 - **Structure (the console map, plan 6.6):** Overview; Storage and drives (health, drives, pools, migrations, SSD cache); Users and groups; Sharing; Security (sessions, 2FA policy, audit log); Network shares; Backups and recovery; Jobs; Logs and alerts; System settings (network and bind, time, notifications, updates, advanced); About and diagnostics. Each section is filled by the stage that builds its feature.
 - **Rules:** every admin API route checks the admin role on the server (default deny; route inventory test); sensitive actions need recent re-authentication (S03.3); every admin action is audit-logged (S03.6); destructive actions show a preview and a typed confirmation (I10); one layout, component set, and wording; usable on a phone; accessible (NFR-015).
 - **Optional:** a setting to allow `/admin` and `/api/v1/admin` only from given networks (LAN, VPN), required before R09.
@@ -40,7 +40,10 @@ The console lives at `/admin/…` in the same SvelteKit app (ADR-0009), shown on
 
 ## Approval record
 
-_Pending: put to the user with the P007 report (S007 E047). Decided when its stage is planned in detail (S03.9 (foundation), S10.6 (completeness))._
+> "approve s03"
+> (2026-09-29, session S007, log E050)
+
+The user approved the S03 stage document, whose decision **D-1** (Q74) put option A (recommended) to the user: "admin console as `/admin` in the same web app (ADR-0039 option A, recommended), or a separate app on its own port". No change was asked, so option A is chosen and this ADR is Accepted. Proposed with the P007 report (S007 E047).
 
 ## Links
 

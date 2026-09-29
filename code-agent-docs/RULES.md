@@ -1,6 +1,6 @@
 # RULES: Permanent Operating Rules for AI Agents on local-ai-nas
 
-**RULES.md version:** 1.8.1
+**RULES.md version:** 1.8.2
 **Created:** 2026-09-23 (session S001)
 **Source:** `operating_rules` in `code-agent-docs/bootstrap/initial-prompt.json`, transcribed in full with the original rule IDs.
 
@@ -282,6 +282,7 @@ All agent documentation lives in `code-agent-docs/`:
 | `code-agent-docs/bootstrap/` | The original bootstrap prompt, archived verbatim (`initial-prompt.json`). It stays there. It is effectively prompt P001. |
 | `code-agent-docs/prompts/` | Later user prompts (change requests, instructions delivered as files), archived verbatim as `P<NNN>-<short-kebab-title>.<ext>`, e.g. `P002-staged-development-roadmap.json`. The session log records the USER entry as a pointer to the archived file. The user's own originals live in the repository-root `prompts/` folder (user-managed, outside `code-agent-docs/`). |
 | `code-agent-docs/research/` | Research records for planning, numbered sequentially: `R<NNN>-<YYYY-MM-DD>-<slug>.md` (e.g. `R001-2026-09-28-cloud-storage-feature-research.md`, the competitor research behind the release roadmap). Dated snapshots: the plan links to them instead of copying them. Added in 1.8.0 (P006). |
+| `code-agent-docs/security/` | Security documents, starting with the threat model `threat-model.md` (S03.1, FR-084): assets, attackers, surfaces, numbered threats (T-01…), and the status of each (mitigated with its test, accepted risk with the user's approval, or open with the stage that handles it). Every stage that adds an attack surface updates it. Added in 1.8.2 (S03 approval, decision D-4). |
 | `code-agent-docs/audits/` | Documentation audit reports, numbered sequentially: `A<NNN>-<YYYY-MM-DD>-<slug>.md` (e.g. `A001-2026-09-24-documentation-audit.md`), plus audit side documents such as README change proposals (`A<NNN>-readme-proposal.md`). See R12. |
 
 Folders that were created empty got a `.gitkeep` file so git tracks them. These files stay in place even after a folder gains content (R9: nothing is deleted from `code-agent-docs/`).
@@ -352,3 +353,4 @@ Filled in as the user states lasting preferences (R10). Commit behavior is recor
 | 1.8.0 | 2026-09-29 | (c) `templates/audit-checklist.md` group D: every gap in a research file has exactly one destination; every release feature has an FR ID; every FR of a release names its release. | Pre-approved in P006; session S007 |
 | 1.8.0 | 2026-09-29 | (d) User Preferences: keep working without stopping at checkpoints; stop only when the user says so or a stage completes, and stopping means save, commit, and push. | The user's lasting instruction (S007 E041), recorded per R10 |
 | 1.8.1 | 2026-09-29 | User Preferences: Raspberry Pi first, and a very user-friendly deployer for each of Debian, Arch Linux, Windows, and Raspberry Pi; Arch added to the section 12 platforms in the dependency-record bullet. Audit checklist: checks for the admin console, the Raspberry Pi budgets, the four platform columns, and the reused ID S15. | The user's lasting instructions (S007 E046), recorded per R10 |
+| 1.8.2 | 2026-09-29 | Documentation map: new folder `code-agent-docs/security/` for the threat model. Audit checklist: the threat model check (group H). | The user's approval of S03 with decision D-4 ("approve s03", S007 E050) |
