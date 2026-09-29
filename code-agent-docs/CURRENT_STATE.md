@@ -1,18 +1,19 @@
 # CURRENT_STATE
 
-**Last updated:** 2026-09-30 00:21 +0500 (session S007)
+**Last updated:** 2026-09-30 00:25 +0500 (session S007)
 **Plan version:** 1.8.0 (`code-agent-docs/plan.md`; 1.8.0: **S03 approved**, Q33 yes, Q74 `/admin` with ADR-0039 Accepted, command-line admin creation for headless machines, the LAN listener made concrete), **Approved baseline** 1.0.0 (S005). 1.6.0 (P006): research, MVP additions FR-217–FR-221 (pending Q54), releases R01–R12. 1.7.0 (P007 and the user's S007 requirements): drive lifecycle in S14, **SSD caching S15, AI now S16**, the **admin console** (S03.9, S10.6, plan 6.6), **Raspberry Pi first** (NFR-051), **deployers for Debian, Arch Linux, Windows 11, Raspberry Pi OS** (FR-149, NFR-052). 16 stages, 133 substages; IDs translated in plan 10.18
 **Current phase:** **S01 Done** (S005 E126). **S02 Done** (signed off 2026-09-29, S007 E044). **S03 (Security): Approved** (S007 E050) and **In Progress** (`stages/S03-security.md`)
 
 ## Active stage and task
 - **Active stage:** **S03: Security**, In Progress (`stages/S03-security.md`, approved in S007 E050 with D-1–D-6 as recommended). **S02: NAS GUI** is **Done** (signed off in S007 E044); S01 is **Done**.
-- **Active task:** **S03.1-T01** threat model (`code-agent-docs/security/threat-model.md`). Execution order: S03.1 → S03.2 → S03.3 → S03.8-T01 → S03.5 → S03.6 → S03.4 → S03.7 → S03.8-T02 → S03.9 → S03.10. The P005 follow-up tasks of S01 are all done.
+- **Active task:** **S03.1-T02** review of the S01 and S02 code against the threat model (findings into its section 7). Execution order: S03.1 → S03.2 → S03.3 → S03.8-T01 → S03.5 → S03.6 → S03.4 → S03.7 → S03.8-T02 → S03.9 → S03.10. The P005 follow-up tasks of S01 are all done.
 - **The user's instruction (S007 E010):** after P005, resume S02 and work until the stage is complete, and also build the P005 items that belong to the current or earlier stages (the S01 follow-up tasks).
 
 ## In progress (write-ahead)
-- **S03.1-T01** (threat model), branch `docs/S03.1-T01-threat-model`.
+- **S03.1-T02** (code review against the threat model), branch `docs/S03.1-T02-code-review`.
 
 ## Last completed
+- **S03.1-T01 done** (S007 E051): threat model `code-agent-docs/security/threat-model.md` v1.0: assets A-01–A-09, attackers X-01–X-08, surfaces E-01–E-19, threats T-01–T-57 (each mapped to an S03 task, earlier evidence, a later stage, or an accepted-risk candidate). New: **DNS rebinding (T-19)** → a Host allow-list in S03.5-T02; `?next=` (T-23) → S03.8-T01; owner binding and file permissions → S03.5-T05. The user's review is asked at the next stop.
 - **S03 approved** (S007 E050): "approve s03"; D-1–D-6 as recommended; plan 1.8.0 (1.7.0 archived); ADR-0039 Accepted; RULES 1.8.2 (`security/` folder); audit checklist (threat model check).
 - **S03 stage document written** (S007 E049; `stages/S03-security.md`): 10 substages, 36 tasks; the design for accounts, sessions and tokens, HTTPS on a separate LAN listener (plain HTTP stays on this computer), default-deny authorization, CSRF, headers, rate limits, the audit trail, optional TOTP (Q33), the security GUI, and the **admin console foundation** (S03.9: `/admin`, console-managed settings, shared components, first sections); **Raspberry Pi budgets** (4.9) and the ARM64 and Pi-profile CI (S03.10). New dependencies checked: x/crypto v0.57.0, x/term v0.46.0 (BSD-3-Clause); pquerna/otp v1.5.0 (Apache-2.0) and boombuler/barcode v1.1.0 (MIT) only if Q33 is yes.
 - **Plan change request #7, the admin console, Raspberry Pi first, and the deployers applied** (S007 E044–E047; branch `docs/P007-drives-cache-admin-console`): plan 1.7.0; ADR-0030–ADR-0039 (Proposed; verification results inside); RULES 1.8.1; register (P007 candidates, Arch Linux column in section 12, AI renumbered S16); audit checklist; README proposal R-16. No application code.
