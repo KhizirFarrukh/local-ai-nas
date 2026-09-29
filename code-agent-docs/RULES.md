@@ -1,6 +1,6 @@
 # RULES: Permanent Operating Rules for AI Agents on local-ai-nas
 
-**RULES.md version:** 1.7.1
+**RULES.md version:** 1.7.2
 **Created:** 2026-09-23 (session S001)
 **Source:** `operating_rules` in `code-agent-docs/bootstrap/initial-prompt.json`, transcribed in full with the original rule IDs.
 
@@ -293,6 +293,7 @@ Filled in as the user states lasting preferences (R10). Commit behavior is recor
 - **Stacked branches** (S005, 2026-09-24, decision D-03 of audit A001): if an earlier branch is not merged yet, a new branch may be created on top of it (and the user is told). With the merge rule above this should be rare. User's answer: "Accept all (Recommended)".
 - **Testing approach** (S006, 2026-09-25): the user's instruction: "Make sure to add unit tests and integration tests and system/ application tests a part of development process but focus on coding first, write code that is testable, but write tests in the end (of the stage)". Code comes first and is written to be testable. Each stage's final testing substage writes its unit, integration, and system/application tests (R6). Coverage is reported (since S007: locally, and by CI at the stage end, see the next bullet) but does not block during a stage; 80% is an exit criterion of the final testing substage ("Report now, enforce at stage end (Recommended)"). A bug is recorded and fixed at once, and its regression test is written with the stage's tests ("Fix now, test at stage end (Recommended)").
 - **CI only at stage completion** (S007, 2026-09-28): the user's instruction: "dont run CI on every commit/push/checkpoint but CI should only run at the completion of a stage". During a stage, the agent runs the checks locally before each commit and merge, and CI is not triggered by commits, pushes, or checkpoints. CI runs once when a stage is complete, before the user's sign-off. **Mechanism** (the user's answer in S007 E013, "Stage tag + manual (Recommended)"): `.github/workflows/ci.yml` runs only when a stage-completion tag `S<NN>-done` is pushed (after the stage's final testing substage, before sign-off) or when "Run workflow" is used. Branch pushes, merges, and pull requests (including Dependabot's) start nothing, so `[skip ci]` is no longer needed. The tag is created by the agent on `develop` at the stage end.
+- **AI co-author line kept in commits** (S007, 2026-09-29): the agent's commit messages end with its `Co-Authored-By` line, so GitHub shows the agent as co-author, **for transparency**. The user first asked to remove it ("i dont want your name here"), then decided to keep it: "hey you know what, its fine, keep it there, for transparency purposes". Nothing in the history is rewritten.
 
 ---
 
@@ -324,3 +325,4 @@ Filled in as the user states lasting preferences (R10). Commit behavior is recor
 | 1.7.0 | 2026-09-28 | (c) plan.md: the "Stage ID changes" table (section 10.18) added, and I10 added to the plan's "Project invariants" (2a). | Pre-approved in `code-agent-docs/prompts/P005-feature-additions.json` (`pre_approved_documentation_changes`); session S007 |
 | 1.7.0 | 2026-09-28 | (d) `templates/audit-checklist.md` group K: historical documents are checked against the "Stage ID changes" table instead of their old IDs being flagged as errors. | Pre-approved in `code-agent-docs/prompts/P005-feature-additions.json` (`pre_approved_documentation_changes`); session S007 |
 | 1.7.1 | 2026-09-28 | User Preferences: the CI trigger mechanism (a stage-completion tag `S<NN>-done`, or a manual run). | The user's answer in S007 (E013): "Stage tag + manual (Recommended)", recorded per R10 |
+| 1.7.2 | 2026-09-29 | User Preferences: the agent's co-author line stays in commit messages, for transparency. | The user's decision (S007 E038, E039), recorded per R10 |

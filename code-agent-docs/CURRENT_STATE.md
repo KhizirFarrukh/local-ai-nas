@@ -1,6 +1,6 @@
 # CURRENT_STATE
 
-**Last updated:** 2026-09-28 21:34 +0500 (session S007)
+**Last updated:** 2026-09-29 06:37 +0500 (session S007)
 **Plan version:** 1.5.0 (`code-agent-docs/plan.md`), **Approved baseline** 1.0.0 (S005); 1.4.0 adds P005 (15 stages, 120 substages; packaging is now S13 and AI S15, table in plan 10.18)
 **Current phase:** **S01 (Basic NAS) Done** (signed off, S005 E126; P005 follow-up tasks done in S007). **S02 (NAS GUI) In Progress** (approved S006 E009); S02.1–S02.7 Done; S02.8 In Progress (T01–T04 done; T05 waits for the sign-off)
 
@@ -62,4 +62,4 @@
 - Audit reports: `code-agent-docs/audits/A003-2026-09-28-documentation-audit.md` (the S02 final review, with `A003-readme-proposal.md`); `A002-2026-09-24-documentation-audit.md` (the S01 final review); `A001-2026-09-24-documentation-audit.md`
 - ADRs: `code-agent-docs/decisions/ADR-0001` … `ADR-0029` (0019 and 0022–0029 Proposed; 0021 Accepted in S007; 0012 superseded in part by 0020; the rest Accepted)
 - Dependency register: `code-agent-docs/dependencies.md` (section 12: deployment prerequisites per platform, the input for the S13.2 setup scripts)
-- Rules: `code-agent-docs/RULES.md` (v1.7.1: invariant I10; CI only at stage completion, on a tag `S<NN>-done` or by hand) · Prompts: `code-agent-docs/prompts/` (P002–P005)
+- Rules: `code-agent-docs/RULES.md` (v1.7.2: the agent's co-author line stays in commits, for transparency; invariant I10; CI only at stage completion, on a tag `S<NN>-done` or by hand) · Prompts: `code-agent-docs/prompts/` (P002–P005)
