@@ -506,7 +506,7 @@ Every task is on its own branch and merged only with CI green. The GUI is additi
 
 ## 13. Completion record
 
-- **Completed on:** 2026-09-28 (session S007): every task of S02.1–S02.8 is done and the stage-end CI run is green. **The user's sign-off is pending** (S02.8-T05: a hands-on walkthrough on this PC, with the Narrator listening check of S02.7-T02).
+- **Completed on:** 2026-09-29 (session S007): every task of S02.1–S02.8 is done, including the follow-ups from the user's walkthrough (S02.3-T05, S02.4-T05), and the stage-end CI run is green. **The user's sign-off is pending** (S02.8-T05: a hands-on walkthrough on this PC, with the Narrator listening check of S02.7-T02).
 - **What was built:** a web interface for the Files area, embedded in the server binary and served at `/` on the same computer.
   - **S02.1 foundations:**
     - SvelteKit with Svelte 5 and the static adapter in `web/`, embedded with `//go:embed` (`web/embed.go`); `internal/webapp` serves it (app fallback, caching, security headers and CSP; a short notice when the binary was built without it);
@@ -519,13 +519,14 @@ Every task is on its own branch and merged only with CI green. The GUI is additi
   - **S02.6 previews:** images, audio and video with seeking by byte ranges, text and code up to 256 KB, PDF with pdf.js, and a fallback card. Active content never runs in the app's origin (HTML shown as text, SVG as an image, a sandbox CSP on downloads).
   - **S02.7 responsiveness and accessibility:** phone and tablet layouts with 44 px touch targets, tap to open and long press to select, an ARIA grid, live regions, focus return and focus rings, and WCAG 2.1 AA contrast in both themes.
   - **S02.8 tests and review:** web unit and component tests, Go tests for archives, the app handler, and listings, Playwright system tests with axe in real browsers, the user guide (`docs/guide/web-interface.md`), the cross-browser report (`docs/reports/S02-cross-browser.md`), and audit A003.
+  - **The user's walkthrough (S007, FR-214–FR-216):** every item shows its size, folders too (`GET /api/v1/files/usage`, asked only for the folders on screen); the added and modified dates, both sortable (`added_time` from the file system's creation time); finished uploads appear at once, folders too (bug S02-B12), and a single upload is scrolled into view and blinks twice (`locate`).
   - **Also built in S02:** the S01 follow-ups from P005, at the user's instruction (S007 E010): a portable storage root (S01.2-T07), and SHA-256 content hashes for simple and resumable uploads (S01.3-T10, S01.4-T07).
   - **Size:** about 7,800 lines of TypeScript and Svelte in `web/src` (without generated code and tests) and 4,500 lines of web tests. Go since S02 began, with the S01 follow-ups: about 1,350 lines of code and 1,600 lines of tests.
 - **Deviations from plan:**
   1. **Safari is not checked** (the user's decision, S006 E009), so NFR-027 is met only in part: Chrome, Edge, and Firefox on desktop, and phone layouts by emulation.
   2. **Google Chrome** is not installed on this PC. It runs in the CI system-test job; locally, Chromium (the same engine) stands in for it.
   3. **Design changes**, each recorded in section 12: Shift+N for a new folder (Chromium browsers keep Ctrl+Shift+N); pdf.js instead of the browser's PDF viewer; `aria-activedescendant` instead of a roving tab index; tap to open on touch screens.
-  4. **More than planned:** the S01 follow-ups of P005 (above), and continuing an upload after a reload.
+  4. **More than planned:** the S01 follow-ups of P005 (above), continuing an upload after a reload, and the walkthrough follow-ups S02.3-T05 and S02.4-T05 (plan 1.5.0).
   5. **Less than planned:** the folder-button test is skipped in Firefox, because Playwright can fill a folder picker only in Chromium-based browsers. Folder upload was checked by hand in Firefox (S02.4-T02).
   6. **Moved:** the Narrator listening check of S02.7-T02 goes to the user's walkthrough.
   7. **Versions:** vitest 5.0.2 instead of the planned 5.0.1 (a patch, S007 E020).
@@ -538,7 +539,9 @@ Every task is on its own branch and merged only with CI green. The GUI is additi
      - Photos is a placeholder (S04.7), and Settings has only the theme and About (S10.5);
      - delete is permanent until the trash (S08.1);
      - copies are synchronous and limited to 1,000 items or 1 GiB (background jobs in S04.3).
-  5. Test output only: Vite warns that the config imports the fake tus server without a file extension, and Vite logs an SSR evaluation error for SvelteKit's server module while the tests start. All tests pass.
+  5. **Added dates on Windows:** NTFS "tunneling" can give a file that replaces another within 15 seconds the old file's creation time, so its added date stays the old one. On file systems without creation times, the added date is the modified date.
+  6. A folder's size is added up anew each time it is shown (no cache), so a folder with a very large tree takes a moment to show its size ("…" meanwhile); the walk stops when the view no longer needs it.
+  7. Test output only: Vite warns that the config imports the fake tus server without a file extension, and Vite logs an SSR evaluation error for SvelteKit's server module while the tests start. All tests pass.
 - **Follow-ups:**
   1. Check Safari and real phones once the NAS can be reached over the network (after S03), for NFR-027.
   2. When login and HTTPS arrive (S03): update `docs/api/usage.md`, the demo scripts, and the system tests' server, and run them again.
@@ -546,8 +549,9 @@ Every task is on its own branch and merged only with CI green. The GUI is additi
   4. Apply README proposals R-13–R-15 if the user approves them (audit A003).
   5. Next stage: write the S03 (Security) stage document (R3) and get the user's approval before any S03 code.
 - **Final test results:**
-  - **CI run 36433983279** (the tag `S02-done` on `develop` 494e616): **all 15 jobs green**. They cover lint and format; Go tests on Linux (race) and Windows with the coverage gate; the memory bound (10 GiB Linux, 1 GiB Windows); the demo on Linux and Windows; vulnerabilities, licenses, and generated code; the web job (format, lint, types, the API client, licenses, audit, the unit and component tests with coverage, the build); **system tests on Linux** (Chromium, Firefox, Google Chrome) **and Windows** (Chromium, Firefox, Edge, Google Chrome); builds for linux/amd64, linux/arm64, and windows/amd64; and the dev image with its scan. The first run, on 61062c1 (36426410026), failed only in the Linux system tests, because of two test races fixed in S02.8-T05 (section 12); the tag was moved to the fixed commit with the user's permission.
-  - **Locally (this PC, 2026-09-28):**
-    - web: 198 unit and component tests; coverage of `web/src/lib` 95.4% statements, 82.9% branches, 93.6% functions, 96.4% lines (threshold 80%); format, lint, and type checks clean;
-    - Go: `go test ./...` passes; coverage of `internal/...` 89.9% (S02.8-T01); golangci-lint 0 issues;
-    - system tests: 125 passed, 1 skipped in Chromium, Firefox, and Edge; axe found no violation in either theme.
+  - **CI run 36592445848** (the tag `S02-done` on `develop` b6123a1, 2026-09-29): **all 15 jobs green**: lint and format; Go tests on Linux (race) and Windows with the coverage gate; the memory bound (10 GiB Linux, 1 GiB Windows); the demo on Linux and Windows; vulnerabilities, licenses, and generated code; the web job (format, lint, types, the API client, licenses, audit, the unit and component tests with coverage, the build); **system tests on Linux** (Chromium, Firefox, Google Chrome) **and Windows** (Chromium, Firefox, Edge, Google Chrome); builds for linux/amd64, linux/arm64, and windows/amd64; and the dev image with its scan.
+  - Earlier stage-end runs: 36426410026 (61062c1) failed only in the Linux system tests, from two test races fixed in S02.8-T05; 36433983279 (494e616) was green before the walkthrough fixes. The tag was moved twice with the user's permission (E028, E043).
+  - **Locally (this PC, 2026-09-29):**
+    - web: 210 unit and component tests; coverage of `web/src/lib` 95.6% statements, 83.3% branches, 94.0% functions, 96.4% lines (threshold 80%); format, lint, and type checks clean;
+    - Go: `go test ./...` passes; coverage of `internal/...` 89.7%; golangci-lint 0 issues;
+    - system tests: 142 passed, 2 skipped (the Firefox folder pickers) in Chromium, Firefox, and Edge; axe found no violation in either theme.
