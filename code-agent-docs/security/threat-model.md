@@ -3,9 +3,9 @@
 | Field | Value |
 |---|---|
 | Requirement | FR-084: a documented threat model, maintained through the project |
-| Version | 1.0 |
+| Version | 1.1 |
 | Created | 2026-09-30 (session S007, task S03.1-T01) |
-| Last updated | 2026-09-30 (session S007) |
+| Last updated | 2026-09-30 (session S007, S03.1-T02) |
 | Status | **Draft for the user's review** (S03.1 criterion 3) |
 | Maintained by | Every stage that adds an attack surface updates this file (RULES documentation map; audit checklist group H) |
 
@@ -140,13 +140,13 @@ flowchart LR
 | T-16 | CSRF: another site makes the admin's browser change or delete files | T | A-01 / X-02 / E-01, E-02 | A per-session token in `X-CSRF-Token` on every unsafe request, tus included; the `Origin` check; `SameSite=Lax` | Open → S03.5-T02 |
 | T-17 | Login CSRF: the admin is signed in to an account the attacker chose | S | A-01 / X-02 / E-08 | The `Origin` check on login and setup (with one admin this matters from S07) | Open → S03.5-T02 |
 | T-18 | Clickjacking: the console is framed and the admin tricked into clicks | T | A-07 / X-02 / E-05, E-09 | `frame-ancestors 'none'` and `X-Frame-Options: DENY` on every response | Mitigated for the app (S02.1-T02); API answers in S03.5-T03 |
-| T-19 | **DNS rebinding:** a page on the attacker's domain resolves that name to `127.0.0.1` or the NAS's LAN address; its requests then look same-origin (Origin and Host both name the attacker's domain) | I, T | A-01 / X-02 / E-07 | A **Host allow-list** per listener: loopback accepts only `127.0.0.1`, `localhost`, and `[::1]` with its port; the LAN listener accepts only the configured names, the host name, `<hostname>.local`, and its own addresses. Other Host values get `421`. Cookies are not sent to the attacker's name either, so after S03 only unauthenticated routes (setup, login) are reachable this way | Open → S03.5-T02 (added by this threat model). **Today (S01, S02):** the API has no authentication, so a rebinding page could read or delete files while a development server runs (finding F-01 in section 7) |
-| T-20 | Another site reads answers through CORS | I | A-01 / X-02 / E-01 | No `Access-Control-Allow-Origin` anywhere | Mitigated (no CORS headers since S01); tested in S03.5-T03 |
+| T-19 | **DNS rebinding:** a page on the attacker's domain resolves that name to `127.0.0.1` or the NAS's LAN address; its requests then look same-origin (Origin and Host both name the attacker's domain) | I, T | A-01 / X-02 / E-07 | A **Host allow-list** per listener: loopback accepts only `127.0.0.1`, `localhost`, and `[::1]` with its port; the LAN listener accepts only the configured names, the host name, `<hostname>.local`, and its own addresses. Other Host values get `421`. Cookies are not sent to the attacker's name either, so after S03 only unauthenticated routes (setup, login) are reachable this way | Open → S03.5-T02 (added by this threat model). **Today (S01, S02):** the API has no authentication, so a rebinding page could read or delete files while a development server runs (finding F-01, bug S03-B01) |
+| T-20 | Another site reads answers through CORS | I | A-01 / X-02 / E-01 | No `Access-Control-Allow-Origin` anywhere | Mitigated (no CORS headers since S01; tusd's CORS off, checked in S03.1-T02); tested in S03.5-T03 |
 | T-21 | A crafted file name injects script into the GUI | T, E | A-03 / X-03 / E-05 | Svelte escapes text; no raw HTML from data (checked in S03.1-T02); the CSP forbids inline scripts | Mitigated (S02, CSP by hash); re-checked in S03.1-T02 |
 | T-22 | An uploaded HTML, SVG, or PDF file runs script in the app's origin | E | A-03 / X-03 / E-03 | Downloads: `attachment`, `nosniff`, `Content-Security-Policy: default-src 'none'; sandbox`; previews: images only through `<img>`, text as text, pdf.js without scripting or eval | Mitigated (S01.3, S02.6; system tests of S02.8); re-checked in S03.5-T05 |
 | T-23 | Open redirect through `?next=` after sign-in | S | A-02 / X-02 / E-08 | Only same-origin paths that start with a single `/` are followed; anything else goes to Files | Open → S03.8-T01 (added by this threat model) |
 | T-24 | Error answers leak paths, stack traces, or internal IDs | I | A-05 / X-01 / E-01 | RFC 9457 problems with fixed texts (S01); the internal cause only in the server log | Mitigated (S01.5); reviewed in S03.1-T02 and S03.5-T05 |
-| T-25 | Request floods or slow clients exhaust a Pi | D | A-09 / X-01 / E-07 | Header size and timeouts (S01); per-address rate limits with bounded memory; after S03 only signed-in callers can upload | Partly mitigated (S01); Open → S03.5-T04 |
+| T-25 | Request floods or slow clients exhaust a Pi | D | A-09 / X-01 / E-07 | Header size and timeouts (S01); per-address rate limits with bounded memory; after S03 only signed-in callers can upload | Partly mitigated (S01); Open → S03.5-T04 (with the per-address request limit, finding F-06) |
 | T-26 | Oversized or malformed bodies | D, T | A-09 / X-01 / E-01 | Per-route body limits, strict JSON decoding, fuzz tests (S01.5) | Mitigated (S01.5); new routes follow the same rules (S03.10-T02) |
 
 ### 6.4 Files and storage
@@ -188,7 +188,7 @@ flowchart LR
 
 | ID | Threat | STRIDE | Assets / attacker / surface | Mitigation | Status |
 |---|---|---|---|---|---|
-| T-42 | Another local user reads the database, logs, config, or TLS key | I | A-02–A-05 / X-05 / E-11 | Files and folders created by the service readable only by it (0600 and 0700 on Linux); on Linux the S13 deployers run the service as its own user | Open → S03.5-T05 (permissions, finding F-02), S13.2 (service user) |
+| T-42 | Another local user reads the database, logs, config, or TLS key | I | A-02–A-05 / X-05 / E-11 | Files and folders created by the service readable only by it (0600 and 0700 on Linux); on Linux the S13 deployers run the service as its own user | Open → S03.5-T05 (permissions, finding F-02, bug S03-B02), S13.2 (service user) |
 | T-43 | Another local user resets the admin password with the CLI | E | A-02 / X-05 / E-10 | The CLI needs write access to the database file, which T-42 restricts to the service's user | Open → S03.5-T05, S13.2 |
 | T-44 | A compromised dependency runs code in the build or the service | E | A-08 / X-07 / E-12 | Pinned versions (`go.sum`, `pnpm-lock.yaml`); govulncheck, `pnpm audit`, Trivy, Dependabot, license checks (S01, S02); few dependencies | Partly mitigated (S01, S02); Open → S03.10-T03 (fail on high severity); the residual is an **accepted-risk candidate** |
 | T-45 | The disk or SD card is stolen and read | I | A-01–A-05 / X-06 / — | The NAS does not encrypt data at rest; the guide points to the operating system's disk encryption | **Accepted-risk candidate** (documented in S03.10-T04) |
@@ -212,7 +212,32 @@ flowchart LR
 
 ## 7. Review of existing code (S03.1-T02)
 
-_Filled in by S03.1-T02: the review of the S01 and S02 code against the threats above. Each finding gets a follow-up task or a bug ID (stage document section 12)._
+Reviewed on 2026-09-30 (session S007): the S01 and S02 code against the threats above. The file modes were checked on Linux (WSL, umask 022) with a fresh storage root.
+
+### 7.1 Findings
+
+| ID | Severity | Finding | Threats | Follow-up |
+|---|---|---|---|---|
+| F-01 | High for a running development server; closed before any LAN use | The API has **no authentication and no Host check** (by design until S03). A web page using DNS rebinding can therefore use the whole files API of a server running on the same computer: list, download, upload, delete. No release exists; the risk is limited to development and test runs. Until S03.5 is done, stop the server when you are not testing | T-19 | Bug **S03-B01**: fixed by S03.5-T01 (authentication) and S03.5-T02 (Host allow-list); regression test in S03.10-T02 (`Host: attacker.example` → `421`) |
+| F-02 | Low | The **database file** (`nas.db`, and its `-wal` and `-shm` files) is created **0644** by SQLite, and tusd creates upload data **0664** and folders 0775 inside `tmp/uploads`. The internal folder `.local-ai-nas` is 0750, so members of the service's group can read the database (password hashes and sessions from S03 on) and change uploads in progress. Other users are stopped by the 0750 folders | T-42, T-43, T-06 | Bug **S03-B02**: S03.5-T05 makes `.local-ai-nas` 0700 and the database files 0600, and sets tusd's file and folder modes |
+| F-03 | Medium once LAN access exists; none today | `GET /api/v1/system/health` shows everyone the config file path, the free space, and raw operating-system errors, which can contain paths | T-24 | S03.5-T01 (anonymous callers get only the overall status, as planned) |
+| F-04 | Low (matters from S07) | Archive tickets are not bound to the user who created them | T-29, T-55 | S03.5-T05 |
+| F-05 | Low (matters from S07) | A tus upload can be continued by any caller that knows its URL; the namespace is the fixed S01 owner | T-30, T-55 | S03.5-T05 (the owner is checked on every tus request) |
+| F-06 | Medium on a Raspberry Pi | The server has header and idle timeouts but no limit on concurrent requests per address and no read deadline for bodies, so a few slow clients can hold many connections | T-25 | S03.5-T04: a per-address limit on concurrent requests (added to the task) |
+| F-07 | Low | The API documentation page's policy has no `frame-ancestors`, and API answers lack part of the header set of stage document 4.5 | T-18 | S03.5-T03 (the headers on every response, as planned) |
+| F-08 | Informational | pdf.js is not given `isEvalSupported: false`. The page's CSP blocks eval anyway (no `unsafe-eval`), and pdf.js never loads its document-scripting sandbox | T-22 | S03.5-T05: set it explicitly if pdf.js 6.3 still has the option (defense in depth) |
+
+### 7.2 Checked and found sound
+
+- **Paths (T-27, T-28):** `cleanUserPath` refuses `..`, dot runs, look-alike dots, drive letters, backslashes, encoded separators, NUL, and names Windows would change; `os.Root` is the second layer and never follows links out.
+- **Downloads and previews (T-22):** `attachment` with an ASCII fallback and an RFC 8187 name, `nosniff`, `Content-Security-Policy: default-src 'none'; sandbox`, `private, no-cache`; previews render images only through `<img>`, text as text, and PDFs with pdf.js (XFA off).
+- **The GUI (T-21):** no `{@html}` or `innerHTML` anywhere in `web/src`; Svelte escapes every name; the app's CSP uses script hashes only.
+- **The web app handler (E-05):** GET and HEAD only; hidden files never served; fixed media types; `nosniff`, `Referrer-Policy: no-referrer`, `X-Frame-Options: DENY`, `frame-ancestors 'none'`.
+- **Errors (T-24):** unexpected errors and panics answer with a generic detail; the cause and stack go only to the log.
+- **Logs (T-36):** credential headers (`Authorization`, `Cookie`, `X-Csrf-Token`, …) and sensitive query parameters are redacted; incoming request IDs are validated.
+- **CORS (T-20):** no handler sends CORS headers, and tusd's own CORS handling is turned off (`CorsConfig{Disable: true}`).
+- **File modes:** user files 0640, folders 0750, log files 0600.
+- **Archive ticket IDs (T-29):** 130 random bits from `crypto/rand` (`rand.Text`), five minutes in memory.
 
 ## 8. Accepted risks
 
@@ -223,3 +248,4 @@ _None yet. Candidates are marked in section 6 (T-33, T-37, T-44, T-45). Each bec
 | Date | Session | Change |
 |---|---|---|
 | 2026-09-30 | S007 | Version 1.0 (S03.1-T01): assets, attackers, surfaces, threats T-01–T-57 |
+| 2026-09-30 | S007 | Version 1.1 (S03.1-T02): section 7, the review of the S01 and S02 code: findings F-01–F-08 (bugs S03-B01, S03-B02) and what was found sound |
