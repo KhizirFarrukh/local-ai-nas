@@ -1,18 +1,19 @@
 # CURRENT_STATE
 
-**Last updated:** 2026-09-30 00:39 +0500 (session S007)
+**Last updated:** 2026-09-30 00:46 +0500 (session S007)
 **Plan version:** 1.8.0 (`code-agent-docs/plan.md`; 1.8.0: **S03 approved**, Q33 yes, Q74 `/admin` with ADR-0039 Accepted, command-line admin creation for headless machines, the LAN listener made concrete), **Approved baseline** 1.0.0 (S005). 1.6.0 (P006): research, MVP additions FR-217–FR-221 (pending Q54), releases R01–R12. 1.7.0 (P007 and the user's S007 requirements): drive lifecycle in S14, **SSD caching S15, AI now S16**, the **admin console** (S03.9, S10.6, plan 6.6), **Raspberry Pi first** (NFR-051), **deployers for Debian, Arch Linux, Windows 11, Raspberry Pi OS** (FR-149, NFR-052). 16 stages, 133 substages; IDs translated in plan 10.18
 **Current phase:** **S01 Done** (S005 E126). **S02 Done** (signed off 2026-09-29, S007 E044). **S03 (Security): Approved** (S007 E050) and **In Progress** (`stages/S03-security.md`)
 
 ## Active stage and task
 - **Active stage:** **S03: Security**, In Progress (`stages/S03-security.md`, approved in S007 E050 with D-1–D-6 as recommended). **S02: NAS GUI** is **Done** (signed off in S007 E044); S01 is **Done**.
-- **Active task:** **S03.2-T02** passwords: Argon2id (PHC), the concurrency guard, rehash, the password rule, the benchmark.
+- **Active task:** none (checkpoint, the user's request). **Next: S03.2-T03** auth endpoints (status, setup, login, logout, password change), spec first.
 - **The user's instruction (S007 E010):** after P005, resume S02 and work until the stage is complete, and also build the P005 items that belong to the current or earlier stages (the S01 follow-up tasks).
 
 ## In progress (write-ahead)
-- **S03.2-T02** (passwords), branch `feat/S03.2-T02-passwords`.
+- Nothing in progress (checkpoint after S03.2-T02). The next task, **S03.2-T03**, starts on a new branch `feat/S03.2-T03-auth-endpoints`.
 
 ## Last completed
+- **S03.2-T02 done** (S007 E054): `internal/auth/password.go`: Argon2id with the ADR-0010 parameters in PHC format, NFKC-normalized passwords, at most 2 hashes at a time (10 s queue, then `ErrBusy`), rehash detection, bounded parsing of stored hashes, a dummy check for unknown users, the password rules (12 characters minimum, D-6). Benchmark on the development PC: about 40 ms and 64 MiB per hash. `golang.org/x/crypto` v0.57.0 in `go.mod` (register updated).
 - **S03.2-T01 done** (S007 E053): migration `00003_accounts.sql` (users, sessions, api_tokens, audit_events with an append-only trigger; Down included) and the user store `internal/auth` (normalized case-insensitive usernames, the first admin on `u0001` in one write transaction, look-ups, password hash updates).
 - **S03.1-T02 done** (S007 E052): the S01 and S02 code reviewed against the threat model (section 7): findings F-01–F-08; bugs **S03-B01** (no authentication and no Host check: DNS rebinding can use the files API of a running development server; fixed by S03.5-T01/T02) and **S03-B02** (database created 0644, tus files 0664; fixed by S03.5-T05). S03.1 is in **Review**, waiting for the user's review of the threat model.
 - **S03.1-T01 done** (S007 E051): threat model `code-agent-docs/security/threat-model.md` v1.0: assets A-01–A-09, attackers X-01–X-08, surfaces E-01–E-19, threats T-01–T-57 (each mapped to an S03 task, earlier evidence, a later stage, or an accepted-risk candidate). New: **DNS rebinding (T-19)** → a Host allow-list in S03.5-T02; `?next=` (T-23) → S03.8-T01; owner binding and file permissions → S03.5-T05. The user's review is asked at the next stop.
@@ -43,7 +44,7 @@
 - **S01 Done** (S005 E126), plan 1.1.4: every task, CI run, and decision is in `stages/S01-basic-nas.md` (sections 12 and 13) and the S005 log.
 
 ## Next steps
-1. **S03 in the execution order of its section 5**, one task at a time (mark it In Progress here and in the stage document first). The user's review of the threat model is asked at the next stop; work continues meanwhile.
+1. **Next task: S03.2-T03** (stage document section 5): the auth endpoints, spec first (`api/openapi.yaml` → `go generate ./internal/api` → handlers), with the session cookie of S03.3-T01 done together; new problem kinds (`setup_not_allowed`, `weak_password`, `unauthenticated`, …) in `internal/apperr` and `docs/api/errors.md`. Then the execution order of section 5: S03.2-T04 → T05 → S03.3 → S03.8-T01 → S03.5 → S03.6 → S03.4 → S03.7 → S03.8-T02 → S03.9 → S03.10. **Ask the user** to review the threat model (`code-agent-docs/security/threat-model.md`, S03.1 criterion 3).
 2. **Still open from the P005 report** (not blocking S02): Q42–Q49 and Q51; accepting or removing the planner additions (labelled in plan section 3); ADR-0022–ADR-0029 (Proposed); the RAID 0/1 reading of E008. ADR-0021 and the CI trigger were decided in E013. The S01 follow-ups are done (S007 E017–E019).
 3. Follow-up from S01 (the user's decision): run `scripts/perf-baseline.sh` on the Raspberry Pi and the mini-PC when available; also measure SHA-256 there (ADR-0021).
 4. **Endpoint workflow (spec-first):** spec → `go generate ./internal/api` → strict operation; an error case in `errorCases`/`bodyErrorCases`; a review row in `docs/api/conventions.md`; a fake-service test that invalid input never reaches the service.
