@@ -132,6 +132,7 @@ func (e OnConflict) Valid() bool {
 // Defines values for ProblemCode.
 const (
 	ProblemCodeConflict            ProblemCode = "conflict"
+	ProblemCodeCsrfFailed          ProblemCode = "csrf_failed"
 	ProblemCodeInsufficientStorage ProblemCode = "insufficient_storage"
 	ProblemCodeInternal            ProblemCode = "internal"
 	ProblemCodeInvalidName         ProblemCode = "invalid_name"
@@ -139,6 +140,7 @@ const (
 	ProblemCodeLengthRequired      ProblemCode = "length_required"
 	ProblemCodeLocked              ProblemCode = "locked"
 	ProblemCodeMethodNotAllowed    ProblemCode = "method_not_allowed"
+	ProblemCodeMisdirectedRequest  ProblemCode = "misdirected_request"
 	ProblemCodeNotAvailable        ProblemCode = "not_available"
 	ProblemCodeNotFound            ProblemCode = "not_found"
 	ProblemCodeOutsideRoot         ProblemCode = "outside_root"
@@ -154,6 +156,8 @@ func (e ProblemCode) Valid() bool {
 	switch e {
 	case ProblemCodeConflict:
 		return true
+	case ProblemCodeCsrfFailed:
+		return true
 	case ProblemCodeInsufficientStorage:
 		return true
 	case ProblemCodeInternal:
@@ -167,6 +171,8 @@ func (e ProblemCode) Valid() bool {
 	case ProblemCodeLocked:
 		return true
 	case ProblemCodeMethodNotAllowed:
+		return true
+	case ProblemCodeMisdirectedRequest:
 		return true
 	case ProblemCodeNotAvailable:
 		return true

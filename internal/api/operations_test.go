@@ -14,7 +14,7 @@ import (
 
 // postJSON posts a JSON body to path.
 func postJSON(h http.Handler, path, body string) *httptest.ResponseRecorder {
-	req := httptest.NewRequest(http.MethodPost, path, strings.NewReader(body))
+	req := newTestRequest(http.MethodPost, path, strings.NewReader(body))
 	req.Header.Set("Content-Type", "application/json")
 	rec := httptest.NewRecorder()
 	h.ServeHTTP(rec, req)

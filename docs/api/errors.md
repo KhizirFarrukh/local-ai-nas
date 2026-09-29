@@ -36,6 +36,7 @@ Unexpected server errors (`internal`) always have the same generic `detail`. The
 | `invalid_request` | 400 | The request is malformed: bad parameters or body. |
 | `invalid_name` | 400 | A file or folder name breaks the name rules. |
 | `outside_root` | 400 | A path would leave your storage area. |
+| `csrf_failed` | 403 | A state-changing request (not GET, HEAD, or OPTIONS) came from another website: its `Origin` header is not this server's own origin. Requests without an `Origin`, such as those of scripts, are not affected. See [conventions.md](conventions.md#requests-from-other-websites). |
 | `not_found` | 404 | The file, folder, or upload does not exist, or there is no endpoint at this path. |
 | `conflict` | 409 | The request clashes with the current state, for example the target already exists. |
 | `method_not_allowed` | 405 | The endpoint exists, but not with this method. The `Allow` header lists the methods it accepts. |
@@ -43,6 +44,7 @@ Unexpected server errors (`internal`) always have the same generic `detail`. The
 | `precondition_failed` | 412 | A conditional request (`If-Match`, `If-Unmodified-Since`) does not match the file's current version. |
 | `too_large` | 413 | The upload or request is over a size limit. |
 | `range_not_satisfiable` | 416 | The `Range` of a download lies outside the file. The `Content-Range` header gives the file's size (`bytes */<size>`). |
+| `misdirected_request` | 421 | The `Host` header does not name this server, as when a web page reaches it through another host name (DNS rebinding). Open the server by its own address: `127.0.0.1`, `localhost`, or a name the admin configured. |
 | `too_large_for_sync` | 422 | The operation is valid but too big to run within one request, for example a copy over the synchronous copy limits (`copy.sync_max_items`, `copy.sync_max_bytes`). Larger copies become background jobs in a later stage. |
 | `locked` | 423 | The item is busy with another request, such as a resumable upload that another request is writing. Retry later. |
 | `internal` | 500 | An unexpected server error. See the server log under the `correlation_id`. |

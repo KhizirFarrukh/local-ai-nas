@@ -14,7 +14,7 @@ import (
 
 // getContent calls GET (or HEAD) /api/v1/files/content with headers.
 func getContent(h http.Handler, method, path string, headers map[string]string) *httptest.ResponseRecorder {
-	req := httptest.NewRequest(method, "/api/v1/files/content?path="+url.QueryEscape(path), nil)
+	req := newTestRequest(method, "/api/v1/files/content?path="+url.QueryEscape(path), nil)
 	for k, v := range headers {
 		req.Header.Set(k, v)
 	}

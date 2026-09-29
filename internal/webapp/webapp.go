@@ -130,7 +130,10 @@ func (h *Handler) Built() bool { return h.built }
 func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	header := w.Header()
 	header.Set("X-Content-Type-Options", "nosniff")
-	header.Set("Referrer-Policy", "no-referrer")
+	// same-origin, not no-referrer: referrers still never leave the NAS,
+	// and browsers send the real Origin, not "null", on the app's own
+	// state-changing requests, which the Origin check needs (ADR-0042).
+	header.Set("Referrer-Policy", "same-origin")
 	header.Set("X-Frame-Options", "DENY")
 	if r.Method != http.MethodGet && r.Method != http.MethodHead {
 		header.Set("Allow", "GET, HEAD")

@@ -518,7 +518,7 @@ export interface components {
              * @description A stable, machine-readable error code.
              * @enum {string}
              */
-            code: "internal" | "invalid_request" | "invalid_name" | "outside_root" | "not_found" | "conflict" | "too_large" | "insufficient_storage" | "not_available" | "method_not_allowed" | "length_required" | "precondition_failed" | "range_not_satisfiable" | "too_large_for_sync" | "locked" | "unavailable";
+            code: "internal" | "invalid_request" | "invalid_name" | "outside_root" | "not_found" | "conflict" | "too_large" | "insufficient_storage" | "not_available" | "method_not_allowed" | "length_required" | "precondition_failed" | "range_not_satisfiable" | "too_large_for_sync" | "locked" | "unavailable" | "misdirected_request" | "csrf_failed";
             /** @description The exact rule that was broken, for some codes (for example `reserved_name` for `invalid_name`). */
             rule?: string;
             /** @description The request ID; the same as the `X-Request-ID` header and the server logs. */

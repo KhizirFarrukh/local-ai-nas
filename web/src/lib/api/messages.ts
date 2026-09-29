@@ -59,6 +59,15 @@ const byCode: Record<ProblemCode | ClientCode, Omit<ErrorMessage, 'detail'>> = {
   unavailable: {
     title: 'The NAS is busy',
     message: 'The server cannot take this right now. Try again in a moment.'
+  },
+  misdirected_request: {
+    title: 'Wrong address',
+    message: 'Open the NAS by its own address, such as http://127.0.0.1:8080, not through another name.'
+  },
+  csrf_failed: {
+    title: 'Blocked for your safety',
+    message:
+      'This request came from another website, so the NAS refused it. Do it again from the NAS’s own page.'
   }
 };
 

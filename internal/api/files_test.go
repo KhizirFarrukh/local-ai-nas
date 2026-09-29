@@ -22,7 +22,7 @@ import (
 func getItems(t *testing.T, h http.Handler, query url.Values) (*httptest.ResponseRecorder, gen.ItemsResponse) {
 	t.Helper()
 	rec := httptest.NewRecorder()
-	h.ServeHTTP(rec, httptest.NewRequest(http.MethodGet, "/api/v1/files/items?"+query.Encode(), nil))
+	h.ServeHTTP(rec, newTestRequest(http.MethodGet, "/api/v1/files/items?"+query.Encode(), nil))
 	var resp gen.ItemsResponse
 	if rec.Code == http.StatusOK {
 		if err := json.Unmarshal(rec.Body.Bytes(), &resp); err != nil {
@@ -189,7 +189,7 @@ func TestGetItemsInvalidInputNeverReachesService(t *testing.T) {
 		"path=/&locate=a/b",      // a name, not a path
 	} {
 		rec := httptest.NewRecorder()
-		h.ServeHTTP(rec, httptest.NewRequest(http.MethodGet, "/api/v1/files/items?"+q, nil))
+		h.ServeHTTP(rec, newTestRequest(http.MethodGet, "/api/v1/files/items?"+q, nil))
 		var p apperr.Problem
 		if err := json.Unmarshal(rec.Body.Bytes(), &p); err != nil || rec.Code != http.StatusBadRequest || p.Code != "invalid_request" {
 			t.Errorf("?%s → %d %s, want 400 invalid_request", q, rec.Code, rec.Body)

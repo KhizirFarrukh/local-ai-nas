@@ -22,7 +22,7 @@ func TestAPIDocs(t *testing.T) {
 	h := New(Options{})
 	get := func(path string) *httptest.ResponseRecorder {
 		rec := httptest.NewRecorder()
-		h.ServeHTTP(rec, httptest.NewRequest(http.MethodGet, path, nil))
+		h.ServeHTTP(rec, newTestRequest(http.MethodGet, path, nil))
 		return rec
 	}
 
@@ -65,7 +65,7 @@ func TestAPIDocs(t *testing.T) {
 		t.Errorf("/api/docs: %d → %q", rec.Code, rec.Header().Get("Location"))
 	}
 	rec := httptest.NewRecorder()
-	h.ServeHTTP(rec, httptest.NewRequest(http.MethodHead, "/api/docs/", nil))
+	h.ServeHTTP(rec, newTestRequest(http.MethodHead, "/api/docs/", nil))
 	if rec.Code != http.StatusOK || rec.Body.Len() != 0 {
 		t.Errorf("HEAD /api/docs/: %d with %d bytes", rec.Code, rec.Body.Len())
 	}

@@ -214,10 +214,10 @@ func TestErrorResponsesMatchSchema(t *testing.T) {
 
 	for _, c := range errorCases {
 		label := c.method + " " + c.path
-		req := httptest.NewRequest(c.method, c.path, nil)
+		req := newTestRequest(c.method, c.path, nil)
 		if _, pattern := routeOf.Handler(req); pattern != "" {
 			covered[pattern] = true
-		} else if _, p := routeOf.Handler(httptest.NewRequest(http.MethodGet, c.path, nil)); p != "" {
+		} else if _, p := routeOf.Handler(newTestRequest(http.MethodGet, c.path, nil)); p != "" {
 			covered[p] = true // a wrong-method case covers the route of its path
 		}
 
@@ -243,7 +243,7 @@ func TestErrorResponsesMatchSchema(t *testing.T) {
 		if len(label) > 120 {
 			label = label[:120] + "…"
 		}
-		req := httptest.NewRequest(c.method, c.path, strings.NewReader(c.body))
+		req := newTestRequest(c.method, c.path, strings.NewReader(c.body))
 		if c.contentType != "" {
 			req.Header.Set("Content-Type", c.contentType)
 		}
@@ -281,7 +281,7 @@ func TestPanicResponseMatchesSchema(t *testing.T) {
 		panic("boom")
 	})))
 	rec := httptest.NewRecorder()
-	h.ServeHTTP(rec, httptest.NewRequest(http.MethodGet, "/api/v1/x", nil))
+	h.ServeHTTP(rec, newTestRequest(http.MethodGet, "/api/v1/x", nil))
 	if rec.Code != http.StatusInternalServerError {
 		t.Fatalf("status %d", rec.Code)
 	}
@@ -310,7 +310,7 @@ func TestEveryCodeIsInTheSpec(t *testing.T) {
 func TestHealthMatchesSchema(t *testing.T) {
 	doc := loadSpec(t)
 	rec := httptest.NewRecorder()
-	New(Options{Version: "dev"}).ServeHTTP(rec, httptest.NewRequest(http.MethodGet, "/api/v1/system/health", nil))
+	New(Options{Version: "dev"}).ServeHTTP(rec, newTestRequest(http.MethodGet, "/api/v1/system/health", nil))
 	var body any
 	if err := json.Unmarshal(rec.Body.Bytes(), &body); err != nil {
 		t.Fatal(err)
@@ -332,10 +332,10 @@ func TestErrorStatusesAreInTheSpec(t *testing.T) {
 	}
 	check := func(method, target string, status int) {
 		t.Helper()
-		req := httptest.NewRequest(method, target, nil)
+		req := newTestRequest(method, target, nil)
 		_, pattern := routeOf.Handler(req)
 		if pattern == "" {
-			_, pattern = routeOf.Handler(httptest.NewRequest(http.MethodGet, target, nil))
+			_, pattern = routeOf.Handler(newTestRequest(http.MethodGet, target, nil))
 		}
 		if pattern == "" {
 			return // no endpoint at all: the 404 of an unknown path

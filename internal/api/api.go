@@ -62,6 +62,10 @@ type Options struct {
 	// App serves every path outside /api: the web interface (S02.1-T02).
 	// nil answers those paths with 404 problems, as for unknown API paths.
 	App http.Handler
+	// AllowedHosts are host names the server answers to besides loopback
+	// addresses and "localhost" (S03.5-T02, ADR-0042); any other Host
+	// header gets 421. The LAN listener adds its names in S03.4.
+	AllowedHosts []string
 }
 
 // Route is one entry of the route table.
@@ -156,7 +160,8 @@ func withApp(api, app http.Handler) http.Handler {
 }
 
 // New builds the complete HTTP handler. From the outside in: request ID,
-// access log, panic recovery, routes. Each route has its own body limit
+// access log, panic recovery, the Host and Origin checks (origin.go),
+// routes. Each route has its own body limit
 // (uploads need far more than JSON), applied inside the mux: the access
 // log keeps the request the mux fills in (its route pattern), while
 // http.MaxBytesHandler passes a copy on.
@@ -180,6 +185,7 @@ func New(o Options) http.Handler {
 		h = withApp(h, o.App)
 	}
 	h = noStore(h)
+	h = localOrigin(o.Logger, o.AllowedHosts)(h)
 	h = apperr.Recover(o.Logger)(h)
 	h = logging.AccessLog(o.Logger)(h)
 	return logging.RequestID(h)
