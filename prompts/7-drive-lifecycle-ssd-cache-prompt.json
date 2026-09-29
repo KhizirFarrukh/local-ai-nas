@@ -1,0 +1,519 @@
+{
+  "prompt_meta": {
+    "name": "local-ai-nas: Drive Lifecycle (new drives, upgrades, mirrors, replacements) and SSD Caching (Plan Change Request #7)",
+    "prompt_version": "1.0",
+    "type": "Plan change request, handled under code-agent-docs/RULES.md R4 (plan changes) and R5 (decision records)",
+    "written_against": "plan 1.4.2, plus P006 (competitor research and release roadmap) if it has been applied",
+    "how_to_read_this": "Read this entire prompt before acting. Every field is an instruction. Items marked [User requirement] come from the user and must not be changed or dropped. Items marked [Planner addition] were added by the planner; record them with that label so the user can accept or remove them individually. Where this prompt conflicts with an invariant, an assumption, or an Accepted ADR, follow conflicts_and_decisions and never resolve a conflict silently."
+  },
+
+  "user_requirements": {
+    "note": "Quote these verbatim in plan.md (in the affected stages) and in the session log.",
+    "message_1": "System: 1. Ability to install new hard drive into system and let the software adapt it or do the data migration to it for cases of upgrading storage capacity, introducing a raid 1 drive (a backup drive) or a replacement drive for if the old drive is failing or seeming to fail.",
+    "message_2": "one more thing to add, caching into ssd of most used (typically large) files/photos, if configured.",
+    "interpretation": [
+      "[User requirement] When a new drive is installed, the NAS notices it and guides the user through using it. It prepares the drive and moves the data as needed.",
+      "[User requirement] Three cases must work: (1) upgrading capacity (moving to a bigger drive, or growing a pool); (2) adding a second drive as a RAID 1 mirror of the current drive; (3) replacing a drive that is failing or looks like it is starting to fail, before or after it dies.",
+      "[User requirement] Optional SSD caching: if the admin configures it, the most-used files and photos (with a preference for large ones) are served from an SSD for speed. Nothing changes if it is not configured.",
+      "The user calls the RAID 1 drive 'a backup drive'. A mirror protects against a drive dying but not against deletion, ransomware, or corruption, which are copied to the mirror instantly. The GUI must explain this and offer the new drive as a real backup target too (S08.6). This keeps FR-206 ('RAID is not a backup') honest."
+    ]
+  },
+
+  "before_you_start": [
+    "Run the full session start protocol from code-agent-docs/RULES.md (R1) before acting on anything in this prompt.",
+    "Save this entire prompt, unchanged, to code-agent-docs/prompts/P007-drive-lifecycle-and-ssd-cache.json. If P007 is already taken, use the next free number and use that number everywhere this prompt says P007. Record the two user messages verbatim as USER entries in the session log, plus: 'Plan change request #7, archived verbatim at code-agent-docs/prompts/P007-drive-lifecycle-and-ssd-cache.json'.",
+    "In CURRENT_STATE.md under 'In progress', write: 'Applying plan change request #7 (drive lifecycle and SSD caching)'.",
+    "Check whether P006 was applied and how the user answered its questions (especially Q52 on AI position and Q53 on the pools position). Adapt stage placement and milestone names to the current plan. Never overwrite a decision the user made.",
+    "Do not change any application code in this session. If a change affects a substage that is In Progress or Done, list the impact in your report instead of changing the work."
+  ],
+
+  "objective": "Add the drive lifecycle features and optional SSD caching to the plan. Put two small, cross-platform safety pieces into the MVP stages. Extend the drive-pools stage with the new-drive wizard, single-drive upgrades, mirror conversion, proactive replacement, pool growth, and drive retirement. Add a new SSD caching stage right after the drive-pools stage, before AI (I8). Create the needed ADRs as Proposed, record requirements, questions, and risks, then report to the user and stop.",
+
+  "out_of_scope": [
+    "Writing application source code, prototypes, or spikes",
+    "Installing dependencies or touching any real disk",
+    "Accepting any new ADR on the user's behalf",
+    "Implementing parity RAID, virtual drives, or nesting. They stay deferred in 11a (the user's decision in S007).",
+    "Write-back SSD caching (see ssd_caching.write_policy)"
+  ],
+
+  "current_plan_context": {
+    "note": "What already exists and must be reused, not duplicated (cross-cutting principle 4: build once, reuse).",
+    "items": [
+      "S10.3 disk health: SMART collection where available, low-space and failure warnings, designed for reuse by the pools (FR-129, RK-24).",
+      "If P006 was applied: alert delivery by email, webhook, and ntfy in S10.3 (G-003).",
+      "S14.2 privileged storage helper: a root service on the Linux host with an allow-listed, authenticated, audited interface (FR-210, ADR-0029, NFR-037). The core never runs as root.",
+      "S14.3 drive discovery (FR-202); S14.5 creation safety (FR-203, typed confirmation, never the OS drive); S14.6 data migration onto a pool with checksum verification (FR-205); S14.7 monitoring, replace-drive wizard, rebuilds (FR-206); S14.8 expansion (FR-208, Could) and import (FR-209).",
+      "S08.1 trash, S08.2 integrity verification, S08.4 disaster recovery, S08.6 external backup to a local target.",
+      "FR-211 content hashes (SHA-256) stored for every file: migrations and the SSD cache verify with them, so no data needs a second full hashing pass.",
+      "A18: the storage root, temp uploads, and trash are one filesystem. A19: internal app data can live in a separate location. A22: pools are Linux-only and hidden elsewhere.",
+      "Invariants: I2 (internal data outside the areas), I5 (per-user isolation on every path), I6 (no network calls unless enabled), I9 (only the core writes sidecars and the index), I10 (preview, confirmation, and undo for destructive operations; say plainly when undo is impossible).",
+      "ADR-0027 (mdadm for RAID 0 and RAID 1, Proposed), ADR-0028 (ext4 or XFS, Proposed), ADR-0029 (storage helper, Proposed)."
+    ]
+  },
+
+  "placement": {
+    "mvp_additions": {
+      "note": "[Planner addition] Two small, cross-platform pieces. A failing single drive is the most common way home NAS users lose data, and the full wizard arrives only after the MVP. List these first in your report for the user's confirmation (question 'confirm MVP additions'). If the user rejects them, move them into the drive-pools stage.",
+      "items": [
+        {
+          "id": "MVP-A",
+          "name": "Predictive drive health",
+          "where": "S10.3",
+          "summary": "Turn raw SMART data into a clear drive status (Healthy, Watch, Replace soon, Replace now) with plain-language reasons, schedule SMART self-tests, alert on status changes, and link to what to do next. Details in drive_lifecycle.predictive_health."
+        },
+        {
+          "id": "MVP-B",
+          "name": "Storage migration engine (command line) and documented drive-move procedure",
+          "where": "S08.4 (disaster recovery), with the guide in S13.4",
+          "summary": "A verified way to move the whole storage root to another drive on every platform: 'local-ai-nas storage migrate --to <path>' (exact name in the stage document). It uses the engine in drive_lifecycle.migration_engine with the target prepared by the user. The drive-pools stage later adds the GUI, drive preparation, and online migration on top of the same engine."
+        }
+      ]
+    },
+    "drive_pools_stage_extension": {
+      "stage": "The drive-pools stage (S14 at plan 1.4.2). It already has discovery, the helper, migration, replacement, and expansion, so the drive lifecycle belongs there. Its name becomes 'Drives, pools, and drive lifecycle'.",
+      "substage_changes": "See stage_changes.drive_pools_stage."
+    },
+    "ssd_caching_stage": {
+      "position": "A new stage immediately after the drive-pools stage and before the AI stage (I8). At plan 1.4.2 this makes SSD caching S15 and renumbers AI from S15 to S16. Record the change in the 10.18 'Stage ID changes' table and update every current document that uses the AI stage ID. Historical documents keep their old IDs.",
+      "if_P006_applied": "If the user's answers to Q52 or Q53 moved the pools or the AI stage, still insert SSD caching directly after the drive-pools stage, and keep AI last. Put SSD caching in the same milestone or release as the drive-pools stage (at plan 1.4.2 that is M4, suggested v1.1.0 'Drives and storage').",
+      "why_this_position": "The cache reuses disk health (S10.3), the helper for preparing an SSD on Linux (S14.2), and the new-drive wizard (an inserted SSD can be offered for caching). The application-level cache itself works on every platform."
+    }
+  },
+
+  "drive_lifecycle": {
+    "terminology": {
+      "storage_root_drive": "The single drive (or pool) that holds the storage root: files/, photos/, and internal data (unless A19 moved internal data elsewhere).",
+      "new_drive": "A drive that the NAS has not seen before, or one that holds no NAS data.",
+      "migration": "Copying the whole storage root to a target, verifying every file by content hash, and switching the NAS to the target.",
+      "mirror_conversion": "Turning a single-drive setup into a RAID 1 pool by adding a second drive.",
+      "proactive_replacement": "Replacing a drive that still works but shows warning signs, while its data is still readable.",
+      "retirement": "What happens to the old drive afterwards: kept as a rollback copy, reused as a backup target, or securely erased."
+    },
+
+    "new_drive_detection": [
+      "[User requirement] The NAS notices a newly installed drive without a restart where the hardware allows it. On Linux, the storage helper subscribes to kernel device events (udev) and reports them to the core. Elsewhere, and as a fallback, it re-scans on a schedule and when the admin clicks 'Scan for drives'.",
+      "Drives are identified by serial number, model, and WWN, never by device names like /dev/sdb, which change between boots.",
+      "The admin gets an alert and a GUI notification: 'New drive detected: <model>, <size>, <type>'. Opening it starts the new-drive wizard.",
+      "A drive that belongs to an existing NAS pool (its md metadata matches) is offered for import or re-adding (S14.8), never treated as blank.",
+      "A drive that holds an unknown filesystem or partitions shows a read-only summary (partition table, filesystem labels, used space) so the user can tell whether it holds something important before any erase."
+    ],
+
+    "new_drive_wizard": {
+      "summary": "[User requirement] One guided flow that asks 'What do you want to do with this drive?' and recommends an answer based on the situation.",
+      "choices": [
+        { "intent": "Upgrade capacity: move my storage to this drive", "when_recommended": "The new drive is larger than the current storage root drive and there is no pool." },
+        { "intent": "Add as a mirror (RAID 1) of my current drive", "when_recommended": "Single-drive setup and the new drive is at least as large as the data. The wizard explains that a mirror protects against a drive failure, not against deletion or ransomware, and offers 'use as a backup drive' as the alternative or addition." },
+        { "intent": "Replace a failing drive", "when_recommended": "Any drive has status 'Replace soon' or 'Replace now' (predictive_health), or a pool is degraded." },
+        { "intent": "Grow my pool", "when_recommended": "A pool exists and the drive fits the growth path in pool_growth." },
+        { "intent": "Use as a backup drive", "when_recommended": "Always offered. Configures it as an S08.6 external backup target, which gives versioned copies that survive deletion and ransomware (and the R04 features if P006 is applied)." },
+        { "intent": "Use as SSD cache", "when_recommended": "The drive is an SSD and the SSD caching stage exists. Before that stage exists, this choice is hidden." },
+        { "intent": "Ignore this drive", "when_recommended": "Always offered. The drive is remembered as ignored until the admin changes it." }
+      ],
+      "rules": [
+        "Every choice shows a plain-language summary before anything happens: what will be erased (by model and serial), how long it should take, whether the NAS will be in maintenance mode and for how long, how much space the result will have, and the level of protection before and after.",
+        "Erasing a drive needs the typed confirmation of FR-203 and says plainly that it cannot be undone (I10).",
+        "The OS drive is never offered. A drive holding NAS data is offered only through import or migration flows.",
+        "The wizard can be paused and resumed. Every step is written to a migration journal so a restart or power cut never leaves an unknown state."
+      ]
+    },
+
+    "drive_qualification": {
+      "summary": "[Planner addition] Check a drive before trusting it with data.",
+      "checks": [
+        "SMART overall health and attributes read before use. A new drive that already shows reallocated or pending sectors triggers a clear warning and a recommendation to return it.",
+        "A SMART short self-test by default, and an optional extended self-test.",
+        "An optional burn-in: a full read test, or a destructive write-and-verify test on a blank drive. It can take many hours on large drives, so it is optional, estimated up front, runs as a background job, and can be cancelled.",
+        "Capacity check: the target can hold the used data plus the free-space reserve (FR-072), with the figures shown.",
+        "Compatibility warnings, each with a plain explanation: drives in USB enclosures (SMART often unavailable, and USB disconnects are risky for RAID, relevant on Raspberry Pi); SMR drives in RAID (very slow rebuilds; detection is best effort, so the user is also asked); mixed sector sizes in one mirror; a much smaller or slower drive paired with a large one.",
+        "Results are stored with the drive's identity and shown in the drive's details."
+      ]
+    },
+
+    "predictive_health": {
+      "where": "S10.3 (MVP-B addition); reused by the drive-pools stage",
+      "summary": "[User requirement: 'failing or seeming to fail'] Detect a drive that is starting to fail early enough to replace it while its data is still readable.",
+      "signals": [
+        "SMART overall health result and self-test results",
+        "Attribute values and their growth over time: reallocated sectors, pending sectors, offline uncorrectable sectors, reported uncorrectable errors, command timeouts, and interface CRC errors (usually a cable problem, reported as such)",
+        "NVMe: critical warning flags, media and data-integrity errors, percentage of rated endurance used, available spare",
+        "Temperature above the drive's limits",
+        "Read or write errors seen by the NAS itself, and (in pools) errors reported by md"
+      ],
+      "statuses": {
+        "Healthy": "No warning signs.",
+        "Watch": "A small, stable warning sign (e.g. a few reallocated sectors that are not growing). Checked more often.",
+        "Replace soon": "Warning signs that are growing, or a failed extended self-test. The admin is alerted and offered the replacement flow.",
+        "Replace now": "SMART reports failure, or errors are growing fast, or the drive is producing read errors. The admin is alerted immediately. The GUI suggests pausing non-essential background work to reduce load, and offers replacement or an immediate backup."
+      },
+      "rules": [
+        "Thresholds and rules are documented in the stage document with the reasoning for each, and tested with recorded SMART outputs from failing drives (fixtures, no real failing drive needed).",
+        "Every status shows the reasons in plain language and the raw values for experts.",
+        "Scheduled SMART self-tests (e.g. short weekly, extended monthly, configurable) run at low-activity times.",
+        "Where SMART is not available (some USB bridges, containers without privileges, virtual disks), the status says 'Health data not available' and why, never 'Healthy' (RK-24).",
+        "A status change sends an alert through the configured channels."
+      ]
+    },
+
+    "migration_engine": {
+      "summary": "One engine for every flow that moves the storage root: capacity upgrade, single-drive replacement, conversion to a mirror, and migration onto a pool. Built minimally in S08.4 (MVP-B) and extended in the drive-pools stage (principle 4).",
+      "phases": [
+        "Plan: calculate what will be copied (files/, photos/, internal data, and the separate internal-data location if A19 is used), the space needed, and an estimated time. Show it and get confirmation.",
+        "Bulk copy online: copy everything while the NAS keeps working, throttled so the NAS stays usable, preserving timestamps and the metadata the app relies on. It can be paused and resumed.",
+        "Catch-up: copy what changed during the bulk copy. Repeat until the remaining changes are small.",
+        "Final sync in maintenance mode: stop writes (uploads, WebDAV writes, jobs, the AI worker), copy the last changes, and checkpoint the database. Maintenance mode shows a friendly page with the expected duration. The goal is minutes, not hours.",
+        "Verify: compare every copied file with its stored content hash (FR-211). Also compare counts, sizes, sidecar validity, and database integrity. Any mismatch stops the switch and is reported.",
+        "Switch: the NAS starts using the target. On Linux with the helper, the target is mounted at the same storage-root path the old drive used, so configuration and Docker bind mounts stay unchanged (ADR in adrs_to_create). Elsewhere, the configuration is updated to the new path and the service restarts.",
+        "Post-switch check: health check, a sample of reads, and index consistency. On failure, automatic rollback to the old drive.",
+        "Rollback window: the old drive is left untouched and can be switched back for a period the user chooses (default e.g. 7 days) or until the user retires it (retirement)."
+      ],
+      "rules": [
+        "The source is only ever read during migration. The old drive is never modified until the user retires it with a separate, explicit confirmation (I10).",
+        "The migration journal records every phase, so a crash or power cut resumes safely from the last completed step.",
+        "Moving to a target that is not on the same filesystem as the trash and temp uploads is refused (A18); the whole root moves together.",
+        "Progress, speed, estimated time, and errors are visible in the GUI and through alerts on completion or failure.",
+        "Works on Linux, Windows, and macOS (if supported) when the target is prepared by the user (formatted and mounted). Preparing the drive automatically needs the helper and is Linux only (A22)."
+      ]
+    },
+
+    "capacity_upgrade_single_drive": {
+      "summary": "[User requirement] Move from the current drive to a larger one.",
+      "flow": [
+        "Qualify the new drive (drive_qualification).",
+        "Linux with the helper: partition and format the new drive (filesystem per ADR-0028) and mount it at a temporary path. Other platforms: the wizard shows how to format and mount it and waits.",
+        "Run the migration engine to the new drive.",
+        "After the switch, offer retirement choices for the old drive, recommending 'use as a backup drive'."
+      ]
+    },
+
+    "mirror_conversion": {
+      "summary": "[User requirement] Turn a single-drive setup into RAID 1 by adding a second drive, without losing data and without needing a third drive. Linux with the helper only (A22).",
+      "method": [
+        "Qualify the new drive.",
+        "Create a RAID 1 array on the new drive only, with the second member marked as missing (a degraded mirror), with a write-intent bitmap, and format it (ADR-0028).",
+        "Migrate the storage root onto this array with the migration engine. The old drive still holds the full original data, so at every moment there are at least two complete copies: the untouched old drive and the verified new copy.",
+        "After verification and the switch, ask for the separate typed confirmation that the old drive will be erased and added as the second mirror member. State plainly that this cannot be undone and that until the resync finishes there is only one up-to-date copy.",
+        "Add the old drive to the array. The mirror resyncs in the background with progress shown. The pool shows 'Protected' only when the resync completes.",
+        "Pool capacity equals the smaller member (FR-195). If the old drive is smaller than the data on the array, the add is refused before anything is erased, with an explanation."
+      ],
+      "alternative_offered": "If the user wants protection without erasing the old drive, offer 'use the new drive as a backup drive' instead, or buy a second new drive and create a fresh mirror from two blank drives (S14.5), then migrate.",
+      "verification": "Confirm with mdadm documentation that a RAID 1 array can be created with one member missing, that a member can be added later and resynced, and the behavior of the write-intent bitmap during the resync."
+    },
+
+    "drive_replacement": {
+      "summary": "[User requirement] Replace a drive that is failing or looks like it is starting to fail.",
+      "cases": [
+        { "case": "Single drive, still readable ('Replace soon' or 'Replace now')", "flow": "Capacity-upgrade flow onto the new drive, with the bulk copy prioritised and the NAS set to low load. Files that cannot be read are listed by name, never silently skipped. The user is offered restore of those files from the backup (S08.6), trash, or versions where available." },
+        { "case": "Single drive, already dead", "flow": "There is no copy to move. The wizard switches to disaster recovery (S08.4): restore from the external backup onto the new drive, and says clearly what can and cannot be recovered." },
+        { "case": "RAID 1 member failing but still working", "flow": "Proactive hot replacement: add the new drive and let mdadm copy the failing member's data onto it while the array stays redundant, then remove the failing member (mdadm replace mode). Redundancy is never reduced during the process. Verify with mdadm documentation." },
+        { "case": "RAID 1 member already failed (degraded pool)", "flow": "The existing replace-drive wizard (S14.7): add the new drive, rebuild with progress, and alert on completion." },
+        { "case": "RAID 0 member failing", "flow": "RAID 0 has no redundancy. While the member still reads, the wizard urgently offers migration of the whole pool to new storage (a new pool or a single larger drive) with the migration engine. If a member has already died, the pool's data is lost and the wizard goes to disaster recovery from backup, stating this plainly." }
+      ],
+      "rules": [
+        "The failing drive is identified by model and serial and, where the hardware allows it, by blinking its activity LED (ledctl or similar; Could), so the user pulls the right drive.",
+        "The GUI tells the user when it is safe to shut down and remove the old drive, and when hot-swap is not supported by their hardware."
+      ]
+    },
+
+    "pool_growth": {
+      "summary": "[User requirement: capacity upgrade] Grow an existing pool. Promotes FR-208 from Could to Should.",
+      "paths": [
+        "RAID 1 with larger drives: replace the members one at a time (each with the proactive-replacement method, keeping redundancy), then grow the array to the new size and grow the filesystem online. The GUI shows that extra capacity appears only after the last member is replaced.",
+        "RAID 1 to a larger new pool: create a new pool from new drives and migrate onto it with the migration engine.",
+        "RAID 0: growing in place is risky (a reshape of a pool with no redundancy). The default path is migration onto a new, larger pool. In-place growth is offered only if the ADR verifies it is reliable, with a warning to back up first."
+      ],
+      "rules": [
+        "Growing the filesystem uses the online grow tools for the chosen filesystem (ext4 and XFS can both grow online; neither ADR-0028 option can shrink XFS, so shrinking is not offered). Verify in the ADR.",
+        "Every growth step checks a recent successful backup first and warns if there is none."
+      ]
+    },
+
+    "drive_retirement": {
+      "summary": "[Planner addition] What to do with the old drive after an upgrade, conversion, or replacement.",
+      "choices": [
+        "Keep as a rollback copy (default) for the rollback window, clearly labelled in the drive list with the date of the copy. Switching back is offered while it lasts.",
+        "Reuse as a backup drive (S08.6 target), recommended for healthy drives.",
+        "Add as a mirror member (mirror_conversion).",
+        "Securely erase before disposal or sale: a firmware secure erase where the drive supports it (ATA secure erase, NVMe format with secure erase), otherwise an overwrite. Estimated time shown, typed confirmation, and a completion record with the drive's serial (I10: says plainly this cannot be undone).",
+        "Just forget it (remove from the list, data left as is), with a warning that the drive still contains readable data."
+      ],
+      "rule": "A drive with status 'Replace now' is not offered as a backup drive or mirror member."
+    },
+
+    "platform_matrix": {
+      "note": "Record in plan.md. A22 is refined, not reversed.",
+      "linux_with_helper": "Everything: detection by kernel events, preparation (partition, format, mount), migration, mirror conversion, pool growth, hot replacement, secure erase, LED location.",
+      "linux_without_helper_windows_macos": "Predictive health where SMART is readable; detection by re-scan; migration to a target the user prepared (the command line in the MVP, the GUI wizard from the drive-pools stage); guides for preparing a drive with the OS's own tools; backup-drive setup. No pools, mirror conversion, or secure erase from the app.",
+      "docker": "The helper runs on the host (ADR-0029). The stable-mount-point design keeps the container's bind mounts valid after a switch; the ADR must confirm this works with the chosen mount propagation."
+    },
+
+    "security": [
+      "Every new drive operation is a new allow-listed helper operation: subscribe to device events, read drive details and SMART, run self-tests, partition and format a qualified blank drive, mount and unmount at NAS-owned paths, create a degraded RAID 1, add a member, hot-replace a member, grow an array, grow a filesystem, blink an LED, securely erase a retired drive. Each validates the drive against the inventory (never the OS drive, never a drive with NAS data outside the migration and import flows) and is audit-logged (NFR-037).",
+      "The threat model (S03.1 file) gets entries for each new operation, especially secure erase and hot-plug events from an attacker-controlled USB device (e.g. a malicious drive with a crafted filesystem is never mounted automatically; mounting happens only inside a flow the admin started).",
+      "Only admins can run drive flows, and each needs recent re-authentication."
+    ]
+  },
+
+  "ssd_caching": {
+    "summary": "[User requirement] If configured, the most-used files and photos, especially large ones, are served from an SSD. Off by default. The NAS works exactly as before when it is off, and nothing is lost if the SSD fails.",
+    "tiers": {
+      "tier_1_fast_internal_data": {
+        "summary": "[Planner addition] The simplest, biggest speed-up: place the database, search index, thumbnails, and the video transcode cache on the SSD. A19 already allows a separate internal-data location; this adds a GUI wizard to move them safely later.",
+        "rules": [
+          "Moves use the migration engine's copy, verify, and switch steps in a short maintenance window.",
+          "Trash, temp uploads, and replaced originals stay on the storage root's filesystem (A18).",
+          "If the SSD fails, derived data (index, thumbnails, transcode cache) is rebuilt on the storage root, and the database is restored from the metadata backup (S08.3). The wizard therefore requires a recent metadata backup, and recommends a mirrored SSD pair for the database, or keeping the database on the storage root if the admin prefers."
+        ]
+      },
+      "tier_2_file_read_cache": {
+        "summary": "An application-level read cache of original files on the SSD. It works on every platform and needs no reformatting of any drive.",
+        "design": [
+          "Content-addressed: cache entries are keyed by the content hash (FR-211), so a moved or renamed file keeps its cache entry, and identical content is cached once.",
+          "Transparent: the cache sits below the authorization and service layers. Every read is authorized exactly as before (I5), and only then served from the SSD copy if one exists.",
+          "Read paths covered: downloads (including HTTP range requests), photo and video viewing, video streaming of originals and transcoding input, file previews, WebDAV reads, and exports. Writes always go to the storage root (write_policy)."
+        ],
+        "admission": [
+          "[User requirement: 'most used (typically large)'] A file is admitted when it has been read at least N times within a time window and is at least a minimum size. Both are configurable, with defaults tuned in the stage (e.g. 3 reads in 7 days, 8 MB).",
+          "A frequency-based admission filter (e.g. TinyLFU-style) stops one-off large reads from pushing out files that are genuinely popular.",
+          "Filters by area, file type, and size range, e.g. 'videos and RAW photos only'.",
+          "Admission copies happen in the background, throttled, and never slow down the read that triggered them."
+        ],
+        "eviction": [
+          "A size budget chosen by the admin, plus a free-space reserve on the SSD.",
+          "Eviction by a policy that balances recency and frequency (e.g. an ARC-like or LFU-with-aging policy; choose and justify in the ADR).",
+          "Entries whose file is deleted are removed by a cleanup job."
+        ],
+        "pinning_and_prewarming": [
+          "[Planner addition] Pinning: users can mark their own folders or albums 'Keep on fast storage'; pinned items are cached first and not evicted, within a pin budget set by the admin. Pins are per user and private.",
+          "[Planner addition] Prewarming: optional rules, e.g. recent photos, favorites, or the first minutes of recent videos, filled during quiet hours."
+        ],
+        "consistency": [
+          "An entry is served only if its content hash equals the file's current recorded hash, and the file's size and modification time match what was recorded with that hash. Any mismatch (e.g. a change made outside the app) invalidates the entry, and the read goes to the storage root.",
+          "Every admitted copy is written to a temp file, synced, verified against the content hash, and only then made visible.",
+          "A background scrub re-verifies cache entries on a schedule and drops any that fail.",
+          "The cache is never a source of truth. It is excluded from backups and can be deleted at any time without loss (I2: rebuildable internal data)."
+        ],
+        "failure_handling": [
+          "Any SSD read error or timeout falls back to the storage root transparently, and the entry is dropped.",
+          "If the SSD disappears or its health becomes 'Replace now', the cache switches to bypass automatically and an alert is sent. The NAS keeps working at normal speed.",
+          "The cache never blocks startup: if the SSD is missing, the NAS starts without it."
+        ]
+      },
+      "tier_3_block_cache": {
+        "summary": "Could, Linux only: a block-level SSD cache under the filesystem (lvmcache/dm-cache). It speeds up everything, including metadata and small random reads, but needs an LVM layer between the pool and the filesystem that has to exist when the pool is created.",
+        "decision": "ADR in the SSD caching stage decides whether to offer it. bcache is not recommended because it requires reformatting the drive being cached. Forward-compatibility question: should pool creation (S14.5) optionally include an LVM layer now, so a block cache can be added later without recreating the pool? (question in new_open_questions)"
+      }
+    },
+    "write_policy": {
+      "default": "Write-through only: every write goes to the storage root first, and the cache is updated or invalidated afterwards. A dead SSD can never lose data.",
+      "write_back": "Not offered. Write-back caching keeps new data only on the SSD for a while, so a single SSD failure loses data. It could only be considered later with a mirrored pair of SSDs and power-loss protection, through a new ADR and the user's approval. Recorded as a not-scheduled candidate in 11a."
+    },
+    "endurance_and_power": [
+      "SSD wear (percentage of rated endurance used) is monitored through predictive_health, and alerts are sent near end of life.",
+      "A daily write budget for the cache protects consumer SSDs from excessive wear; admission pauses when the budget is used up.",
+      "TRIM is used on the cache SSD (periodic fstrim or discard, per the filesystem ADR).",
+      "[Planner addition] Could: optional hard-drive spin-down after idle time, since the cache and fast internal data let the hard drives sleep more often. Warn about wear from frequent spin-ups and let the admin set the idle time."
+    ],
+    "privacy_and_security": [
+      "Admin statistics are aggregated only: hit rate, bytes served, space used, top file types. They never show another user's file names, which would break I5 and NFR-024. Each user sees the cache status of their own pinned items only.",
+      "If the storage is encrypted at rest (R05 G-064 if P006 is applied), the cache and fast internal data must be on an encrypted volume too, or caching is refused, with the reason shown.",
+      "Cache files are named by content hash and live in NAS-owned directories with restrictive permissions. They are never exposed through WebDAV, SMB, or the files API.",
+      "The cache does not count toward user quotas."
+    ],
+    "configuration": [
+      "Enable or disable; choose the SSD (a whole SSD prepared by the helper on Linux, or a directory on an SSD the admin mounted on any platform).",
+      "Size budget, free-space reserve, minimum file size, access threshold and window, area and type filters, pin budget, prewarm rules, daily write budget.",
+      "'Clear cache' and 'Bypass cache' buttons; changes take effect without a restart.",
+      "The setup wizard measures the SSD and the storage root with a short read benchmark and warns if the SSD is not actually faster (e.g. a SATA SSD behind a slow USB bridge)."
+    ],
+    "metrics": [
+      "Hit rate, bytes served from the SSD versus the storage root, admissions, evictions, space used, write budget used, and estimated time saved.",
+      "The stage's performance tests compare typical workloads with the cache off and on, on reference hardware, and record the results."
+    ]
+  },
+
+  "stage_changes": {
+    "mvp_stages": [
+      { "substage": "S10.3", "change": "MVP-A predictive drive health (drive_lifecycle.predictive_health), labelled [Planner addition] P007." },
+      { "substage": "S08.4", "change": "MVP-B storage migration engine (command line) for all platforms: plan, copy, catch-up, maintenance-mode final sync, hash verification, switch by configuration change, rollback, journal. Labelled [Planner addition] P007." },
+      { "substage": "S13.4", "change": "Guide: 'Moving to a new or bigger drive' and 'My drive is failing' for each platform, built around the MVP-B command." },
+      { "substage": "S08.7 / S10.6", "change": "Tests: migration with crash injection at every phase, verification failure stops the switch, rollback; health status rules against recorded SMART fixtures." }
+    ],
+    "drive_pools_stage": {
+      "new_name": "Drives, pools, and drive lifecycle",
+      "changes": [
+        { "substage": "S14.2 (helper)", "change": "Add the new allow-listed operations in drive_lifecycle.security." },
+        { "substage": "S14.3 (discovery and health)", "change": "Add new-drive detection by kernel events, the known-drive registry by serial and WWN, and reuse of predictive health." },
+        { "substage": "S14.6 (data migration)", "change": "Becomes 'Storage migration engine (GUI and online)': extends MVP-B with online bulk copy and catch-up, drive preparation through the helper, the stable-mount-point switch, and the GUI." },
+        { "substage": "S14.7 (monitoring, failures, rebuilds)", "change": "Add proactive hot replacement of RAID 1 members and the RAID 0 failing-member flow (drive_replacement)." },
+        { "substage": "S14.8 (expansion and import)", "change": "Add pool_growth; FR-208 promoted from Could to Should." },
+        { "substage": "NEW, after S14.8", "name": "New-drive wizard and drive qualification", "change": "new_drive_detection handling in the GUI, new_drive_wizard, drive_qualification." },
+        { "substage": "NEW", "name": "Single-drive upgrade, replacement, and mirror conversion", "change": "capacity_upgrade_single_drive, the single-drive cases of drive_replacement, mirror_conversion." },
+        { "substage": "NEW", "name": "Drive retirement", "change": "drive_retirement, including secure erase and LED location (Could)." },
+        { "substage": "Storage GUI (was S14.9)", "change": "Renumbered after the new substages. Add the drive list with statuses, the wizard, migration progress, rollback, and retirement." },
+        { "substage": "Testing and stage review (was S14.10)", "change": "Renumbered to stay last. Add simulated-disk tests (loop devices or VM disks only, NFR-038) for: hot-plug detection, capacity upgrade, mirror conversion including an interrupted resync, hot replacement, RAID 1 growth by replacing both members, RAID 0 failing-member migration, rollback, retirement and secure erase on a virtual disk, and crash injection at every migration phase." }
+      ],
+      "numbering": "Number the new substages after S14.8 and renumber the GUI and testing substages so testing stays last. Record every renumbered substage in the 10.18 table."
+    },
+    "ssd_caching_stage": {
+      "id": "S15 at plan 1.4.2 (AI becomes S16)",
+      "name": "SSD caching",
+      "origin": "User-defined (P007)",
+      "goal": "If configured, the most-used and large files and photos are served from an SSD, and internal data can live on fast storage, with no risk to data if the SSD fails.",
+      "depends_on": ["The drive-pools stage (helper, wizard hook)", "S10.3 (health)", "S04.4 and S04.8 (thumbnails, transcode cache)", "S06 (index)", "S08.3 (metadata backup)"],
+      "substages": [
+        { "name": "Architecture and decisions", "must_cover": "ADRs for the cache design (tier 2 admission and eviction policies), fast internal-data placement (tier 1), and whether to offer the block-level cache (tier 3); the threat model entries." },
+        { "name": "Fast internal-data placement", "must_cover": "tiers.tier_1_fast_internal_data, with the move wizard and its failure behavior." },
+        { "name": "Cache store", "must_cover": "Content-addressed storage on the SSD, temp-write-verify admission, scrub, size budget and free-space reserve, bypass on failure, cleanup of deleted content." },
+        { "name": "Admission, eviction, pinning, and prewarming", "must_cover": "tier_2 admission, eviction, pinning_and_prewarming, and the daily write budget." },
+        { "name": "Read-path integration and consistency", "must_cover": "Every read path in tier_2.design, the consistency rules, and authorization before any cache read (I5)." },
+        { "name": "Endurance and power", "must_cover": "SSD wear monitoring, TRIM, and the optional hard-drive spin-down (Could)." },
+        { "name": "Cache GUI and metrics", "must_cover": "configuration, metrics, privacy-safe admin statistics, per-user pins, and the 'use as SSD cache' choice in the new-drive wizard." },
+        { "name": "Testing, performance, and stage review", "must_cover": "Hit-rate and speed benchmarks with the cache off and on; consistency tests with external changes; fault injection (SSD removed mid-read, corrupted cache file, full SSD); leak tests proving no user sees another user's cached items or statistics; the R12 documentation audit; completion record; user sign-off." }
+      ],
+      "exit_criteria": "With the cache configured, repeated reads of large files come from the SSD measurably faster on reference hardware. Removing or corrupting the SSD never causes a wrong read, a lost file, or downtime."
+    }
+  },
+
+  "requirements_to_add": {
+    "note": "Add to plan.md section 3 with new FR and NFR IDs continuing after the highest existing IDs. Keep the labels. Link each to its substage.",
+    "functional": [
+      "[User requirement] New-drive detection with a guided wizard offering capacity upgrade, mirror, replacement, pool growth, backup drive, SSD cache, or ignore (Should).",
+      "[User requirement] Capacity upgrade by migrating the storage root to a larger drive, with verification and rollback (Must).",
+      "[User requirement] Conversion of a single drive to RAID 1 by adding a second drive, using a degraded mirror, migration, and adding the old drive after confirmation (Must, Linux with helper).",
+      "[User requirement] Replacement of a failing or suspect drive: single drive by migration, RAID 1 member by hot replacement, RAID 0 by migrating the pool (Must).",
+      "[User requirement] Predictive drive health with the four statuses, reasons, scheduled self-tests, and alerts (Must, MVP-A).",
+      "[Planner addition] Storage migration engine usable from the command line on every platform (Must, MVP-B).",
+      "[Planner addition] Drive qualification before use: SMART check, self-test, optional burn-in, capacity and compatibility warnings (Should).",
+      "[Planner addition] Pool growth by replacing members with larger drives or migrating to a larger pool (Should; FR-208 promoted).",
+      "[Planner addition] Drive retirement: rollback copy, backup drive, mirror member, secure erase, forget (Should; secure erase Could where firmware support is missing).",
+      "[User requirement] Optional SSD read cache of the most-used files and photos, preferring large ones, with configurable thresholds and filters (Must within its stage).",
+      "[Planner addition] Fast internal-data placement on an SSD with a move wizard (Should).",
+      "[Planner addition] Per-user pinning of folders and albums to fast storage, and prewarming rules (Could).",
+      "[Planner addition] Block-level SSD cache on Linux (Could, pending ADR and question).",
+      "[Planner addition] Optional hard-drive spin-down (Could)."
+    ],
+    "non_functional": [
+      "Migration safety: the source is only read until retirement; every migrated file is verified by content hash before the switch; a crash at any phase resumes or rolls back without data loss (Must).",
+      "Migration downtime: the maintenance-mode final sync stays within a target set in the stage document for the reference library size (Should).",
+      "Cache safety: a cache failure never causes data loss, a wrong read, or a failed request; reads fall back to the storage root (Must).",
+      "Cache privacy: cached content and statistics never reveal one user's items to another, including the admin (Must).",
+      "SSD endurance: the cache respects a configurable daily write budget (Should).",
+      "No real disks in tests (NFR-038 applies to every new drive flow) (Must)."
+    ]
+  },
+
+  "adrs_to_create": {
+    "note": "All with status Proposed. Each includes context, options with pros and cons, a recommendation, consequences, and the verification results.",
+    "adrs": [
+      { "topic": "Storage migration engine: copy method (built-in Go copier versus rsync as a separate program), catch-up strategy, journal format, verification", "stage": "S08.4 and the drive-pools stage" },
+      { "topic": "Switching the storage root: stable mount point remounted by the helper (recommended on Linux) versus configuration change; Docker bind mounts and mount propagation", "stage": "Drive-pools stage" },
+      { "topic": "Predictive health rules: attributes, thresholds, trend windows, self-test schedule", "stage": "S10.3" },
+      { "topic": "Mirror conversion and hot replacement with mdadm (degraded creation, member add, replace mode, bitmap, growth)", "stage": "Drive-pools stage (extends ADR-0027)" },
+      { "topic": "Hot-plug detection: kernel events through the helper, re-scan fallback, Windows and macOS detection", "stage": "Drive-pools stage (extends ADR-0029)" },
+      { "topic": "Secure erase methods and verification", "stage": "Drive-pools stage" },
+      { "topic": "SSD read cache design: content-addressed store, admission filter, eviction policy, write budget", "stage": "SSD caching stage" },
+      { "topic": "Fast internal-data placement and its failure behavior", "stage": "SSD caching stage" },
+      { "topic": "Block-level cache (lvmcache/dm-cache) and the optional LVM layer at pool creation", "stage": "SSD caching stage (affects S14.5 and ADR-0028)" }
+    ]
+  },
+
+  "dependency_register_candidates": {
+    "note": "Add as 'Candidate (stage), not a dependency yet' with license and verification status, in the same section as other candidates.",
+    "items": [
+      "smartmontools (already planned for S10.3): confirm self-test scheduling and NVMe support",
+      "nvme-cli (NVMe health and secure format)",
+      "hdparm (ATA secure erase, spin-down)",
+      "e2fsprogs badblocks (optional burn-in) and resize2fs; xfsprogs xfs_growfs",
+      "ledmon/ledctl (Could: drive LED location)",
+      "rsync (only if the migration ADR chooses it)",
+      "lvm2 (only if the block-level cache is chosen)",
+      "util-linux (lsblk, wipefs, fstrim), already planned for S14"
+    ]
+  },
+
+  "verification_tasks": {
+    "note": "Verify from official documentation (man pages, project docs). Record results in the ADRs. Mark anything you cannot verify as 'Unverified'.",
+    "tasks": [
+      "mdadm: creating RAID 1 with a missing member; adding a member and resync; replace mode (hot replacement keeping redundancy); growing an array to the size of larger members; whether and how RAID 0 can grow; write-intent bitmap behavior.",
+      "ext4 and XFS: online growth; XFS cannot shrink; TRIM options.",
+      "smartmontools: which attributes and NVMe fields are reported, self-test commands, and behavior through common USB bridges.",
+      "Secure erase: ATA security erase and NVMe format or sanitize support detection, and their known pitfalls (frozen drives, USB bridges).",
+      "Kernel device events: receiving them in a Go service on the host without extra daemons, or through udev.",
+      "Windows: detecting newly attached volumes and reading SMART (or confirm it is not possible without extra tools).",
+      "lvmcache: requirements for adding a cache to an existing logical volume, and removal behavior."
+    ]
+  },
+
+  "conflicts_and_decisions": {
+    "items": [
+      { "item": "A22 (pools Linux-only)", "handling": "Refine, do not reverse: pools, mirror conversion, drive preparation, and secure erase stay Linux-only; predictive health and migration to a user-prepared drive work on every platform (platform_matrix)." },
+      { "item": "A18 (one filesystem for the root, temp uploads, and trash)", "handling": "Unchanged. Migration moves the whole root together. The SSD cache and fast internal data are rebuildable or backed-up internal data, not part of that filesystem rule; say so in A18." },
+      { "item": "I8 (AI last)", "handling": "SSD caching is inserted before AI, and AI is renumbered." },
+      { "item": "I10", "handling": "Applies to every erase (new drive preparation, adding the old drive to a mirror, secure erase), to switching storage, and to clearing pins. Mirror conversion states plainly when undo becomes impossible." },
+      { "item": "I5 and NFR-024", "handling": "Cache reads are authorized first; statistics are aggregated for admins." },
+      { "item": "User's wording 'a backup drive' for RAID 1", "handling": "Build the mirror as asked, and explain the difference in the wizard with the backup-drive option offered alongside (FR-206)." },
+      { "item": "The user's decision to build pools 'in the end' (S007)", "handling": "Unchanged: the drive lifecycle extends the pools stage in its current position. Only the two small MVP pieces move earlier, pending confirmation." }
+    ]
+  },
+
+  "new_open_questions": {
+    "note": "Add to plan.md section 5 under 'New in <version> (P007)', numbered after the highest existing question.",
+    "questions": [
+      "Confirm the two MVP additions: predictive drive health (S10.3) and the command-line storage migration engine (S08.4)?",
+      "Rollback window for the old drive after a migration: 7 days (proposed), longer, or 'until I retire it'?",
+      "Burn-in of new drives: off by default (proposed), a quick read test by default, or a full write test by default for blank drives?",
+      "Should pool creation include an optional LVM layer now, so a block-level SSD cache can be added later without recreating the pool?",
+      "Fast internal data on an SSD: allow the database on a single SSD (with a recent metadata backup required), or require a mirrored SSD pair for the database?",
+      "SSD cache defaults: minimum file size and access threshold (proposed: 8 MB and 3 reads in 7 days)?",
+      "Hard-drive spin-down: include it as an option (Could), or leave it out?"
+    ]
+  },
+
+  "plan_md_updates": [
+    "Header: archive the current version, bump MINOR per R4, update the date.",
+    "Section 1 and the stage table: rename the drive-pools stage, add the SSD caching stage, renumber AI.",
+    "Section 2: extend G12 to cover the drive lifecycle and optional SSD caching; update NG8 if it lists what pools include.",
+    "Section 3: requirements_to_add with labels and substage links.",
+    "Section 4: refine A18 and A22 (conflicts_and_decisions).",
+    "Section 5: new_open_questions.",
+    "Section 6: add components: drive lifecycle manager (in the pool manager), migration engine, health evaluator, cache manager; add the SSD to the storage layout diagram as optional; update the flows (new-drive flow, migration flow, cached read flow).",
+    "Section 7: list the new Proposed ADRs.",
+    "Section 8: add concerns: migration consistency and downtime; switching the storage root under Docker; cache consistency and privacy; SSD endurance.",
+    "Section 10: apply stage_changes; add the SSD caching stage with every required field; update the 10.18 Stage ID changes table.",
+    "Section 11: the drive-pools milestone becomes 'Drives and storage' and includes the SSD caching stage; the AI milestone stays last. If P006 release labels exist, keep them consistent.",
+    "Section 11a: add 'Write-back SSD caching (mirrored SSDs with power-loss protection)' as a not-scheduled candidate.",
+    "Section 12: add fixtures (recorded SMART outputs of healthy, degrading, and failed drives; virtual disks of different sizes; SSD failure injection) and the new tests.",
+    "Section 13: add risks: data loss during migration or mirror conversion (mitigation: source untouched, hash verification, journal, rollback, typed confirmation); wrong drive erased (mitigation: serial and model display, OS and data-drive refusal, LED location); false alarms or missed failures in predictive health (mitigation: documented rules, fixtures, trends, 'not available' when unknown); stale or leaking cache (mitigation: hash-checked reads, authorization first, aggregated statistics); SSD wear (mitigation: write budget, wear alerts).",
+    "Section 14: revision entry referencing P007 and the session log."
+  ],
+
+  "execution_steps": [
+    { "step": 1, "action": "Run R1, archive this prompt, log it, and write the in-progress entry.", "details": "See before_you_start." },
+    { "step": 2, "action": "Impact analysis.", "details": "In the session log: whether P006 was applied and how its questions were answered; the current stage IDs of drive pools and AI; the highest FR, NFR, Q, and ADR numbers; substages already In Progress or Done that this touches; every conflict." },
+    { "step": 3, "action": "Verification.", "details": "Complete verification_tasks and record the results." },
+    { "step": 4, "action": "Archive the current plan.", "details": "Copy plan.md to code-agent-docs/archive/plan-history/ before editing." },
+    { "step": 5, "action": "Update plan.md.", "details": "Apply placement, stage_changes, requirements_to_add, and plan_md_updates. Renumber AI and the pool substages, and record them in 10.18." },
+    { "step": 6, "action": "Create the ADRs and update the dependency register.", "details": "See adrs_to_create and dependency_register_candidates." },
+    { "step": 7, "action": "Update the threat model entries list.", "details": "Add the new helper operations and hot-plug risks to the threat model file if it exists, or to the S03.1 and S14.2 substage notes if it does not yet." },
+    { "step": 8, "action": "Update CURRENT_STATE.md.", "details": "Remove the in-progress entry. Next steps: the user confirms the MVP additions and answers the new questions; current stage work continues unchanged." },
+    { "step": 9, "action": "Consistency check.", "details": "Run audit checklist groups D, F, G, I, and K on everything you changed, especially the AI renumbering and the renumbered pool substages." },
+    { "step": 10, "action": "Git.", "details": "Commit according to the preference in RULES.md, e.g. 'docs(plan): drive lifecycle and SSD caching; AI renumbered [P007]'." },
+    { "step": 11, "action": "Report to the user and stop.", "details": "Keep it short, as the user prefers: (a) the two MVP additions to confirm; (b) what the drive-pools stage gains, in one line per case (upgrade, mirror, replacement, growth, retirement); (c) the SSD caching stage in three lines, including that nothing is lost if the SSD fails; (d) the renumbering; (e) the new questions; (f) verification results. Log this and close the session log with a summary." }
+  ],
+
+  "definition_of_done": [
+    "This prompt is archived as P007 (or the next free number).",
+    "The MVP additions are in S10.3, S08.4, and S13.4 with P007 labels and listed for confirmation.",
+    "The drive-pools stage is renamed and contains the new-drive wizard, qualification, single-drive upgrade and replacement, mirror conversion, hot replacement, pool growth, and retirement, with every required field; its testing substage is last.",
+    "The SSD caching stage exists directly after the drive-pools stage and before AI, with every required field; AI is renumbered everywhere in current documents; 10.18 is updated.",
+    "Requirements, assumptions, questions, concerns, risks, fixtures, and milestones are updated as listed.",
+    "The new ADRs exist as Proposed with verification results; the dependency register lists the candidates.",
+    "The previous plan version is archived; version and revision history are updated.",
+    "CURRENT_STATE.md and the session log are current, with a closing summary.",
+    "No application code was written and no real disk was touched.",
+    "The user has received the report described in step 11."
+  ],
+
+  "final_instruction": "Begin with the R1 startup protocol. Work through the execution steps in order, recording as you go. When everything in definition_of_done is complete, report to the user and stop."
+}
