@@ -6,6 +6,7 @@ Created in audit A001 (session S004) from P004. Written generally so that every 
 Updated in audit A002 (session S005): checks for the product documentation (docs/, scripts/, README sections owned by stages) in groups A, E, and K.
 Updated in session S007 (P005, pre-approved): group K checks historical documents against the plan's "Stage ID changes" table (plan.md 10.18).
 Updated in audit A003 (session S007): group G also covers the tools the tests use; group H checks the files table against what was built; group J checks task-start entries.
+Updated in session S007 (P006, pre-approved): group D checks the research files and the release roadmap.
 UPDATE THIS CHECKLIST whenever a new document type, folder, rule, or invariant is added (R12 / P004).
 
 How to use:
@@ -88,6 +89,8 @@ How to use:
 - [ ] Invariants are worded identically in plan.md and RULES.md.
 - [ ] The chosen-stack table matches the ADRs' current statuses and links.
 - [ ] No stale text contradicts a newer decision (grep for superseded technologies and answered-question markers such as "pending Q…").
+- [ ] Every gap in every research file (`research/R<NNN>-*.md`) has exactly one destination: the MVP, a release, the AI stage, or excluded (P006).
+- [ ] Every feature of every release (plan 11b, 3.3) has an FR ID, and every FR of a release names its release (P006).
 
 ### E. README alignment
 - [ ] Every README feature maps to at least one requirement.
