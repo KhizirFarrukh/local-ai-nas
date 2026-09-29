@@ -317,7 +317,7 @@ The main navigation gets a user menu (account, sign out) and the Admin entry for
 | Substage | Name | Status | Depends on | Requirements |
 |---|---|---|---|---|
 | S03.1 | Threat model | **Review** (T01 and T02 done; the user's review of the threat model is asked at the next stop) | S02 | FR-084, FR-221 (threats only) |
-| S03.2 | First-run setup and authentication | Not started | S03.1 | FR-064, FR-085, FR-068, NFR-010 |
+| S03.2 | First-run setup and authentication | **In Progress** | S03.1 | FR-064, FR-085, FR-068, NFR-010 |
 | S03.3 | Sessions and tokens | Not started | S03.2 | FR-086, FR-087, FR-219 (foundation) |
 | S03.4 | Transport security | Not started | S03.2 | FR-088, NFR-020 |
 | S03.5 | Application hardening | Not started | S03.2, S03.3 | FR-089, NFR-022 |
@@ -360,7 +360,7 @@ Its tests are written in S03.10. Bugs found while building are recorded in secti
 
 | Task ID | Description | Status | Acceptance criteria |
 |---|---|---|---|
-| S03.2-T01 | **Schema and user store:** migration `00003_accounts.sql` (users, sessions, api_tokens, audit_events; Down included); `internal/auth` user store (create, get by name, update password, roles, namespaces; the first admin gets `u0001`). Register `golang.org/x/crypto` (R6). | Not started | `local-ai-nas migrate up` and `status` show 00003; Down and Up again work on a copy of the database; the store works against a real database (checked by a small program or the next task). |
+| S03.2-T01 | **Schema and user store:** migration `00003_accounts.sql` (users, sessions, api_tokens, audit_events; Down included); `internal/auth` user store (create, get by name, update password, roles, namespaces; the first admin gets `u0001`). Register `golang.org/x/crypto` (R6). | **Done** (S007 E053) | `local-ai-nas migrate up` and `status` show 00003; Down and Up again work on a copy of the database; the store works against a real database (checked by a small program or the next task). |
 | S03.2-T02 | **Passwords:** Argon2id in PHC format (4.2), the concurrency guard, rehash on login, the password rule, `BenchmarkPasswordHash` run on the development PC and recorded. | Not started | A hash verifies and a wrong password does not; the PHC string carries the ADR parameters; a third parallel hash waits; the benchmark result is in the session log. |
 | S03.2-T03 | **Auth endpoints** (spec first): status, setup, login, logout, password change (4.10); cookie handling from S03.3-T01 (done together); problem codes; review rows in `docs/api/conventions.md`. | Not started | With curl on loopback: setup once (a second setup is `403 setup_not_allowed`), login, status shows the user, logout, password change ends another session; setup from a non-loopback address is refused. |
 | S03.2-T04 | **Throttling and lockout** (4.2): per address and per account; loopback never locked by the account rule; `Retry-After`; the same answer and timing for unknown users. | Not started | Scripted failed logins lock the address after 5 and the account for LAN addresses after 20; loopback still works; the lock ends after its time (fake clock in a check program or a short config value). |
