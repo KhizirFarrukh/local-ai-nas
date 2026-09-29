@@ -3,7 +3,7 @@
 | Field | Value |
 |---|---|
 | Number | ADR-0041 |
-| Status | Proposed |
+| Status | **Accepted** (2026-09-30, session S007) |
 | Date proposed | 2026-09-30 (session S007) |
 | Date of last status change | 2026-09-30 (session S007) |
 | Supersedes | none |
@@ -48,7 +48,10 @@ A logical operation (move, copy, delete to trash, restore, purge, upload finaliz
 
 ## Approval record
 
-_Proposed with plan 1.9.0 (P008). The user asked for the review's suggestions to be "added into the plan so these can also be implemented along the way" and approved building the follow-up tasks ("Approve all, F2 first (Recommended)", S007 E059); acceptance of this ADR's decision is asked before its first task starts._
+> "Accept all three (Recommended)"
+> (2026-09-30, session S007; the user's answer to: "Accept the three ADRs the approved follow-ups are built on?", naming ADR-0040, ADR-0041, and ADR-0042 with a one-line summary of each)
+
+Proposed with plan 1.9.0 (P008), whose follow-up tasks the user had approved ("Approve all, F2 first (Recommended)", S007 E059).
 
 ## Links
 
