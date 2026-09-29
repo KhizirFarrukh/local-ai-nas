@@ -64,4 +64,4 @@ P003 principle: "one core server binary, one database file". Pure-Go builds with
 - **Throttled writes:** session last-seen and token last-used at most once a minute; job progress at most once a second per job; batched inserts during ingest.
 - **Pragmas set and tested explicitly:** `journal_mode=WAL`, `foreign_keys=ON`, `busy_timeout=5000`, `synchronous=FULL`; SQLite's default automatic checkpoint.
 - **Also verified:** modernc.org/sqlite v1.59.0 bundles SQLite 3.53.4; `VACUUM INTO` works and the driver has the online backup API (`NewBackup`, `Step`, `Finish`), for database snapshots (FR-355).
-- **Task:** S01.1-T12 (P008 follow-up F5, built in S03).
+- **Task:** S01.1-T12 (P008 follow-up F5, built in S03): done in S007 E066. **Measured** on the development PC (AMD Ryzen 5 7640HS, NVMe, Windows 11): one small committed insert takes about **0.41 ms with FULL** and 0.024 ms with NORMAL (`BenchmarkCommit`), so about 2,400 commits a second: ample for accounts, sessions, and audit events; bulk work batches its rows per transaction. The Raspberry Pi profile measures it again (S03.10-T03).

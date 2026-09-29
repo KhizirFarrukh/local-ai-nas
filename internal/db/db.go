@@ -28,15 +28,23 @@ const readers = 4
 //go:embed migrations/*.sql
 var migrationFiles embed.FS
 
-// pragmas are set on every connection. WAL lets readers work while one
-// writer writes; busy_timeout makes a connection wait for a lock instead of
-// failing at once; NORMAL synchronous is safe with WAL (a power cut can
-// lose the last transactions, never corrupt the file).
+// pragmas are set on every connection (ADR-0007 and its amendment 1).
+// WAL lets readers work while one writer writes; busy_timeout makes a
+// connection wait for a lock instead of failing at once. synchronous is
+// FULL (S01.1-T12, the user's decision D5, NFR-056): in WAL mode NORMAL
+// never corrupts the file but "might roll back following a power loss"
+// the last committed transactions (SQLite documentation), and the database
+// holds sessions, revocations, password changes, and the audit trail,
+// which must survive a power cut. FULL adds one flush of the WAL per
+// commit; high-frequency writes are throttled by their owners (session
+// and token last-use times, job progress). wal_autocheckpoint is SQLite's
+// default, set explicitly so the policy is visible and tested.
 var pragmas = []string{
 	"journal_mode(WAL)",
 	"foreign_keys(1)",
 	"busy_timeout(5000)",
-	"synchronous(NORMAL)",
+	"synchronous(FULL)",
+	"wal_autocheckpoint(1000)",
 }
 
 // DB is the application database: one writer connection, because SQLite
