@@ -37,6 +37,10 @@ func (s *server) CopyItem(ctx context.Context, req gen.CopyItemRequestObject) (g
 		return nil, err
 	}
 	it, created, err := s.files.Copy(ctx, s.owner, b.From, b.To, files.CopyOptions{OnConflict: policy})
+	if apperr.KindOf(err) == apperr.TooLargeForSync && s.jobs != nil {
+		// Refused before anything was written: run it in the background.
+		return s.copyAsJob(ctx, b.From, b.To, policy)
+	}
 	if err != nil {
 		return nil, err
 	}

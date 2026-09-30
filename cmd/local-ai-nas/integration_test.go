@@ -156,13 +156,18 @@ func (h *harness) expect(s liveServer, op string, r req, want int) (http.Header,
 // notCaused lists the declared statuses that no request from outside can
 // cause on purpose, with the reason and where they are tested instead.
 var notCaused = map[string]string{
-	"500":                            "internal errors: unit tests inject faults (internal/apperr, internal/files, internal/uploads)",
-	"POST /files/uploads/ 501":       "only when the API runs without a tus server; the program always has one (internal/api contract test)",
-	"HEAD /files/uploads/{id} 423":   "tus lock contention: a timing race between two requests for one upload",
-	"PATCH /files/uploads/{id} 423":  "tus lock contention: a timing race between two requests for one upload",
-	"DELETE /files/uploads/{id} 423": "tus lock contention: a timing race between two requests for one upload",
-	"PATCH /files/uploads/{id} 507":  "the copy fallback of finalize needs the upload directory on another file system (internal/uploads TestFinalizeCopyFallback)",
-	"GET /files/content 409":         "a file replaced between the lookup and the open, five times in a row (internal/files stress test)",
+	"500":                             "internal errors: unit tests inject faults (internal/apperr, internal/files, internal/uploads)",
+	"POST /files/uploads/ 501":        "only when the API runs without a tus server; the program always has one (internal/api contract test)",
+	"HEAD /files/uploads/{id} 423":    "tus lock contention: a timing race between two requests for one upload",
+	"PATCH /files/uploads/{id} 423":   "tus lock contention: a timing race between two requests for one upload",
+	"DELETE /files/uploads/{id} 423":  "tus lock contention: a timing race between two requests for one upload",
+	"PATCH /files/uploads/{id} 507":   "the copy fallback of finalize needs the upload directory on another file system (internal/uploads TestFinalizeCopyFallback)",
+	"GET /files/content 409":          "a file replaced between the lookup and the open, five times in a row (internal/files stress test)",
+	"POST /files/operations/copy 422": "only when the API runs without a job queue; the program always has one, so a large copy is a job (internal/api TestCopyEndpoint)",
+	"GET /jobs 501":                   "only when the API runs without a job queue; the program always has one (internal/api contract test)",
+	"GET /jobs/{id} 501":              "only when the API runs without a job queue; the program always has one (internal/api contract test)",
+	"POST /jobs/{id}/cancel 501":      "only when the API runs without a job queue; the program always has one (internal/api contract test)",
+	"POST /jobs/{id}/cancel 200":      "a timing race between the cancel and a small copy that finishes in milliseconds (internal/jobs tests, S03.10)",
 }
 
 // testedInS02_8 lists statuses of operations added during stage 2, whose
@@ -283,7 +288,37 @@ func TestIntegration(t *testing.T) {
 	for _, name := range []string{"one.bin", "two.bin"} {
 		h.expect(main, "PUT /files/content", req{method: "PUT", path: "/api/v1/files/content?path=/big/" + name, body: make([]byte, 600<<10)}, 201)
 	}
-	h.expect(main, "POST /files/operations/copy", post("/api/v1/files/operations/copy", `{"from":"/big","to":"/big2"}`), 422)
+	// Over the synchronous limit: a background job (S01.4-T08).
+	_, body := h.expect(main, "POST /files/operations/copy", post("/api/v1/files/operations/copy", `{"from":"/big","to":"/big2"}`), 202)
+	var job struct {
+		ID     string         `json:"id"`
+		State  string         `json:"state"`
+		Result map[string]any `json:"result"`
+	}
+	if err := json.Unmarshal(body, &job); err != nil {
+		t.Fatalf("the copy job: %v", err)
+	}
+	for deadline := time.Now().Add(20 * time.Second); job.State != "succeeded"; {
+		if time.Now().After(deadline) || job.State == "failed" || job.State == "canceled" {
+			t.Fatalf("the copy job ended %q", job.State)
+		}
+		time.Sleep(50 * time.Millisecond)
+		_, body = h.expect(main, "GET /jobs/{id}", req{method: "GET", path: "/api/v1/jobs/" + job.ID}, 200)
+		if err := json.Unmarshal(body, &job); err != nil {
+			t.Fatal(err)
+		}
+	}
+	if job.Result["path"] != "/big2" || job.Result["created"] != true {
+		t.Errorf("the copy job's result = %v", job.Result)
+	}
+	h.expect(main, "GET /files/items", req{method: "GET", path: "/api/v1/files/items?path=/big2/two.bin"}, 200)
+	h.expect(main, "GET /jobs", req{method: "GET", path: "/api/v1/jobs"}, 200)
+	h.expect(main, "GET /jobs", req{method: "DELETE", path: "/api/v1/jobs"}, 405)
+	h.expect(main, "GET /jobs/{id}", req{method: "GET", path: "/api/v1/jobs/unknown"}, 404)
+	h.expect(main, "GET /jobs/{id}", req{method: "PUT", path: "/api/v1/jobs/unknown"}, 405)
+	h.expect(main, "POST /jobs/{id}/cancel", req{method: "POST", path: "/api/v1/jobs/" + job.ID + "/cancel"}, 409)
+	h.expect(main, "POST /jobs/{id}/cancel", req{method: "POST", path: "/api/v1/jobs/unknown/cancel"}, 404)
+	h.expect(main, "POST /jobs/{id}/cancel", req{method: "GET", path: "/api/v1/jobs/unknown/cancel"}, 405)
 	if err := os.WriteFile(filepath.Join(full.root, "files", "u0001", "src.txt"), []byte("s"), 0o600); err != nil {
 		t.Fatal(err)
 	}

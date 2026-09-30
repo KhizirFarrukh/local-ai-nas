@@ -136,6 +136,18 @@ func (f *failingServer) MoveItem(context.Context, gen.MoveItemRequestObject) (ge
 	return nil, f.err
 }
 
+func (f *failingServer) ListJobs(context.Context, gen.ListJobsRequestObject) (gen.ListJobsResponseObject, error) {
+	return nil, f.err
+}
+
+func (f *failingServer) GetJob(context.Context, gen.GetJobRequestObject) (gen.GetJobResponseObject, error) {
+	return nil, f.err
+}
+
+func (f *failingServer) CancelJob(context.Context, gen.CancelJobRequestObject) (gen.CancelJobResponseObject, error) {
+	return nil, f.err
+}
+
 func (f *failingServer) CopyItem(context.Context, gen.CopyItemRequestObject) (gen.CopyItemResponseObject, error) {
 	return nil, f.err
 }

@@ -26,6 +26,9 @@ type server struct {
 	log *slog.Logger
 	// archives keeps the archive tickets (S02.4-T03).
 	archives *archiveTickets
+	// jobs runs long operations in the background (S01.4-T08); nil
+	// means none (copies over the limits are refused, as in S01).
+	jobs JobQueue
 }
 
 var _ gen.StrictServerInterface = (*server)(nil)

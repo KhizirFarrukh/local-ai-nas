@@ -136,7 +136,10 @@ export interface paths {
          *     or special files in the tree (400; links are never followed), and
          *     the free space (507). The copy appears only when it is complete.
          *     A folder cannot be copied into itself (400). Conflicts are handled
-         *     as for move; `overwrite` replacing a file answers 200.
+         *     as for move; `overwrite` replacing a file answers 200. On a server
+         *     that runs background jobs, a copy over the synchronous limits is
+         *     accepted as a job instead of refused: 202 with the job, whose
+         *     progress GET /jobs/{id} reports (S01.4-T08).
          */
         post: operations["copyItem"];
         delete?: never;
@@ -350,6 +353,75 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/jobs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List your recent background jobs
+         * @description Your jobs of the last seven days, newest first (at most 50);
+         *     finished jobs are removed after seven days.
+         */
+        get: operations["listJobs"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/jobs/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The job's `id`. */
+                id: string;
+            };
+            cookie?: never;
+        };
+        /**
+         * Get a background job
+         * @description The job's state, progress, and, once it succeeded, its result.
+         */
+        get: operations["getJob"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/jobs/{id}/cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The job's `id`. */
+                id: string;
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Cancel a background job
+         * @description A queued job is canceled at once; a running one stops at its next
+         *     progress report, and what it had done so far is cleaned up (a copy
+         *     leaves nothing behind). A finished job cannot be canceled (409).
+         */
+        post: operations["cancelJob"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -478,6 +550,41 @@ export interface components {
             /** @description The item's new path, starting with `/`. */
             to: string;
             on_conflict?: components["schemas"]["OnConflict"];
+        };
+        /** @description A background job (S01.4-T08). */
+        Job: {
+            /** @description The job's ID (a UUIDv7). */
+            id: string;
+            /** @description What the job does, such as `files.copy`. */
+            type: string;
+            /** @enum {string} */
+            state: "queued" | "running" | "succeeded" | "failed" | "canceled";
+            /** @description How far the job is, in its own units (bytes for a copy); `total` is 0 while unknown. */
+            progress: {
+                /** Format: int64 */
+                done: number;
+                /** Format: int64 */
+                total: number;
+            };
+            /** @description How many times the job has started; a failed attempt is retried up to `max_attempts`. */
+            attempts: number;
+            max_attempts: number;
+            cancel_requested: boolean;
+            /** @description The last failure, safe to show. */
+            error?: string;
+            /** @description The job's result once it succeeded (for `files.copy`, the copy's `path` and whether it `created` a new item). */
+            result?: {
+                [key: string]: unknown;
+            };
+            /** Format: date-time */
+            created_at: string;
+            /** Format: date-time */
+            updated_at: string;
+            /** Format: date-time */
+            finished_at?: string;
+        };
+        JobList: {
+            items: components["schemas"]["Job"][];
         };
         CopyRequest: {
             /** @description The item to copy, starting with `/`. */
@@ -905,6 +1012,19 @@ export interface operations {
                     "application/json": components["schemas"]["FileItem"];
                 };
             };
+            /**
+             * @description The copy is over the synchronous limits and runs as a background
+             *     job. Its result, once it succeeded, has the copy's `path` and
+             *     whether it `created` a new item.
+             */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Job"];
+                };
+            };
             400: components["responses"]["BadRequest"];
             404: components["responses"]["NotFound"];
             405: components["responses"]["MethodNotAllowed"];
@@ -1243,6 +1363,81 @@ export interface operations {
         requestBody?: never;
         responses: {
             500: components["responses"]["InternalError"];
+            501: components["responses"]["NotAvailable"];
+        };
+    };
+    listJobs: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The jobs. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["JobList"];
+                };
+            };
+            405: components["responses"]["MethodNotAllowed"];
+            501: components["responses"]["NotAvailable"];
+        };
+    };
+    getJob: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The job's `id`. */
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The job. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Job"];
+                };
+            };
+            404: components["responses"]["NotFound"];
+            405: components["responses"]["MethodNotAllowed"];
+            501: components["responses"]["NotAvailable"];
+        };
+    };
+    cancelJob: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The job's `id`. */
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The job after the request (`canceled`, or still `running` with `cancel_requested`). */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Job"];
+                };
+            };
+            404: components["responses"]["NotFound"];
+            405: components["responses"]["MethodNotAllowed"];
+            409: components["responses"]["Conflict"];
             501: components["responses"]["NotAvailable"];
         };
     };

@@ -117,6 +117,12 @@ var errorCases = []struct {
 	{http.MethodPost, "/api/docs/", http.StatusMethodNotAllowed, "method_not_allowed"},
 	{http.MethodGet, "/api/docs/nothing.js", http.StatusNotFound, "not_found"},
 	{http.MethodPut, "/api/docs", http.StatusMethodNotAllowed, "method_not_allowed"},
+	// The jobs routes (S01.4-T08) on a server without a job queue: 501;
+	// a wrong method: 405.
+	{http.MethodGet, "/api/v1/jobs", http.StatusNotImplemented, "not_available"},
+	{http.MethodDelete, "/api/v1/jobs", http.StatusMethodNotAllowed, "method_not_allowed"},
+	{http.MethodGet, "/api/v1/jobs/unknown", http.StatusNotImplemented, "not_available"},
+	{http.MethodPost, "/api/v1/jobs/unknown/cancel", http.StatusNotImplemented, "not_available"},
 	// The reserved photos routes, with any method.
 	{http.MethodGet, "/api/v1/photos", http.StatusNotImplemented, "not_available"},
 	{http.MethodPost, "/api/v1/photos", http.StatusNotImplemented, "not_available"},
