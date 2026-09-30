@@ -100,3 +100,7 @@
 - **Related ADRs:** ADR-0012 (**superseded in part** by this ADR), ADR-0006 (Docker, device passthrough), ADR-0009 (web UI, player), ADR-0011 (job system; cache eviction job), ADR-0010 (auth)
 - **Related stages:** S02.6 (player hook), S04.7, **S04.8**, S04.9
 - **Plan version:** 0.4.0
+
+## Note (2026-09-30, session S007)
+
+Since plan 1.10.0 the internal data is grouped into `state/`, `cache/`, `tmp/`, and `logs/` (ADR-0003 amendment 1, the user's decision): the transcode cache lives in `<internal>/cache/transcode/` (was `transcode-cache/`). Only the folder changes; the decision above is unchanged.

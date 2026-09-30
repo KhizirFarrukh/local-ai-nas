@@ -73,7 +73,7 @@ func TestNoOperationLeavesTheNamespace(t *testing.T) {
 	for _, p := range []string{
 		filepath.Join(l.Area(storage.PhotosArea, storage.DefaultNamespace), "secret.jpg"),
 		filepath.Join(root, "files", "u0002", "other.txt"),
-		filepath.Join(root, ".local-ai-nas", "db", "secret.db"),
+		filepath.Join(root, ".local-ai-nas", "state", "db", "secret.db"),
 		filepath.Join(root, "root-secret.txt"),
 	} {
 		if err := os.MkdirAll(filepath.Dir(p), 0o750); err != nil {
@@ -97,7 +97,7 @@ func TestNoOperationLeavesTheNamespace(t *testing.T) {
 	// The whole S01.6 attack corpus, plus more escapes (S01.7-T02).
 	escapes := []string{
 		"/..", "/../u0002/other.txt", "/../../photos/u0001/secret.jpg", "/docs/../../../root-secret.txt",
-		"/../../.local-ai-nas/db/secret.db", "/..%2Fu0002%2Fother.txt", `/..\u0002\other.txt`, `\..\x`,
+		"/../../.local-ai-nas/state/db/secret.db", "/..%2Fu0002%2Fother.txt", `/..\u0002\other.txt`, `\..\x`,
 		"//server/share/x", "/C:/Windows/win.ini", "/c:", "/" + filepath.ToSlash(outside),
 		"/. ./x", "/.../x", "/docs/. /x", "/../u0002", "/docs/%00", "/docs/a.txt\x00.jpg",
 	}

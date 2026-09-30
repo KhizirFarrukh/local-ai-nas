@@ -6,8 +6,8 @@ Every significant technical decision (RULES R5). An ADR becomes **Accepted** onl
 |---|---|---|
 | [ADR-0001](ADR-0001-backend-language-framework.md) | Core server language: Go | Accepted |
 | [ADR-0002](ADR-0002-api-style.md) | API style: REST with an OpenAPI contract; router and code generation | Accepted |
-| [ADR-0003](ADR-0003-storage-layout.md) | Storage layout, per-user namespaces, and internal data location | Accepted |
-| [ADR-0004](ADR-0004-repository-layout.md) | Repository layout | Accepted |
+| [ADR-0003](ADR-0003-storage-layout.md) | Storage layout, per-user namespaces, and internal data location | Accepted · amended |
+| [ADR-0004](ADR-0004-repository-layout.md) | Repository layout | Accepted · amended |
 | [ADR-0005](ADR-0005-testing-linting-ci.md) | Testing, linting, and CI toolchain | Accepted |
 | [ADR-0006](ADR-0006-dev-environment-and-packaging.md) | Development environment and packaging: Docker Compose, multi-architecture | Accepted (parts deferred) |
 | [ADR-0007](ADR-0007-database-sqlite.md) | Database: SQLite in WAL mode, pure-Go driver, goose migrations | Accepted · amended |
@@ -15,7 +15,7 @@ Every significant technical decision (RULES R5). An ADR becomes **Accepted** onl
 | [ADR-0009](ADR-0009-web-ui-sveltekit.md) | Web UI: SvelteKit static SPA embedded in the Go binary | Accepted |
 | [ADR-0010](ADR-0010-security-building-blocks.md) | Security building blocks: Argon2id, server-side sessions, CSRF tokens, optional TOTP, TLS | Accepted |
 | [ADR-0011](ADR-0011-job-queue-sqlite.md) | Background job queue on SQLite, inside the core server | Accepted · amended |
-| [ADR-0012](ADR-0012-media-toolchain.md) | Media toolchain: ExifTool, libvips with libheif, FFmpeg (as subprocesses) | Accepted (partly superseded) (parts deferred) |
+| [ADR-0012](ADR-0012-media-toolchain.md) | Media toolchain: ExifTool, libvips with libheif, FFmpeg (as subprocesses) | Accepted (parts deferred) |
 | [ADR-0013](ADR-0013-reverse-geocoding-geonames.md) | Offline reverse geocoding with GeoNames | Accepted |
 | [ADR-0014](ADR-0014-search-engine-bleve.md) | Search engine: Bleve, with query-time synonym expansion | Accepted · amended |
 | [ADR-0015](ADR-0015-network-shares-webdav.md) | Network shares: WebDAV first, via golang.org/x/net/webdav | Accepted (parts deferred) |

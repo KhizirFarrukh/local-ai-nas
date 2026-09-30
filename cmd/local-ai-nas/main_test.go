@@ -234,7 +234,7 @@ func TestServeInProcess(t *testing.T) {
 			t.Errorf("log file lacks %s", want)
 		}
 	}
-	if _, err := os.Stat(filepath.Join(root, ".local-ai-nas", "db", "nas.db")); err != nil {
+	if _, err := os.Stat(filepath.Join(root, ".local-ai-nas", "state", "db", "nas.db")); err != nil {
 		t.Errorf("database file: %v", err)
 	}
 }
@@ -314,7 +314,7 @@ func TestRelocatedDatabase(t *testing.T) {
 	if _, err := os.Stat(filepath.Join(dbDir, "nas.db")); err != nil {
 		t.Errorf("database not in the configured directory: %v", err)
 	}
-	if _, err := os.Stat(filepath.Join(root, ".local-ai-nas", "db")); !os.IsNotExist(err) {
+	if _, err := os.Stat(filepath.Join(root, ".local-ai-nas", "state", "db")); !os.IsNotExist(err) {
 		t.Error("the default database directory exists although the database was moved")
 	}
 }

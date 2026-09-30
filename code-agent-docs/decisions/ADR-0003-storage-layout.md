@@ -65,3 +65,10 @@
 - **Related ADRs:** ADR-0001 (Go), ADR-0002 (API), ADR-0004 (repository layout), ADR-0007 (SQLite database at `<internal>/db/`), ADR-0008 (tus temp uploads at `<internal>/tmp/uploads/`), ADR-0014 (index at `<internal>/index/`)
 - **Related stages:** S01.2, S03.2, S07.2, S08.1
 - **Plan version:** 0.5.0. _History: Proposed in S002; not covered by P003 (links updated in S003); Accepted in S005._
+
+## Amendment 1 (2026-09-30, session S007): internal data grouped; the photos layout
+
+- **The user's decisions** (S007 E070): "state / cache / tmp / logs (Recommended)" and, for Q40, "Hybrid (Recommended)".
+- **Internal data** (`<root>/.local-ai-nas/`) is grouped by how it may be treated: `state/` (durable, backed up, never deleted automatically: the database in `state/db/`, snapshots, trash, replaced originals, metadata, TLS files), `cache/` (rebuildable, never backed up, may live on a faster drive, ADR-0037: the search index, thumbnails, transcodes, AI data), `tmp/` (work in progress; `tmp/uploads/` must stay on the root's filesystem), and `logs/`. The plan's storage diagram (6.3) shows the whole layout.
+- **Upgrade:** at startup the server moves an old `.local-ai-nas/db/` to `state/db/` with one rename on the same filesystem (the database and its WAL files together), logs it, never touches a relocated database (`storage.db_dir`), and refuses to start if both folders exist (`storage.Layout.Upgrade`, S007). Checked with a root made by the previous build: the files and their content hashes were intact after the move.
+- **Photos layout (Q40):** hybrid: folders the user uploads, including Google Takeout exports, keep their structure; loose photos are filed by date taken into `YYYY/MM/`. The S04.1 layout ADR adds the rules; stable item IDs (ADR-0040) keep references valid when a photo is refiled.

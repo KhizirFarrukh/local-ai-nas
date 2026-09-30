@@ -63,3 +63,7 @@
 - **Related ADRs:** ADR-0001, ADR-0006, ADR-0011, **ADR-0020 (supersedes the video-transcoding deferral in part)**
 - **Related stages:** S04.4, S05.3
 - **Plan version:** 0.3.0
+
+## Note (2026-09-30, session S007)
+
+Since plan 1.10.0 the internal data is grouped into `state/`, `cache/`, `tmp/`, and `logs/` (ADR-0003 amendment 1, the user's decision): thumbnails live in `<internal>/cache/thumbnails/`. Only the folder changes; the decision above is unchanged.

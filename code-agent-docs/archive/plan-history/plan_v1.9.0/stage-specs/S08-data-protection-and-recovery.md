@@ -13,7 +13,7 @@
 #### S08.1: Trash
 - **Goal:** Deleted items can be recovered.
 - **Scope:** a per-user trash for both areas; retention period of 30 days (FR-008, the user's requirement in S007); restore to the original location with sidecar and metadata intact.
-- **Deliverables:** trash store in internal data (`.local-ai-nas/state/trash/<ns>/`, 1.10.0); delete-to-trash hook; restore; purge job.
+- **Deliverables:** trash store in internal data (`.local-ai-nas/trash/<ns>/`); delete-to-trash hook; restore; purge job.
 - **Depends on:** S07 (Done), S05.6, S04.3.
 - **Requirements:** FR-008, FR-026.
 - **Acceptance criteria:**

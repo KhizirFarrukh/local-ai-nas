@@ -152,28 +152,24 @@ flowchart TB
 ```
 <storage root>/                       single filesystem (A18)
 ├── files/                            user-data area 1 (I1)
-│   └── <user-namespace>/…            per-user from day one; one namespace until S07 (FR-071); the user's own folders, never reorganized
+│   └── <user-namespace>/…            per-user from day one; one namespace until S07 (FR-071)
 ├── photos/                           user-data area 2 (I1)
-│   └── <user-namespace>/…            media + <name>.lainas.json sidecars (S04, S05); hybrid layout (Q40, 1.10.0): uploaded folders keep their structure, loose photos go to YYYY/MM/
-└── .local-ai-nas/                    internal app data (I2), default location (A19); grouped in 1.10.0 (ADR-0003 amendment 1)
-    ├── state/                        durable: backed up (S08.3), never deleted automatically
-    │   ├── db/nas.db                 SQLite (WAL) internal database, from S01 (ADR-0007); moved here from .local-ai-nas/db/ at startup
-    │   ├── snapshots/                database snapshots (FR-355, S03.2-T06)
-    │   ├── trash/<user-namespace>/   per-user trash (FR-354; S08.1); also restores removed duplicates (S11)
-    │   ├── originals/<user-namespace>/ originals replaced by optimization, kept for the retention period (S12.5, ADR-0026)
-    │   ├── metadata/                 albums, face-group registry, transferred-out sidecars (Q13, Q27)
-    │   └── tls/                      certificate and key (S03.4)
-    ├── cache/                        rebuildable: never backed up; may live on a faster drive (ADR-0037)
-    │   ├── index/                    Bleve search index (S06, ADR-0014)
-    │   ├── thumbnails/               renditions keyed by content hash (S04.4)
-    │   ├── transcode/                HLS quality levels, created on demand, size-capped with LRU eviction (S04.8, ADR-0020)
-    │   └── ai/                       models, embeddings (S17)
-    ├── tmp/                          work in progress: uploads/ (resumable upload sessions, S01.4; same filesystem for the atomic rename), copies being built
+│   └── <user-namespace>/…            media + <name>.lainas.json sidecars (S04, S05); layout inside per Q40
+└── .local-ai-nas/                    internal app data (I2), default location (A19)
+    ├── tmp/uploads/                  resumable upload sessions (S01.4), same filesystem for atomic rename
+    ├── trash/<user-namespace>/       per-user trash (S08.1); also restores removed duplicates (S11)
+    ├── originals/<user-namespace>/   originals replaced by optimization, kept for the retention period (S12.5, ADR-0026)
+    ├── db/nas.db                     SQLite (WAL) internal database, from S01 (ADR-0007)
+    ├── index/                        Bleve search index (S06, ADR-0014)
+    ├── thumbnails/                   renditions keyed by content hash (S04.4)
+    ├── transcode-cache/              HLS quality levels, created on demand, size-capped with LRU eviction (S04.8, ADR-0020)
+    ├── metadata/                     albums, face-group registry, transferred-out sidecars (Q13, Q27)
+    ├── ai/                           models, embeddings (S17)
     └── logs/                         application log files (JSON, size-rotated; D-07, S005); the audit log lives in SQLite (ADR-0007)
 Configuration file: outside the storage root (CLI flag / env var / OS default path).
 Optional pool (S15, Linux): drives → mdadm RAID 0/1 → ext4 or XFS → mounted and used as <storage root>.
 Optional SSD (S16, 1.7.0): <ssd>/cache/ (content-addressed read cache of originals; rebuildable, never backed up)
-                             and fast internal data (the .local-ai-nas/cache/ folders; optionally the database, ADR-0037).
+                             and fast internal data (index, thumbnails, transcode cache; optionally the database, ADR-0037).
 ```
 
 ### 6.4 Key flows
@@ -201,14 +197,14 @@ Optional SSD (S16, 1.7.0): <ssd>/cache/ (content-addressed read cache of origina
 | Ownership, access lists, shares, public links, revocations (both areas) _(1.9.0, D2)_ | Internal DB (authoritative); mirrored into the photo sidecar's `access` section and, if Q28 keeps them, hidden files-area files | No: backed up (S08.3), database snapshots (FR-355) |
 | Access mirror for shared items in `files/` | Per ADR in S07.3 (Q28); a mirror of the database since 1.9.0 | Yes, from the database |
 | Item IDs (items table) _(1.9.0)_ | Internal DB; photo IDs also in the sidecar (`mediaId`) | Photos: from the sidecars; files area: from snapshots and backups (ADR-0040) |
-| Operation journal, jobs, trash records _(1.9.0)_ | Internal DB; trashed items in `.local-ai-nas/state/trash/<ns>/` | Journal and trash: no (backed up); jobs: re-created |
-| Albums, face-group registry | `.local-ai-nas/state/metadata/` (Q13) | No: backed up (S08.3) |
+| Operation journal, jobs, trash records _(1.9.0)_ | Internal DB; trashed items in `.local-ai-nas/trash/<ns>/` | Journal and trash: no (backed up); jobs: re-created |
+| Albums, face-group registry | `.local-ai-nas/metadata/` (Q13) | No: backed up (S08.3) |
 | Users, sessions, tokens, settings, audit log | Internal DB / config | No: backed up (S08.3) |
 | Content hash, perceptual hash, stack membership and cover, duplicate decisions, merged-metadata provenance, optimization history of photos | Sidecar (reserved in S05.1; P005) | No: **source of truth** (I3) |
 | "Not duplicates" marks and ignore list for files; shortcuts | Internal DB (S11) | No: backed up (S08.3) |
-| Replaced originals after optimization | `.local-ai-nas/state/originals/` (S12.5) | No, while kept: user data until the retention ends |
+| Replaced originals after optimization | `.local-ai-nas/originals/` (S12.5) | No, while kept: user data until the retention ends |
 | Pool layout | On the member drives (mdadm metadata) and in the internal DB | Re-importable from the drives (S15.8) |
-| Search index, thumbnails, transcodes, embeddings, similarity index | Internal app data, `.local-ai-nas/cache/` (1.10.0); the job queue is in the database | Yes (from disk, sidecars, media, or AI re-run) |
+| Search index, job queue, thumbnails, embeddings, similarity index | Internal app data | Yes (from disk, sidecars, media, or AI re-run) |
 
 ### 6.6 Admin console map (new in 1.7.0, the user's requirement)
 
@@ -407,7 +403,7 @@ A separate opt-in. Embeddings are stored only in internal app data, never in sid
 - The tools' licenses and bundling are recorded in `dependencies.md` for the user's attention with Q22.
 
 ### 8.21 On-demand video transcoding (new in 0.4.0, ADR-0020)
-- **Sessions:** one FFmpeg subprocess per (video, level). It writes keyframe-aligned 4 s HLS segments ahead of the playhead into `<internal>/cache/transcode/<content-hash>/<level>/` (1.10.0). Segment requests wait briefly for production. A seek beyond the produced range restarts the session at the target time. Idle sessions stop after a timeout.
+- **Sessions:** one FFmpeg subprocess per (video, level). It writes keyframe-aligned 4 s HLS segments ahead of the playhead into `<internal>/transcode-cache/<content-hash>/<level>/`. Segment requests wait briefly for production. A seek beyond the produced range restarts the session at the target time. Idle sessions stop after a timeout.
 - **Budget:** a global cap on concurrent sessions (default 1 with the CPU encoder, 2–4 with a hardware encoder), a configurable maximum level, and yielding of background jobs while someone is watching. Interactive API latency must keep NFR-003.
 - **Hardware encoders:** detected at startup and shown in health. The Debian FFmpeg build explicitly enables libx264 and libvpl (Intel QSV). VAAPI, V4L2-M2M (Raspberry Pi), and NVENC are autodetected features, to be verified in the image in S04.8. Docker needs device passthrough (e.g. `/dev/dri`), which is documented.
 - **Cache:** content-hash keys (no duplicates across users and areas), a size cap with LRU eviction by a job (S04.3), fully rebuildable (I2). Originals are never modified.

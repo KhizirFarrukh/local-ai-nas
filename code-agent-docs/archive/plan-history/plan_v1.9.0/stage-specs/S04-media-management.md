@@ -29,7 +29,6 @@
   4. The supported-format list matches the answer to Q26.
 - **Risks/notes:** HEIC/RAW decoders have licensing implications (ADR-0012, `dependencies.md`).
 - **P006 addition (1.6.0, [Planner addition], pending Q54):** Domain model: paired items, a Live Photo or motion photo as one library item (FR-217, FR-218).
-- **1.10.0 (the user's answer to Q40):** the photos layout is **hybrid**: uploaded folders keep their structure; loose photos go to `YYYY/MM/` by date taken; the layout ADR records the rules (date source and fallback, name conflicts, refiling when a date is corrected).
 - **Status:** Not started
 
 #### S04.2: Media ingestion

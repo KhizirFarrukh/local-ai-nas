@@ -2,11 +2,11 @@
 
 | Field | Value |
 |---|---|
-| **Version** | 1.10.0 |
+| **Version** | 1.9.0 |
 | **Status** | **Approved baseline** (approved by the user in S005, 2026-09-24); 1.1.0 adds the user's setup-script requirement (S005 E015) |
 | **Last updated** | 2026-09-30 (session S007) |
 | **Source of vision** | `README.md` (repository root), the user's staged roadmap (`code-agent-docs/prompts/P002-staged-development-roadmap.json`), the user's technology stack (`code-agent-docs/prompts/P003-technology-stack.json`), and the user's feature additions (`code-agent-docs/prompts/P005-feature-additions.json`, with the user's chat decisions in S007) |
-| **Previous version** | 1.9.0, archived at `code-agent-docs/archive/plan-history/plan_v1.9.0/` (a copy of the plan folder, the R4 practice since the split; the single-file versions 0.1.0–1.8.1 are `plan_v<version>.md` there) |
+| **Previous version** | 1.8.1, archived at `code-agent-docs/archive/plan-history/plan_v1.8.1.md` (0.1.0–1.8.0 also archived there) |
 | **Stage IDs** | Changed in 1.4.0 (P005): packaging became S13 (was S11) and AI S15 (was S12). Changed in 1.7.0 (P007): S15 became SSD caching and AI S16; S03.9 → S03.10, S10.6 → S10.7, S14.9 → S14.12, S14.10 → S14.13. **Changed in 1.9.0 (the user's requirement): the new S13 is the dependency security review; packaging is S14, drives S15, SSD caching S16, AI S17.** Older documents use the old IDs; the table in **10.18** translates them. |
 
 > **This is a living document.** It changes as the user gives feedback. Every change follows `code-agent-docs/RULES.md` **R4**: the old version is archived, the version is bumped, and a revision entry is added. While the plan is a pre-1.0 draft, restructurings bump the MINOR version. **When the user approves this plan as the baseline, it becomes version 1.0.0.**
@@ -15,7 +15,7 @@
 
 ---
 
-## Plan files (version 1.10.0; one version for the whole plan set)
+## Plan files (version 1.9.0; one version for the whole plan set)
 
 | File | Holds (old `plan.md` sections) |
 |---|---|
