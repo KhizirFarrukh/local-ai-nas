@@ -29,6 +29,12 @@ type CopyOptions struct {
 	// OnConflict applies to the target name. Overwrite replaces a file
 	// with a file; folders are never replaced or merged.
 	OnConflict OnConflict
+	// NoLimits lifts the synchronous copy limits: the copy runs as a
+	// background job (S01.4-T08, FR-351).
+	NoLimits bool
+	// Progress, if set, is called with the bytes copied so far and the
+	// total, after each file.
+	Progress func(done, total int64)
 }
 
 // copyEntry is one item of the source tree, relative to the copied item
@@ -89,7 +95,11 @@ func (s *Local) Copy(ctx context.Context, owner, fromAPI, toAPI string, o CopyOp
 					return err
 				}
 			}
-			entries, size, err := scanCopy(root, from, to, src, s.copyLimits)
+			limits := s.copyLimits
+			if o.NoLimits {
+				limits = CopyLimits{}
+			}
+			entries, size, err := scanCopy(root, from, to, src, limits)
 			if err != nil {
 				return err
 			}
@@ -102,12 +112,16 @@ func (s *Local) Copy(ctx context.Context, owner, fromAPI, toAPI string, o CopyOp
 			var final string
 			var hashed []hashedFile
 			if src.IsDir() {
-				final, hashed, err = copyFolder(ctx, root, from, to, entries, policy, toAPI, lock)
+				final, hashed, err = copyFolder(ctx, root, from, to, entries, policy, toAPI, lock, progressOf(o.Progress, size))
 				r.created = true
 			} else {
 				var one hashedFile
+				progressOf(o.Progress, size)(0)
 				final, r.created, one, err = copyOneFile(ctx, root, from, to, src, policy, toAPI, lock)
 				hashed = []hashedFile{one}
+				if err == nil {
+					progressOf(o.Progress, size)(size)
+				}
 			}
 			if err != nil {
 				return err
@@ -271,7 +285,7 @@ func copyOneFile(ctx context.Context, root *os.Root, from, to string, src fs.Fil
 // to, then gives it its name, holding lock during the commit. On any error
 // the temporary tree is removed. It returns the copied files with their
 // hashes, relative to the copy (renaming the tree keeps their versions).
-func copyFolder(ctx context.Context, root *os.Root, from, to string, entries []copyEntry, policy OnConflict, toAPI string, lock func() func()) (string, []hashedFile, error) {
+func copyFolder(ctx context.Context, root *os.Root, from, to string, entries []copyEntry, policy OnConflict, toAPI string, lock func() func(), progress func(done int64)) (string, []hashedFile, error) {
 	switch _, err := root.Lstat(filepath.FromSlash(to)); {
 	case err == nil && policy != ConflictRename:
 		return "", nil, apperr.Newf(apperr.Conflict, "an item already exists at %s; folders are never replaced or merged", toAPI)
@@ -279,7 +293,7 @@ func copyFolder(ctx context.Context, root *os.Root, from, to string, entries []c
 		return "", nil, fsError(err, toAPI)
 	}
 	tmp := path.Join(path.Dir(to), storage.TempPrefix+rand.Text()+".part")
-	hashed, err := buildTree(ctx, root, from, tmp, entries)
+	hashed, err := buildTree(ctx, root, from, tmp, entries, progress)
 	if err != nil {
 		_ = root.RemoveAll(filepath.FromSlash(tmp))
 		return "", nil, err
@@ -298,10 +312,11 @@ func copyFolder(ctx context.Context, root *os.Root, from, to string, entries []c
 // buildTree creates the entries below dst: folders, then each file
 // synced, then the folders' modification times, deepest first, because
 // adding entries changes them. It returns the files with their hashes,
-// relative to dst.
-func buildTree(ctx context.Context, root *os.Root, from, dst string, entries []copyEntry) ([]hashedFile, error) {
+// relative to dst, and reports the bytes copied after each file.
+func buildTree(ctx context.Context, root *os.Root, from, dst string, entries []copyEntry, progress func(done int64)) ([]hashedFile, error) {
 	buf := make([]byte, copyBufferSize)
 	var hashed []hashedFile
+	var done int64
 	for _, e := range entries {
 		target := path.Join(dst, e.rel)
 		if !e.info.IsDir() {
@@ -311,6 +326,8 @@ func buildTree(ctx context.Context, root *os.Root, from, dst string, entries []c
 			}
 			hf.rel = e.rel
 			hashed = append(hashed, hf)
+			done += e.info.Size()
+			progress(done)
 			continue
 		}
 		if err := root.Mkdir(filepath.FromSlash(target), 0o750); err != nil {
@@ -421,4 +438,13 @@ func copyStream(ctx context.Context, dst io.Writer, src io.Reader, buf []byte) e
 			return apperr.Wrap(apperr.Internal, "reading the source failed", rerr)
 		}
 	}
+}
+
+// progressOf adapts a CopyOptions.Progress function (which may be nil) to
+// the bytes-done reports of a copy of total bytes.
+func progressOf(p func(done, total int64), total int64) func(done int64) {
+	if p == nil {
+		return func(int64) {}
+	}
+	return func(done int64) { p(done, total) }
 }

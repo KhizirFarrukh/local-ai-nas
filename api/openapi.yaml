@@ -31,6 +31,10 @@ tags:
       creation, creation-with-upload, termination. The upload metadata
       carries `target_path`, `on_conflict`, and optionally `sha256`
       (docs/api/conventions.md).
+  - name: jobs
+    description: |
+      Background jobs (S01.4-T08): long operations, such as a copy over the
+      synchronous limits, run as durable jobs that survive a restart.
 paths:
   /files/content:
     get:
@@ -282,7 +286,10 @@ paths:
         or special files in the tree (400; links are never followed), and
         the free space (507). The copy appears only when it is complete.
         A folder cannot be copied into itself (400). Conflicts are handled
-        as for move; `overwrite` replacing a file answers 200.
+        as for move; `overwrite` replacing a file answers 200. On a server
+        that runs background jobs, a copy over the synchronous limits is
+        accepted as a job instead of refused: 202 with the job, whose
+        progress GET /jobs/{id} reports (S01.4-T08).
       requestBody:
         required: true
         content:
@@ -302,6 +309,15 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/FileItem"
+        "202":
+          description: |
+            The copy is over the synchronous limits and runs as a background
+            job. Its result, once it succeeded, has the copy's `path` and
+            whether it `created` a new item.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Job"
         "400":
           $ref: "#/components/responses/BadRequest"
         "404":
@@ -690,6 +706,82 @@ paths:
           $ref: "#/components/responses/NotAvailable"
         "500":
           $ref: "#/components/responses/InternalError"
+  /jobs:
+    get:
+      tags: [jobs]
+      operationId: listJobs
+      summary: List your recent background jobs
+      description: |
+        Your jobs of the last seven days, newest first (at most 50);
+        finished jobs are removed after seven days.
+      responses:
+        "200":
+          description: The jobs.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/JobList"
+        "405":
+          $ref: "#/components/responses/MethodNotAllowed"
+        "501":
+          $ref: "#/components/responses/NotAvailable"
+  /jobs/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        description: The job's `id`.
+        schema:
+          type: string
+    get:
+      tags: [jobs]
+      operationId: getJob
+      summary: Get a background job
+      description: The job's state, progress, and, once it succeeded, its result.
+      responses:
+        "200":
+          description: The job.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Job"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "405":
+          $ref: "#/components/responses/MethodNotAllowed"
+        "501":
+          $ref: "#/components/responses/NotAvailable"
+  /jobs/{id}/cancel:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        description: The job's `id`.
+        schema:
+          type: string
+    post:
+      tags: [jobs]
+      operationId: cancelJob
+      summary: Cancel a background job
+      description: |
+        A queued job is canceled at once; a running one stops at its next
+        progress report, and what it had done so far is cleaned up (a copy
+        leaves nothing behind). A finished job cannot be canceled (409).
+      responses:
+        "200":
+          description: The job after the request (`canceled`, or still `running` with `cancel_requested`).
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Job"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "405":
+          $ref: "#/components/responses/MethodNotAllowed"
+        "409":
+          $ref: "#/components/responses/Conflict"
+        "501":
+          $ref: "#/components/responses/NotAvailable"
 components:
   parameters:
     Path:
@@ -878,6 +970,65 @@ components:
           description: The item's new path, starting with `/`.
         on_conflict:
           $ref: "#/components/schemas/OnConflict"
+    Job:
+      type: object
+      additionalProperties: false
+      description: A background job (S01.4-T08).
+      required: [id, type, state, progress, attempts, max_attempts, cancel_requested, created_at, updated_at]
+      properties:
+        id:
+          type: string
+          description: The job's ID (a UUIDv7).
+        type:
+          type: string
+          description: What the job does, such as `files.copy`.
+        state:
+          type: string
+          enum: [queued, running, succeeded, failed, canceled]
+        progress:
+          type: object
+          additionalProperties: false
+          required: [done, total]
+          description: How far the job is, in its own units (bytes for a copy); `total` is 0 while unknown.
+          properties:
+            done:
+              type: integer
+              format: int64
+            total:
+              type: integer
+              format: int64
+        attempts:
+          type: integer
+          description: How many times the job has started; a failed attempt is retried up to `max_attempts`.
+        max_attempts:
+          type: integer
+        cancel_requested:
+          type: boolean
+        error:
+          type: string
+          description: The last failure, safe to show.
+        result:
+          type: object
+          additionalProperties: true
+          description: The job's result once it succeeded (for `files.copy`, the copy's `path` and whether it `created` a new item).
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+        finished_at:
+          type: string
+          format: date-time
+    JobList:
+      type: object
+      additionalProperties: false
+      required: [items]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/Job"
     CopyRequest:
       type: object
       additionalProperties: false

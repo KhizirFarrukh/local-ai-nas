@@ -62,6 +62,10 @@ type Options struct {
 	// App serves every path outside /api: the web interface (S02.1-T02).
 	// nil answers those paths with 404 problems, as for unknown API paths.
 	App http.Handler
+	// Jobs runs long operations in the background (S01.4-T08); nil means
+	// none: the jobs routes answer 501 and copies over the synchronous
+	// limits are refused, as in S01.
+	Jobs JobQueue
 	// AllowedHosts are host names the server answers to besides loopback
 	// addresses and "localhost" (S03.5-T02, ADR-0042); any other Host
 	// header gets 421. The LAN listener adds its names in S03.4.
@@ -103,7 +107,7 @@ func Routes(o Options) []Route {
 	}
 	g := generated(&server{
 		version: o.Version, checks: o.Checks, files: o.Files, owner: storage.DefaultNamespace, log: o.Logger,
-		archives: newArchiveTickets(o.Now),
+		archives: newArchiveTickets(o.Now), jobs: o.Jobs,
 	}, o.Logger)
 
 	// The photos area exists on disk from S01, but its API is reserved
@@ -132,6 +136,10 @@ func Routes(o Options) []Route {
 		// The offline API documentation (S01.5-T06).
 		{Pattern: DocsPath, Handler: apiDocs(o.Logger)},
 		{Pattern: strings.TrimSuffix(DocsPath, "/"), Handler: docsRedirect(o.Logger)},
+		// Background jobs (S01.4-T08).
+		{Pattern: "GET /api/v1/jobs", Handler: http.HandlerFunc(g.ListJobs)},
+		{Pattern: "GET /api/v1/jobs/{id}", Handler: http.HandlerFunc(g.GetJob)},
+		{Pattern: "POST /api/v1/jobs/{id}/cancel", Handler: http.HandlerFunc(g.CancelJob)},
 		{Pattern: "/api/v1/photos", Handler: photos},
 		{Pattern: "/api/v1/photos/", Handler: photos},
 	}

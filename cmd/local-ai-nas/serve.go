@@ -19,6 +19,7 @@ import (
 	"github.com/KhizirFarrukh/local-ai-nas/internal/files"
 	"github.com/KhizirFarrukh/local-ai-nas/internal/health"
 	"github.com/KhizirFarrukh/local-ai-nas/internal/items"
+	"github.com/KhizirFarrukh/local-ai-nas/internal/jobs"
 	"github.com/KhizirFarrukh/local-ai-nas/internal/logging"
 	"github.com/KhizirFarrukh/local-ai-nas/internal/schedule"
 	"github.com/KhizirFarrukh/local-ai-nas/internal/storage"
@@ -149,16 +150,24 @@ func cmdServe(ctx context.Context, args []string, stderr io.Writer) int {
 		log.Error("cannot start the upload server", "error", err.Error())
 		return exitError
 	}
-	// Abandoned uploads and temporary files left by a crash (S01.4-T06).
-	cleanCtx, stopCleanup := context.WithCancel(ctx)
-	sched := &schedule.Ticker{Log: log}
+	// Background jobs (S01.4-T08): long operations and periodic work,
+	// durable across restarts. The abandoned-upload and temporary-file
+	// cleanup of S01.4-T06 is a periodic job.
+	jobCtx, stopJobs := context.WithCancel(ctx)
+	queue := jobs.New(a.db, log, jobs.Options{})
 	defer func() {
-		stopCleanup()
-		sched.Wait()
+		stopJobs()
+		queue.Wait()
 	}()
-	sched.Every(cleanCtx, "upload cleanup", cleanupInterval, func(ctx context.Context) {
+	queue.Handle(api.CopyJobType, copyJobAttempts, copyJob(fsvc, log))
+	var sched schedule.Scheduler = queue
+	sched.Every(jobCtx, "uploads.cleanup", cleanupInterval, func(ctx context.Context) {
 		cleanup(ctx, log, tus, fsvc, a.cfg.Uploads.Expiry.Duration)
 	})
+	if err := queue.Start(jobCtx); err != nil {
+		log.Error("cannot start the background jobs", "error", err.Error())
+		return exitError
+	}
 
 	// The web interface embedded at build time (S02.1-T02).
 	app, err := webapp.New(web.Build())
@@ -181,6 +190,7 @@ func cmdServe(ctx context.Context, args []string, stderr io.Writer) int {
 			Uploads:        tus,
 			MaxChunkBytes:  int64(a.cfg.Uploads.MaxChunkSize),
 			App:            app,
+			Jobs:           queue,
 		}),
 		ReadHeaderTimeout: a.cfg.Server.ReadHeaderTimeout.Duration,
 		IdleTimeout:       a.cfg.Server.IdleTimeout.Duration,
