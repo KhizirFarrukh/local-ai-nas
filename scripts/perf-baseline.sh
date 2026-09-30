@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Runs the S01 performance baseline (S01.7-T04, NFR-003) on this machine
-# and prints a Markdown table for docs/perf/: the listing benchmark of the
+# and prints a Markdown table for docs/reports/: the listing benchmark of the
 # files service, then TestPerfBaseline over real HTTP (listing latency,
 # raw disk and loopback baselines, and upload and download throughput).
 #

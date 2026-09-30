@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Checks that every Go package linked into the product has an allowed license
 # (NFR-029). The allow-list is scripts/allowed-licenses.txt; the policy is
-# docs/licensing.md. Test-only imports are not checked because they are not
+# docs/dev/licensing.md. Test-only imports are not checked because they are not
 # distributed.
 #
 # Usage: scripts/check-licenses.sh   (on Windows, run it from Git Bash)

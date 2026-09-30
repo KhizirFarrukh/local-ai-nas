@@ -2,7 +2,7 @@
 
 ## Project license
 
-local-ai-nas is licensed under the **GNU Affero General Public License v3.0 or later** (SPDX: `AGPL-3.0-or-later`). The full text is in [`LICENSE`](../LICENSE). The project owner chose AGPL-3.0 in session S005 (plan question Q22) and the "or later" form in the same session.
+local-ai-nas is licensed under the **GNU Affero General Public License v3.0 or later** (SPDX: `AGPL-3.0-or-later`). The full text is in [`LICENSE`](../../LICENSE). The project owner chose AGPL-3.0 in session S005 (plan question Q22) and the "or later" form in the same session.
 
 In short: anyone may use, study, change, and share the software. Anyone who distributes it, or **lets users interact with a modified version over a network**, must offer those users the complete corresponding source code under the same license.
 
@@ -10,11 +10,11 @@ The root `LICENSE` covers every file in this repository unless a file says other
 
 ## Dependency license policy (NFR-029)
 
-Every dependency, external tool, dataset, and AI model must have a license that lets **anyone deploy and use** this project, including commercially. Licenses restricted to non-commercial or research use are never allowed. Every dependency is recorded with its license in [`code-agent-docs/dependencies.md`](../code-agent-docs/dependencies.md) (RULES R6).
+Every dependency, external tool, dataset, and AI model must have a license that lets **anyone deploy and use** this project, including commercially. Licenses restricted to non-commercial or research use are never allowed. Every dependency is recorded with its license in [`code-agent-docs/dependencies.md`](../../code-agent-docs/dependencies.md) (RULES R6).
 
 ### Code linked into the binary or bundled into the web UI
 
-These licenses are allowed. The machine-readable list for the Go check is [`scripts/allowed-licenses.txt`](../scripts/allowed-licenses.txt).
+These licenses are allowed. The machine-readable list for the Go check is [`scripts/allowed-licenses.txt`](../../scripts/allowed-licenses.txt).
 
 | License | Why it is allowed |
 |---|---|
@@ -62,8 +62,8 @@ Datasets and models follow the same "anyone may deploy and use" rule. Attributio
 
 ## How the policy is checked
 
-- **Go:** [`scripts/check-licenses.sh`](../scripts/check-licenses.sh) runs `go tool go-licenses check ./...` with the allow-list. It fails on any linked package with a license outside the list or with no recognized license. CI runs it on every pull request (S01.1-T05). On Windows, run it from Git Bash.
-- **Web UI:** [`scripts/check-web-licenses.mjs`](../scripts/check-web-licenses.mjs) (S02.1-T05) runs `pnpm licenses list` in `web/`. The packages that ship in the built interface (the `dependencies` and what they pull in) must be on `scripts/allowed-licenses.txt`; every package, the development tools included, must be on that list or in the table of permissive tool licenses above. SPDX expressions are read as written: an `OR` needs one allowed part, an `AND` needs all. A package whose npm metadata states no license is checked by hand and listed in the script by exact version with the license its own files state; so far `combine-errors@3.0.3` (MIT, stated in its Readme; pulled in by tus-js-client). CI runs it in the `web` job.
+- **Go:** [`scripts/check-licenses.sh`](../../scripts/check-licenses.sh) runs `go tool go-licenses check ./...` with the allow-list. It fails on any linked package with a license outside the list or with no recognized license. CI runs it on every pull request (S01.1-T05). On Windows, run it from Git Bash.
+- **Web UI:** [`scripts/check-web-licenses.mjs`](../../scripts/check-web-licenses.mjs) (S02.1-T05) runs `pnpm licenses list` in `web/`. The packages that ship in the built interface (the `dependencies` and what they pull in) must be on `scripts/allowed-licenses.txt`; every package, the development tools included, must be on that list or in the table of permissive tool licenses above. SPDX expressions are read as written: an `OR` needs one allowed part, an `AND` needs all. A package whose npm metadata states no license is checked by hand and listed in the script by exact version with the license its own files state; so far `combine-errors@3.0.3` (MIT, stated in its Readme; pulled in by tus-js-client). CI runs it in the `web` job.
 - **Release (S14.6):** a full audit of dependencies, external tools, datasets, and models.
 
 ## Adding a dependency

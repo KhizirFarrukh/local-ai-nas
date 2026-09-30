@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Runs the tests of internal/... with coverage and fails when the total
-# statement coverage is below the threshold (S01.1-T04, docs/testing.md).
+# statement coverage is below the threshold (S01.1-T04, docs/dev/testing.md).
 # Generated code (internal/api/gen) is left out of the figure: it is
 # produced by oapi-codegen from the spec, and its behavior is tested
 # through internal/api. Writes coverage.out and prints the per-function

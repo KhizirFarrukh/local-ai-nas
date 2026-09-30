@@ -3,7 +3,7 @@
 // what they pull in) must carry a license from scripts/allowed-licenses.txt,
 // the list that also holds for Go code linked into the binary. Development
 // tools may also use the licenses in devOnlyLicenses below; they are never
-// shipped. The policy and its reasons are in docs/licensing.md.
+// shipped. The policy and its reasons are in docs/dev/licensing.md.
 //
 // Usage (from the repository root or from web/): node scripts/check-web-licenses.mjs
 import { execSync } from 'node:child_process';
@@ -15,12 +15,12 @@ const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 const web = join(root, 'web');
 
 // Permissive licenses accepted for tools that are never shipped
-// (docs/licensing.md): BlueOak-1.0.0 for minimatch (linters), Python-2.0
+// (docs/dev/licensing.md): BlueOak-1.0.0 for minimatch (linters), Python-2.0
 // for argparse (js-yaml in the API type generator, openapi-typescript).
 const devOnlyLicenses = ['BlueOak-1.0.0', 'Python-2.0'];
 
 // Packages whose npm metadata states no license, checked by hand; the value
-// is the license their own files state (docs/licensing.md). Exact versions
+// is the license their own files state (docs/dev/licensing.md). Exact versions
 // only: a new version is checked again.
 const verifiedByHand = {
   // tus-js-client pulls it in. Its Readme ends with "## License MIT"; its
@@ -77,7 +77,7 @@ const shipped = licenses(true);
 check('shipped', shipped, allowed);
 check('all, including dev tools', licenses(false), new Set([...allowed, ...devOnlyLicenses]));
 if (failures > 0) {
-  console.error(`${failures} package(s) with a license outside the policy (docs/licensing.md)`);
+  console.error(`${failures} package(s) with a license outside the policy (docs/dev/licensing.md)`);
   process.exit(1);
 }
 console.log('all licenses are allowed');

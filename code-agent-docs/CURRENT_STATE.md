@@ -10,7 +10,7 @@
 - **The user's instruction (S007 E010):** after P005, resume S02 and work until the stage is complete, and also build the P005 items that belong to the current or earlier stages (the S01 follow-up tasks).
 
 ## In progress (write-ahead)
-- Nothing in progress (checkpoint after S01.4-T08). The next task, **S01.3-T12**, starts on a new branch `feat/S01.3-T12-ids-in-api`.
+- **Organizing files and folders** (S007 E070, the user's request and decisions; branch `chore/organize-files-and-folders`): repository (`inputs/`, `docs/` by audience), agent docs (`plan/stage-specs/`, ADR index), NAS storage (`.local-ai-nas/{state,cache,tmp,logs}`, Q40 hybrid photos layout). Then back to S01.3-T12.
 
 ## Last completed
 - **S01.4-T08 done (F3)** (S007 E068): `internal/jobs` (durable queue, workers, retries, cancel, restart recovery, pruning), migration `00005_jobs.sql`; copies over the synchronous limits answer `202` with a job; `GET /api/v1/jobs`, `GET /api/v1/jobs/{id}`, `POST /api/v1/jobs/{id}/cancel`; the upload cleanup is a periodic job. Checked: a 1.5 GB copy survived a killed server (attempt 2 succeeded) and a cancel stopped another (no copy left).
@@ -37,7 +37,7 @@
 - **S02.8-T01 done** (S007 E021): 197 web unit and component tests (coverage of `web/src/lib` 95.4% statements, 82.9% branches), Go tests for archives and the web app (`internal/...` 89.9%), regression tests for S02-B01, B04, B07, B08, B09.
 - **S01.4-T07 done; S01 follow-ups complete** (S007 E019): resumable uploads are hashed chunk by chunk (state saved per chunk, one full read only as a fallback); the client checksum no longer reads the file again.
 - **S01.3-T10 done** (P005 follow-up; S007 E018): simple uploads and copies store a SHA-256 content hash (`content_hash` in item details), kept through rename, move, and delete, never reported for a file changed outside the NAS.
-- **S01.2-T07 done** (P005 follow-up; S007 E017): the storage root can be copied or moved (`docs/storage-root.md`); unfinished uploads are repaired at start-up; bug S01-B01 (uploads locked for good on Windows) fixed with tusd's memory locker.
+- **S01.2-T07 done** (P005 follow-up; S007 E017): the storage root can be copied or moved (`docs/guide/storage-root.md`); unfinished uploads are repaired at start-up; bug S01-B01 (uploads locked for good on Windows) fixed with tusd's memory locker.
 - **S02.7-T03 done; S02.7 closed** (S007 E016): token contrast computed for both themes (dark `danger` now #fa8585; preview arrows black/60); axe `color-contrast` clean on 11 screens × 2 themes × 2 widths in Edge and Firefox.
 - **S02.7-T02 done** (S007 E015; merged into `develop`, CI at stage end): screen-reader names for items, live regions (notifications, selection, uploads), focus to the main area for empty folders, focus rings kept in Firefox (`focusFor`), level-one headings; axe clean in Edge and Firefox, both themes.
 - **The user's decisions merged** (`develop` 2a371b3; S007 E013): ADR-0021 Accepted (SHA-256); CI only on a stage tag `S<NN>-done` or by hand (RULES 1.7.1; plan 1.4.1).

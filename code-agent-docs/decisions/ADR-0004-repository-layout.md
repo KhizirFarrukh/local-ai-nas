@@ -90,3 +90,11 @@ local-ai-nas/
 - **Related ADRs:** ADR-0001, ADR-0002, ADR-0005, ADR-0006, ADR-0007, ADR-0009, ADR-0017
 - **Related stages:** S01.1 onward
 - **Plan version:** 0.3.0
+
+## Amendment 1 (2026-09-30, session S007): organization of files and folders
+
+- **The user's decision** (S007 E070): "Inputs + docs by audience (Recommended)".
+- **`inputs/`** holds everything the user hands to the agent: `inputs/prompts/` (was the root `prompts/`) and `inputs/code-reviews/` (was the root `code-reviews/`). One root folder for inputs, however many kinds there will be.
+- **`docs/` by audience:** `docs/guide/` (users and admins; `storage-root.md` moved here), `docs/api/` (API reference), `docs/dev/` (contributors; `testing.md` and `licensing.md` moved here), `docs/reports/` (measurements and checks; the S01 performance baseline moved here as `S01-performance-baseline.md`). `docs/README.md` is the index.
+- **`internal/` stays flat,** as Go projects usually are; packages are still created when a stage needs them. The package list above is a plan; the packages that exist on this date are: `api` (+ `api/gen`), `apperr`, `auth` (S03), `config`, `contenthash` (S01.3-T10), `db` (+ `db/migrations`), `files`, `health`, `items` (item IDs, S01.3-T11), `jobs` (background jobs, S01.4-T08; moved forward from S04), `logging`, `schedule` (the scheduler interface that `jobs` implements), `storage`, `testutil`, `uploads`, `webapp` (the embedded web interface, S02). The planned `policy/` is named `authz/` (S03.5), and `trash/` comes with S01.3-T13 (P008), not S08.
+- Unchanged: `api/`, `cmd/`, `web/`, `deploy/`, `scripts/`, `testdata/` (the fixture sources, `testdata/SOURCES.md`), `.github/`, `code-agent-docs/`.

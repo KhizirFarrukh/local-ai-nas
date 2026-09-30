@@ -13,7 +13,7 @@ How tests are written and run (ADR-0005, S01.1-T04). On Windows, run the `script
 | Lint and format | `./bin/golangci-lint run ./...` and `./bin/golangci-lint fmt --diff` (install: `scripts/install-golangci-lint.sh`) |
 | Dependency licenses | `scripts/check-licenses.sh` |
 | Memory bound of large transfers (writes the size several times) | `LOCALAINAS_MEMTEST_SIZE=1GiB go test -run TestMemoryBound -v ./internal/api` |
-| Performance baseline (NFR-003; see `docs/perf/`) | `scripts/perf-baseline.sh 1GiB` |
+| Performance baseline (NFR-003; see `docs/reports/`) | `scripts/perf-baseline.sh 1GiB` |
 | Web unit and component tests (in `web/`) | `pnpm test`; with the coverage of `web/src/lib` (80% required): `pnpm coverage`. The component tests need Playwright's Chromium once: `pnpm exec playwright install chromium` |
 | One web test file, or by name | `pnpm exec vitest run src/lib/files/selection.svelte.test.ts`, `pnpm exec vitest run -t "select all"` |
 
@@ -72,4 +72,4 @@ These run the real program the way a user does. `TestIntegration` (`cmd/local-ai
 
 ## Test data
 
-Files under `testdata/` are listed in [`testdata/SOURCES.md`](../testdata/SOURCES.md) with their origin and license. Generate fixtures in test code when possible.
+Files under `testdata/` are listed in [`testdata/SOURCES.md`](../../testdata/SOURCES.md) with their origin and license. Generate fixtures in test code when possible.

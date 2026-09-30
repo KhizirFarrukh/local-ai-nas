@@ -104,6 +104,7 @@ How to use:
 - [ ] README edits made by tasks stay inside the sections their stage document names (its files table). Any other change is reverted and written up as a proposal.
 
 ### F. ADRs
+- [ ] `decisions/README.md` lists every ADR with the status its file states (S007).
 - [ ] Numbering is sequential with no gaps or duplicates. File names match titles (or the exception is documented).
 - [ ] Every ADR has every template section.
 - [ ] Every status is valid and matches what the approving prompt or user specified. Accepted ADRs cite their approval.

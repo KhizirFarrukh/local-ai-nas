@@ -125,7 +125,7 @@ _(Planner-added from P006; Q54 and Q34 first, because they change the MVP, then 
 19. **Writing into originals / XMP export**: never write originals (**recommended**); XMP export later? _Needed by: S05._
 20. _Superseded by Q32._
 21. _Superseded by Q37._
-22. _Answered (S005, D-12):_ **AGPL-3.0** (GNU Affero General Public License v3.0), in the **"or later"** form: SPDX `AGPL-3.0-or-later` (the user's answer in S005 E020: "AGPL-3.0-or-later (Recommended)"). The LICENSE file and the policy `docs/licensing.md` were added in S01.1-T02.
+22. _Answered (S005, D-12):_ **AGPL-3.0** (GNU Affero General Public License v3.0), in the **"or later"** form: SPDX `AGPL-3.0-or-later` (the user's answer in S005 E020: "AGPL-3.0-or-later (Recommended)"). The LICENSE file and the policy `docs/dev/licensing.md` were added in S01.1-T02.
     - Relevant facts from the dependency register:
       - Every linked Go library is MIT, BSD, or Apache-2.0.
       - External tools run as separate programs: ExifTool (Artistic/GPL), libvips (LGPL-2.1), libheif (LGPL), FFmpeg (LGPL, or GPL depending on the build).

@@ -27,23 +27,23 @@
 | [architecture.md](architecture.md) | 6 and 8: Architecture and technical concerns |
 | [tech-stack.md](tech-stack.md) | 7: Chosen technology stack |
 | [roadmap.md](roadmap.md) | 9, 10, 10.1, 10.17, 10.18, 11, 11a–11d: Roadmap, milestones, and releases |
-| [stages/S01-basic-nas.md](stages/S01-basic-nas.md) | 10.2: S01: Basic NAS implementation |
-| [stages/S02-nas-gui.md](stages/S02-nas-gui.md) | 10.3: S02: NAS GUI |
-| [stages/S03-security.md](stages/S03-security.md) | 10.4: S03: Security |
-| [stages/S04-media-management.md](stages/S04-media-management.md) | 10.5: S04: Media management |
-| [stages/S05-media-metadata.md](stages/S05-media-metadata.md) | 10.6: S05: Media metadata |
-| [stages/S06-search.md](stages/S06-search.md) | 10.7: S06: Search |
-| [stages/S07-multi-user-and-sharing.md](stages/S07-multi-user-and-sharing.md) | 10.8: S07: Multi-user and sharing |
-| [stages/S08-data-protection-and-recovery.md](stages/S08-data-protection-and-recovery.md) | 10.9: S08: Data protection and recovery |
-| [stages/S09-network-file-access.md](stages/S09-network-file-access.md) | 10.10: S09: Network file access and external change sync |
-| [stages/S10-admin-console.md](stages/S10-admin-console.md) | 10.11: S10: Admin console: monitoring, quotas, and system settings |
-| [stages/S11-duplicates-and-look-alikes.md](stages/S11-duplicates-and-look-alikes.md) | 10.12: S11: Duplicate and look-alike management |
-| [stages/S12-storage-optimization.md](stages/S12-storage-optimization.md) | 10.13: S12: Storage optimization |
-| [stages/S13-dependency-security-review.md](stages/S13-dependency-security-review.md) | 10.13a: S13: Dependency security review (new in 1.9.0, the user's requirement) |
-| [stages/S14-packaging-and-release.md](stages/S14-packaging-and-release.md) | 10.14: S14: Packaging, deployment, and pre-AI release |
-| [stages/S15-drives-and-pools.md](stages/S15-drives-and-pools.md) | 10.15: S15: Drives, pools, and drive lifecycle (RAID 0 and RAID 1) |
-| [stages/S16-ssd-caching.md](stages/S16-ssd-caching.md) | 10.15a: S16: SSD caching (new in 1.7.0, P007) |
-| [stages/S17-ai-features.md](stages/S17-ai-features.md) | 10.16: S17: AI features |
+| [stage-specs/S01-basic-nas.md](stage-specs/S01-basic-nas.md) | 10.2: S01: Basic NAS implementation |
+| [stage-specs/S02-nas-gui.md](stage-specs/S02-nas-gui.md) | 10.3: S02: NAS GUI |
+| [stage-specs/S03-security.md](stage-specs/S03-security.md) | 10.4: S03: Security |
+| [stage-specs/S04-media-management.md](stage-specs/S04-media-management.md) | 10.5: S04: Media management |
+| [stage-specs/S05-media-metadata.md](stage-specs/S05-media-metadata.md) | 10.6: S05: Media metadata |
+| [stage-specs/S06-search.md](stage-specs/S06-search.md) | 10.7: S06: Search |
+| [stage-specs/S07-multi-user-and-sharing.md](stage-specs/S07-multi-user-and-sharing.md) | 10.8: S07: Multi-user and sharing |
+| [stage-specs/S08-data-protection-and-recovery.md](stage-specs/S08-data-protection-and-recovery.md) | 10.9: S08: Data protection and recovery |
+| [stage-specs/S09-network-file-access.md](stage-specs/S09-network-file-access.md) | 10.10: S09: Network file access and external change sync |
+| [stage-specs/S10-admin-console.md](stage-specs/S10-admin-console.md) | 10.11: S10: Admin console: monitoring, quotas, and system settings |
+| [stage-specs/S11-duplicates-and-look-alikes.md](stage-specs/S11-duplicates-and-look-alikes.md) | 10.12: S11: Duplicate and look-alike management |
+| [stage-specs/S12-storage-optimization.md](stage-specs/S12-storage-optimization.md) | 10.13: S12: Storage optimization |
+| [stage-specs/S13-dependency-security-review.md](stage-specs/S13-dependency-security-review.md) | 10.13a: S13: Dependency security review (new in 1.9.0, the user's requirement) |
+| [stage-specs/S14-packaging-and-release.md](stage-specs/S14-packaging-and-release.md) | 10.14: S14: Packaging, deployment, and pre-AI release |
+| [stage-specs/S15-drives-and-pools.md](stage-specs/S15-drives-and-pools.md) | 10.15: S15: Drives, pools, and drive lifecycle (RAID 0 and RAID 1) |
+| [stage-specs/S16-ssd-caching.md](stage-specs/S16-ssd-caching.md) | 10.15a: S16: SSD caching (new in 1.7.0, P007) |
+| [stage-specs/S17-ai-features.md](stage-specs/S17-ai-features.md) | 10.16: S17: AI features |
 | [testing.md](testing.md) | 12: Testing strategy |
 | [risks.md](risks.md) | 13: Risks and mitigations |
 | [changelog.md](changelog.md) | 14: Revision history |
@@ -52,23 +52,23 @@
 
 | Stage | Name | Status | Plan file | Task document |
 |---|---|---|---|---|
-| S01 | Basic NAS implementation | Done | [stages/S01-basic-nas.md](stages/S01-basic-nas.md) | [task document](../stages/S01-basic-nas.md) |
-| S02 | NAS GUI | **Done** | [stages/S02-nas-gui.md](stages/S02-nas-gui.md) | [task document](../stages/S02-nas-gui.md) |
-| S03 | Security | **Approved** (2026-09-29, S007 E050; `stages/S03-security.md`); In Progress from S03.1-T01 | [stages/S03-security.md](stages/S03-security.md) | [task document](../stages/S03-security.md) |
-| S04 | Media management | Not started | [stages/S04-media-management.md](stages/S04-media-management.md) | not written yet |
-| S05 | Media metadata | Not started | [stages/S05-media-metadata.md](stages/S05-media-metadata.md) | not written yet |
-| S06 | Search | Not started | [stages/S06-search.md](stages/S06-search.md) | not written yet |
-| S07 | Multi-user and sharing | Not started | [stages/S07-multi-user-and-sharing.md](stages/S07-multi-user-and-sharing.md) | not written yet |
-| S08 | Data protection and recovery | Not started | [stages/S08-data-protection-and-recovery.md](stages/S08-data-protection-and-recovery.md) | not written yet |
-| S09 | Network file access and external change sync | Not started | [stages/S09-network-file-access.md](stages/S09-network-file-access.md) | not written yet |
-| S10 | Admin console: monitoring, quotas, and system settings | Not started | [stages/S10-admin-console.md](stages/S10-admin-console.md) | not written yet |
-| S11 | Duplicate and look-alike management | Not started | [stages/S11-duplicates-and-look-alikes.md](stages/S11-duplicates-and-look-alikes.md) | not written yet |
-| S12 | Storage optimization | Not started | [stages/S12-storage-optimization.md](stages/S12-storage-optimization.md) | not written yet |
-| S13 | Dependency security review _(new in 1.9.0)_ | Not started | [stages/S13-dependency-security-review.md](stages/S13-dependency-security-review.md) | not written yet |
-| S14 | Packaging, deployment, and pre-AI release (was S11, then S13 until 1.9.0) | Not started | [stages/S14-packaging-and-release.md](stages/S14-packaging-and-release.md) | not written yet |
-| S15 | Drives, pools, and drive lifecycle | Not started | [stages/S15-drives-and-pools.md](stages/S15-drives-and-pools.md) | not written yet |
-| S16 | SSD caching | Not started | [stages/S16-ssd-caching.md](stages/S16-ssd-caching.md) | not written yet |
-| S17 | AI features (was S12, then S15, then S16) | Not started | [stages/S17-ai-features.md](stages/S17-ai-features.md) | not written yet |
+| S01 | Basic NAS implementation | Done | [stage-specs/S01-basic-nas.md](stage-specs/S01-basic-nas.md) | [task document](../stages/S01-basic-nas.md) |
+| S02 | NAS GUI | **Done** | [stage-specs/S02-nas-gui.md](stage-specs/S02-nas-gui.md) | [task document](../stages/S02-nas-gui.md) |
+| S03 | Security | **Approved** (2026-09-29, S007 E050; `stage-specs/S03-security.md`); In Progress from S03.1-T01 | [stage-specs/S03-security.md](stage-specs/S03-security.md) | [task document](../stages/S03-security.md) |
+| S04 | Media management | Not started | [stage-specs/S04-media-management.md](stage-specs/S04-media-management.md) | not written yet |
+| S05 | Media metadata | Not started | [stage-specs/S05-media-metadata.md](stage-specs/S05-media-metadata.md) | not written yet |
+| S06 | Search | Not started | [stage-specs/S06-search.md](stage-specs/S06-search.md) | not written yet |
+| S07 | Multi-user and sharing | Not started | [stage-specs/S07-multi-user-and-sharing.md](stage-specs/S07-multi-user-and-sharing.md) | not written yet |
+| S08 | Data protection and recovery | Not started | [stage-specs/S08-data-protection-and-recovery.md](stage-specs/S08-data-protection-and-recovery.md) | not written yet |
+| S09 | Network file access and external change sync | Not started | [stage-specs/S09-network-file-access.md](stage-specs/S09-network-file-access.md) | not written yet |
+| S10 | Admin console: monitoring, quotas, and system settings | Not started | [stage-specs/S10-admin-console.md](stage-specs/S10-admin-console.md) | not written yet |
+| S11 | Duplicate and look-alike management | Not started | [stage-specs/S11-duplicates-and-look-alikes.md](stage-specs/S11-duplicates-and-look-alikes.md) | not written yet |
+| S12 | Storage optimization | Not started | [stage-specs/S12-storage-optimization.md](stage-specs/S12-storage-optimization.md) | not written yet |
+| S13 | Dependency security review _(new in 1.9.0)_ | Not started | [stage-specs/S13-dependency-security-review.md](stage-specs/S13-dependency-security-review.md) | not written yet |
+| S14 | Packaging, deployment, and pre-AI release (was S11, then S13 until 1.9.0) | Not started | [stage-specs/S14-packaging-and-release.md](stage-specs/S14-packaging-and-release.md) | not written yet |
+| S15 | Drives, pools, and drive lifecycle | Not started | [stage-specs/S15-drives-and-pools.md](stage-specs/S15-drives-and-pools.md) | not written yet |
+| S16 | SSD caching | Not started | [stage-specs/S16-ssd-caching.md](stage-specs/S16-ssd-caching.md) | not written yet |
+| S17 | AI features (was S12, then S15, then S16) | Not started | [stage-specs/S17-ai-features.md](stage-specs/S17-ai-features.md) | not written yet |
 
 ## Where things stand
 
@@ -91,23 +91,23 @@ References such as "plan 8.8" or "plan section 10.18" in logs, ADRs, and stage d
 | 6, 6.1–6.6, 8, 8.1–8.42 | [architecture.md](architecture.md) |
 | 7, 7.1 | [tech-stack.md](tech-stack.md) |
 | 9, 10, 10.1, 10.17–10.18, 11, 11a, 11b, 11b.1–11b.2, 11c, 11d | [roadmap.md](roadmap.md) |
-| 10.2 | [stages/S01-basic-nas.md](stages/S01-basic-nas.md) |
-| 10.3 | [stages/S02-nas-gui.md](stages/S02-nas-gui.md) |
-| 10.4 | [stages/S03-security.md](stages/S03-security.md) |
-| 10.5 | [stages/S04-media-management.md](stages/S04-media-management.md) |
-| 10.6 | [stages/S05-media-metadata.md](stages/S05-media-metadata.md) |
-| 10.7 | [stages/S06-search.md](stages/S06-search.md) |
-| 10.8 | [stages/S07-multi-user-and-sharing.md](stages/S07-multi-user-and-sharing.md) |
-| 10.9 | [stages/S08-data-protection-and-recovery.md](stages/S08-data-protection-and-recovery.md) |
-| 10.10 | [stages/S09-network-file-access.md](stages/S09-network-file-access.md) |
-| 10.11 | [stages/S10-admin-console.md](stages/S10-admin-console.md) |
-| 10.12 | [stages/S11-duplicates-and-look-alikes.md](stages/S11-duplicates-and-look-alikes.md) |
-| 10.13 | [stages/S12-storage-optimization.md](stages/S12-storage-optimization.md) |
-| 10.13a | [stages/S13-dependency-security-review.md](stages/S13-dependency-security-review.md) |
-| 10.14 | [stages/S14-packaging-and-release.md](stages/S14-packaging-and-release.md) |
-| 10.15 | [stages/S15-drives-and-pools.md](stages/S15-drives-and-pools.md) |
-| 10.15a | [stages/S16-ssd-caching.md](stages/S16-ssd-caching.md) |
-| 10.16 | [stages/S17-ai-features.md](stages/S17-ai-features.md) |
+| 10.2 | [stage-specs/S01-basic-nas.md](stage-specs/S01-basic-nas.md) |
+| 10.3 | [stage-specs/S02-nas-gui.md](stage-specs/S02-nas-gui.md) |
+| 10.4 | [stage-specs/S03-security.md](stage-specs/S03-security.md) |
+| 10.5 | [stage-specs/S04-media-management.md](stage-specs/S04-media-management.md) |
+| 10.6 | [stage-specs/S05-media-metadata.md](stage-specs/S05-media-metadata.md) |
+| 10.7 | [stage-specs/S06-search.md](stage-specs/S06-search.md) |
+| 10.8 | [stage-specs/S07-multi-user-and-sharing.md](stage-specs/S07-multi-user-and-sharing.md) |
+| 10.9 | [stage-specs/S08-data-protection-and-recovery.md](stage-specs/S08-data-protection-and-recovery.md) |
+| 10.10 | [stage-specs/S09-network-file-access.md](stage-specs/S09-network-file-access.md) |
+| 10.11 | [stage-specs/S10-admin-console.md](stage-specs/S10-admin-console.md) |
+| 10.12 | [stage-specs/S11-duplicates-and-look-alikes.md](stage-specs/S11-duplicates-and-look-alikes.md) |
+| 10.13 | [stage-specs/S12-storage-optimization.md](stage-specs/S12-storage-optimization.md) |
+| 10.13a | [stage-specs/S13-dependency-security-review.md](stage-specs/S13-dependency-security-review.md) |
+| 10.14 | [stage-specs/S14-packaging-and-release.md](stage-specs/S14-packaging-and-release.md) |
+| 10.15 | [stage-specs/S15-drives-and-pools.md](stage-specs/S15-drives-and-pools.md) |
+| 10.15a | [stage-specs/S16-ssd-caching.md](stage-specs/S16-ssd-caching.md) |
+| 10.16 | [stage-specs/S17-ai-features.md](stage-specs/S17-ai-features.md) |
 | 12, 12.1–12.4 | [testing.md](testing.md) |
 | 13 | [risks.md](risks.md) |
 | 14 | [changelog.md](changelog.md) |
