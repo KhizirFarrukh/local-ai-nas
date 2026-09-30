@@ -11,7 +11,8 @@ var AttackPaths = []string{
 	"/a/../../x", "/a/b/../../../x", "/a/..", "/./../x", "/a/./../../x", "/a/b/c/../../../../x",
 	// Other namespaces, the photos area, internal data.
 	"/files/../photos/u0001/a.jpg", "/../u0002/secret.txt", "/../../photos/u0001",
-	"/../../.local-ai-nas/db/nas.db",
+	"/../../.local-ai-nas/state/db/nas.db",
+	"/../../.local-ai-nas/db/nas.db", // the layout before S007
 	// Dot runs and dots with spaces (Windows may read them as "..").
 	"/...", "/..../x", "/....", "/.../.../x", "/.. ", "/. .", "/ ..", "/a/.. /b", "/a/... /b", "/a/ ../b",
 	// Backslashes.

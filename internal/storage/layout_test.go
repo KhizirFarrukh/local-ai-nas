@@ -20,8 +20,10 @@ import (
 // wantDirs is the complete layout, relative to the root.
 var wantDirs = []string{
 	".local-ai-nas",
-	".local-ai-nas/db",
+	".local-ai-nas/cache",
 	".local-ai-nas/logs",
+	".local-ai-nas/state",
+	".local-ai-nas/state/db",
 	".local-ai-nas/tmp",
 	".local-ai-nas/tmp/uploads",
 	"files",
@@ -135,7 +137,7 @@ func TestInitReportsUnknownEntries(t *testing.T) {
 }
 
 func TestInitRejectsNonDirectories(t *testing.T) {
-	for _, name := range []string{"files", "photos/u0001", ".local-ai-nas/db"} {
+	for _, name := range []string{"files", "photos/u0001", ".local-ai-nas/state/db"} {
 		t.Run(name, func(t *testing.T) {
 			root := testutil.StorageRoot(t)
 			if err := testutil.WriteFiles(root, map[string]string{name: "not a directory"}); err != nil {

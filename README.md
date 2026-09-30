@@ -258,13 +258,13 @@ The container runs your working copy with `go run` and keeps its data in a Docke
 | Coverage (minimum 80%) | `scripts/coverage.sh` |
 | Lint and format | `scripts/install-golangci-lint.sh` once, then `./bin/golangci-lint run ./...` and `./bin/golangci-lint fmt --diff` |
 | Dependency licenses | `scripts/check-licenses.sh` |
-| Performance baseline | `scripts/perf-baseline.sh` (results in [docs/perf/](docs/perf/)) |
+| Performance baseline | `scripts/perf-baseline.sh` (results in [docs/reports/](docs/reports/)) |
 | Web interface: format, lint, type checks | in `web/`: `pnpm format:check`, `pnpm lint`, `pnpm check` |
 | Web interface: unit and component tests | in `web/`: `pnpm exec playwright install chromium firefox` once, then `pnpm test` (`pnpm coverage` adds coverage, minimum 80%) |
 | Web interface: system tests in real browsers | in `web/`: `pnpm test:e2e` (builds the interface and the server first; Chromium and Firefox, plus Edge on Windows) |
 | Web interface licenses | `node scripts/check-web-licenses.mjs` |
 
-On Windows, run the `scripts/*.sh` files from Git Bash. More in [docs/testing.md](docs/testing.md). CI runs all of these except the performance baseline, on Linux and Windows (the web interface checks and unit tests on Linux; its system tests on both, adding Google Chrome), when a stage is complete (a tag `S<NN>-done`) or when started by hand from the Actions tab.
+On Windows, run the `scripts/*.sh` files from Git Bash. More in [docs/dev/testing.md](docs/dev/testing.md). CI runs all of these except the performance baseline, on Linux and Windows (the web interface checks and unit tests on Linux; its system tests on both, adding Google Chrome), when a stage is complete (a tag `S<NN>-done`) or when started by hand from the Actions tab.
 
 ---
 
@@ -291,4 +291,4 @@ Contributions, ideas, and feedback are welcome! Feel free to open an issue to di
 
 local-ai-nas is free software, licensed under the **GNU Affero General Public License v3.0 or later** (`AGPL-3.0-or-later`). See [LICENSE](LICENSE).
 
-If you run a modified version on a server that other people use over a network, the AGPL requires you to offer them its source code. Third-party components keep their own licenses. The policy is in [docs/licensing.md](docs/licensing.md).
+If you run a modified version on a server that other people use over a network, the AGPL requires you to offer them its source code. Third-party components keep their own licenses. The policy is in [docs/dev/licensing.md](docs/dev/licensing.md).

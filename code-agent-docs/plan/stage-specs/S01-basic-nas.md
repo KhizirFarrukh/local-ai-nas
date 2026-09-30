@@ -55,7 +55,7 @@
   4. Writes that would push free space below the configured reserve are refused with a clear error.
   5. The health endpoint reports each startup check: root writable, temp and areas on one filesystem, free space, config valid.
 - **Risks/notes:** The layout affects S07.2 and S09. ADR-0003 avoids a later data move by creating namespaces now.
-- **P005 follow-up (1.4.0):** the storage root must not assume a single physical disk and must be relocatable, so it can later move onto a pool (S15.6, NFR-036). The upload temp folder and the trash always follow the root's filesystem (A18). Recorded as a follow-up task in `stages/S01-basic-nas.md` (S01.2-T07); S01 stays Done. **Done in S007** (Q50: `docs/storage-root.md`).
+- **P005 follow-up (1.4.0):** the storage root must not assume a single physical disk and must be relocatable, so it can later move onto a pool (S15.6, NFR-036). The upload temp folder and the trash always follow the root's filesystem (A18). Recorded as a follow-up task in `stages/S01-basic-nas.md` (S01.2-T07); S01 stays Done. **Done in S007** (Q50: `docs/guide/storage-root.md`).
 - **Status:** Done (S005, 2026-09-24; details in `stages/S01-basic-nas.md`)
 
 #### S01.3: Core file operations

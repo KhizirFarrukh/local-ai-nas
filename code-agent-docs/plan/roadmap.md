@@ -334,5 +334,6 @@ After P008 the **MVP scope is frozen** (rule R14). A new request is recorded her
 |---|---|---|---|---|
 | 2026-09-30 | The user, S007 | Google Takeout import of Drive and Photos with everything Google recorded; sample data first | Feature | R01 (the user's choice), FR-222 extended |
 | 2026-09-30 | The user, S007 | A stage that reviews every dependency for known issues and vulnerabilities, upgrading, else downgrading | Security; the user placed it in the MVP | S13 (new, before packaging; the user's choice) |
+| 2026-09-30 | The user, S007 | Organization of files and folders: the repository (`inputs/`, `docs/` by audience), the agent documentation (`plan/stage-specs/`, ADR index), the NAS's internal data (`state/`, `cache/`, `tmp/`, `logs/`) and the photos layout (Q40: hybrid) | A foundation cheap only now (the storage layout before the photos library exists) and housekeeping | Done now (plan 1.10.0) |
 
 ---

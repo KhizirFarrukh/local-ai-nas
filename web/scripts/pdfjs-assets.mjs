@@ -5,7 +5,7 @@
 // folder keeps its license file. It runs before dev and build.
 //
 // The Liberation Sans fonts in pdfjs-dist are not copied: their license is
-// GPL-2.0 with a font exception, which docs/licensing.md does not allow in
+// GPL-2.0 with a font exception, which docs/dev/licensing.md does not allow in
 // shipped files. pdf.js then uses the system's sans-serif font instead.
 import { copyFileSync, mkdirSync, readdirSync, rmSync } from 'node:fs';
 import { dirname, join } from 'node:path';

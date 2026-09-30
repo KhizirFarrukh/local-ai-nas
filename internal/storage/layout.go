@@ -25,12 +25,24 @@ const (
 	DefaultNamespace = "u0001"
 )
 
-// Layout is the set of directories under a storage root.
+// Layout is the set of directories under a storage root. Internal data is
+// split by how it may be treated (ADR-0003 amendment 1, the user's
+// decision in S007): state/ is durable and backed up; cache/ can always
+// be rebuilt, is never backed up, and may live on a faster drive
+// (ADR-0037); tmp/ holds work in progress; logs/ the log files.
 type Layout struct {
 	// Root is the absolute path of the storage root.
 	Root string
 	// Internal is the internal data directory, <root>/.local-ai-nas.
 	Internal string
+	// State holds durable internal data: the database (by default),
+	// snapshots, trash, replaced originals, metadata, certificates.
+	State string
+	// Cache holds rebuildable data: the search index, thumbnails,
+	// transcodes, AI results.
+	Cache string
+	// Tmp holds work in progress (uploads, copies being built).
+	Tmp string
 	// TmpUploads holds uploads in progress. It is always on the root's
 	// filesystem, so a finished upload can be renamed into place.
 	TmpUploads string
@@ -38,6 +50,9 @@ type Layout struct {
 	DB string
 	// Logs holds the log files.
 	Logs string
+	// legacyDB is where the database lived before the split
+	// (<root>/.local-ai-nas/db), when the database is in its default place.
+	legacyDB string
 }
 
 // Options relocates internal data (ADR-0003, S01.2-T02). An empty field
@@ -53,15 +68,21 @@ type Options struct {
 // logs moved where opts says.
 func NewLayout(root string, opts Options) Layout {
 	internal := filepath.Join(root, InternalDir)
+	state := filepath.Join(internal, "state")
 	l := Layout{
 		Root:       root,
 		Internal:   internal,
+		State:      state,
+		Cache:      filepath.Join(internal, "cache"),
+		Tmp:        filepath.Join(internal, "tmp"),
 		TmpUploads: filepath.Join(internal, "tmp", "uploads"),
-		DB:         filepath.Join(internal, "db"),
+		DB:         filepath.Join(state, "db"),
 		Logs:       filepath.Join(internal, "logs"),
+		legacyDB:   filepath.Join(internal, "db"),
 	}
 	if opts.DBDir != "" {
 		l.DB = filepath.Clean(opts.DBDir)
+		l.legacyDB = "" // a relocated database is never moved
 	}
 	if opts.LogsDir != "" {
 		l.Logs = filepath.Clean(opts.LogsDir)
@@ -83,11 +104,46 @@ func (l Layout) dirs() []string {
 		filepath.Join(l.Root, PhotosArea),
 		l.Area(PhotosArea, DefaultNamespace),
 		l.Internal,
-		filepath.Dir(l.TmpUploads),
+		l.State,
+		l.Cache,
+		l.Tmp,
 		l.TmpUploads,
 		l.DB,
 		l.Logs,
 	}
+}
+
+// Upgrade moves internal data from an older layout into the current one,
+// before Init and before the database is opened; it returns a line for
+// the log for each move. Today it moves the database folder from
+// <root>/.local-ai-nas/db (before S007) to state/db, with one rename on
+// the same filesystem, so the database and its WAL files move together.
+// It never touches a relocated database (storage.db_dir), and it refuses,
+// changing nothing, when both folders exist: which one is current is for
+// the admin to decide. Running it again changes nothing.
+func (l Layout) Upgrade() ([]string, error) {
+	if l.legacyDB == "" {
+		return nil, nil
+	}
+	if _, err := os.Lstat(l.legacyDB); errors.Is(err, fs.ErrNotExist) {
+		return nil, nil
+	} else if err != nil {
+		return nil, fmt.Errorf("storage: cannot check %s: %w", l.legacyDB, err)
+	}
+	if err := ensureExistingDir(l.legacyDB); err != nil {
+		return nil, err
+	}
+	if _, err := os.Lstat(l.DB); err == nil {
+		return nil, fmt.Errorf("storage: both %s (the old place) and %s hold a database folder; move the one you want to keep to %s and the other away, then start again",
+			l.legacyDB, l.DB, l.DB)
+	}
+	if err := os.MkdirAll(l.State, 0o750); err != nil {
+		return nil, fmt.Errorf("storage: cannot create %s: %w", l.State, err)
+	}
+	if err := os.Rename(l.legacyDB, l.DB); err != nil {
+		return nil, fmt.Errorf("storage: cannot move the database folder %s to %s: %w", l.legacyDB, l.DB, err)
+	}
+	return []string{fmt.Sprintf("moved the database folder from %s to %s (the internal data is split into state, cache, tmp, and logs)", l.legacyDB, l.DB)}, nil
 }
 
 // Init creates the missing layout directories and checks that each one is

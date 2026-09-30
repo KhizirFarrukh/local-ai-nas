@@ -50,7 +50,7 @@ flowchart LR
 
 <!--
 Hierarchy: Stage → Substage → Task (RULES.md R3).
-Substage IDs and their goals, scope, and acceptance criteria come from the stage's plan file (`plan/stages/S<NN>-<slug>.md`, plan section 10). Copy them here, then break each substage into tasks.
+Substage IDs and their goals, scope, and acceptance criteria come from the stage's plan file (`plan/stage-specs/S<NN>-<slug>.md`, plan section 10). Copy them here, then break each substage into tasks.
 Task IDs: S<NN>.<n>-T<NN>, e.g. S01.3-T02 = task 2 of substage S01.3.
 Status values: Not started / In Progress / Testing / Review / Done / Blocked (with reason).
 -->

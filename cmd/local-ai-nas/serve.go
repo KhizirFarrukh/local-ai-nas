@@ -51,6 +51,11 @@ func setup(ctx context.Context, fs *flag.FlagSet, stderr io.Writer) (*app, bool)
 		return nil, false
 	}
 	layout := storage.NewLayout(cfg.Storage.Root, storage.Options{DBDir: cfg.Storage.DBDir, LogsDir: cfg.Storage.LogsDir})
+	moved, err := layout.Upgrade()
+	if err != nil {
+		_, _ = fmt.Fprintf(stderr, "local-ai-nas: %v\n", err)
+		return nil, false
+	}
 	unknown, err := layout.Init()
 	if err != nil {
 		_, _ = fmt.Fprintf(stderr, "local-ai-nas: %v\n", err)
@@ -66,6 +71,9 @@ func setup(ctx context.Context, fs *flag.FlagSet, stderr io.Writer) (*app, bool)
 	if err != nil {
 		_, _ = fmt.Fprintf(stderr, "local-ai-nas: %v\n", err)
 		return nil, false
+	}
+	for _, m := range moved {
+		logger.Info("storage layout upgraded: " + m)
 	}
 	if len(unknown) > 0 {
 		logger.Warn("the storage root has entries the server does not use; they are left alone",

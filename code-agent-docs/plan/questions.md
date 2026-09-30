@@ -46,7 +46,7 @@ Questions keep their numbers permanently. **★ = needed for S01**: none left (Q
 37. _Answered (S005, D-08):_ **none added now**. Mobile auto-backup, public share links, and remote access stay unscheduled (11a). Any later addition goes before S17 (I8).
 38. _Answered (S005, D-08):_ the first usable release is **S01–S11** (milestone M3 in section 11), in the stage IDs of that time: through the pre-AI release. _Since 1.4.0 (P005)_ the pre-AI release is S14, and the new stages S11 and S12 come before it, so M3 is **S01–S14**; the user is asked to confirm this in Q51.
 39. _(Planner-added)_ **Importing an existing collection.** Besides browser upload, should the admin be able to import a folder already on the host into `photos/` or `files/` (server-side copy or move)? _Needed by: S04.2._
-40. _(Planner-added)_ **Organization inside `photos/`.** Store media by date taken (`photos/<user>/YYYY/MM/`), by import batch, or in user-created folders? _Needed by: S04.1 (layout ADR)._
+40. _(Planner-added)_ **Organization inside `photos/`.** Store media by date taken (`photos/<user>/YYYY/MM/`), by import batch, or in user-created folders? _Needed by: S04.1 (layout ADR)._ _Answered in 1.10.0 (the user, S007 E070: "Hybrid (Recommended)"): **hybrid**: folders the user uploads (including Google Takeout exports) keep their structure; loose photos (single uploads, phone backup) are filed by date taken into `YYYY/MM/` (by upload date when the date taken is unknown). The app's timeline and albums do not depend on it; item IDs (ADR-0040) keep references stable when a photo is refiled. The S04.1 layout ADR records the details._
 41. _(Planner-added, 1.1.0)_ **Setup script default mode on Linux** (x86-64 and Raspberry Pi): should the setup script deploy with **Docker Compose** (installs Docker if missing, then starts the stack; ADR-0006 primary) or as a **native service** (binary + systemd + distribution packages)? _Needed by: S14.2._ _Recommendation: offer both; Docker Compose by default on Linux, native service on Windows 11._
 
 ### New in 1.4.0 (P005)
@@ -125,7 +125,7 @@ _(Planner-added from P006; Q54 and Q34 first, because they change the MVP, then 
 19. **Writing into originals / XMP export**: never write originals (**recommended**); XMP export later? _Needed by: S05._
 20. _Superseded by Q32._
 21. _Superseded by Q37._
-22. _Answered (S005, D-12):_ **AGPL-3.0** (GNU Affero General Public License v3.0), in the **"or later"** form: SPDX `AGPL-3.0-or-later` (the user's answer in S005 E020: "AGPL-3.0-or-later (Recommended)"). The LICENSE file and the policy `docs/licensing.md` were added in S01.1-T02.
+22. _Answered (S005, D-12):_ **AGPL-3.0** (GNU Affero General Public License v3.0), in the **"or later"** form: SPDX `AGPL-3.0-or-later` (the user's answer in S005 E020: "AGPL-3.0-or-later (Recommended)"). The LICENSE file and the policy `docs/dev/licensing.md` were added in S01.1-T02.
     - Relevant facts from the dependency register:
       - Every linked Go library is MIT, BSD, or Apache-2.0.
       - External tools run as separate programs: ExifTool (Artistic/GPL), libvips (LGPL-2.1), libheif (LGPL), FFmpeg (LGPL, or GPL depending on the build).

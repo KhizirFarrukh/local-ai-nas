@@ -18,7 +18,8 @@
 
 [storage]
 # Required. An absolute path. It holds files/, photos/, and the internal
-# data folder .local-ai-nas/ (database, logs, uploads in progress).
+# data folder .local-ai-nas/: state/ (the database and other durable data),
+# cache/ (rebuildable), tmp/ (uploads in progress), logs/.
 # On Windows, use forward slashes or doubled backslashes, e.g. "D:/nas".
 root = "/srv/local-ai-nas"
 
@@ -28,7 +29,7 @@ free_space_reserve = "1GiB"
 # Optional: keep the database or the logs somewhere else, for example on a
 # faster disk. An absolute path outside the files and photos areas; inside
 # the storage root only under .local-ai-nas. Empty: the default location
-# .local-ai-nas/db or .local-ai-nas/logs. Uploads in progress always stay
+# .local-ai-nas/state/db or .local-ai-nas/logs. Uploads in progress always stay
 # under the storage root.
 db_dir = ""
 logs_dir = ""

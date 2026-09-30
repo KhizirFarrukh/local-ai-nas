@@ -110,7 +110,7 @@ func TestInitRelocatesDatabaseAndLogs(t *testing.T) {
 			t.Errorf("%s was not created: %v", dir, err)
 		}
 	}
-	if _, err := os.Stat(filepath.Join(root, ".local-ai-nas", "db")); !os.IsNotExist(err) {
+	if _, err := os.Stat(filepath.Join(root, ".local-ai-nas", "state", "db")); !os.IsNotExist(err) {
 		t.Error("the default database directory was created although the database was moved")
 	}
 }
