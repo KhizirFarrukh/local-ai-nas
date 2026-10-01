@@ -30,7 +30,7 @@ Every significant technical decision (RULES R5). An ADR becomes **Accepted** onl
 | [ADR-0024](ADR-0024-file-shortcuts.md) | File shortcuts after duplicate resolution | Proposed |
 | [ADR-0025](ADR-0025-video-optimization-codec.md) | Video codec for storage optimization | Proposed |
 | [ADR-0026](ADR-0026-originals-retention-and-revert.md) | Retention and revert of originals replaced by optimization | Proposed |
-| [ADR-0027](ADR-0027-drive-pool-approach.md) | Drive pool approach (RAID 0 and RAID 1) | Proposed |
+| [ADR-0027](ADR-0027-drive-pool-approach.md) | Drive pool approach (RAID 0 and RAID 1) | Proposed · revised (ZFS optional) |
 | [ADR-0028](ADR-0028-pool-filesystem.md) | Filesystem on a drive pool | Proposed |
 | [ADR-0029](ADR-0029-privileged-storage-helper.md) | Privileged storage helper | Proposed |
 | [ADR-0030](ADR-0030-storage-migration-engine.md) | Storage migration engine | Proposed |
@@ -54,3 +54,6 @@ Every significant technical decision (RULES R5). An ADR becomes **Accepted** onl
 | [ADR-0048](ADR-0048-secrets-management.md) | Secrets management | Proposed |
 | [ADR-0049](ADR-0049-release-signing-and-provenance.md) | Release signing and provenance (direction decided by the user, D2) | Proposed |
 | [ADR-0050](ADR-0050-service-account-permissions-and-mounts.md) | Service account, file permissions, and mount options per platform | Proposed |
+| [ADR-0051](ADR-0051-zfs-pool-backend.md) | ZFS as an optional pool backend | Proposed |
+| [ADR-0052](ADR-0052-appliance-os-image.md) | The appliance OS image ("local-ai-nas OS") | Proposed |
+| [ADR-0053](ADR-0053-host-management.md) | Host management through the privileged helper | Proposed |

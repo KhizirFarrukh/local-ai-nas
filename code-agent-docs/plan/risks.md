@@ -67,5 +67,9 @@
 | RK-59 | **A compromised dependency, build tool, or CI action** (1.12.0, P010). | Security | Actions pinned by SHA, verified and pinned dependencies, scanning, S13, signed and verifiable releases (NFR-078, NFR-079, FR-382); SR-02. |
 | RK-60 | **A secret leaked in the public repository** (1.12.0, P010). | Security | gitleaks hooks (decision D3), GitHub push protection, a full-history scan, rotation first (NFR-078); SR-03. |
 | RK-61 | **A false sense of compliance** (1.12.0, P010). | Trust | Honesty rules (R15; security policy section 4), statuses with evidence in the Statement of Applicability, audit checklist group M; SR-04. |
+| RK-62 | **A kernel update leaves ZFS pools unusable until the module is rebuilt** (1.13.0; reported on Raspberry Pi OS). | Availability | mdadm is the default; ZFS only on request with a warning; the health check verifies the module and the pools after boot; a recovery guide; kernel updates are never held back automatically (FR-384). |
+| RK-63 | **ZFS takes the memory the NAS needs on a Raspberry Pi** (1.13.0). | Performance | The NAS sets the ARC limit per hardware profile; measured in the Pi profile (NFR-051; FR-383). |
+| RK-64 | **Maintaining an appliance image is a lasting burden** (keeping it patched; hardware variants) (1.13.0). | Scope | Built on Raspberry Pi OS and Debian with their own updates; rebuilt and signed for every release; one Pi image and one x86-64 image only (FR-391, NG12). |
+| RK-65 | **NAS platforms change their app systems and break the templates** (1.13.0; TrueNAS moved from Kubernetes to Docker in 2024). | Compatibility | Templates versioned and tested at every release; guides name the tested platform versions (FR-386, R004). |
 
 ---

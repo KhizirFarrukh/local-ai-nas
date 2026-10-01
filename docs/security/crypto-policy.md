@@ -34,7 +34,7 @@ Tokens and secrets have at least 128 bits of entropy (public links: at least 128
 
 ## 3. TLS (NFR-067)
 
-- **HTTPS for every connection that leaves the computer.** The LAN listener is HTTPS only (S03.4). Plain HTTP exists only on loopback (the approved S03 design); whether it stays after HTTPS is set up is question Q87.
+- **HTTPS for every connection that leaves the computer.** The LAN listener is HTTPS only (S03.4). Plain HTTP exists only on loopback (the approved S03 design) and stays there as the one documented exception: that traffic never leaves the computer (Q87, decided 2026-10-01 under the owner's delegation); it can be turned off.
 - **TLS 1.3 preferred, TLS 1.2 minimum.** For TLS 1.2 only ECDHE with AEAD cipher suites (AES-GCM, ChaCha20-Poly1305), set explicitly; Go's default list for TLS 1.2 is checked for the Go version in use (Unverified for Go 1.27 on 2026-10-01; ADR-0047). TLS 1.3 suites are Go's (all AEAD).
 - **Checked with testssl.sh** in the S03 security gate.
 - **Certificates:** a self-signed ECDSA P-256 certificate generated at first setup is the LAN default; its SHA-256 fingerprint is shown in the web interface and carried in the pairing QR code, so clients pin it (trust on first use with verification, never "ignore certificate errors"). Owner-provided certificates are supported; trusted ACME certificates come with remote access (R06).

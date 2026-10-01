@@ -35,7 +35,7 @@ The two areas never mix (invariant I1). Each user's data is private unless share
 | Content hashes (SHA-256) of uploaded files | Yes (since S01.3-T10) | Used by duplicate detection (S11) and integrity scans |
 | Crash safety: writes go to a temporary file, then an atomic rename; the database uses `synchronous=FULL`, so a committed change survives a power cut | Yes (S01, S01.1-T12) | The operation journal makes multi-step changes all-or-nothing (S01.4-T09) |
 | Scheduled integrity scans that compare files with their hashes | — | S08.2 |
-| Mirrored drives (RAID 1) with scrubs | — | S15 |
+| Mirrored drives (RAID 1) with scrubs; on optional ZFS pools also checksums that find and, on mirrors, repair silent corruption | — | S15 (mdadm by default; ZFS optional, FR-383) |
 | A tamper-evident audit log | — | S03.6 (FR-379) |
 
 ## 4. Backups and recovery

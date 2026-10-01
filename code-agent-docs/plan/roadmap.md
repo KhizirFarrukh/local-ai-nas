@@ -168,9 +168,10 @@ Not stages. If any is approved later, it is inserted **before** the AI stage and
 | ~~Mobile app with automatic photo backup from phones~~ **Scheduled in 1.6.0 (P006)** as R07; the MVP bridges it with WebDAV auto-upload apps (FR-219, FR-220). | Would add a mobile client and a background upload protocol (tus fits). Photos go into the user's `photos/` namespace. |
 | ~~Public share links for people without an account~~ **Scheduled in 1.6.0 (P006)** in R09 (FR-294 and 11c). | Needs expiring, revocable tokens and a hardened unauthenticated surface. It weakens the LAN-only posture, so a threat model update is needed. |
 | ~~Secure remote access from outside the local network~~ **Scheduled in 1.6.0 (P006)** as R06 (private) and R09 (public). | Options: documented VPN (Tailscale/WireGuard), or a reverse proxy with HTTPS. Must not require any cloud service by default (I6). |
-| **Advanced drive pools ("complex RAID")** _(1.4.0; deferred by the user in S007: "leave complex raid for later as planned non implemented work")_ | **Planned, not implemented.** _(1.6.0: unchanged; it can become a release later, before AI, I8.)_ Specification kept from P005: dedicated parity, "RAID 4 style" (FR-197); distributed and double parity, RAID 5 and RAID 6 (FR-199); combining smaller drives end to end into a **virtual drive** that can be a member of a striped or parity pool (FR-198); nesting (e.g. RAID 10, parity over virtual drives); the unused space of larger members as a separate volume (FR-201); SnapRAID with mergerfs as the option for mixed-size media drives. **The user's example is the acceptance test:** drives of 2, 1, 1, 2, 2, 2 TB; the two 1 TB drives combined into a 2 TB virtual drive; the members 2, 2, 2, 2, 2 TB in a parity layout give 8 TB usable and survive one failed member. **Before building:** mdadm's parity write hole (a journal or the partial parity log, 8.25), nesting md arrays and their assembly at boot (only partly verified in S007), and whether SnapRAID fits. The S15 layout model is built so this candidate needs no migration of existing pools. If approved, it is inserted before the AI stage (I8). |
+| **Advanced drive pools ("complex RAID")** _(1.4.0; deferred by the user in S007: "leave complex raid for later as planned non implemented work")_ | **Planned, not implemented.** _(1.6.0: unchanged; it can become a release later, before AI, I8.)_ Specification kept from P005: dedicated parity, "RAID 4 style" (FR-197); distributed and double parity, RAID 5 and RAID 6 (FR-199); combining smaller drives end to end into a **virtual drive** that can be a member of a striped or parity pool (FR-198); nesting (e.g. RAID 10, parity over virtual drives); the unused space of larger members as a separate volume (FR-201); SnapRAID with mergerfs as the option for mixed-size media drives. **The user's example is the acceptance test:** drives of 2, 1, 1, 2, 2, 2 TB; the two 1 TB drives combined into a 2 TB virtual drive; the members 2, 2, 2, 2, 2 TB in a parity layout give 8 TB usable and survive one failed member. **Before building:** mdadm's parity write hole (a journal or the partial parity log, 8.25), nesting md arrays and their assembly at boot (only partly verified in S007), and whether SnapRAID fits. The S15 layout model is built so this candidate needs no migration of existing pools. If approved, it is inserted before the AI stage (I8). _1.13.0:_ on ZFS pools the parity layout would be RAIDZ, which can grow one disk at a time since OpenZFS 2.3 (R004). |
 | Video resolution variants as duplicates _(1.4.0, P005)_ | Finding the same video at another resolution (S11 covers exact video duplicates only). Needs a video fingerprint (e.g. perceptual hashes of sampled frames). |
 | Write-back SSD caching _(1.7.0, P007)_ | New data kept only on the SSD for a while is lost if a single SSD fails, so it could only come with a mirrored pair of SSDs with power-loss protection, a new ADR, and the user's approval. |
+| Mirrored boot drive for the appliance _(1.13.0, E076)_ | The appliance (R14) boots from one SD card or drive; a mirrored boot drive is left for later (it needs installer and bootloader work per platform). |
 
 **Considered and excluded (1.6.0, P006).** Found in the research (R001) and left out on purpose; none is a requirement. The user can bring any back (Q65). X-04 (groupware) and X-06 (federation) stay as not-scheduled candidates.
 
@@ -184,9 +185,11 @@ Not stages. If any is approved later, it is inserted **before** the AI stage and
 | X-06 | Federated sharing between separate servers | Nextcloud | Large security surface; kept as a not-scheduled candidate in 11a. |
 | X-07 | Enterprise governance: legal hold, eDiscovery, sensitivity labels, data rooms | Nextcloud Enterprise, Box, Tresorit | Outside the household and small-group scope. |
 | X-08 | Professional media review workflow (frame-accurate review and approvals) | Dropbox Replay | Niche; comments (G-045) cover the basics. |
-| X-09 | Hosting apps, containers, and virtual machines | Synology, TrueNAS | Outside scope; the plugin system (G-144) is the extension point. |
+| X-09 | Hosting apps, containers, and virtual machines | Synology, TrueNAS | Outside scope; the plugin system (G-144) is the extension point. _Confirmed in 1.13.0 (decided by the agent under the user's delegation (S007 E076); NG12): the attack surface would exceed the security program's limits and it does not fit a Raspberry Pi; host platforms (R13) offer it._ |
 | X-10 | Vendor-operated relay or account service (QuickConnect-style) | Synology | Conflicts with I6 and NG1. The self-hosted relay (G-072) covers the need. |
 | X-11 | Phone-number (SMS) two-factor authentication | Icedrive, Tresorit | Needs a paid SMS gateway and is weaker than TOTP and passkeys. |
+| X-12 | FTP file access | TrueNAS, Synology, QNAP | _1.13.0 (E076):_ cleartext passwords and data; SFTP (FR-389) covers the need. |
+| X-13 | iSCSI block storage | TrueNAS, Synology, QNAP | _1.13.0 (E076):_ a block device bypasses the areas, the authorization, and the index (I1, I5); a different product. |
 | G-016 | External read-only libraries (index a host folder in place) | Immich, Nextcloud | Conflicts with I1 and A3 (a third source of media); excluded unless the user decides otherwise (Q58). |
 
 ---
@@ -201,7 +204,7 @@ The user asked for this roadmap (quoted verbatim, P006):
 
 **Goal G13** (section 2). Features found in competitors but missing from the plan are planned as releases, each a fixed set of features, developed and shipped one release at a time. They are not part of the MVP, except the must-haves in section 3.1 (FR-217–FR-221). The research, with every source, is `research/R001-2026-09-28-cloud-storage-feature-research.md`.
 
-**Order** (default, keeping invariant I8 exactly as written; updated in 1.7.0): MVP (S01–S14, v1.0.0) → S15 drives, pools, and drive lifecycle and S16 SSD caching (v1.1.0, milestone M4 "Drives and storage") → R01 … R12 (v1.2.0 …) → S17 AI (always last). See Q52 and Q53 for the alternatives the user may choose.
+**Order** (default, keeping invariant I8 exactly as written; updated in 1.7.0): MVP (S01–S14, v1.0.0) → S15 drives, pools, and drive lifecycle and S16 SSD caching (v1.1.0, milestone M4 "Drives and storage") → R01 … R12 (v1.2.0 …) → S17 AI (always last). _1.13.0 (E076):_ R13 and R14 follow R12 (R01 … R14), still before AI; ZFS joins S15. See Q52 and Q53 for the alternatives the user may choose.
 
 | ID | Suggested label | Theme | Goal | Features (FR IDs, section 3.3) | Prerequisites | Exit criteria | Status |
 |---|---|---|---|---|---|---|---|
@@ -217,6 +220,8 @@ The user asked for this roadmap (quoted verbatim, P006):
 | R10 | v2.1.0 | Media center | Enjoy photos, videos, and music on every screen in the home. | FR-308–FR-316 (9) | MVP (video streaming); Q57 for editing | The stage's testing substage (11b.1) | Planned |
 | R11 | v2.2.0 | Documents and office | Work with documents without Google Docs or Microsoft 365. | FR-317–FR-322 (6) | R08 (file locks); G-004 versions | The stage's testing substage (11b.1) | Planned |
 | R12 | v2.3.0 | Automation and integrations | Let power users and other tools build on local-ai-nas. | FR-323–FR-327 (5) | R05 (token scopes and security) | The stage's testing substage (11b.1) | Planned |
+| R13 | v2.4.0 | NAS platforms | Run local-ai-nas on the NAS operating systems people already use, on their ZFS or Btrfs storage. | FR-386–FR-387 (2) | MVP (the container image, S14.1); S09.4 (the watcher handles changes made by the host) | A tested template installs and upgrades on TrueNAS, Unraid, OpenMediaVault, and Proxmox VE (Synology DSM and QNAP where a test device is available), and the S14 system tests pass on each<br>Host system folders and snapshot directories never appear as user items | Planned _(1.13.0, the user's requirement, E076; position decided by the agent under the user's delegation (S007 E076))_ |
+| R14 | v2.5.0 | local-ai-nas OS | A NAS you flash and switch on: an appliance image for the Raspberry Pi (then PCs) that manages the whole host from the admin console. | FR-388–FR-391 (4) | S15 (the storage helper and pools); S14.2 (hardened deployers); R13 recommended; R06 for remote access | A Raspberry Pi flashed with the image becomes a working, hardened NAS through the browser with no terminal<br>Network changes from the console revert unless confirmed<br>OS security updates apply automatically and are shown<br>SFTP, Time Machine, and NFS pass the authorization and leak tests | Planned _(1.13.0, the user's requirement, E076; position decided by the agent under the user's delegation (S007 E076))_ |
 
 ### 11b.1 Release process
 
@@ -289,6 +294,26 @@ The client releases already existed, so **nothing moved**: Android and iOS stay 
 - **Linux, file managers:** Dolphin service menus are `.desktop` files in `kio/servicemenus` (develop.kde.org); Nautilus menus come from nautilus-python `MenuProvider` extensions (the nautilus-python reference); Thunar custom actions live in `~/.config/Thunar/uca.xml` (third-party guides). Verified, Thunar from third-party sources only.
 
 The user's pre-launch testing guide (`docs/guide/pre-launch-testing-guide.md`, Part 2, R07 and R08) lists the release tests for these features; the stage documents of R07 and R08 turn them into acceptance criteria.
+
+
+### 11b.4 ZFS, NAS platforms, and the appliance OS (new in 1.13.0, the user's requirement, E076)
+
+The user: "updates: add support for: zfs, NAS OS, and everything related to this and hosting a NAS." Open questions were delegated to the agent: "also, approve the tasks and if you have questions, do what you deem best for that." The decisions (Q88–Q91, Q47) and the research are in `research/R004-2026-10-01-zfs-and-nas-os.md`.
+
+- **ZFS** joins the drives stage **S15** as an optional second pool backend (FR-383, FR-384; ADR-0027 revision 1, ADR-0051); mdadm stays the default. ZFS features are then used by R04 (snapshots with holds, `send`/`receive` replication) and S08.2 (scrubs).
+- **Host system folders** (`.zfs`, Synology and QNAP system folders, `lost+found`, Windows system folders) are never treated as user content (FR-385), from the MVP on (a data-integrity fix).
+- **R13 NAS platforms** (FR-386, FR-387) and **R14 local-ai-nas OS** (FR-388–FR-391) are new releases after R12.
+- **Excluded:** hosting other apps, containers, or VMs (X-09, NG12); FTP (X-12); iSCSI (X-13).
+
+| Feature | TrueNAS | Unraid | OpenMediaVault | Proxmox VE | Synology DSM | QNAP | The appliance (R14) |
+|---|---|---|---|---|---|---|---|
+| Install | Custom app from Compose YAML (R13) | Community Applications template (R13) | Compose plugin (R13) | LXC container or VM (R13) | Container Manager, on models that run containers (R13) | Container Station (R13) | Flash the image (R14) |
+| Drives and pools | The host (ZFS) | The host (array or ZFS) | The host (mdadm, Btrfs, or the ZFS plugin) | The host (ZFS) | The host (Btrfs) | The host (ZFS on QuTS hero) | The NAS (S15: mdadm or ZFS) |
+| Snapshots | Host snapshots shown read-only (FR-387) | As TrueNAS where ZFS | Plugin-dependent | Host snapshots shown read-only | Host snapshots shown where readable | As Synology | The NAS (R04, FR-256) |
+| Host management | The host | The host | The host | The host | The host | The host | The console (FR-388) |
+| Extra protocols | The host | The host | The host | The host | The host | The host | The NAS (FR-389) |
+
+Platform facts not verified in R004 are marked there; each template is verified when R13 is planned in detail.
 
 ---
 
@@ -378,5 +403,6 @@ After P008 the **MVP scope is frozen** (rule R14). A new request is recorded her
 | 2026-09-30 | The user, S007 | Organization of files and folders: the repository (`inputs/`, `docs/` by audience), the agent documentation (`plan/stage-specs/`, ADR index), the NAS's internal data (`state/`, `cache/`, `tmp/`, `logs/`) and the photos layout (Q40: hybrid) | A foundation cheap only now (the storage layout before the photos library exists) and housekeeping | Done now (plan 1.10.0) |
 | 2026-10-01 | The user, S007 (prompt #9) | Client apps: Android and Windows clients with auto media backup, device folder sync, and share to NAS; iOS, macOS, and Linux covered in future plans | Feature (a future release; the user kept the existing client releases) | R07 and R08 (existing; nothing moved): FR-364–FR-376, NFR-058, extensions, matrix 11b.3 (plan 1.11.0) |
 | 2026-10-01 | The user, S007 (prompt #10) | The security program: a secure development lifecycle, secure connections, file transfer and storage, server hardening, supply chain, ISO/IEC-aligned documents; decisions D1–D4 answered in the request | Security (R14 exception: security work may enter the MVP) | Every stage where it is built (MVP stages and releases); no stage added or moved; foundation tasks in S03 and S01 proposed for approval (plan 1.12.0) |
+| 2026-10-01 | The user, S007 (E076) | ZFS, NAS OS, and everything related to hosting a NAS | Feature (after the MVP); one data-integrity fix in the MVP (FR-385, R14 exception) | ZFS in S15 (FR-383, FR-384); new releases R13 and R14 (FR-386–FR-391); FR-385 in S01.6-T07, S04.2, S06, S09.4; placement decided by the agent under the user's delegation (S007 E076) (plan 1.13.0) |
 
 ---

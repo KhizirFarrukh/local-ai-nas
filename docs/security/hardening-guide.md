@@ -65,6 +65,11 @@ What you do:
 - [ ] Do not add `--privileged`, extra capabilities, or the host network unless the guide says so for a specific feature.
 - [ ] Keep Docker itself updated.
 
+## 5a. ZFS and NAS platforms (plan 1.13.0; planned features)
+
+- **ZFS pools** (optional, S15): install ZFS only from your distribution; on a Raspberry Pi use 8 GB of RAM or more; after a kernel update check the NAS's health page, which reports whether the ZFS module loaded and the pools are imported. On Arch Linux ZFS comes from a third-party repository (ArchZFS).
+- **On TrueNAS, Unraid, OpenMediaVault, Proxmox VE, Synology, or QNAP** (R13): keep the host updated and its own admin interface off the internet; do not share the photos area for writing through the host's SMB or NFS; keep the host's snapshots on.
+
 ## 6. Physical security (ISO/IEC 27001:2022 controls 7.1–7.14; the software cannot do this for you)
 
 - [ ] Keep the NAS where strangers cannot reach it, away from heat and water, with ventilation.

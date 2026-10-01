@@ -9,6 +9,7 @@
 - **Goal:** Recovery paths for accidental deletion, corruption, and disaster, per user.
 - **User requirements:** none. This is a planner-proposed stage that the user may remove or reorder.
 - **Status:** Not started
+- **ZFS (1.13.0, E076):** on ZFS pools, S08.2 reads ZFS scrub results next to its own hash checks (FR-383).
 - **Security (1.12.0, P010; rule R15):** retention periods for trash, logs, and backups documented and enforced; the deletion caveat for SSDs and SD cards (NFR-075); restore paths are **Tier 1**.
 
 #### S08.1: Trash
