@@ -9,6 +9,7 @@
 - **User requirements (quoted):**
   > "Stage 2 is the NAS software (GUI) that helps in interacting with the actual NAS."
 - **Status:** **Done** (S007, 2026-09-29; signed off by the user: "you know what, assume its tested, continue to next stage"; completion record in `stages/S02-nas-gui.md` section 13)
+- **Security (1.12.0, P010; rule R15):** the web interface never inserts user-controlled text as HTML, enforced by a lint rule (S03.5-T08); user-content responses keep `nosniff` and the sandbox CSP (NFR-022, done in S02.6). The rendering of user content is **Tier 1**; purely cosmetic pages are Tier 2.
 
 #### S02.1: GUI technology and design foundation
 - **Goal:** Choose the GUI approach and build the design system and API client that every screen uses.

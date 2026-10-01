@@ -63,5 +63,9 @@
 | RK-55 | **Phone makers that stop background apps make backup stop silently** (1.11.0, P009). | Data / UX | The mechanisms Android intends (FR-371: user-initiated transfer jobs, the dataSync limit respected); battery guidance per brand in the app; the Devices page shows the last backup and alerts after N days without one (FR-365); real-phone tests across brands (the user's pre-launch guide, R07). |
 | RK-56 | **Folder sync deletes or overwrites data by mistake** (1.11.0, P009). | Data | Backup is the default mode and never deletes on the NAS; Mirror moves to trash; Two-way makes conflict copies; a first-run preview and a pause on mass deletions (I10, FR-369); versions and rewind (R04, a prerequisite of R08); sync stress tests (the R08 exit criteria). |
 | RK-57 | **Platform limits (iOS above all) make equal features on every platform impossible** (1.11.0, P009). | Scope | The matrix (roadmap 11b.3) states "Limited" or "Not possible" with the reason for each platform; the MVP WebDAV bridge stays for iPhones; promises follow the matrix, not parity. |
+| RK-58 | **A malicious media file exploits a parser** (1.12.0, P010). | Security | The sandbox and limits (NFR-064, NFR-065, ADR-0045), patched tools (NFR-061), the hostile corpus in tests; security risk register SR-01. |
+| RK-59 | **A compromised dependency, build tool, or CI action** (1.12.0, P010). | Security | Actions pinned by SHA, verified and pinned dependencies, scanning, S13, signed and verifiable releases (NFR-078, NFR-079, FR-382); SR-02. |
+| RK-60 | **A secret leaked in the public repository** (1.12.0, P010). | Security | gitleaks hooks (decision D3), GitHub push protection, a full-history scan, rotation first (NFR-078); SR-03. |
+| RK-61 | **A false sense of compliance** (1.12.0, P010). | Trust | Honesty rules (R15; security policy section 4), statuses with evidence in the Statement of Applicability, audit checklist group M; SR-04. |
 
 ---

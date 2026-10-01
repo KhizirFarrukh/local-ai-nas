@@ -13,6 +13,7 @@
   > "Users can share files with each other."
   > "A shared file then carries data about which user owns it and who has read access to it."
 - **Status:** Not started
+- **Security (1.12.0, P010; rule R15):** authorization and sharing are **Tier 1**; the authorization matrix test with ownership (own, shared, foreign) joins S07.7 (NFR-081).
 
 #### S07.1: User and role model
 - **Goal:** Manage multiple accounts with clear roles.

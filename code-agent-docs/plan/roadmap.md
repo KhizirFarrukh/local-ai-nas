@@ -359,6 +359,7 @@ Gaps covered: G-100 to G-107, G-113 → public sharing features; G-108 internet-
 - A private beta with invited external users for an agreed period (e.g. four weeks) with no data-loss or security incident, then a staged rollout.
 - Upgrade from the previous release tested; rollback ('go private again') tested.
 - Documentation: exposure guide per method, hardening guide, incident runbook, recipient help page.
+- _1.12.0 (P010):_ user content is served from a separate origin (NFR-066, ADR-0046); uploads through upload-only links stay in a quarantine until scanned (FR-295, FR-267); the Tier 1 rules of the security gate apply to every internet-facing surface (NFR-059).
 
 ### Proposed invariant I11
 
@@ -376,5 +377,6 @@ After P008 the **MVP scope is frozen** (rule R14). A new request is recorded her
 | 2026-09-30 | The user, S007 | A stage that reviews every dependency for known issues and vulnerabilities, upgrading, else downgrading | Security; the user placed it in the MVP | S13 (new, before packaging; the user's choice) |
 | 2026-09-30 | The user, S007 | Organization of files and folders: the repository (`inputs/`, `docs/` by audience), the agent documentation (`plan/stage-specs/`, ADR index), the NAS's internal data (`state/`, `cache/`, `tmp/`, `logs/`) and the photos layout (Q40: hybrid) | A foundation cheap only now (the storage layout before the photos library exists) and housekeeping | Done now (plan 1.10.0) |
 | 2026-10-01 | The user, S007 (prompt #9) | Client apps: Android and Windows clients with auto media backup, device folder sync, and share to NAS; iOS, macOS, and Linux covered in future plans | Feature (a future release; the user kept the existing client releases) | R07 and R08 (existing; nothing moved): FR-364–FR-376, NFR-058, extensions, matrix 11b.3 (plan 1.11.0) |
+| 2026-10-01 | The user, S007 (prompt #10) | The security program: a secure development lifecycle, secure connections, file transfer and storage, server hardening, supply chain, ISO/IEC-aligned documents; decisions D1–D4 answered in the request | Security (R14 exception: security work may enter the MVP) | Every stage where it is built (MVP stages and releases); no stage added or moved; foundation tasks in S03 and S01 proposed for approval (plan 1.12.0) |
 
 ---

@@ -72,4 +72,22 @@ _1.9.0 (P008):_ a shared **crash-injection harness** for journaled operations (N
 - **Faces:** pairwise/BCubed precision and recall, clusters versus identities, manual merges needed per 100 faces.
 - A model change must match or beat the previous report before adoption.
 
+### 12.5 The stage security gate (new in 1.12.0, P010; rule R15)
+
+Every stage's final testing substage runs the gate. Results go into the stage's completion record and update the Statement of Applicability, the security requirements catalog, and the security backlog (`docs/security/`, `code-agent-docs/security/`). No stage is Done with a blocking finding open (the user's decision D1: Tier 1 blocks Critical, High, and unaccepted Medium findings; Tier 2 blocks Critical and High).
+
+| Check | Tools | Notes |
+|---|---|---|
+| Static analysis | gosec and forbidden-API rules (golangci-lint), ESLint security rules and `svelte/no-at-html-tags`, Ruff `S` rules (AI worker), GitHub CodeQL | CodeQL is free for public repositories (verified 2026-10-01) |
+| Secrets | gitleaks over the stage's commits (the hooks run on every commit, D3); GitHub secret scanning | |
+| Dependencies and images | govulncheck, `pnpm audit`, pip-audit, Trivy | Already at stage end since S01/S02 |
+| Fuzzing | Go native fuzzing of every parser of untrusted input the stage adds or changes: the path resolver and filename validator (S01), cookie, bearer, and Origin parsing (S03), tus headers and `Range` headers, sidecar JSON (S05), the search query parser (S06), WebDAV XML (S09), and the tool wrappers with the hostile media corpus (S04, S05) | Seed corpora in `testdata/fuzz` |
+| Hostile media corpus | Truncated files, huge dimensions, deeply nested metadata, polyglots, files with embedded scripts, playlists that point elsewhere | Must be rejected or contained: no crash, no hang, nothing touched outside the scratch folder (NFR-065) |
+| Dynamic scan | OWASP ZAP against the running app, signed in as a user and as an admin, on a test instance with synthetic data only (ISO 8.34) | Every stage with a web surface |
+| TLS | testssl.sh against the LAN listener | From S03 |
+| Authorization matrix | Generated from the route list: every route × role × own, shared, foreign item (NFR-081) | Roles in S03.10; ownership in S07.7 |
+| ASVS checklist | The stage's scope at Level 3 (Tier 1) or Level 2 (Tier 2) | Evidence links in the completion record |
+
+The gate runs with the stage-end CI (the user's preference: CI only at stage completion) on the x86 and ARM64 runners, and locally where a tool needs a running instance.
+
 ---

@@ -10,6 +10,7 @@
 - **Goal:** A hardened, packaged, documented, stable release without AI.
 - **User requirements:** none (planner-proposed).
 - **Status:** Not started
+- **Security (1.12.0, P010; rule R15):** S14.1 containers per NFR-077; S14.2 the service account, systemd and Windows hardening, and safe setup scripts (NFR-073, NFR-077, ADR-0050); S14.3 signed updates (FR-381); S14.6 the final security review includes the Statement of Applicability and the security requirements catalog; S14.7 release integrity (FR-382, ADR-0049; the user's decision D2) and the supported-versions policy (NFR-061). The release, signing, and update pipeline is **Tier 1**.
 
 #### S14.1: Container packaging
 - **Goal:** One-command deployment.

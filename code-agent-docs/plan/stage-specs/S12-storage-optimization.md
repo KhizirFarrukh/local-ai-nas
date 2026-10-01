@@ -11,6 +11,7 @@
   > "Reduction to a fixed resolution: when the aspect ratio does not match the target, the user chooses whether the width or the height is matched." "Alternatively, the user can choose percentage scaling." "The user can limit compression to certain types or groups of media."
 - **Placement:** after S11, which provides look-alike stacks as a scope filter; it uses the trash (S08.1) for undo.
 - **Status:** Not started
+- **Security (1.12.0, P010; rule R15):** the only stage where ExifTool writes, and only on files the core created (NFR-065); the tools run in the sandbox (NFR-064).
 
 #### S12.1: Image optimization engine
 - **Goal:** Resize and re-encode an image exactly as asked, keeping all its metadata.

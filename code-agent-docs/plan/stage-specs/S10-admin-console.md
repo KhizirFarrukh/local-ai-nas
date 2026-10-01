@@ -10,6 +10,7 @@
 - **User requirements:** none (planner-proposed).
 - **1.7.0 (the user's requirement):** the stage completes the **admin console** (6.6, ADR-0039): its pages are console sections, and S10.6 checks that every admin function is there. The user: "and this is part of the admin console (gui based) app. if such stage/section does not exist (for an admin console where sysadmin can manage everything related to storage management and system settings and drives management and all the admin stuff) then add it. it is very crucial."
 - **Status:** Not started
+- **Security (1.12.0, P010; rule R15):** security event alerts through the alert channels (FR-378); outbound safety for alert delivery (NFR-071, **Tier 1**); the clock synchronization check (FR-380); purely cosmetic console pages are Tier 2.
 
 #### S10.1: Admin dashboard
 - **Goal:** One place to see how the NAS is doing.

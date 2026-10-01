@@ -108,6 +108,12 @@ _(Planner-added from P006; Q54 and Q34 first, because they change the MVP, then 
 85. _(P009)_ **Minimum supported versions:** Android 8.0 or newer (**recommended**)? Windows 10 22H2 and Windows 11, or Windows 11 only (Windows 10 is past its end of support)? _Needed by: the client technology ADR (8.43) and the R07 and R08 stage documents._
 86. _(P009)_ **Windows distribution:** a signed installer (a code-signing certificate costs money every year), an unsigned installer from GitHub (Windows warns on first run), and/or winget? The Windows 11 right-click menu and the Share window need package identity, which needs a signed package, so an unsigned installer leaves Send To, drag-and-drop, and the classic menu (11b.3). _Needed by: R08 (FR-374)._
 
+### New in 1.12.0 (P010, the security program)
+
+_The four decisions of P010 (D1 checklist strictness, D2 release signing, D3 secret scanning, D4 publication) were answered by the user in the request itself (S007 E074) and are not asked again._
+
+87. _(P010)_ **Plain HTTP on loopback after S03:** the approved S03 design keeps plain HTTP on `127.0.0.1` (the traffic never leaves the computer; it serves the first-run setup before a certificate exists and local tools), while P010 asks for HTTPS for everything after the localhost-only phase. Keep it as the one documented exception, with an option to turn it off (**recommended**: loopback traffic cannot be read from the network, the Host allow-list blocks DNS rebinding, and HTTPS would not stop a local program that can already connect), turn it off by default once LAN HTTPS works, or remove it? _Needed by: S03.4._
+
 ### Carried over from 0.1.0
 
 1. _Answered (S005, D-13):_ **multi-platform**. The NAS runs on x86-64 mini-PCs or old PCs and on Raspberry Pi (ARM64), and **this Windows 11 PC is used for testing**. User's words: "mini pc/old pc/raspberry pi/also this windows 11 pc (this one for testing) so multi platform compatibility". Performance targets are measured on the Windows 11 development PC and, when available, on a Raspberry Pi and an x86-64 mini-PC (exact models are recorded when benchmarking in S01.7). _Extended in 1.7.0 (S007 E046):_ the four focus platforms for deployment are Debian, Arch Linux, Windows 11, and Raspberry Pi OS; the Raspberry Pi is the user's production machine (NFR-051, A24, A25).

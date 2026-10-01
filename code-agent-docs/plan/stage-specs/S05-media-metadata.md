@@ -10,6 +10,7 @@
   > "Stage 5 is media metadata work."
   > "From the README: each photo's own metadata is stored in a JSON file alongside the photo."
 - **Status:** Not started
+- **Security (1.12.0, P010; rule R15):** S05.3: ExifTool only through the sandbox wrapper with core-generated names (its `-stay_open` mode reads arguments line by line), version 12.38 or newer (NFR-064, NFR-065); **Tier 1**. S05.8: the hostile media corpus and sidecar JSON fuzzing.
 
 #### S05.1: Sidecar schema v1
 - **Goal:** A stable, versioned, forward-compatible sidecar format.

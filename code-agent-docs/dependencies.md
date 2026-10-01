@@ -277,3 +277,21 @@ These are listed so the register covers every technology named in the ADRs (audi
 | Collabora Online | R11 (optional co-editing, Q64) | MPL-2.0 (separate container) | Online editing over WOPI | Candidate (R11). Verified 2026-09-29 (`COPYING` in `CollaboraOnline/online`) |
 | ONLYOFFICE Docs | R11 (optional co-editing, Q64) | ⚠ AGPL-3.0 (separate container; compatible with the project's AGPL-3.0-or-later, Q22) | Online editing over WOPI | Candidate (R11). License verified 2026-09-29 (GitHub API, `ONLYOFFICE/DocumentServer`); trademark and logo terms **Unverified** |
 | OpenStreetMap data (map tiles or a tile file) | R02 (map view, Q59) | ⚠ ODbL 1.0 (data after September 2012): attribution; share-alike for derived databases the project distributes | The map of photo places | Candidate (R02). Verified 2026-09-29 (<https://osmfoundation.org/wiki/Licence>); decided in the map ADR |
+
+## 14. Candidates from the security program (P010; not dependencies yet)
+
+**Not dependencies.** Tools and libraries the security program (plan 1.12.0, `docs/security/`) proposes. Each is verified again as the genuine package (rule R15, NFR-079), pinned with a checksum, and moved into its section of this register in the commit that adopts it.
+
+| Name | Candidate for | License | Purpose | Verification status |
+|---|---|---|---|---|
+| gitleaks | S03.5-T07 (the user's decision D3) | MIT (to confirm from the repository's `LICENSE` when adopted) | Secret scanning in pre-commit and pre-push hooks; `gitleaks git --pre-commit --staged` is the form since 8.19 (the old `protect` command is deprecated) | Candidate. Command form checked 2026-10-01 (public guides); release, checksum, and license to verify on adoption |
+| `github.com/landlock-lsm/go-landlock` | ADR-0045 (media sandbox, Linux) | MIT | Landlock file-access limits for tool processes, with a best-effort mode for older kernels | Candidate. License and best-effort mode checked 2026-10-01 (repository page) |
+| `github.com/elastic/go-seccomp-bpf` | ADR-0045 (media sandbox, Linux) | Apache-2.0 | Pure-Go seccomp filters (no libseccomp), amd64 and arm64 | Candidate. License, pure Go, and architectures checked 2026-10-01 (repository page) |
+| `github.com/aead/minisign` | FR-381 (updater), ADR-0049 | MIT | Verifies Minisign signatures of the update manifest inside the core, offline | Candidate. License, pure Go, verification support, and release v0.3.0 checked 2026-10-01 (repository page); module path to confirm on adoption |
+| Cosign (Sigstore) | FR-382, ADR-0049 (the user's decision D2) | Apache-2.0 (to confirm on adoption) | Keyless signing of images and release assets in the release workflow | Candidate (S14.7) |
+| Minisign | FR-382, ADR-0049 (D2) | ISC (to confirm on adoption) | Signs `checksums.txt` and the update manifest | Candidate (S14.7) |
+| OWASP ZAP | Testing 12.5 (the stage security gate) | Apache-2.0 (to confirm on adoption) | Dynamic scan of the running app, signed in as a user and as an admin | Candidate (S03.10-T07) |
+| testssl.sh | Testing 12.5, NFR-067 | GPL-2.0 (to confirm on adoption; a separate program, development only) | Checks the TLS configuration of the LAN listener | Candidate (S03.10-T07) |
+| GitHub CodeQL | Testing 12.5 | Free for public repositories (GitHub service; verified 2026-10-01) | Code scanning at stage completion | Candidate (S03.10-T07) |
+| pip-audit | Testing 12.5 (AI worker) | Apache-2.0 (to confirm on adoption) | Vulnerability scan of Python packages | Candidate (S17) |
+

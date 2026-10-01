@@ -16,6 +16,7 @@
   > "Classifications are stored in the photo's JSON metadata file, so search reads metadata and never runs the AI model at query time."
   > "It includes an auto photo classification system."
 - **Status:** Not started
+- **Security (1.12.0, P010; rule R15):** the AI worker reaches the core only through a socket or private network with its token, with no egress (NFR-070); ONNX models checked by hash, no pickle (the secure coding standard); Ruff security rules in the gate; the worker's interface is **Tier 1**.
 
 #### S17.1: AI architecture and opt-in
 - **Goal:** A safe, optional, offline AI foundation.
