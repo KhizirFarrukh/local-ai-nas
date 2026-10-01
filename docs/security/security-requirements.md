@@ -100,7 +100,7 @@ Every new requirement of plan change request #10, with its tier, its ASVS chapte
 | NFR-075 | Retention and deletion | 2 | V14 | 8.10, 5.33, 5.34 | S08, S03.6 | Planned |
 | NFR-076 | Minimal attack surface | 1 | V13 | 8.9, 8.21 | S03 | Planned |
 | NFR-077 | Host and container hardening, safe deployers | 1 | V13 | 8.9, 8.19, 8.20 | S14.1, S14.2 | Planned |
-| NFR-078 | Repository and CI integrity, secret scanning (D3) | 1 | V15 | 8.4, 5.21, 8.32 | Now (S03 foundation) | Planned (actions pinned by SHA: implemented, S03.5-T06; hooks: S03.5-T07; owner tasks open) |
+| NFR-078 | Repository and CI integrity, secret scanning (D3) | 1 | V15 | 8.4, 5.21, 8.32 | Now (S03 foundation) | Planned (actions pinned by SHA and secret-scanning hooks: implemented, S03.5-T06, S03.5-T07; owner tasks open) |
 | NFR-079 | Dependency policy | 1 | V15 | 5.19, 5.21, 5.22, 8.8 | Every stage, S13 | Planned |
 | NFR-080 | Cryptography policy | 1 | V11 | 8.24 | Every stage | Planned (parts implemented) |
 | NFR-081 | Authorization matrix test | 1 | V8 | 8.3, 8.29 | S03.10, S07.7 | Planned |

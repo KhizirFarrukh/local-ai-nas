@@ -60,7 +60,7 @@
 | Forbidden APIs: `os/exec` outside the wrapper, `math/rand` in security packages, `template.HTML`, `InsecureSkipVerify` | forbidigo (in golangci-lint), configured in `.golangci.yml` | Planned (foundation task S03.5-T08) |
 | Svelte and TypeScript: `{@html}`, `eval`, unsafe links | ESLint with the Svelte plugin's `svelte/no-at-html-tags` and security rules | Planned (S03.5-T08) |
 | Python security rules (Bandit-equivalent) | Ruff, `S` rules | Planned (S17, when the worker exists) |
-| Secrets in commits | gitleaks pre-commit and pre-push hooks (decision D3) | Planned (S03.5-T07) |
+| Secrets in commits | gitleaks pre-commit and pre-push hooks (decision D3) | Implemented (S03.5-T07) |
 | Code scanning | GitHub CodeQL at stage completion | Planned (S03.10) |
 
 ## 7. Review checklist (rule R15)

@@ -30,6 +30,7 @@ Designed in alignment with ISO/IEC 27001:2022 Annex A controls (self-assessed; n
 
 - [`dev/testing.md`](dev/testing.md): how tests, fuzzing, coverage, and lint are run (S01.1-T04).
 - [`dev/licensing.md`](dev/licensing.md): the dependency license policy (S01.1-T02).
+- [`dev/git-hooks.md`](dev/git-hooks.md): the secret-scanning git hooks (gitleaks), how to turn them on, and what to do when they block a commit (S03.5-T07).
 
 ## Measurements and checks: [`reports/`](reports/)
 

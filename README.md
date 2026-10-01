@@ -267,6 +267,7 @@ The container runs your working copy with `go run` and keeps its data in a Docke
 | Coverage (minimum 80%) | `scripts/coverage.sh` |
 | Lint and format | `scripts/install-golangci-lint.sh` once, then `./bin/golangci-lint run ./...` and `./bin/golangci-lint fmt --diff` |
 | Dependency licenses | `scripts/check-licenses.sh` |
+| Secret scanning before every commit and push (once per clone) | `scripts/install-git-hooks.sh` (Windows PowerShell: `powershell -ExecutionPolicy Bypass -File scripts\install-git-hooks.ps1`); see [docs/dev/git-hooks.md](docs/dev/git-hooks.md) |
 | Performance baseline | `scripts/perf-baseline.sh` (results in [docs/reports/](docs/reports/)) |
 | Web interface: format, lint, type checks | in `web/`: `pnpm format:check`, `pnpm lint`, `pnpm check` |
 | Web interface: unit and component tests | in `web/`: `pnpm exec playwright install chromium firefox` once, then `pnpm test` (`pnpm coverage` adds coverage, minimum 80%) |

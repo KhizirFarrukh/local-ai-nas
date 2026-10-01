@@ -1,0 +1,21 @@
+#!/bin/sh
+# Scans the commits about to be pushed for secrets (S03.5-T07; the user's
+# decision D3): a second chance after the pre-commit hook. Git passes one
+# line per ref on standard input: <local ref> <local sha> <remote ref> <remote sha>.
+set -eu
+root="$(git rev-parse --show-toplevel)"
+. "$root/.githooks/find-gitleaks.sh"
+
+zero="$(git hash-object --stdin </dev/null | tr '0-9a-f' '0')"
+while read -r local_ref local_sha remote_ref remote_sha; do
+	# A deleted ref sends nothing.
+	[ "$local_sha" = "$zero" ] && continue
+	if [ "$remote_sha" != "$zero" ] && git cat-file -e "$remote_sha^{commit}" 2>/dev/null; then
+		range="$remote_sha..$local_sha"
+	else
+		# A new branch, or a remote commit this clone does not have: scan
+		# what no remote-tracking branch already contains.
+		range="$local_sha --not --remotes"
+	fi
+	"$GITLEAKS" git --redact --no-banner --config "$root/.gitleaks.toml" --log-opts="$range" "$root"
+done

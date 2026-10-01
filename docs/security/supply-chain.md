@@ -35,7 +35,7 @@ The full review of every component, with upgrades and downgrades, is stage S13 (
 | GitHub Actions pinned to full commit SHAs (with the version in a comment), not tags | **Implemented** (S03.5-T06, 2026-10-01: 27 references, each SHA checked against its tag and the action's default branch) |
 | Workflow token permissions set to the minimum per job (`permissions:` in every workflow) | **Implemented** (`contents: read` for the whole workflow since S01; checked in S03.5-T06) |
 | No secrets in workflows that pull requests from forks can start | **Implemented** (the workflow uses no secrets and starts only on stage tags or by hand; checked in S03.5-T06) |
-| gitleaks pre-commit and pre-push hooks, committed `.gitleaks.toml`, a one-time scan of the whole history (decision D3) | Planned (S03.5-T07) |
+| gitleaks pre-commit and pre-push hooks, committed `.gitleaks.toml`, a one-time scan of the whole history (decision D3) | **Implemented** (S03.5-T07, 2026-10-01: gitleaks 8.30.1 pinned by SHA-256; history and tree scanned, no finding; [docs/dev/git-hooks.md](../dev/git-hooks.md)) |
 | The coding agent never bypasses hooks (`--no-verify`) and never weakens a check to make a build pass | In force (rule R15) |
 | **Owner tasks** (account settings only the owner can change): secret scanning with push protection; Dependabot alerts and security updates; private vulnerability reporting; branch protection; two-factor authentication on the owner's GitHub account | Waiting on the owner (see the checklist below) |
 

@@ -1,0 +1,12 @@
+# Secret scanning rules for the git hooks and the stage security gate
+# (S03.5-T07; the user's decision D3; docs/dev/git-hooks.md). gitleaks's
+# default rules apply in full.
+#
+# Allow-list entries must stay narrow: one test fixture file or one fake
+# value, each explained in a comment, added in its own reviewed commit.
+# Never a whole folder of real code. None is needed today: the full history
+# and the tree were scanned on 2026-10-01 with no finding.
+title = "local-ai-nas"
+
+[extend]
+useDefault = true
