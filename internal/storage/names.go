@@ -30,6 +30,8 @@ const (
 	RulePathTooLong   = "path_too_long"
 	RuleInvalidUTF8   = "invalid_utf8"
 	RuleLookalikeSep  = "lookalike_separator"
+	RuleBidiControl   = "bidi_control"
+	RuleSystemName    = "system_name"
 )
 
 // lookalikeSeparators look like a slash or a backslash. Tools that fold
@@ -50,6 +52,47 @@ const TempPrefix = ".local-ai-nas-tmp-"
 // IsTempName reports whether name is one of the server's temporary files.
 func IsTempName(name string) bool {
 	return strings.HasPrefix(name, TempPrefix)
+}
+
+// hostSystemNames are the folders and files that storage systems and
+// operating systems keep inside shared folders for their own use: the ZFS
+// snapshot directory; Synology's thumbnails, recycle bin, and snapshots;
+// QNAP's recycle bin, snapshots, and thumbnails; the Linux and Windows
+// recovery folders (FR-385). They are never items, so a storage root on a
+// NAS share does not pull snapshot copies or host thumbnails into the
+// library. Keys are lower case: these names are compared without case, as
+// on the case-insensitive file systems where several of them appear.
+var hostSystemNames = map[string]bool{
+	".zfs":                      true,
+	"@eadir":                    true,
+	"#recycle":                  true,
+	"#snapshot":                 true,
+	"@recycle":                  true,
+	"@recently-snapshot":        true,
+	".@__thumb":                 true,
+	"lost+found":                true,
+	"$recycle.bin":              true,
+	"system volume information": true,
+}
+
+// IsHostSystemName reports whether name is one of the host system names.
+func IsHostSystemName(name string) bool {
+	return hostSystemNames[strings.ToLower(name)]
+}
+
+// IsHidden reports whether name is never an item: one of the server's
+// temporary files or a host system name. Listings, copies, archives,
+// folder sizes, and paths skip such names.
+func IsHidden(name string) bool {
+	return IsTempName(name) || IsHostSystemName(name)
+}
+
+// isBidiControl reports the Unicode characters that change the display
+// order of text: the embeddings and overrides U+202A–U+202E and the
+// isolates U+2066–U+2069. In a name they disguise the real extension:
+// "invoice" + U+202E + "fdp.exe" is shown as "invoiceexe.pdf" (FR-076).
+func isBidiControl(r rune) bool {
+	return (r >= 0x202A && r <= 0x202E) || (r >= 0x2066 && r <= 0x2069)
 }
 
 // reservedNames are the device names Windows reserves, with or without an
@@ -85,6 +128,8 @@ func ValidateName(name string) error {
 			return nameErr(RuleControlChar, fmt.Sprintf("a name must not contain control characters (found U+%04X)", r))
 		case strings.ContainsRune(forbiddenChars, r):
 			return nameErr(RuleForbiddenChar, fmt.Sprintf(`a name must not contain any of < > : " / \ | ? * (found %q)`, r))
+		case isBidiControl(r):
+			return nameErr(RuleBidiControl, fmt.Sprintf("a name must not contain characters that change the text direction (found U+%04X), which can disguise its real extension", r))
 		}
 	}
 	if i := strings.IndexAny(name, lookalikeSeparators); i >= 0 {
@@ -102,6 +147,9 @@ func ValidateName(name string) error {
 	}
 	if IsTempName(name) {
 		return nameErr(RuleReservedName, fmt.Sprintf("names starting with %q are reserved for the server's temporary files", TempPrefix))
+	}
+	if IsHostSystemName(name) {
+		return nameErr(RuleSystemName, fmt.Sprintf("%q is a name that storage systems use for their own folders", name))
 	}
 	return nil
 }

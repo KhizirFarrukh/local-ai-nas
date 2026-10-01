@@ -181,8 +181,8 @@ func readFolder(root *os.Root, owner, rel, apiPath string) ([]Item, Item, error)
 	}
 	items := make([]Item, 0, len(entries))
 	for _, e := range entries {
-		if storage.IsTempName(e.Name()) {
-			continue // a write in progress, or left by a crash: never an item
+		if storage.IsHidden(e.Name()) {
+			continue // a write in progress or left by a crash, or a host system folder: never an item
 		}
 		info, err := e.Info() // Lstat: links are listed, never followed
 		if storage.IsNotFound(err) {

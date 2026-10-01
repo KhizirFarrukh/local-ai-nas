@@ -70,5 +70,7 @@ A name the API is asked to create (an upload, a new folder, the target of a rena
 | `path_too_long` | the whole path inside your storage area is longer than 4096 bytes |
 | `invalid_utf8` | it is not valid UTF-8 |
 | `lookalike_separator` | it contains a character that looks like `/` or `\` and that some tools turn into one: `／` `＼` `∕` `⁄` `∖` `⧵` `⧸` `⧹` `﹨` (other fullwidth characters, such as `？`, are fine) |
+| `bidi_control` | it contains a character that changes the text direction: U+202A–U+202E or U+2066–U+2069. Such characters can disguise a name's real extension, for example `invoice` + U+202E + `fdp.exe` shown as `invoiceexe.pdf` (S01.6-T07) |
+| `system_name` | it is a name that storage systems keep for their own folders, in any case: `.zfs`, `@eaDir`, `#recycle`, `#snapshot`, `@Recycle`, `@Recently-Snapshot`, `.@__thumb`, `lost+found`, `$RECYCLE.BIN`, `System Volume Information`. Folders with these names are also hidden from listings, copies, archives, and folder sizes, and a path through one is not found (S01.6-T07, FR-385) |
 
 Paths are also normalized to Unicode NFC: a name sent in decomposed form (common on macOS) is the same file as its composed form.

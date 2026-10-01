@@ -168,15 +168,17 @@ func run[T any](ctx context.Context, h Hooks, e Event, op func() (T, error)) (T,
 }
 
 // resolveVisible resolves path for an operation on an existing item. The
-// server's temporary files (storage.TempPrefix) are not items: a path
-// through one is not found, so a partial upload can never be read.
+// server's temporary files (storage.TempPrefix) and host system folders
+// (storage.IsHostSystemName, FR-385) are not items: a path through one is
+// not found, so a partial upload can never be read, and a snapshot
+// directory or a host's thumbnails are never reached through the API.
 func (s *Local) resolveVisible(owner, path string) (string, error) {
 	rel, err := s.resolver.Resolve(storage.FilesArea, owner, path)
 	if err != nil {
 		return "", err
 	}
 	for _, name := range strings.Split(rel, "/") {
-		if storage.IsTempName(name) {
+		if storage.IsHidden(name) {
 			return "", apperr.New(apperr.NotFound, "no item at "+path)
 		}
 	}

@@ -8,6 +8,7 @@ import (
 	"path/filepath"
 
 	"github.com/KhizirFarrukh/local-ai-nas/internal/apperr"
+	"github.com/KhizirFarrukh/local-ai-nas/internal/storage"
 )
 
 // DeleteOptions configure Delete.
@@ -63,12 +64,32 @@ func (s *Local) Delete(ctx context.Context, owner, apiPath string, o DeleteOptio
 }
 
 // notEmpty explains why the folder rel was not deleted. A folder that
-// holds only the server's temporary files looks empty to clients: an
-// upload or copy into it has not finished (or was cut off by a crash).
+// holds only hidden names looks empty to clients: either the server's
+// temporary files (an upload or copy into it has not finished, or was cut
+// off by a crash) or a storage system's own folders (FR-385).
 func notEmpty(root *os.Root, rel, apiPath string) error {
-	names, err := readNames(root, rel)
-	if err == nil && len(names) == 0 {
+	visible, temp, host := 0, 0, 0
+	if f, err := root.Open(filepath.FromSlash(rel)); err == nil {
+		entries, err := f.ReadDir(-1)
+		_ = f.Close() // read-only
+		if err == nil {
+			for _, e := range entries {
+				switch {
+				case storage.IsTempName(e.Name()):
+					temp++
+				case storage.IsHostSystemName(e.Name()):
+					host++
+				default:
+					visible++
+				}
+			}
+		}
+	}
+	switch {
+	case visible == 0 && temp > 0:
 		return apperr.Newf(apperr.Conflict, "%s has an unfinished upload or copy; try again later, or delete it with recursive", apiPath)
+	case visible == 0 && host > 0:
+		return apperr.Newf(apperr.Conflict, "%s holds only folders that a storage system keeps for itself (such as snapshots or thumbnails); set recursive to delete it with them", apiPath)
 	}
 	return apperr.Newf(apperr.Conflict, "%s is not empty; set recursive to delete it with everything in it", apiPath)
 }
