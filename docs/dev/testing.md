@@ -12,6 +12,7 @@ How tests are written and run (ADR-0005, S01.1-T04). On Windows, run the `script
 | One fuzz target, searching for new inputs | `go test -run '^$' -fuzz '^FuzzWriteFiles$' -fuzztime 30s ./internal/testutil` |
 | Lint and format | `./bin/golangci-lint run ./...` and `./bin/golangci-lint fmt --diff` (install: `scripts/install-golangci-lint.sh`) |
 | Dependency licenses | `scripts/check-licenses.sh` |
+| Secret scanning hooks (once per clone) | `scripts/install-git-hooks.sh` or `scripts\install-git-hooks.ps1` ([git-hooks.md](git-hooks.md)) |
 | Memory bound of large transfers (writes the size several times) | `LOCALAINAS_MEMTEST_SIZE=1GiB go test -run TestMemoryBound -v ./internal/api` |
 | Performance baseline (NFR-003; see `docs/reports/`) | `scripts/perf-baseline.sh 1GiB` |
 | Web unit and component tests (in `web/`) | `pnpm test`; with the coverage of `web/src/lib` (80% required): `pnpm coverage`. The component tests need Playwright's Chromium once: `pnpm exec playwright install chromium` |
