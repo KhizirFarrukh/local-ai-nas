@@ -63,6 +63,24 @@ func (e ItemKind) Valid() bool {
 	}
 }
 
+// Defines values for ItemLocationArea.
+const (
+	Files  ItemLocationArea = "files"
+	Photos ItemLocationArea = "photos"
+)
+
+// Valid indicates whether the value is a known member of the ItemLocationArea enum.
+func (e ItemLocationArea) Valid() bool {
+	switch e {
+	case Files:
+		return true
+	case Photos:
+		return true
+	default:
+		return false
+	}
+}
+
 // Defines values for JobState.
 const (
 	Canceled  JobState = "canceled"
@@ -307,6 +325,16 @@ type FileItem struct {
 	// written or replaced; the download sends the same value.
 	Etag *string `json:"etag,omitempty"`
 
+	// Id The item's stable ID (a UUIDv7): renames and moves keep it; a
+	// copy gets a new one. Absent for the root of the area and for
+	// links and other special files, which are not items. An item
+	// created outside the NAS gets one when it is first listed or
+	// looked at. An ID only names an item; it never grants access.
+	//
+	//
+	// Example: 0192f0c4-2b4e-7a51-9c3d-5e6f7a8b9c0d
+	Id *string `json:"id,omitempty"`
+
 	// Kind A symbolic link is listed but never followed.
 	Kind ItemKind `json:"kind"`
 
@@ -350,6 +378,16 @@ type HealthStatus string
 
 // ItemKind A symbolic link is listed but never followed.
 type ItemKind string
+
+// ItemLocation defines model for ItemLocation.
+type ItemLocation struct {
+	// Area The storage area that holds the item. Only `files` until the photos area has its API (S04).
+	Area ItemLocationArea `json:"area"`
+	Item FileItem         `json:"item"`
+}
+
+// ItemLocationArea The storage area that holds the item. Only `files` until the photos area has its API (S04).
+type ItemLocationArea string
 
 // ItemsResponse defines model for ItemsResponse.
 type ItemsResponse struct {
@@ -623,6 +661,9 @@ type ServerInterface interface {
 	// GetUsage Add up the size of a folder
 	// (GET /files/usage)
 	GetUsage(w http.ResponseWriter, r *http.Request, params GetUsageParams)
+	// GetItemByID Find one of your items by its ID
+	// (GET /items/{id})
+	GetItemByID(w http.ResponseWriter, r *http.Request, id string)
 	// ListJobs List your recent background jobs
 	// (GET /jobs)
 	ListJobs(w http.ResponseWriter, r *http.Request)
@@ -1011,6 +1052,32 @@ func (siw *ServerInterfaceWrapper) GetUsage(w http.ResponseWriter, r *http.Reque
 	handler.ServeHTTP(w, r)
 }
 
+// GetItemByID operation middleware
+func (siw *ServerInterfaceWrapper) GetItemByID(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "id" -------------
+	var id string
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", r.PathValue("id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "", ValueIsUnescaped: true})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "id", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.GetItemByID(w, r, id)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
 // ListJobs operation middleware
 func (siw *ServerInterfaceWrapper) ListJobs(w http.ResponseWriter, r *http.Request) {
 
@@ -1222,6 +1289,7 @@ func HandlerWithOptions(si ServerInterface, options StdHTTPServerOptions) http.H
 	m.HandleFunc(http.MethodDelete+" "+options.BaseURL+"/files/items", wrapper.DeleteItem)
 	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/files/items", wrapper.GetItems)
 	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/files/usage", wrapper.GetUsage)
+	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/items/{id}", wrapper.GetItemByID)
 	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/system/health", wrapper.GetHealth)
 	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/jobs", wrapper.ListJobs)
 	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/jobs/{id}", wrapper.GetJob)
@@ -2683,6 +2751,95 @@ func (response GetUsage500ApplicationProblemPlusJSONResponse) VisitGetUsageRespo
 	return err
 }
 
+type GetItemByIDRequestObject struct {
+	Id string `json:"id"`
+}
+
+type GetItemByIDResponseObject interface {
+	VisitGetItemByIDResponse(w http.ResponseWriter) error
+}
+
+type GetItemByID200JSONResponse ItemLocation
+
+func (response GetItemByID200JSONResponse) VisitGetItemByIDResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type GetItemByID400ApplicationProblemPlusJSONResponse struct {
+	BadRequestApplicationProblemPlusJSONResponse
+}
+
+func (response GetItemByID400ApplicationProblemPlusJSONResponse) VisitGetItemByIDResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(400)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type GetItemByID404ApplicationProblemPlusJSONResponse struct {
+	NotFoundApplicationProblemPlusJSONResponse
+}
+
+func (response GetItemByID404ApplicationProblemPlusJSONResponse) VisitGetItemByIDResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(404)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type GetItemByID405ApplicationProblemPlusJSONResponse struct {
+	MethodNotAllowedApplicationProblemPlusJSONResponse
+}
+
+func (response GetItemByID405ApplicationProblemPlusJSONResponse) VisitGetItemByIDResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/problem+json")
+	if response.Headers.Allow != nil {
+		w.Header().Set("Allow", fmt.Sprint(*response.Headers.Allow))
+	}
+	w.WriteHeader(405)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type GetItemByID500ApplicationProblemPlusJSONResponse struct {
+	InternalErrorApplicationProblemPlusJSONResponse
+}
+
+func (response GetItemByID500ApplicationProblemPlusJSONResponse) VisitGetItemByIDResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(500)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
 type ListJobsRequestObject struct {
 }
 
@@ -3006,6 +3163,9 @@ type StrictServerInterface interface {
 	// GetUsage Add up the size of a folder
 	// (GET /files/usage)
 	GetUsage(ctx context.Context, request GetUsageRequestObject) (GetUsageResponseObject, error)
+	// GetItemByID Find one of your items by its ID
+	// (GET /items/{id})
+	GetItemByID(ctx context.Context, request GetItemByIDRequestObject) (GetItemByIDResponseObject, error)
 	// ListJobs List your recent background jobs
 	// (GET /jobs)
 	ListJobs(ctx context.Context, request ListJobsRequestObject) (ListJobsResponseObject, error)
@@ -3365,6 +3525,32 @@ func (sh *strictHandler) GetUsage(w http.ResponseWriter, r *http.Request, params
 		sh.options.ResponseErrorHandlerFunc(w, r, err)
 	} else if validResponse, ok := response.(GetUsageResponseObject); ok {
 		if err := validResponse.VisitGetUsageResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// GetItemByID operation middleware
+func (sh *strictHandler) GetItemByID(w http.ResponseWriter, r *http.Request, id string) {
+	var request GetItemByIDRequestObject
+
+	request.Id = id
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.GetItemByID(ctx, request.(GetItemByIDRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "GetItemByID")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(GetItemByIDResponseObject); ok {
+		if err := validResponse.VisitGetItemByIDResponse(w); err != nil {
 			sh.options.ResponseErrorHandlerFunc(w, r, err)
 		}
 	} else if response != nil {

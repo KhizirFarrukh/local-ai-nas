@@ -35,6 +35,11 @@ tags:
     description: |
       Background jobs (S01.4-T08): long operations, such as a copy over the
       synchronous limits, run as durable jobs that survive a restart.
+  - name: items
+    description: |
+      Stable item IDs (S01.3-T12, FR-349, ADR-0040): every file and folder
+      has an `id` that renames and moves keep. An ID only names an item;
+      it never grants access.
 paths:
   /files/content:
     get:
@@ -666,6 +671,41 @@ paths:
           $ref: "#/components/responses/MethodNotAllowed"
         "500":
           $ref: "#/components/responses/InternalError"
+  /items/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        description: The item's `id`, as listings and details report it.
+        schema:
+          type: string
+    get:
+      tags: [items]
+      operationId: getItemByID
+      summary: Find one of your items by its ID
+      description: |
+        Returns where the item with this ID is now (its area and path) and
+        its details, as `GET /files/items` reports a single item. A rename
+        or move keeps the ID, so this finds the item wherever it went. Only
+        your own items are found: an ID that is not yours, a deleted item,
+        and an item no longer at its recorded place all answer 404, so the
+        answer never tells whether an ID exists elsewhere. A malformed ID
+        answers 400.
+      responses:
+        "200":
+          description: The item and where it is.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ItemLocation"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "405":
+          $ref: "#/components/responses/MethodNotAllowed"
+        "500":
+          $ref: "#/components/responses/InternalError"
   /system/health:
     get:
       tags: [system]
@@ -798,6 +838,15 @@ components:
       additionalProperties: false
       required: [path, name, kind, size, mod_time, added_time]
       properties:
+        id:
+          type: string
+          description: |
+            The item's stable ID (a UUIDv7): renames and moves keep it; a
+            copy gets a new one. Absent for the root of the area and for
+            links and other special files, which are not items. An item
+            created outside the NAS gets one when it is first listed or
+            looked at. An ID only names an item; it never grants access.
+          example: 0192f0c4-2b4e-7a51-9c3d-5e6f7a8b9c0d
         path:
           type: string
           description: The item's path in the caller's files area, starting with `/`.
@@ -844,6 +893,17 @@ components:
             unchanged since; a file changed in another way has none until it
             is hashed again (a later version). Two files with the same hash
             have the same content.
+    ItemLocation:
+      type: object
+      additionalProperties: false
+      required: [area, item]
+      properties:
+        area:
+          type: string
+          description: The storage area that holds the item. Only `files` until the photos area has its API (S04).
+          enum: [files, photos]
+        item:
+          $ref: "#/components/schemas/FileItem"
     Usage:
       type: object
       additionalProperties: false
