@@ -193,31 +193,12 @@ func scanCopy(root *os.Root, from, to string, src fs.FileInfo, limits CopyLimits
 	return entries, total, nil
 }
 
-// readNames returns the names in the folder dir, in order, without the
-// server's temporary files.
-func readNames(root *os.Root, dir string) ([]string, error) {
-	f, err := root.Open(filepath.FromSlash(dir))
-	if err != nil {
-		return nil, fsError(err, "/"+dir)
-	}
-	defer func() { _ = f.Close() }() // read-only
-	entries, err := f.ReadDir(-1)
-	if err != nil {
-		return nil, fsError(err, "/"+dir)
-	}
-	names := make([]string, 0, len(entries))
-	for _, e := range entries {
-		if !storage.IsTempName(e.Name()) {
-			names = append(names, e.Name())
-		}
-	}
-	return names, nil
-}
-
 // readInfos returns the items in the folder dir as the folder read reports
-// them, in name order, without the server's temporary files; links are
-// described, never followed. One folder read costs far less than an Lstat
-// per item, which on Windows took about 1 ms each (bug S02-B09).
+// them, in name order, without hidden names (the server's temporary files
+// and host system folders, storage.IsHidden); links are described, never
+// followed. Copies, archives, and folder sizes read folders through it.
+// One folder read costs far less than an Lstat per item, which on Windows
+// took about 1 ms each (bug S02-B09).
 func readInfos(root *os.Root, dir string) ([]fs.FileInfo, error) {
 	f, err := root.Open(filepath.FromSlash(dir))
 	if err != nil {
@@ -230,7 +211,7 @@ func readInfos(root *os.Root, dir string) ([]fs.FileInfo, error) {
 	}
 	infos := make([]fs.FileInfo, 0, len(entries))
 	for _, e := range entries {
-		if storage.IsTempName(e.Name()) {
+		if storage.IsHidden(e.Name()) {
 			continue
 		}
 		info, err := e.Info() // Lstat: links are never followed

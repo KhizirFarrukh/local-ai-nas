@@ -84,7 +84,9 @@ const byRule: Record<string, string> = {
   name_too_long: 'The name is too long (at most 255 bytes).',
   path_too_long: 'The whole path is too long.',
   invalid_utf8: 'The name contains characters that are not valid text.',
-  lookalike_separator: 'Names cannot contain characters that look like a slash.'
+  lookalike_separator: 'Names cannot contain characters that look like a slash.',
+  bidi_control: 'Names cannot contain characters that change the text direction.',
+  system_name: 'This name is used by storage systems for their own folders.'
 };
 
 /** Codes whose request ID is worth showing: the server log explains them. */
