@@ -1,18 +1,19 @@
 # CURRENT_STATE
 
-**Last updated:** 2026-10-01 12:13 +0500 (session S007)
+**Last updated:** 2026-10-01 12:18 +0500 (session S007)
 **Plan version:** 1.13.0 (1.13.0: ZFS optional in S15, releases R13 NAS platforms and R14 local-ai-nas OS, FR-383–FR-391). 1.12.0 (1.12.0: the security program, P010: I12, R15, `docs/security/`, NFR-059–NFR-081, FR-377–FR-382). 1.11.0 (client app requirements in R07 and R08, P009; platform matrix in roadmap 11b.3). 1.10.0 (internal data grouped into state/cache/tmp/logs, Q40 answered; **`code-agent-docs/plan/PLAN_INDEX.md`**; the plan is split into files since phase B, ADR-0044). **17 stages, 139 substages.** 1.9.0 (P008 with the user's D1–D7, S007 E058–E061): I3 (the database is authoritative for ownership and access) and I4 (the typed search text may be embedded) reworded; follow-ups F1–F5 approved and built in S03 (item IDs, protection against other websites, job foundation and operation journal, trash, `synchronous=FULL`); sidecars `.lainas.json`; internal alpha at M2; change intake R14 (MVP frozen); the user's **new S13 dependency security review** before packaging (packaging S14, drives S15, SSD caching S16, AI S17; plan 10.18); the user's **Google Takeout import** (Drive and Photos, everything Google recorded) in R01 with the user's sample data first (A28). Earlier: 1.8.x S03 approved; 1.7.0 P007 (drive lifecycle, SSD caching, admin console, Raspberry Pi first, deployers); 1.6.0 P006 (releases R01–R12); **Approved baseline** 1.0.0 (S005)
 **Current phase:** **S01 Done** (S005 E126). **S02 Done** (signed off 2026-09-29, S007 E044). **S03 (Security): Approved** (S007 E050) and **In Progress** (`stages/S03-security.md`)
 
 ## Active stage and task
 - **Active stage:** **S03: Security**, In Progress (`stages/S03-security.md`, approved in S007 E050 with D-1–D-6 as recommended). **S02: NAS GUI** is **Done** (signed off in S007 E044); S01 is **Done**.
-- **Active task:** none (plan 1.13.0 done). **Next: S01.3-T12** (the approved P010 foundation tasks are all done: S03.5-T06, T07, T08, S01.6-T07; E078–E081) (S03 stage document, P010 execution order); **then S01.3-T12** (F1: `id` in listings and details, lookup by ID, IDs for items met in a listing, the ID backfill as a job).
+- **Active task:** **S01.3-T12, in progress** (stopped at a checkpoint at the user's request, E082; branch `feat/S01.3-T12-item-ids`). Before it: **S01.3-T12** (the approved P010 foundation tasks are all done: S03.5-T06, T07, T08, S01.6-T07; E078–E081) (S03 stage document, P010 execution order); **then S01.3-T12** (F1: `id` in listings and details, lookup by ID, IDs for items met in a listing, the ID backfill as a job).
 - **The user's instruction (S007 E010):** after P005, resume S02 and work until the stage is complete, and also build the P005 items that belong to the current or earlier stages (the S01 follow-up tasks).
 
 ## In progress (write-ahead)
-- None.
+- **S01.3-T12 (IDs in the API and for existing data) is in progress** on branch `feat/S01.3-T12-item-ids` (pushed, not merged; wip commit 53ce292): the spec part is done and the code regenerated; **that branch does not build yet** (the `GetItemByID` handler is missing). The design for the remaining steps is in the S007 log, E082. Resume: `git checkout feat/S01.3-T12-item-ids`, `git merge develop`, then step (1) of that design.
 
 ## Last completed
+- **Checkpoint** (S007 E082, the user's request): everything saved, committed, and pushed; S01.3-T12's work in progress on its own branch.
 - **S01.6-T07 done** (S007 E081): rules `bidi_control` and `system_name`; NAS-host system folders hidden from listings, paths, copies, archives, and folder sizes (FR-385); the `os.Root` audit (one documented, contained exception: `storage.MoveInto`).
 - **S03.5-T08 done** (S007 E080): forbidden-API lint rules for Go and security rules for ESLint, each proven with a deliberate violation; bug S03-B04 fixed (a format-check failure); `pnpm format:check` added to the per-task checks.
 - **S03.5-T07 done** (S007 E079): gitleaks pre-commit and pre-push hooks (decision D3), installers with pinned checksums, history and tree scanned with no finding; bug S03-B03 fixed (the golangci-lint installer no longer runs a downloaded script). **The hooks are on in this clone** (`core.hooksPath=.githooks`).
