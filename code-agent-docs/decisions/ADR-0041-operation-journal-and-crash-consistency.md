@@ -56,3 +56,11 @@ Proposed with plan 1.9.0 (P008), whose follow-up tasks the user had approved ("A
 ## Links
 
 plan FR-352, NFR-053, 8.38 · [ADR-0011](ADR-0011-job-queue-sqlite.md) · [ADR-0007](ADR-0007-database-sqlite.md) · [ADR-0040](ADR-0040-item-identity.md) · P008 F3
+
+## Amendment 1 (2026-10-01, session S007): sequence numbers for a later change feed
+
+- **Source:** the user's prompt #9 (P009, client apps; plan 1.11.0), which asks for forward-compatibility hooks only.
+- **Change:** when an operation reaches `done`, it gets an increasing sequence number (`seq`, unique, assigned in the same transaction). Nothing reads it in the MVP.
+- **Why now:** the client apps (R07, R08) need a per-user change feed read with a cursor (FR-370, plan 8.43). Numbering completed changes from the start costs one column; adding it later would need a migration and leave older changes without numbers.
+- **Not decided here:** the feed itself, its retention, and how it filters by user (I5); that belongs to R07.
+

@@ -51,7 +51,7 @@
 #### S03.3: Sessions and tokens
 - **Goal:** Sessions and tokens that are hard to steal and easy to revoke.
 - **Scope:** secure session cookies (HttpOnly, Secure, SameSite) or tokens; expiry; revocation; "log out everywhere"; optional API tokens for scripts.
-- **Deliverables:** session store; cookie policy; API token model (scoped, hashed, revocable). _1.11.0 (P009, forward compatibility):_ the token model keeps an optional device field for the later client apps (FR-364).
+- **Deliverables:** session store; cookie policy; API token model (scoped, hashed, revocable).
 - **Depends on:** S03.2.
 - **Requirements:** FR-086, FR-087.
 - **Acceptance criteria:**
