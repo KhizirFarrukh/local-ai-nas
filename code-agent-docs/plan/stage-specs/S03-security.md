@@ -9,6 +9,7 @@
 - **User requirements (quoted):**
   > "Stage 3 is security implementation."
 - **Status:** **Approved** (2026-09-29, S007 E050; `stages/S03-security.md`); In Progress from S03.1-T01
+- **Security (1.12.0, P010; rule R15):** **Tier 1:** all of S03 except the purely cosmetic parts of the security GUI and the console (Tier 2). Changes proposed for the user's approval: S03.4-T01 (AEAD-only TLS 1.2 suites, **HSTS only with a trusted certificate**, an explicit header-size limit; NFR-067, NFR-068, ADR-0047); S03.5-T03 (every user-content response checked; `security.txt`, FR-377); S03.5-T05 (files 0640 and folders 0750, umask 027, the startup permission check, per-user tus limits; NFR-063, NFR-073, FR-004); S03.6 (a hash-chained audit log and security events; FR-379, FR-378); new foundation tasks S03.5-T06 (actions pinned by SHA, minimal permissions), S03.5-T07 (gitleaks hooks and a history scan; decision D3), S03.5-T08 (security lint rules), and S03.10-T07 (the stage security gate, NFR-059, testing 12.5). Also: secrets management (NFR-074, ADR-0048), minimal attack surface (NFR-076), the re-authentication list (FR-086 note), the authorization matrix test for roles (NFR-081), and the content-origin decision (ADR-0046). Plain HTTP on loopback: Q87.
 
 #### S03.1: Threat model
 - **Goal:** Identify what must be protected, from whom, and where, to drive the rest of S03.

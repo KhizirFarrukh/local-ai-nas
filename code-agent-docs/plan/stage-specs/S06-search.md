@@ -12,6 +12,7 @@
   > "Search is not exact-match. It works like a search engine, with near matches and different word forms, and synonyms work too (searching 'receipts' also returns items with 'receipt', 'invoice', or 'voucher' in their metadata)."
   > "Operator-style searches work, e.g. 'before:2026' returns all items dated before 2026."
 - **Status:** Not started
+- **Security (1.12.0, P010; rule R15):** the search query parser is fuzzed in the stage gate; results are filtered per user before ranking (I5); both **Tier 1**.
 
 #### S06.1: Search architecture and engine
 - **Goal:** One embedded, rebuildable search index for both areas, ready for access control and AI fields.

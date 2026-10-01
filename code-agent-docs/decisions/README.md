@@ -48,3 +48,9 @@ Every significant technical decision (RULES R5). An ADR becomes **Accepted** onl
 | [ADR-0042](ADR-0042-local-origin-protection.md) | Protection against other websites before login (Host and Origin checks) | Accepted |
 | [ADR-0043](ADR-0043-hybrid-search.md) | Hybrid lexical and semantic search | Proposed |
 | [ADR-0044](ADR-0044-plan-document-structure.md) | Plan document structure: a plan folder with an index | Accepted |
+| [ADR-0045](ADR-0045-media-processing-sandbox.md) | Media processing sandbox | Proposed |
+| [ADR-0046](ADR-0046-user-content-origin-isolation.md) | User content origin isolation | Proposed |
+| [ADR-0047](ADR-0047-tls-and-certificate-policy.md) | TLS and certificate policy (amends the TLS part of ADR-0010 once accepted) | Proposed |
+| [ADR-0048](ADR-0048-secrets-management.md) | Secrets management | Proposed |
+| [ADR-0049](ADR-0049-release-signing-and-provenance.md) | Release signing and provenance (direction decided by the user, D2) | Proposed |
+| [ADR-0050](ADR-0050-service-account-permissions-and-mounts.md) | Service account, file permissions, and mount options per platform | Proposed |

@@ -9,6 +9,7 @@
 - **Goal:** Recovery paths for accidental deletion, corruption, and disaster, per user.
 - **User requirements:** none. This is a planner-proposed stage that the user may remove or reorder.
 - **Status:** Not started
+- **Security (1.12.0, P010; rule R15):** retention periods for trash, logs, and backups documented and enforced; the deletion caveat for SSDs and SD cards (NFR-075); restore paths are **Tier 1**.
 
 #### S08.1: Trash
 - **Goal:** Deleted items can be recovered.

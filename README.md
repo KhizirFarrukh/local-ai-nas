@@ -168,6 +168,15 @@ The sidecar files are the **source of truth** for photo metadata. Who owns a pho
 
 ---
 
+## 🛡️ Security
+
+Designed in alignment with ISO/IEC 27001:2022 Annex A controls (self-assessed; not certified). Security is a program that runs through every stage. The design: user content is never executed; media tools will run in a sandbox; every network connection will use HTTPS; releases will be signed and verifiable; every stage ends with a security gate. Most of these controls are still planned: the security stage is in progress and nothing has been released yet.
+
+- The security documents, including the ISO/IEC 27001 alignment matrix (all 93 controls), the threat model, and the storage security guide: [docs/security/](docs/security/README.md)
+- Found a vulnerability? Please report it privately: [SECURITY.md](SECURITY.md)
+
+---
+
 ## 🚀 Getting Started
 
 > Installation instructions will be added once the first release is ready. To run the current development version from source, see the Development section below.

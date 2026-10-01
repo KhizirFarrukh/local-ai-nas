@@ -161,6 +161,15 @@ How to use:
 - [ ] Answer from the documents alone: What is this project? What stage and task are active? What was the last completed action? What exactly is the next action? What is waiting on the user? What rules must I follow?
 - [ ] Any question that cannot be answered clearly and correctly is a **Critical** finding.
 
+### M. Security program (new with RULES 1.10.0 and plan 1.12.0, P010)
+- [ ] **No claim of certification or compliance** anywhere (documents, README, release notes, the GUI): search for "certified", "compliant", "compliance", "ISO certified", "enterprise grade". The only allowed wording is "Designed in alignment with ISO/IEC 27001:2022 Annex A controls (self-assessed; not certified)" (or a sentence that explains that certification does not apply).
+- [ ] The **Statement of Applicability** lists all 93 Annex A controls; every status matches reality: nothing is Implemented or Verified without the named evidence (a test, a file, a record).
+- [ ] Every **security-relevant task** of the audited stage has its R15 record in the stage document (threat model change, ASVS IDs, secure-coding self-review, abuse-case tests).
+- [ ] The stage document lists its **Tier 1 parts**; the stage security gate ran (or is planned in the final testing substage) and no blocking finding is open (decision D1).
+- [ ] The **security backlog** and the **risk register** are current; every accepted risk quotes the user's acceptance with a date.
+- [ ] `docs/security/` and `SECURITY.md` are linked from the README and from `docs/README.md`; their statuses agree with `code-agent-docs/security/` and the plan.
+- [ ] No file in the repository holds details of an unfixed vulnerability in a released version, exploit steps, or a secret (the repository is public).
+
 ## Report structure (`audits/A<NNN>-<YYYY-MM-DD>-<slug>.md`)
 1. Header: audit ID, date, session, trigger, plan version at start and at end, status.
 2. Scope: files and sources audited, method, interpretation notes, inventory.

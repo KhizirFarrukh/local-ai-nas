@@ -11,6 +11,7 @@
   > "The NAS has two folders at the root: files and photos."
 - **Scope note (from P002):** S01 creates both the `files/` and `photos/` roots but implements only the files area. The photos area is managed from S04. There is no GUI and no authentication yet, so the server must bind to localhost only.
 - **Status:** **Done** (signed off by the user on 2026-09-24, S005; completion record in `stages/S01-basic-nas.md` section 13)
+- **Security (1.12.0, P010; rule R15):** the path resolver and the name rules are **Tier 1**. Follow-up **S01.6-T07** (proposed, awaiting the user's approval; built in S03): the bidirectional-override characters refused in new names, NFC required, and a check that every area access goes through `os.Root` (FR-076).
 
 #### S01.1: Project foundation
 - **Goal:** Establish the approved stack, repository, tooling, and conventions, so every later change is built, checked, and tested the same way.

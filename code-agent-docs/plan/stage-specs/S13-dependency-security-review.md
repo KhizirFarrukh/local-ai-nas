@@ -10,6 +10,7 @@
   > "Also add a stage that alone goes over every first party and third party library used and sees if it has any known issues, vulnerabilities or exploits or anything similar and then sees if there is a fix in newer update then does that else if a previous version of it didn't have the issue and it's usable then it downgrades to that"
 - **Position:** before packaging (S14), so the MVP (M3) ships reviewed: the user's choice ("Before packaging (Recommended)", S007). AI stays last (I8).
 - **Status:** Not started
+- **Security (1.12.0, P010; rule R15):** the continuous dependency policy (NFR-079) between reviews; the SBOM in SPDX (ISO/IEC 5962) or CycloneDX (FR-382); OpenChain ISO/IEC 5230 and 18974:2023 alignment; the stage is **Tier 1**.
 
 #### S13.1: Inventory of every component (software bill of materials)
 - **Goal:** A complete, machine-readable list of everything the NAS is built from and runs with.

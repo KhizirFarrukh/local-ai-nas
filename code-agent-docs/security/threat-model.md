@@ -3,9 +3,9 @@
 | Field | Value |
 |---|---|
 | Requirement | FR-084: a documented threat model, maintained through the project |
-| Version | 1.3 |
+| Version | 1.4 |
 | Created | 2026-09-30 (session S007, task S03.1-T01) |
-| Last updated | 2026-09-30 (session S007, plan 1.9.0) |
+| Last updated | 2026-10-01 (session S007, plan 1.12.0: the security program, P010) |
 | Status | **Draft for the user's review** (S03.1 criterion 3) |
 | Maintained by | Every stage that adds an attack surface updates this file (RULES documentation map; audit checklist group H) |
 
@@ -173,7 +173,7 @@ flowchart LR
 | ID | Threat | STRIDE | Assets / attacker / surface | Mitigation | Status |
 |---|---|---|---|---|---|
 | T-36 | Passwords, tokens, or cookies end up in logs or audit details | I | A-02, A-03 / X-05 / E-11 | Header and query redaction (S01.5); audit details never hold secrets | Partly mitigated (S01.5); Open → S03.6-T01 |
-| T-37 | Audit events are changed to hide actions | R | A-06 / X-04 / E-01 | No API to change or delete events; a trigger aborts updates; only retention deletes. Someone with write access to the database file can still change it | Open → S03.6; the file-access residual is an **accepted-risk candidate** (host access is out of scope, X-05) |
+| T-37 | Audit events are changed to hide actions | R | A-06 / X-04 / E-01 | No API to change or delete events; a trigger aborts updates; only retention deletes. Someone with write access to the database file can still change it _P010:_ a hash chain over the entries, verified on schedule and on export (FR-379), so changes made directly in the file are detected; see T-70. | Open → S03.6; the file-access residual is an **accepted-risk candidate** (host access is out of scope, X-05) |
 | T-38 | Admin actions happen without a record | R | A-06 / X-04 / E-09 | One audit wrapper around every state-changing admin route; the inventory test checks it | Open → S03.6-T02, S03.9-T01 |
 
 ### 6.7 Admin console
@@ -190,7 +190,7 @@ flowchart LR
 |---|---|---|---|---|---|
 | T-42 | Another local user reads the database, logs, config, or TLS key | I | A-02–A-05 / X-05 / E-11 | Files and folders created by the service readable only by it (0600 and 0700 on Linux); on Linux the S14 deployers run the service as its own user | Open → S03.5-T05 (permissions, finding F-02, bug S03-B02), S14.2 (service user) |
 | T-43 | Another local user resets the admin password with the CLI | E | A-02 / X-05 / E-10 | The CLI needs write access to the database file, which T-42 restricts to the service's user | Open → S03.5-T05, S14.2 |
-| T-44 | A compromised dependency runs code in the build or the service | E | A-08 / X-07 / E-12 | Pinned versions (`go.sum`, `pnpm-lock.yaml`); govulncheck, `pnpm audit`, Trivy, Dependabot, license checks (S01, S02); few dependencies | Partly mitigated (S01, S02); Open → S03.10-T03 (fail on high severity); the residual is an **accepted-risk candidate** |
+| T-44 | A compromised dependency runs code in the build or the service | E | A-08 / X-07 / E-12 | Pinned versions (`go.sum`, `pnpm-lock.yaml`); govulncheck, `pnpm audit`, Trivy, Dependabot, license checks (S01, S02); few dependencies _P010:_ actions pinned by commit SHA, verified packages, the dependency policy (NFR-078, NFR-079); see T-61, T-63. | Partly mitigated (S01, S02); Open → S03.10-T03 (fail on high severity); the residual is an **accepted-risk candidate** |
 | T-45 | The disk or SD card is stolen and read | I | A-01–A-05 / X-06 / — | The NAS does not encrypt data at rest; the guide points to the operating system's disk encryption | **Accepted-risk candidate** (documented in S03.10-T04) |
 | T-46 | A backup exposes credentials or secrets | I | A-02, A-07 / X-06 / — | Only hashes of passwords, sessions, and tokens are stored; two-factor secrets encrypted with a key kept outside the database (S03.7); backups handle secrets (S08.3, FR-221) | Open → S03.7-T01; Future → S08.3 |
 
@@ -200,17 +200,35 @@ flowchart LR
 |---|---|---|---|---|---|
 | T-47 | Network shares bypass the app's authorization or path rules | E, I | E-13 | The same `authz` core and path resolver; per-user credentials; LAN only | Future → S09 |
 | T-48 | Camera-upload app passwords reach more than uploads | E | E-14 | An upload-only token scope; per-device revocation; the client sees only what it uploaded (FR-219) | Future → S09 (pending Q54) |
-| T-49 | Alert delivery leaks data or is abused to reach internal services (SSRF) | I | E-15 | Destinations set only by the admin; TLS; HMAC-signed webhooks; minimal content; secrets never logged (FR-221) | Future → S10 (pending Q54) |
-| T-50 | A crafted media file exploits a parser (ExifTool, libvips, libheif, FFmpeg) | E, D | E-16 | Tools run as separate processes with time and memory limits, never with shell strings; tools kept patched (register) | Future → S04, S05, S12 |
+| T-49 | Alert delivery leaks data or is abused to reach internal services (SSRF) | I | E-15 | Destinations set only by the admin; TLS; HMAC-signed webhooks; minimal content; secrets never logged (FR-221) _P010:_ checks after DNS resolution and on every redirect; certificates always verified (NFR-071); see T-67. | Future → S10 (pending Q54) |
+| T-50 | A crafted media file exploits a parser (ExifTool, libvips, libheif, FFmpeg) | E, D | E-16 | Tools run as separate processes with time and memory limits, never with shell strings; tools kept patched (register) _P010:_ the media processing sandbox and input limits (NFR-064, NFR-065, ADR-0045); see T-60, T-64, T-65, T-68. | Future → S04, S05, S12 |
 | T-51 | A compromised core asks the privileged storage helper to format or erase drives | E, T, D | E-17 | A narrow allow-list of typed operations; the helper checks the caller's identity on its socket; destructive steps need the admin's typed confirmation passed through; everything audited (ADR-0029) | Future → S15.2 |
 | T-52 | A hostile USB drive with a crafted filesystem is plugged in | E | E-17 | Never mounted automatically; only inside a flow the admin started; `nosuid,nodev,noexec` (P007, ADR-0034) | Future → S15 |
 | T-53 | Secure erase or a pool change hits the wrong drive | T, D | E-17 | Stable drive IDs, previews, typed confirmation, LED blink, audit (ADR-0035) | Future → S15.11 |
-| T-54 | The AI worker reads more of the library than it needs, or sends data out | I, E | E-18 | A separate process with least privilege and no network; models checked by hash (ADR-0017) | Future → S17 |
+| T-54 | The AI worker reads more of the library than it needs, or sends data out | I, E | E-18 | A separate process with least privilege and no network; models checked by hash (ADR-0017) _P010:_ internal API only over a socket or private network with its token, no egress (NFR-070); see T-69. | Future → S17 |
 | T-55 | Users read each other's data through IDs (uploads, archives, jobs, shares) | I | E-01–E-04 | Ownership rules in `authz`; IDs bound to their owner (prepared in S03.5-T05) | Future → S07 |
 | T-56 | The console is reachable from the internet once the NAS is exposed | E | E-09 | A setting that limits `/admin` and `/api/v1/admin` to the LAN or VPN (ADR-0039) | Future → R09 |
-| T-57 | A tampered release or update is installed | E | E-19 | Published checksums and signatures; the deployers verify them | Future → S14 |
+| T-57 | A tampered release or update is installed | E | E-19 | Published checksums and signatures; the deployers verify them _P010:_ Cosign keyless signatures, `checksums.txt` signed with Cosign and Minisign, SLSA provenance, an updater that verifies Minisign (FR-381, FR-382, ADR-0049; the owner's decision D2). | Future → S14 |
 | T-58 | Access data kept in sidecars or hidden files is changed outside the app (on the filesystem, over a network share with write access, by restoring an old backup) and grants access | E | E-11, E-13 | The database is the authority for owners, ACLs, and shares; sidecars only mirror it (plan 8.36) | Future → S05.1, S07.3: **decided** (the user's decision D2, P008): the database is authoritative (FR-359) |
 | T-59 | A power cut rolls back the last committed security changes (a revoked session or token, a password change, audit events), because SQLite in WAL mode with `synchronous=NORMAL` flushes only at checkpoints | S, R | E-11 | `synchronous=FULL` (plan 8.37) | Open → S01.1-T12 (built in S03): **decided** `synchronous=FULL` (D5, NFR-056) |
+
+### 6.10 Added by the security program (plan 1.12.0, P010)
+
+| ID | Threat | STRIDE | Assets / attacker / surface | Mitigation | Status |
+|---|---|---|---|---|---|
+| T-60 | A file name passed to an external tool injects options or commands: a leading `-` read as an option; a newline in an ExifTool `-stay_open` argument file starts a new argument; a name ending in `\|` was run as a command by ExifTool before 12.38 (CVE-2022-23935) | E | A-08 / X-03 / E-16 | Tools never receive user-chosen names: the wrapper gives them core-generated names in a scratch folder; argument lists, never a shell; `--` where supported; ExifTool 12.38 or newer (NFR-064, ADR-0045). A leading `-` stays allowed in user names (refusing it would refuse ordinary files from backups) | Future → S04, S05 |
+| T-61 | A CI action or build tool referenced by a movable tag is replaced with malicious code that steals CI secrets (`tj-actions/changed-files`, March 2025; `aquasecurity/trivy-action`, March 2026, which this project's CI uses by tag; its runs were outside the attack window) | E, I | A-08, CI secrets / X-07 / E-12 | Actions pinned by full commit SHA; minimal token permissions per job; no secrets for workflows started from forks (NFR-078) | Open → S03.5-T06 |
+| T-62 | A secret is committed to the public repository | I | A-02, A-07 / anyone reading GitHub / E-12 | gitleaks pre-commit and pre-push hooks (decision D3); GitHub push protection (an owner task); a one-time scan of the whole history; anything found is rotated first (NFR-078) | Open → S03.5-T07; owner task |
+| T-63 | The coding agent adds an invented or typo-squatted package ("slopsquatting") | E | A-08 / X-07 / E-12 | Every dependency verified as the genuine package before it is added (rule R15, NFR-079); the register records the check; S13 reviews every component | Mitigated by rule (R15); checked in S13 |
+| T-64 | A decompression or resource bomb (huge pixel dimensions, deeply nested metadata, very long or many-stream videos) exhausts memory or CPU | D | A-09 / X-03 / E-16 | Header-first limits (default 250 megapixels), duration, resolution, and stream limits; tool time and memory limits; the item is stored but not processed and the owner is told why (NFR-065) | Future → S04, S05 |
+| T-65 | A crafted container or playlist makes FFmpeg read other local files or fetch URLs | I | A-01, A-05 / X-03 / E-16 | `-protocol_whitelist file` and an explicit input format (`-f`) for every input, placed so nothing overrides them; no network and only the scratch folder in the sandbox (NFR-065, NFR-064) | Future → S04.4, S04.8 |
+| T-66 | HSTS sent with a self-signed certificate locks users out after the certificate is renewed (browsers allow no click-through on an HSTS host) | D | A-09 / — / E-07 | HSTS only when a trusted certificate is in use (P010 change to S03.4-T01; NFR-067, ADR-0047) | Open → S03.4-T01 |
+| T-67 | Outbound features (webhooks, imports, backups) are pointed at internal addresses (SSRF), directly, through DNS, or through redirects | I, E | A-05, A-08 / X-04, X-08 / E-15 | Internal, loopback, link-local, and metadata addresses refused after DNS resolution and on every redirect unless the admin allows a specific LAN target; certificates always verified (NFR-071) | Future → S10 and every outbound feature |
+| T-68 | libvips opens an upload with a loader not meant for untrusted input | E | A-08 / X-03 / E-16 | Untrusted operations blocked (`VIPS_BLOCK_UNTRUSTED` or `vips_block_untrusted_set`, libvips 8.13 and newer, verified 2026-10-01); only the formats the plan supports allowed; the sandbox (NFR-065) | Future → S04.4 |
+| T-69 | The AI worker loads a crafted model or a pickled object | E | A-08 / X-07 / E-18 | ONNX models verified by checksum; no pickle or other object deserialization (secure coding standard, section 3) | Future → S17 |
+| T-70 | The audit log is changed directly in the database file to hide actions (refines T-37) | R | A-06 / X-05 / E-11 | A hash chain over the entries with a recorded anchor for retention, verified on schedule and on export (FR-379); file permissions (NFR-073) | Open → S03.6 |
+| T-71 | Debug or profiling endpoints are reachable in a release | I, E | A-05, A-08 / X-01 / E-01 | None in release builds; admin-only on loopback in development builds (NFR-076) | Open → S03 (NFR-076) |
+| T-72 | The media sandbox is weaker than designed because the kernel lacks Landlock (some Raspberry Pi kernels) or on Windows | E | A-08 / X-03 / E-16 | Process limits and no network still apply; the health page shows the sandbox level; the hardening guide explains enabling Landlock; ADR-0045 records the Windows limits | Future → S04 (ADR-0045) |
 
 ## 7. Review of existing code (S03.1-T02)
 
@@ -253,3 +271,4 @@ _None yet. Candidates are marked in section 6 (T-33, T-37, T-44, T-45). Each bec
 | 2026-09-30 | S007 | Version 1.1 (S03.1-T02): section 7, the review of the S01 and S02 code: findings F-01–F-08 (bugs S03-B01, S03-B02) and what was found sound |
 | 2026-09-30 | S007 | Version 1.2: T-58 (access data edited outside the app) and T-59 (security writes rolled back by a power cut), from external review #1 (CR001, research R002) |
 | 2026-09-30 | S007 | Version 1.3 (plan 1.9.0): T-58 and T-59 decided (D2, D5); T-19 mitigated first (FR-350, ADR-0042); stage IDs renumbered (packaging S14, drives S15, AI S17) |
+| 2026-10-01 | S007 | Version 1.4 (plan 1.12.0, the security program, P010): section 6.10 with T-60–T-72 (tool argument injection, CI tag hijacking, secrets in the public repository, invented packages, resource bombs, FFmpeg file reads, HSTS lockout, SSRF, libvips loaders, AI model loading, direct audit-log edits, debug endpoints, a weaker sandbox); T-37, T-44, T-49, T-50, T-54, T-57 point to the new requirements; a public overview in `docs/security/threat-model.md`; the risk register `risk-register.md` |

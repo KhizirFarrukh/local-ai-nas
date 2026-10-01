@@ -12,6 +12,7 @@
   > "The NAS has two folders at the root, files and photos, and they never intersect."
   > "Content moves between them only when the user selects a file to copy or move to files or photos."
 - **Status:** Not started
+- **Security (1.12.0, P010; rule R15):** ingestion, thumbnails, and video are **Tier 1** (parsers of untrusted files). Before any tool processes an upload (S04.3, S04.4): the media processing sandbox (NFR-064, ADR-0045) and the input limits and tool restrictions (NFR-065: the pixel limit, libvips's untrusted-operation block, FFmpeg's protocol allow-list and explicit format). S04.8: streaming URLs short-lived and bound to the user (FR-145 note). S04.9: the hostile media corpus and fuzzing of the tool wrappers (testing 12.5).
 
 #### S04.1: Photos area rules and domain model
 - **Goal:** Define what a media item is and how it is stored inside `photos/`, and enforce separation from `files/`.
