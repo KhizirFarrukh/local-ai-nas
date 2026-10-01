@@ -50,3 +50,7 @@ _Not yet approved._
 - **Related ADRs:** ADR-0010 (authentication and sessions; TLS part amended)
 - **Related stages:** S03.4, R06, R07, R08
 - **Plan version:** 1.12.0
+
+## Note (2026-10-01, session S007 E076)
+
+Q87 was decided by the agent under the user's delegation ("if you have questions, do what you deem best for that"): plain HTTP stays on loopback as the one documented exception (it never leaves the computer; it serves first-run setup before a certificate exists and local tools), with the option to turn it off (`server.bind = ""`). The ADR itself stays Proposed until the user approves it.

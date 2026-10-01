@@ -3,9 +3,9 @@
 | Field | Value |
 |---|---|
 | Requirement | FR-084: a documented threat model, maintained through the project |
-| Version | 1.4 |
+| Version | 1.5 |
 | Created | 2026-09-30 (session S007, task S03.1-T01) |
-| Last updated | 2026-10-01 (session S007, plan 1.12.0: the security program, P010) |
+| Last updated | 2026-10-01 (session S007, plan 1.13.0: ZFS, NAS platforms, the appliance OS) |
 | Status | **Draft for the user's review** (S03.1 criterion 3) |
 | Maintained by | Every stage that adds an attack surface updates this file (RULES documentation map; audit checklist group H) |
 
@@ -230,6 +230,17 @@ flowchart LR
 | T-71 | Debug or profiling endpoints are reachable in a release | I, E | A-05, A-08 / X-01 / E-01 | None in release builds; admin-only on loopback in development builds (NFR-076) | Open → S03 (NFR-076) |
 | T-72 | The media sandbox is weaker than designed because the kernel lacks Landlock (some Raspberry Pi kernels) or on Windows | E | A-08 / X-03 / E-16 | Process limits and no network still apply; the health page shows the sandbox level; the hardening guide explains enabling Landlock; ADR-0045 records the Windows limits | Future → S04 (ADR-0045) |
 
+### 6.11 Future surfaces from ZFS, NAS platforms, and the appliance OS (plan 1.13.0, E076)
+
+| ID | Threat | STRIDE | Assets / attacker / surface | Mitigation | Status |
+|---|---|---|---|---|---|
+| T-73 | Host management is abused to open SSH, change the network, or turn off the firewall | E, D | A-08, A-09 / X-04, X-08 / E-09, E-17 | Typed helper operations only (no shell), re-authentication, audit, keep-or-revert for network and firewall changes, values validated by the helper (ADR-0053, FR-388) | Future → R14 |
+| T-74 | Someone on the LAN reaches the first-boot setup of a fresh appliance before the owner | E | A-02, A-08 / X-01 / E-08 | The LAN setup page accepts only a one-time setup code shown on the device and written to the boot partition; it expires after setup (ADR-0052, FR-391) | Future → R14 |
+| T-75 | NFS trusts the user IDs a client claims, so a LAN device reads another user's files | I, E | A-01 / X-01 / E-13 | NFS read-only by default and only for trusted single-user setups unless Kerberos is configured; documented plainly (FR-389) | Future → R14 |
+| T-76 | Snapshot directories or host system folders expose deleted or other users' data, or get ingested as user items | I, T | A-01 / X-08 / E-11, E-13 | `.zfs` hidden (`snapdir=hidden`); host system names reserved and ignored by listings, the index, ingestion, and the watcher (FR-385) | Open → S01.6-T07 (approved), S04.2, S06, S09.4 |
+| T-77 | A host NAS platform's own shares bypass the NAS's authorization on the same folders | I, T | A-01 / X-08 / E-13 | Changes go through the watcher (S09.4); guidance: the photos area read-only in host shares; the NAS never claims to protect what the host shares (FR-387) | Future → R13 |
+| T-78 | A malicious ZFS pool on a plugged-in drive is imported automatically | E | A-08 / X-03 / E-17 | Pools are imported only inside a flow the admin starts, never on hot-plug (as T-52) (ADR-0051) | Future → S15 |
+
 ## 7. Review of existing code (S03.1-T02)
 
 Reviewed on 2026-09-30 (session S007): the S01 and S02 code against the threats above. The file modes were checked on Linux (WSL, umask 022) with a fresh storage root.
@@ -272,3 +283,4 @@ _None yet. Candidates are marked in section 6 (T-33, T-37, T-44, T-45). Each bec
 | 2026-09-30 | S007 | Version 1.2: T-58 (access data edited outside the app) and T-59 (security writes rolled back by a power cut), from external review #1 (CR001, research R002) |
 | 2026-09-30 | S007 | Version 1.3 (plan 1.9.0): T-58 and T-59 decided (D2, D5); T-19 mitigated first (FR-350, ADR-0042); stage IDs renumbered (packaging S14, drives S15, AI S17) |
 | 2026-10-01 | S007 | Version 1.4 (plan 1.12.0, the security program, P010): section 6.10 with T-60–T-72 (tool argument injection, CI tag hijacking, secrets in the public repository, invented packages, resource bombs, FFmpeg file reads, HSTS lockout, SSRF, libvips loaders, AI model loading, direct audit-log edits, debug endpoints, a weaker sandbox); T-37, T-44, T-49, T-50, T-54, T-57 point to the new requirements; a public overview in `docs/security/threat-model.md`; the risk register `risk-register.md` |
+| 2026-10-01 | S007 | Version 1.5 (plan 1.13.0, E076): section 6.11 with T-73–T-78 (host management, first-boot setup, NFS trust, snapshot and host system folders, host shares, ZFS pool import) |

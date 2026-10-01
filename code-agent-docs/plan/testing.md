@@ -47,6 +47,8 @@ CI runs on Linux and Windows from S01.1. _Since S007 (the user's preference):_ C
 
 _1.9.0 (P008):_ a shared **crash-injection harness** for journaled operations (NFR-053); **local-origin security tests** (a foreign Host refused, cross-site posts refused, the GUI and scripts still working; NFR-057); **multilingual golden queries** (Urdu, Roman Urdu, mixed script; FR-357); a **background-load responsiveness test** (NFR-054); a **hybrid versus lexical evaluation** (FR-362); the **dependency review procedure** (S13.5).
 
+_1.13.0 (E076):_ **ZFS** tests use file-backed vdevs (no real disks, NFR-049) on a CI runner where the module can be loaded; the R13 templates are installed and upgraded on virtual machines of each platform at every release; the R14 image boots in a Raspberry Pi test device (and a VM for x86-64) and passes the first-boot and host-management system tests.
+
 ### 12.3 Fixture sets
 - **Files (S01):**
   - Names: Unicode (NFC/NFD, emoji, right-to-left), reserved names, long names.

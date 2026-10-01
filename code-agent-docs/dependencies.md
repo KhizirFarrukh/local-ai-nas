@@ -295,3 +295,17 @@ These are listed so the register covers every technology named in the ADRs (audi
 | GitHub CodeQL | Testing 12.5 | Free for public repositories (GitHub service; verified 2026-10-01) | Code scanning at stage completion | Candidate (S03.10-T07) |
 | pip-audit | Testing 12.5 (AI worker) | Apache-2.0 (to confirm on adoption) | Vulnerability scan of Python packages | Candidate (S17) |
 
+## 15. Candidates from ZFS and NAS OS support (plan 1.13.0, E076; not dependencies yet)
+
+**Not dependencies.** Each is verified again (rule R15, NFR-079) and moved into its section, with its section-12 platform rows, in the commit that adopts it.
+
+| Name | Candidate for | License | Purpose | Verification status |
+|---|---|---|---|---|
+| OpenZFS (`zfs-dkms`, `zfsutils-linux`; ArchZFS on Arch) | FR-383, FR-384 (S15, optional) | CDDL-1.0 (a separate kernel module and tools; installed from the distribution with the operator's consent, never shipped by the project) | ZFS pools | Candidate. Versions, ARC default, and platform packaging checked 2026-10-01 (research R004) |
+| rpi-image-gen | FR-391 (R14) | To confirm on adoption | Builds the Raspberry Pi appliance image | Candidate. Purpose checked 2026-10-01 (Raspberry Pi announcement) |
+| pi-gen | FR-391 (R14), alternative | To confirm on adoption | The tool that builds Raspberry Pi OS | Candidate |
+| OpenSSH `sftp-server` | FR-389 (R14) | BSD-style (to confirm) | SFTP access | Candidate |
+| rsync | FR-389 (R14) | GPL-3.0 (to confirm; a separate program) | Backup target for other computers | Candidate |
+| NFS server (`nfs-kernel-server`) | FR-389 (R14) | GPL-2.0 (to confirm) | NFS exports | Candidate |
+| Net-SNMP | FR-390 (R14) | BSD-style (to confirm) | Read-only SNMP | Candidate |
+

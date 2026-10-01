@@ -9,6 +9,7 @@
 - **Goal:** The NAS works as a network drive with per-user permissions, and external changes stay in sync.
 - **User requirements:** none (planner-proposed).
 - **Status:** Not started
+- **Host system folders (1.13.0, E076; FR-385, data integrity):** S09.4: the watcher and reconciliation skip NAS-host system entries (`.zfs`, `@eaDir`, `#recycle`, `#snapshot`, `@Recycle`, `@Recently-Snapshot`, `.@__thumb`, `lost+found`, `$RECYCLE.BIN`, `System Volume Information`), so snapshot copies and host thumbnails never become user items.
 - **Security (1.12.0, P010; rule R15):** WebDAV hardening (NFR-072) is **Tier 1**: HTTPS only, NAS accounts or app passwords, limited `PROPFIND` depth, XML without external entities, `Destination` through the resolver and authorization.
 
 #### S09.1: Protocol selection

@@ -11,6 +11,7 @@
 - **Depends on:** S15, S10.3, S04.4, S04.8, S06, S08.3.
 - **Write policy:** write-through only; write-back is a not-scheduled candidate (11a).
 - **Status:** Not started
+- **ZFS (1.13.0, E076):** on ZFS pools the block-level cache options are ZFS's own (L2ARC; a special vdev for metadata), compared with lvmcache in S16.1 (ADR-0038).
 
 #### S16.1: Architecture and decisions
 - **Goal:** The cache is designed and its decisions are made.

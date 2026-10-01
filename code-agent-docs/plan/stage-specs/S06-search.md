@@ -12,6 +12,7 @@
   > "Search is not exact-match. It works like a search engine, with near matches and different word forms, and synonyms work too (searching 'receipts' also returns items with 'receipt', 'invoice', or 'voucher' in their metadata)."
   > "Operator-style searches work, e.g. 'before:2026' returns all items dated before 2026."
 - **Status:** Not started
+- **Host system folders (1.13.0, E076; FR-385, data integrity):** the index skips NAS-host system entries (`.zfs`, `@eaDir`, `#recycle`, `#snapshot`, `@Recycle`, `@Recently-Snapshot`, `.@__thumb`, `lost+found`, `$RECYCLE.BIN`, `System Volume Information`), so snapshot copies and host thumbnails never become user items.
 - **Security (1.12.0, P010; rule R15):** the search query parser is fuzzed in the stage gate; results are filtered per user before ranking (I5); both **Tier 1**.
 
 #### S06.1: Search architecture and engine

@@ -70,3 +70,12 @@ _Pending: put to the user with the P005 report (S007). Q47 is asked at the same 
 - **Related ADRs:** ADR-0028 (pool filesystem), ADR-0029 (storage helper), ADR-0003 (storage layout)
 - **Related stages:** S10.3, S15
 - **Plan version:** 1.4.0 (concerns 8.24, 8.25; 11a)
+
+## Revision 1 (2026-10-01, session S007 E076): ZFS as an optional second backend
+
+- **The user's request:** "add support for: zfs, NAS OS, and everything related to this and hosting a NAS"; open questions delegated: "if you have questions, do what you deem best for that".
+- **Change to the recommendation:** mdadm stays the **default** for RAID 0 and RAID 1; **ZFS (option C) becomes an optional second backend** on Linux, chosen when a pool is created (decided by the agent under the user's delegation (S007 E076); details in ADR-0051). Option C's cons are handled there: the module is installed from the distribution with the operator's consent (never shipped by the project), the NAS sets the ARC limit, the health page checks the module after kernel updates, and snapshots now have a place (R04, FR-256; NG8 note).
+- **Q47** is answered in the same way: pools stay Linux-only; mdadm default, ZFS optional.
+- **Still deferred:** parity layouts (RAID 4/5/6 and RAIDZ), virtual drives, nesting (11a).
+- The ADR stays **Proposed** until the user approves it (R5).
+

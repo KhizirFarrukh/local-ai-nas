@@ -56,7 +56,7 @@ Questions keep their numbers permanently. **★ = needed for S01**: none left (Q
 44. **Retention of replaced originals** after optimization: how long (proposed: **30 days**)? _Needed by: S12.5._
 45. **Exact duplicate photos at upload:** "Skip and report" (proposed), "Keep both", or "Ask"? _Needed by: S04.2 (default), S11.2 (policy)._
 46. **File shortcuts over network shares:** shown as a read-only view of the target (proposed in ADR-0024), or hidden? _Needed by: S11.6, S09.2._
-47. **Pools:** is mdadm acceptable for RAID 0 and RAID 1 (recommended, ADR-0027), and is **Linux-only** acceptable for pools (A22)? _Needed by: S15.1._ _(SnapRAID with mergerfs and parity layouts are deferred with the complex RAID, 11a; RAID 5 and RAID 6 are answered by the user's decision in S007: later.)_
+47. **Pools:** is mdadm acceptable for RAID 0 and RAID 1 (recommended, ADR-0027), and is **Linux-only** acceptable for pools (A22)? _Needed by: S15.1._ _Answered in 1.13.0, decided by the agent under the user's delegation (S007 E076): pools stay Linux-only; mdadm is the default backend and ZFS an optional second one (ADR-0027 revision 1, ADR-0051). The user can change it._ _(SnapRAID with mergerfs and parity layouts are deferred with the complex RAID, 11a; RAID 5 and RAID 6 are answered by the user's decision in S007: later.)_
 48. **Video codec for optimization:** H.264 only (most compatible, recommended default), or also H.265/HEVC and AV1 (smaller files; slower encoding and weaker browser support)? _Needed by: S12.2 (ADR-0025)._
 49. **Who applies optimization policies:** only each user to their own media (proposed), or can an admin apply policies to all users? _Needed by: S12.6._
 50. _Answered (S007, E010): now, with the current stage ("make sure to work on the new stuff too if they were meant to be part of current or previous stages"). ADR-0021 was Accepted in E013, and the three follow-up tasks were done in S007 (E017–E019)._ _(Planner-added, from fixing P005)_ **When are the S01 follow-up tasks done** (content hash at upload in both areas; storage-root checks), now that S01 is Done? _Recommendation:_ at the start of S04, before S04.2 needs the hashes; files uploaded before then are covered by the S11.1 backfill. The content-hash ADR (ADR-0021) must be decided first. _Needed by: S04._
@@ -112,7 +112,16 @@ _(Planner-added from P006; Q54 and Q34 first, because they change the MVP, then 
 
 _The four decisions of P010 (D1 checklist strictness, D2 release signing, D3 secret scanning, D4 publication) were answered by the user in the request itself (S007 E074) and are not asked again._
 
-87. _(P010)_ **Plain HTTP on loopback after S03:** the approved S03 design keeps plain HTTP on `127.0.0.1` (the traffic never leaves the computer; it serves the first-run setup before a certificate exists and local tools), while P010 asks for HTTPS for everything after the localhost-only phase. Keep it as the one documented exception, with an option to turn it off (**recommended**: loopback traffic cannot be read from the network, the Host allow-list blocks DNS rebinding, and HTTPS would not stop a local program that can already connect), turn it off by default once LAN HTTPS works, or remove it? _Needed by: S03.4._
+87. _(P010)_ **Plain HTTP on loopback after S03:** the approved S03 design keeps plain HTTP on `127.0.0.1` (the traffic never leaves the computer; it serves the first-run setup before a certificate exists and local tools), while P010 asks for HTTPS for everything after the localhost-only phase. Keep it as the one documented exception, with an option to turn it off (**recommended**: loopback traffic cannot be read from the network, the Host allow-list blocks DNS rebinding, and HTTPS would not stop a local program that can already connect), turn it off by default once LAN HTTPS works, or remove it? _Needed by: S03.4._ _Answered, decided by the agent under the user's delegation (S007 E076): keep it as the one documented exception, with the option to turn it off (as recommended)._
+
+### New in 1.13.0 (ZFS, NAS OS, and hosting a NAS; decided by the agent under the user's delegation (S007 E076))
+
+_The user: "also, approve the tasks and if you have questions, do what you deem best for that." These questions were decided by the agent and are listed for traceability; the user can change any answer._
+
+88. **What "NAS OS" covers:** running on existing NAS operating systems, an appliance OS of our own, or host features? _Answered: all three: R13 (NAS platforms), R14 (the appliance and host management), and the hosting feature map in research R004._
+89. **ZFS: where, and which default?** _Answered: an optional second pool backend in S15 (FR-383, FR-384); mdadm stays the default, because the production machine is a Raspberry Pi (memory, DKMS rebuilds after kernel updates)._
+90. **Hosting apps, containers, and VMs (X-09)?** _Answered: stays excluded (NG12): the attack surface would exceed the security program's limits and it does not fit a Raspberry Pi; host platforms (R13) offer it._
+91. **Position of R13 and R14:** _Answered: after R12, before AI (the default order; nothing else moves). Because the production machine is a Raspberry Pi, the user may want R14 earlier (for example right after S16); that would be a reordering for the user to decide._
 
 ### Carried over from 0.1.0
 
