@@ -323,7 +323,7 @@ The main navigation gets a user menu (account, sign out) and the Admin entry for
 | S03.2 | First-run setup and authentication | **In Progress** | S03.1 | FR-064, FR-085, FR-068, NFR-010 |
 | S03.3 | Sessions and tokens | Not started | S03.2 | FR-086, FR-087, FR-219 (foundation) |
 | S03.4 | Transport security | Not started | S03.2 | FR-088, NFR-020 |
-| S03.5 | Application hardening | **In Progress** (T02 first part, T06, and T07 done) | S03.2, S03.3 | FR-089, NFR-022 |
+| S03.5 | Application hardening | **In Progress** (T02 first part, T06, T07, and T08 done) | S03.2, S03.3 | FR-089, NFR-022 |
 | S03.6 | Security logging and audit trail | Not started | S03.2 | FR-090, NFR-016 |
 | S03.7 | Two-factor authentication (optional per account) | Not started (Q33: yes) | S03.2, S03.3 | FR-091 |
 | S03.8 | Security GUI | Not started | S03.2–S03.7, S02 | FR-064, FR-086, NFR-015 |
@@ -336,7 +336,7 @@ The main navigation gets a user menu (account, sign out) and the Admin entry for
 
 **Rule (R6):** the tasks in S03.1–S03.9 deliver code (or, in S03.1, documents), written to be testable. Such a task is Done when:
 - it builds;
-- the Go linter and formatter, `pnpm lint`, `pnpm check`, and the existing tests pass (unit, integration, and the system tests when the task touches the GUI or the routes);
+- the Go linter and formatter, `pnpm format:check` (added in S03.5-T08 after bug S03-B04), `pnpm lint`, `pnpm check`, and the existing tests pass (unit, integration, and the system tests when the task touches the GUI or the routes);
 - it was checked by running it, as its acceptance criteria say.
 
 Its tests are written in S03.10. Bugs found while building are recorded in section 12 and fixed at once; their regression tests come in S03.10.
@@ -420,7 +420,7 @@ Its tests are written in S03.10. Bugs found while building are recorded in secti
 | S03.5-T05 | **Review fixes:** the S03.1-T02 findings for uploads, previews, and error messages; archive tickets and tus uploads bound to the user who created them (T-29, T-30); files and folders the service creates readable only by it (T-42, T-43): `.local-ai-nas` 0700, the database files 0600, tusd's modes (bug S03-B02); `isEvalSupported: false` for pdf.js if the option exists (F-08). _P010 (approved E076; ADR-0050):_ umask 027; user files 0640 and folders 0750 (no execute bit, I12); the startup permission check (warn; refuse to start when a secret file is readable by others; NFR-073); per-user limits on concurrent tus uploads and pending bytes (FR-004). | Not started | Each finding is fixed (bug entry) or moved to the threat model as an accepted-risk candidate with a reason; another subject cannot use a ticket or upload ID; new database, log, and key files are 0600 on Linux. |
 | S03.5-T06 | **Supply-chain foundation** (P010, NFR-078): every GitHub Action in `.github/workflows/` pinned to a full commit SHA with its version in a comment (each SHA checked against the action's release); `permissions:` minimal per job (`contents: read` by default); no secrets for workflows started from forks; Dependabot's `github-actions` updates keep the SHAs current; the owner's settings checklist (`docs/security/supply-chain.md`, section 3) handed to the owner. Why first: tag hijacking of `tj-actions/changed-files` (2025) and `aquasecurity/trivy-action` (2026, used by this CI). | **Done** (S007 E078) | No `uses:` line refers to a tag (a scripted check); the workflow is proved by the next stage-end run (a by-hand run only with the user's permission). |
 | S03.5-T07 | **Secret scanning hooks** (P010, the user's decision D3, NFR-078): gitleaks (verified as the genuine package and its license before use; a pinned release with its checksum; register entry) as a pre-commit hook (`gitleaks git --pre-commit --staged`) and a pre-push hook; `.gitleaks.toml` committed with a narrow allow-list for test fixtures; install scripts for Windows 11 (PowerShell) and Linux (`scripts/install-git-hooks.*`), documented in `docs/dev/`; a one-time scan of the whole git history, with anything found **rotated first** and cleaned up only with the user's permission (history rewriting, RULES R7). | **Done** (S007 E079) | A commit with a fake key (in a throwaway branch) is blocked; a normal commit passes in about a second; the history scan's result is in the session log, with no secret value written anywhere. |
-| S03.5-T08 | **Security lint rules** (P010, NFR-059, NFR-080; the secure coding standard): `forbidigo` in `.golangci.yml` against `os/exec` outside the tool wrapper (tests allowed), `math/rand` in security packages, `template.HTML`, and `InsecureSkipVerify`; ESLint `svelte/no-at-html-tags` and rules against `eval` and `new Function`; the Ruff `S` rules recorded for S17. | Not started (approved E076) | The linters pass on the current code; a deliberate violation of each rule (in a scratch file, not committed) is reported. |
+| S03.5-T08 | **Security lint rules** (P010, NFR-059, NFR-080; the secure coding standard): `forbidigo` in `.golangci.yml` against `os/exec` outside the tool wrapper (tests allowed), `math/rand` in security packages, `template.HTML`, and `InsecureSkipVerify`; ESLint `svelte/no-at-html-tags` and rules against `eval` and `new Function`; the Ruff `S` rules recorded for S17. | **Done** (S007 E080) | The linters pass on the current code; a deliberate violation of each rule (in a scratch file, not committed) is reported. |
 
 ### S03.6: Security logging and audit trail
 
@@ -640,6 +640,7 @@ cd web && pnpm test:e2e        # when the task touches the GUI or the routes
 | 2026-10-01 | S007 | **P010 approved** (E076): S03.5-T06, T07, T08, S03.10-T07 and the P010 changes to S03.4-T01, S03.5-T03, S03.5-T05, S03.6-T01 and T02 are approved; statuses set to Not started; Q87 decided by the agent under the user's delegation: plain HTTP stays on loopback as the one documented exception (S03.4-T01 keeps `server.bind`) | the user (S007 E076): "also, approve the tasks and if you have questions, do what you deem best for that." | Given (E076) |
 | 2026-10-01 | S007 | **S03.5-T06 done** (E078): every GitHub Action pinned to a verified commit SHA; permissions and triggers were already minimal | Approved P010 foundation task | Given (E076) |
 | 2026-10-01 | S007 | **S03.5-T07 done** (E079): gitleaks pre-commit and pre-push hooks with pinned, checksum-verified installers; history and tree scanned with no finding; bug S03-B03 (the golangci-lint installer ran a downloaded script) recorded and fixed | Approved P010 foundation task (the user's decision D3) | Given (E076) |
+| 2026-10-01 | S007 | **S03.5-T08 done** (E080): forbidden-API rules (depguard, forbidigo; gosec covers `template.HTML`) and ESLint security rules, each checked with a deliberate violation; bug S03-B04 (a format-check failure from S03.5-T02) fixed; `pnpm format:check` added to the per-task checks | Approved P010 foundation task | Given (E076) |
 
 ### Bugs found during the stage
 
@@ -648,6 +649,7 @@ cd web && pnpm test:e2e        # when the task touches the GUI or the routes
 | S03-B01 | S03.1-T02 (threat T-19, finding F-01) | The API has no authentication and no Host check, so a web page using DNS rebinding can use the files API of a development server running on the same computer | S03.5-T01 (authentication), S03.5-T02 (Host allow-list: **done**, S007 E065; DNS rebinding and cross-site writes are refused now) | S03.10-T02: a foreign `Host` gets `421`; anonymous calls get `401` |
 | S03-B02 | S03.1-T02 (finding F-02) | The database file is created 0644 by SQLite and tusd's upload files 0664, so members of the service's group can read the database and change uploads in progress | S03.5-T05 | S03.10-T01/T02: the modes of new files and folders on Linux |
 | S03-B03 | S03.5-T07 (the tool scripts reviewed against RULES R15) | `scripts/install-golangci-lint.sh` piped the upstream install script into `sh`: a download run as a script (R15; secure coding standard, section 4) | Fixed in S03.5-T07 (E079): the pinned release archive is downloaded and its SHA-256 checked before unpacking | S03.10-T07: a check that no script pipes a download into a shell |
+| S03-B04 | S03.5-T08 (`pnpm format:check`) | `web/src/lib/api/messages.ts` failed the format check since S03.5-T02 (one long line), so the stage-end CI web job would have failed; the per-task checks of S03 did not include `pnpm format:check` | Fixed in S03.5-T08 (E080): reformatted; `pnpm format:check` added to the per-task checks | The CI web job's format check |
 
 ## 13. Completion record
 

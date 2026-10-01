@@ -17,7 +17,17 @@ export default defineConfig(
       // The app is always served at the root of its own origin (the core
       // embeds it, S02.1-T02), with no base path, and its links are built
       // from file paths at run time. resolve() adds nothing here.
-      'svelte/no-navigation-without-resolve': 'off'
+      'svelte/no-navigation-without-resolve': 'off',
+      // Security rules (S03.5-T08; the secure coding standard, section 2).
+      // No code from strings, and never user data as raw HTML. The Svelte
+      // rules are also in the recommended set; they are set here so a
+      // change of that set cannot drop them.
+      'no-eval': 'error',
+      'no-implied-eval': 'error',
+      'no-new-func': 'error',
+      'no-script-url': 'error',
+      'svelte/no-at-html-tags': 'error',
+      'svelte/no-target-blank': 'error'
     }
   },
   {
