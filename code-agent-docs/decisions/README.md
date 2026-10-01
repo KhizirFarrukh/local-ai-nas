@@ -44,7 +44,7 @@ Every significant technical decision (RULES R5). An ADR becomes **Accepted** onl
 | [ADR-0038](ADR-0038-block-level-ssd-cache.md) | Block-level SSD cache (lvmcache) and an optional LVM layer | Proposed |
 | [ADR-0039](ADR-0039-admin-console.md) | Admin console architecture | Accepted |
 | [ADR-0040](ADR-0040-item-identity.md) | Item identity: UUIDv7 IDs in an items table | Accepted |
-| [ADR-0041](ADR-0041-operation-journal-and-crash-consistency.md) | Operation journal and crash consistency | Accepted |
+| [ADR-0041](ADR-0041-operation-journal-and-crash-consistency.md) | Operation journal and crash consistency | Accepted · amended |
 | [ADR-0042](ADR-0042-local-origin-protection.md) | Protection against other websites before login (Host and Origin checks) | Accepted |
 | [ADR-0043](ADR-0043-hybrid-search.md) | Hybrid lexical and semantic search | Proposed |
 | [ADR-0044](ADR-0044-plan-document-structure.md) | Plan document structure: a plan folder with an index | Accepted |

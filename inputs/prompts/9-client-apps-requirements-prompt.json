@@ -1,0 +1,191 @@
+{
+  "prompt_meta": {
+    "name": "local-ai-nas: Client App Requirements — Backup, Folder Sync, and Share-to-NAS on Android and Windows, with iOS, macOS, and Linux Covered (Plan Change Request #9)",
+    "prompt_version": "1.0",
+    "type": "Plan change request (requirements only), handled under code-agent-docs/RULES.md R4",
+    "how_to_read_this": "Read this entire prompt before acting. Every field is an instruction. This request ADDS requirements to the client apps that already exist in the plan. It does NOT move, rename, split, merge, or reorder any release or stage. Items marked [User requirement] come from the user and must not be changed or dropped. Items marked [Planner addition] can be removed by the user."
+  },
+
+  "user_requirements": {
+    "note": "Record all three messages verbatim in the session log and quote them where the requirements are added.",
+    "message_1": "Add a to-do feature of android app client which will connect to the nas and help in auto backups like auto media backup and device folders sync into drive and ability to allow Android able to \"share\" files/media to the nas using share option and they will upload onto it.",
+    "message_2": "Wait, there should also be a windows app client too for the same, so add both windows and android into the plan with future expansion to Mac, ios and Linux",
+    "message_3": "Stop, if client apps already exists in the plan, then keep them there, no change of that plan, just make sure ios, Mac and Linux is also catered in future plans. Also the share and sync functionality, add them to the client apps requirements",
+    "interpretation": [
+      "[User requirement] The existing client-app releases keep their position, IDs, names, and order. Only requirements are added.",
+      "[User requirement] Android and Windows clients: connect to the NAS; automatic media backup; sync of chosen device folders into the NAS ('drive' means the NAS files area); send files and media to the NAS from the operating system's share option.",
+      "[User requirement] iOS, macOS, and Linux get the same features in the future, as far as each platform allows, and this must be visible in the plan.",
+      "[User requirement] This is future ('to-do') work, not the MVP."
+    ]
+  },
+
+  "before_you_start": [
+    "Run the full session start protocol from code-agent-docs/RULES.md (R1).",
+    "Save this entire prompt, unchanged, to code-agent-docs/prompts/P009-client-app-requirements.json (or the next free number; use it everywhere this prompt says P009). Log the three messages verbatim.",
+    "In CURRENT_STATE.md under 'In progress', write: 'Applying plan change request #9 (client app requirements)'.",
+    "Find where client apps live in the current plan. If P006 was applied, they are release R07 'Mobile apps' (Android and iOS) and release R08 'Desktop sync and command line' (Windows, macOS, Linux). Use the real IDs you find. If the plan was split into files (P008), edit the relevant plan files.",
+    "If P008's change-intake rule (R14) exists, record this request in the backlog table as 'future release, requested by the user' (not MVP)."
+  ],
+
+  "hard_rules": [
+    "Do not change the position, ID, name, theme, order, or prerequisites of any existing release or stage.",
+    "Do not move Android and Windows into the same release. Android stays in the mobile-apps release, Windows in the desktop release, exactly as planned.",
+    "Only add requirements, a platform capability matrix, open questions, verification tasks, risks, and a revision entry.",
+    "If a new requirement cannot fit without changing a release's scope boundary, record it as 'pending user decision' instead of moving anything."
+  ],
+
+  "if_client_releases_do_not_exist": "If the plan has no client-app releases (P006 was not applied), do not create or position releases. Instead: attach these requirements to the 11a candidate 'Mobile app with automatic photo backup', add a new 11a candidate 'Desktop client app (Windows first; macOS and Linux later)', note that their position is pending the user's decision, and list that in your report.",
+
+  "non_goal_update": "NG2 ('no native mobile apps') is reversed by the user's own messages 1 and 2. Change NG2 to point to the client-app releases and quote the user. If P006's Q56 exists, mark its 'native apps or PWA only' part as answered: native client apps. The framework choice, store publishing, and push services in Q56 stay open.",
+
+  "requirements": {
+    "note": "Add each as a new FR (IDs after the highest existing) in the release shown. Where an existing requirement already covers part of it (e.g. P006 G-082 background photo backup, G-087 share-sheet integration, G-090 desktop sync, G-092 PC folder backup), extend that requirement instead of duplicating it and say so in the notes column.",
+
+    "common_to_all_clients": {
+      "release": "Defined in the first client release (mobile apps) and reused by every later client.",
+      "items": [
+        "[User requirement] Connect to the NAS: find it on the local network automatically (mDNS/DNS-SD), or enter its address, or scan a pairing QR code shown in the web UI. The QR code carries the address, a one-time pairing code, and the HTTPS certificate fingerprint, so self-signed certificates are trusted safely.",
+        "[Planner addition] Each device is registered with its own revocable token, scoped to what the app needs. Tokens are stored in the platform's secure store (Android Keystore, Windows Credential Manager/DPAPI, Apple Keychain, Linux Secret Service).",
+        "[Planner addition] A 'Devices' page in the web UI lists each user's devices with platform, last seen, last successful backup, and pending items, with 'sign out this device'. An alert is sent if a device has not backed up for a number of days the user chooses.",
+        "[Planner addition] Automatic switching between the home address and the remote address when remote access exists (private remote access release); on the home network everything works without it.",
+        "[Planner addition] Resumable uploads (tus, as the web UI uses) survive app restarts, phone reboots, sleep, and network drops. This matters a lot where power and internet cut out often.",
+        "[Planner addition] Duplicate skip: before uploading, the client asks the NAS in batches whether the user already has a file with the same content hash. The answer covers only the user's own items, never other users' (I5).",
+        "[Planner addition] Work waits in a local queue when the NAS is unreachable and continues automatically when it is reachable again.",
+        "[Planner addition] Clear status everywhere: what is backed up, what is waiting, what failed and why, with 'retry' and 'pause'.",
+        "[Planner addition] No telemetry or analytics (I6). Update checks are opt-in or come from the store.",
+        "[Planner addition] The clients never write sidecars or the index. They upload and ask; the core does the rest (I9)."
+      ]
+    },
+
+    "auto_media_backup": {
+      "items": [
+        { "release": "Mobile apps (Android; iOS in the same release as already planned)", "text": "[User requirement] Automatic backup of photos and videos from chosen albums or folders (camera by default) into the user's photos area, through the normal ingest (hash, duplicate policy, sidecar, thumbnails). Extends the existing background-backup requirement." },
+        { "release": "Mobile apps", "text": "[Planner addition] Options: Wi-Fi only or also mobile data, only while charging, minimum battery level, back up existing photos or only new ones from a chosen date, include or exclude videos, pause for a set time." },
+        { "release": "Mobile apps", "text": "[Planner addition] Files are uploaded unchanged, in original quality (motion photos keep their embedded video). Any size reduction is done by the NAS's own optimization policies, never by the client." },
+        { "release": "Mobile apps", "text": "[Planner addition] Deleting a photo on the phone never deletes it on the NAS. Backup is not sync." },
+        { "release": "Desktop sync and command line (Windows; macOS and Linux in the same release as already planned)", "text": "[User requirement] Automatic backup of photos and videos from chosen PC folders (e.g. Pictures, camera import folders) into the photos area, with the same duplicate skip. Only media goes to the photos area (I1)." }
+      ]
+    },
+
+    "device_folder_sync": {
+      "note": "[User requirement] 'device folders sync into drive': the user picks folders on the device and a destination folder in the NAS files area (default files/<user>/Devices/<device name>/<folder>, changeable).",
+      "modes": [
+        "Backup (default): device → NAS. New and changed files are uploaded; nothing is ever deleted on the NAS; older contents are kept as file versions when versioning exists.",
+        "Mirror: device → NAS, and deletions on the device move the NAS copy to trash (never permanently).",
+        "Download / offline: NAS → device, for keeping a NAS folder on the device.",
+        "Two-way sync: changes in both directions, with conflict copies (never a silent overwrite) and the NAS's versions and trash as a safety net."
+      ],
+      "items": [
+        { "release": "Mobile apps (Android)", "text": "[User requirement] Folder sync on Android with Backup and Mirror modes, using folder access the user grants through the system folder picker. Two-way sync on Android is a Could (battery and system limits); question in open_questions." },
+        { "release": "Mobile apps (Android)", "text": "[Planner addition] Download/offline mode extends the existing offline-files requirement." },
+        { "release": "Desktop sync and command line (Windows)", "text": "[User requirement] All four modes on Windows. Two-way sync extends the existing desktop sync requirement; Backup and Mirror modes extend PC folder backup." },
+        { "release": "All clients", "text": "[Planner addition] Ignore patterns (e.g. a .nasignore file), size and type filters, bandwidth limits, and a schedule." },
+        { "release": "All clients", "text": "[Planner addition] The first run of any sync shows a preview (number of files, size, what will happen to deletions) and needs confirmation (I10). A sudden mass deletion on the device pauses the sync and asks before applying it on the NAS." },
+        { "release": "Desktop (Windows)", "text": "[Planner addition] Files in cloud-placeholder folders (e.g. OneDrive 'online-only' files) are detected and not downloaded by accident; the user is warned and chooses. Locked files are retried later; very long paths work." }
+      ]
+    },
+
+    "share_to_nas": {
+      "note": "[User requirement] Send files or media to the NAS from the operating system's share option.",
+      "items": [
+        { "release": "Mobile apps (Android)", "text": "[User requirement] The app appears in Android's share menu for one or many items of any type. The user picks a destination: the photos area (media only) or a folder in the files area, with recent destinations and 'new folder'. Uploads run in the background with a progress notification, continue after the app is closed, and wait in the queue if the NAS is unreachable. Extends the existing share-sheet requirement." },
+        { "release": "Mobile apps (Android)", "text": "[Planner addition] Large files are streamed from the sharing app without loading them into memory. If the sharing app only grants temporary access, the file is copied to app storage first, with a clear message if space is short." },
+        { "release": "Desktop sync and command line (Windows)", "text": "[User requirement] 'Upload to local-ai-nas' from File Explorer: right-click menu and 'Send to', plus the Windows share window where supported, and drag-and-drop onto the app window or tray icon. Same destination picker and background upload with notifications." },
+        { "release": "All clients", "text": "[Planner addition] Non-media sent to the photos area is refused with a message and offered the files area instead (I1). Duplicate skip applies." }
+      ]
+    },
+
+    "background_reliability": {
+      "items": [
+        { "release": "Mobile apps (Android)", "text": "[Planner addition] Reliable background work within Android's rules: scheduled background jobs for backup and sync, and the correct long-running mechanism for user-started transfers. Explain battery-optimization settings to the user, with step-by-step guidance for phone brands known to stop background apps (e.g. Xiaomi, Oppo, Vivo, Infinix, Tecno, Samsung)." },
+        { "release": "Desktop sync and command line (Windows)", "text": "[Planner addition] A per-user background app that starts at login with a tray icon and notifications, pauses on battery saver or metered networks if the user wants, and catches up after sleep or hibernation." }
+      ]
+    },
+
+    "server_support": {
+      "note": "Server work each client release needs. Add it to the same release as the client feature that first needs it.",
+      "items": [
+        { "release": "Mobile apps", "text": "[Planner addition] Pairing endpoints, device registry, device-scoped tokens, the Devices page, the duplicate-check endpoint (own items only), device status reporting, and default device destination folders." },
+        { "release": "Mobile apps (for Download/Mirror) and Desktop (for Two-way)", "text": "[Planner addition] A change feed: a per-user list of changes (created, changed, moved, deleted) with a cursor, so clients fetch only what changed. It uses stable item IDs (P008 F1) to follow renames and moves, and it falls back to a full listing when a cursor is too old." },
+        { "release": "Forward-compatibility note for current MVP stages", "text": "[Planner addition] Cheap hooks only, no new features: API tokens (S03) keep a 'device' field; the operation journal (P008 F3, if applied) records completed changes with an increasing sequence number so the change feed can be built from it later. Record these as notes in the stages; if a stage is Done, record them as follow-ups for the client release instead." }
+      ]
+    }
+  },
+
+  "platform_capability_matrix": {
+    "note": "[User requirement: 'make sure ios, Mac and Linux is also catered'] Add this matrix to the plan next to the client releases. Every client feature is listed for all five platforms, with its release and any limit. iOS stays in the mobile-apps release and macOS and Linux stay in the desktop release, as already planned; the matrix does not move them.",
+    "columns": ["Feature", "Android", "Windows", "iOS", "macOS", "Linux"],
+    "rows": [
+      ["Pairing, device token, Devices page", "Mobile release", "Desktop release", "Mobile release", "Desktop release", "Desktop release"],
+      ["Automatic media backup", "Mobile release", "Desktop release (chosen folders)", "Mobile release; limited by iOS background rules (background upload sessions, background tasks); until then the MVP WebDAV camera-upload bridge covers iPhones", "Desktop release (Photos library export or chosen folders; verify)", "Desktop release (chosen folders)"],
+      ["Folder sync: Backup and Mirror", "Mobile release", "Desktop release", "Mobile release, limited to folders the user grants in the Files app; verify", "Desktop release", "Desktop release"],
+      ["Folder sync: Download/offline", "Mobile release", "Desktop release", "Mobile release", "Desktop release", "Desktop release"],
+      ["Folder sync: Two-way", "Could (pending question)", "Desktop release", "Not planned (iOS limits)", "Desktop release", "Desktop release"],
+      ["Share to NAS", "Mobile release (share menu)", "Desktop release (Explorer menu, Send to, share window, drag-and-drop)", "Mobile release (share extension)", "Desktop release (share extension, Finder integration)", "Desktop release (file-manager menus such as Nautilus, Dolphin, Thunar, plus drag-and-drop; varies by desktop)"],
+      ["Background running", "Mobile release (Android job rules)", "Desktop release (login app, tray)", "Mobile release (strict iOS limits)", "Desktop release (login item or launch agent)", "Desktop release (systemd user service, tray where available)"],
+      ["Secure token storage", "Android Keystore", "Credential Manager/DPAPI", "Keychain", "Keychain", "Secret Service (libsecret)"]
+    ],
+    "rule": "Every future client feature must add a row for all five platforms, with 'planned in <release>', 'limited: <reason>', or 'not possible: <reason>'. No platform is silently left out."
+  },
+
+  "architecture_note": {
+    "text": "[Planner addition] The client technology ADR (already planned in the mobile-apps release, Q56) must also cover: one shared client engine (API client generated from api/openapi.yaml, tus uploads, hashing, the local queue and state database, sync rules, conflict handling) reused by every platform, with only thin platform adapters (media source, folder access and watching, background scheduling, secure storage, share integration, notifications). Each future platform then writes adapters, not a new engine. The ADR compares cross-platform options (e.g. a Flutter UI, Kotlin Multiplatform, .NET MAUI, Tauri, or native UIs over a shared engine) against all five platforms, background reliability, licenses (AGPL-3.0-or-later project), and F-Droid compatibility, and includes a short prototype of background upload on Android and Windows before it is accepted.",
+    "no_decision_now": "Do not choose the technology in this session."
+  },
+
+  "open_questions": {
+    "note": "Add after the highest existing question number.",
+    "questions": [
+      "Two-way folder sync on Android: include it in the mobile-apps release (more battery use and complexity), or ship Backup, Mirror, and Download first and add two-way later (recommended)?",
+      "Minimum supported versions: Android 8.0 or newer (recommended, covers almost all phones in use), and Windows 10 22H2 plus Windows 11, or Windows 11 only?",
+      "Windows distribution: a signed installer (a code-signing certificate costs money but avoids SmartScreen warnings), an unsigned installer from GitHub, and/or winget?"
+    ]
+  },
+
+  "verification_tasks": [
+    "Android: which folders the system folder picker can and cannot grant on current Android versions (e.g. restrictions on Android/data); current rules and time limits for long-running background transfers (foreground service types, user-initiated transfer jobs); share-menu handling of many items and large files.",
+    "Windows: what the Windows 11 right-click menu and the Windows share window require (e.g. package identity), versus 'Send to'; detecting cloud-placeholder files.",
+    "iOS: background upload and background task limits; share extension limits (memory, size).",
+    "macOS and Linux: share extension and Finder integration requirements; file-manager extension options on common Linux desktops.",
+    "Record results in the notes of the new requirements; mark anything unverifiable 'Unverified'."
+  ],
+
+  "risks_to_add": [
+    "Phone brands that kill background apps stop automatic backup silently. Mitigation: brand-specific guidance, a 'last backed up' status, and the 'no backup for N days' alert.",
+    "Folder sync deletes or overwrites data by mistake. Mitigation: Backup mode by default, first-run preview, mass-deletion pause, conflict copies, NAS trash and versions.",
+    "Platform limits (especially iOS) make feature parity impossible. Mitigation: the capability matrix states every limit openly."
+  ],
+
+  "plan_updates": [
+    "Archive the current plan version, then bump the version (MINOR) per R4.",
+    "Add the requirements to the client-app releases (or to 11a if they do not exist), extending existing requirements where they overlap.",
+    "Add the platform capability matrix and its rule next to the client releases.",
+    "Update NG2 (and Q56 if it exists) per non_goal_update.",
+    "Add the architecture note to the client technology ADR's scope (the ADR itself stays Proposed or unwritten until its release).",
+    "Add the forward-compatibility notes to S03 and the operation journal (or as client-release follow-ups if those stages are Done).",
+    "Add the open questions, verification results, and risks.",
+    "Add a revision history entry referencing P009 and the session log."
+  ],
+
+  "execution_steps": [
+    { "step": 1, "action": "Run R1, archive this prompt, log the messages, write the in-progress entry, and find the client releases.", "details": "See before_you_start." },
+    { "step": 2, "action": "Verification.", "details": "Complete verification_tasks." },
+    { "step": 3, "action": "Update the plan.", "details": "Apply plan_updates within hard_rules." },
+    { "step": 4, "action": "Update CURRENT_STATE.md.", "details": "Remove the in-progress entry; current stage work continues unchanged; add the new questions to 'waiting on the user'." },
+    { "step": 5, "action": "Consistency check.", "details": "Confirm that no release or stage ID, name, position, or order changed (compare with the archived version), every new requirement has an ID and a release, and the matrix covers all five platforms." },
+    { "step": 6, "action": "Git.", "details": "Commit per RULES.md, e.g. 'docs(plan): client app backup, folder sync, share-to-NAS; platform matrix [P009]'." },
+    { "step": 7, "action": "Report to the user and stop.", "details": "Short: where the requirements were added (release IDs), confirmation that nothing moved, the matrix summary for iOS, macOS, and Linux, the three questions, and verification results." }
+  ],
+
+  "definition_of_done": [
+    "The prompt is archived as P009 (or the next free number).",
+    "All requirements are in the existing client releases (or 11a), with IDs, labels, and overlap notes.",
+    "The platform capability matrix covers Android, Windows, iOS, macOS, and Linux for every client feature.",
+    "NG2 is updated; the new questions and risks are recorded.",
+    "No release or stage was moved, renamed, split, merged, or reordered.",
+    "No application code was written.",
+    "The user has received the report described in step 7."
+  ],
+
+  "final_instruction": "Begin with the R1 startup protocol. Work through the execution steps in order, recording as you go. When everything in definition_of_done is complete, report to the user and stop."
+}

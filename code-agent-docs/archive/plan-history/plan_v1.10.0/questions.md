@@ -70,7 +70,7 @@ _(Planner-added from P006; Q54 and Q34 first, because they change the MVP, then 
 53. Drive pools (S15): keep them right after the MVP (default), or move them after the new releases, since you placed them 'in the end'?
 54. Confirm the MVP additions: Live Photos and motion photos, the phone auto-backup bridge, and alert delivery (email, webhook, ntfy). And answer Q34 (file versioning), recommended 'yes'.
 55. Reword NG1 so opt-in imports from other clouds and off-site backup to targets you choose are allowed?
-56. Mobile apps (reverses NG2): ~~native apps (framework by ADR) or PWA only?~~ _Answered in 1.11.0 (P009, the user's messages 1 and 2): native client apps, Android and Windows first, with iOS, macOS, and Linux covered (roadmap 11b.3); the framework by ADR (8.43)._ Still open: publish on app stores, F-Droid, or both? Allow Apple and Google push services as an opt-in?
+56. Mobile apps (reverses NG2): native apps (framework by ADR) or PWA only? Publish on app stores, F-Droid, or both? Allow Apple and Google push services as an opt-in?
 57. Reword NG3 to allow non-destructive photo editing (originals never changed)?
 58. External read-only libraries (index a folder on the host without copying it): exclude (default, keeps I1) or include?
 59. Map tiles: bundled low-detail offline tiles, a self-hosted tile file you download once, an opt-in online tile server, or a combination?
@@ -101,12 +101,6 @@ _(Planner-added from P006; Q54 and Q34 first, because they change the MVP, then 
 81. _(external review #1, CR001)_ **Plan structure:** keep one `plan.md`, add a short plan index (stage status, dependencies, milestone, links) that sessions read instead of the whole plan (**recommended**, cheapest), or split the plan into several documents (architecture, requirements, roadmap, invariants, security)? _Needed by: now (RULES R1)._ _Answered: the plan is split into `code-agent-docs/plan/` with `PLAN_INDEX.md` (P008 P-A, the user's request); sessions still read the whole plan (D4)._
 82. _(P008 D6)_ **Change intake:** freeze the MVP scope after P008, with new ideas going to a release backlog unless they are security or data-integrity fixes, foundations that are cheap only now, or the user puts them in the MVP? _Answered: yes ("Yes, freeze MVP (Recommended)"): rule R14, section 11d._
 83. _(P008 D7)_ **Internal alpha:** an early build for the user's own daily use at M2 (S01–S06)? _Answered: yes ("Yes, internal alpha at M2 (Recommended)"); the first release stays M3 (section 11)._
-
-### New in 1.11.0 (P009, client apps)
-
-84. _(P009)_ **Two-way folder sync on Android:** include it in R07, or ship Backup, Mirror, and Download first and add two-way later (**recommended**: two-way sync on a phone has the most edge cases, and Backup covers the request)? _Needed by: the R07 stage document (FR-368)._
-85. _(P009)_ **Minimum supported versions:** Android 8.0 or newer (**recommended**)? Windows 10 22H2 and Windows 11, or Windows 11 only (Windows 10 is past its end of support)? _Needed by: the client technology ADR (8.43) and the R07 and R08 stage documents._
-86. _(P009)_ **Windows distribution:** a signed installer (a code-signing certificate costs money every year), an unsigned installer from GitHub (Windows warns on first run), and/or winget? The Windows 11 right-click menu and the Share window need package identity, which needs a signed package, so an unsigned installer leaves Send To, drag-and-drop, and the classic menu (11b.3). _Needed by: R08 (FR-374)._
 
 ### Carried over from 0.1.0
 

@@ -6,6 +6,7 @@ Project documentation, grouped by who it is for (organized in session S007; ADR-
 
 - [`guide/web-interface.md`](guide/web-interface.md): using the web interface: browsing, uploads, downloads, organizing, previews, shortcuts, accessibility (S02.8-T03).
 - [`guide/storage-root.md`](guide/storage-root.md): moving the storage root to another folder or disk (S01.2-T07, NFR-036).
+- [`guide/pre-launch-testing-guide.md`](guide/pre-launch-testing-guide.md): testing before going live: proving the NAS is safe to trust with real data before the first release, and the extra tests for each later release (written by the user).
 - Install and admin guides, and the rest of the user guide, follow in S14.4.
 
 ## The API: [`api/`](api/)

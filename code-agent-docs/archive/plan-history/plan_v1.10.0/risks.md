@@ -60,8 +60,5 @@
 | RK-52 | **Identity drift between disk and database** (1.9.0). | Data | Reconciler matching by file identity and hash, the backfill, missing-item grace period, tests (FR-347). |
 | RK-53 | **A dependency downgrade brings back older bugs** (1.9.0, S13). | Security / data | The target version is checked like any other; re-checked at every run; upgraded as soon as a fixed version exists (S13.4). |
 | RK-54 | **Takeout formats differ from the sample or change over time** (1.9.0). | Data | Tolerant importer: unknown fields kept verbatim, unknown files reported; dry run first; fixtures from the user's sample (A28). |
-| RK-55 | **Phone makers that stop background apps make backup stop silently** (1.11.0, P009). | Data / UX | The mechanisms Android intends (FR-371: user-initiated transfer jobs, the dataSync limit respected); battery guidance per brand in the app; the Devices page shows the last backup and alerts after N days without one (FR-365); real-phone tests across brands (the user's pre-launch guide, R07). |
-| RK-56 | **Folder sync deletes or overwrites data by mistake** (1.11.0, P009). | Data | Backup is the default mode and never deletes on the NAS; Mirror moves to trash; Two-way makes conflict copies; a first-run preview and a pause on mass deletions (I10, FR-369); versions and rewind (R04, a prerequisite of R08); sync stress tests (the R08 exit criteria). |
-| RK-57 | **Platform limits (iOS above all) make equal features on every platform impossible** (1.11.0, P009). | Scope | The matrix (roadmap 11b.3) states "Limited" or "Not possible" with the reason for each platform; the MVP WebDAV bridge stays for iPhones; promises follow the matrix, not parity. |
 
 ---
