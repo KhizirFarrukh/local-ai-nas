@@ -57,8 +57,8 @@
 |---|---|---|
 | Go security rules | gosec (in golangci-lint) | Implemented (since S01) |
 | Area separation and the API's disk access | depguard (in golangci-lint) | Implemented (since S01) |
-| Forbidden APIs: `os/exec` outside the wrapper, `math/rand` in security packages, `template.HTML`, `InsecureSkipVerify` | forbidigo (in golangci-lint), configured in `.golangci.yml` | Planned (foundation task S03.5-T08) |
-| Svelte and TypeScript: `{@html}`, `eval`, unsafe links | ESLint with the Svelte plugin's `svelte/no-at-html-tags` and security rules | Planned (S03.5-T08) |
+| Forbidden APIs: `os/exec` outside the wrapper, `math/rand` and `math/rand/v2` in production code, `os.StartProcess`, `syscall.Exec`/`ForkExec`/`StartProcess`, `plugin.Open` | depguard rules `no-exec` and `no-math-rand`, and forbidigo (in golangci-lint), configured in `.golangci.yml`; gosec adds `InsecureSkipVerify` (G402), unescaped HTML such as `template.HTML` (G203), and weak randomness (G404) | Implemented (S03.5-T08; each rule checked with a deliberate violation) |
+| Svelte and TypeScript: `{@html}`, `eval`, `new Function`, string timers, `javascript:` links, `target="_blank"` without `rel` | ESLint: `no-eval`, `no-implied-eval`, `no-new-func`, `no-script-url`, `svelte/no-at-html-tags`, `svelte/no-target-blank` (set explicitly in `web/eslint.config.js`) | Implemented (S03.5-T08; each rule checked with a deliberate violation) |
 | Python security rules (Bandit-equivalent) | Ruff, `S` rules | Planned (S17, when the worker exists) |
 | Secrets in commits | gitleaks pre-commit and pre-push hooks (decision D3) | Implemented (S03.5-T07) |
 | Code scanning | GitHub CodeQL at stage completion | Planned (S03.10) |

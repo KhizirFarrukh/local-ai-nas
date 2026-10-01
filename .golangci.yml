@@ -7,6 +7,7 @@ linters:
   enable:
     - depguard
     - errcheck
+    - forbidigo
     - gosec
     - govet
     - ineffassign
@@ -47,6 +48,42 @@ linters:
               desc: the API reaches the disk only through files.Service
             - pkg: golang.org/x/sys
               desc: the API reaches the disk only through files.Service
+        # Security rules (S03.5-T08; the secure coding standard,
+        # docs/security/secure-coding-standard.md; rule R15). Tests may use
+        # these packages to build fixtures and drive the binary.
+        no-exec:
+          # External programs start only through the tool wrapper (planned
+          # internal/extexec, NFR-064), which adds limits and the sandbox.
+          files:
+            - $all
+            - "!$test"
+            - "!**/internal/extexec/**"
+          deny:
+            - pkg: os/exec
+              desc: start external programs only through internal/extexec (NFR-064)
+        no-math-rand:
+          # Randomness comes from crypto/rand (NFR-080). A reviewed exception
+          # for non-security jitter needs its own rule here.
+          files:
+            - $all
+            - "!$test"
+          deny:
+            - pkg: math/rand
+              desc: use crypto/rand (NFR-080)
+            - pkg: math/rand/v2
+              desc: use crypto/rand (NFR-080)
+    forbidigo:
+      # Identifiers the secure coding standard forbids (S03.5-T08). gosec
+      # already reports InsecureSkipVerify (G402), template.HTML and other
+      # unescaped HTML (G203), math/rand (G404), and shell-built commands.
+      analyze-types: true
+      forbid:
+        - pattern: ^os\.StartProcess$
+          msg: start external programs only through internal/extexec (NFR-064)
+        - pattern: ^syscall\.(Exec|ForkExec|StartProcess)$
+          msg: start external programs only through internal/extexec (NFR-064)
+        - pattern: ^plugin\.Open$
+          msg: no runtime loading of code (invariant I12)
   exclusions:
     rules:
       # Tests build hostile inputs and temporary files on purpose, which
@@ -54,6 +91,7 @@ linters:
       - path: _test\.go
         linters:
           - gosec
+          - forbidigo
 
 formatters:
   enable:

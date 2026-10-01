@@ -62,7 +62,8 @@ const byCode: Record<ProblemCode | ClientCode, Omit<ErrorMessage, 'detail'>> = {
   },
   misdirected_request: {
     title: 'Wrong address',
-    message: 'Open the NAS by its own address, such as http://127.0.0.1:8080, not through another name.'
+    message:
+      'Open the NAS by its own address, such as http://127.0.0.1:8080, not through another name.'
   },
   csrf_failed: {
     title: 'Blocked for your safety',
